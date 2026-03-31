@@ -686,7 +686,7 @@ function renderFarmCard(zip, city, ami) {
           <div class="adj-row">
             <div class="adj-label">LMI Threshold (% of AMI)</div>
             <div class="adj-controls">
-              <input type="range" class="adj-slider" id="sl-ami" min="50" max="80" step="1" value="${farmParams.amiPct}" oninput="syncInput('amiPct', this.value)" />
+              <input type="range" class="adj-slider" id="sl-ami" min="50" max="200" step="1" value="${farmParams.amiPct}" oninput="syncInput('amiPct', this.value)" />
               <input type="text" class="adj-input" id="in-ami" value="${farmParams.amiPct}" onchange="syncSlider('amiPct', this.value)" />
               <span class="adj-unit">%</span>
             </div>
@@ -739,7 +739,7 @@ function syncSlider(param, val) {
   const parsed = parseFloat(val);
   if (isNaN(parsed)) return;
   const mins = { rate:3, frontEnd:20, amiPct:50 };
-  const maxs = { rate:12, frontEnd:45, amiPct:80 };
+  const maxs = { rate:12, frontEnd:45, amiPct:200 };
   const clamped = Math.min(maxs[param], Math.max(mins[param], parsed));
   farmParams[param] = clamped;
   const sm = { rate:'sl-rate', frontEnd:'sl-fe', amiPct:'sl-ami' };
