@@ -60,11 +60,11 @@
   .search-row { display: flex; gap: 12px; }
   .search-row input { flex: 1; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; letter-spacing: 3px; outline: none; transition: border 0.2s; }
   .search-row input:focus { border-color: #0ed2c8; }
-  .search-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .search-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; }
   .search-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
 
   .examples { font-size: 12px; color: #94a3b8; margin-top: 10px; }
-  .examples span { background: #f1f5f9; border-radius: 5px; padding: 3px 8px; margin-right: 6px; cursor: pointer; display: inline-block; margin-bottom: 4px; transition: background 0.15s; }
+  .examples span { background: #f1f5f9; border-radius: 5px; padding: 3px 8px; margin-right: 6px; cursor: pointer; display: inline-block; margin-bottom: 4px; }
   .examples span:hover { background: #ccfbf1; color: #0f766e; }
 
   .branch-shortcuts { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
@@ -73,7 +73,6 @@
   .branch-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
   .branch-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
 
-  /* FARM CARD */
   .farm-card { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 24px; color: white; }
   .farm-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 3px; }
   .farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 18px; }
@@ -87,6 +86,8 @@
   .farm-zillow { background: #006aff; color: white; }
   .farm-redfin { background: #cc0000; color: white; }
   .farm-zillow-mod { background: #0ed2c8; color: #1f2937; }
+  .farm-realtor { background: #c0392b; color: white; }
+
   .farm-adjustments { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; border: 1px solid rgba(255,255,255,0.08); }
   .farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
@@ -109,7 +110,6 @@
   .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
   .result-meta { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
   .save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
-  .save-btn:hover { background: #dcfce7; }
 
   .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
   .summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
@@ -152,7 +152,6 @@
   .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
   .api-error p { color: #64748b; font-size: 13px; }
 
-  /* ADMIN */
   .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
   .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; }
@@ -203,7 +202,6 @@
   .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
   .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   .existing-branch-row:last-child { border-bottom: none; }
-
   .toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
 
   @media (max-width: 640px) {
@@ -416,6 +414,7 @@ function logout() {
 }
 
 function goAdmin() {
+  if (!currentUser || currentUser.role !== 'admin') return;
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'block';
   renderAdminStats(); renderUserTable();
@@ -634,10 +633,14 @@ function calcFarmPrices(ami, params) {
 }
 
 function buildZillowUrl(zip, maxPrice) {
-  return `https://www.zillow.com/homes/for_sale/${zip}_rb/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22filterState%22%3A%7B%22price%22%3A%7B%22max%22%3A${maxPrice}%7D%7D%7D`;
+  const t = Date.now();
+  return `https://www.zillow.com/homes/for_sale/${zip}_rb/${maxPrice}_price/?t=${t}`;
 }
 function buildRedfinUrl(zip, maxPrice) {
   return `https://www.redfin.com/zipcode/${zip}/filter/max-price=${maxPrice}`;
+}
+function buildRealtorUrl(zip, maxPrice) {
+  return `https://www.realtor.com/realestateandhomes-search/${zip}/price-na-${maxPrice}`;
 }
 
 function renderFarmCard(zip, city, ami) {
@@ -656,6 +659,7 @@ function renderFarmCard(zip, city, ami) {
         <a class="farm-link farm-zillow" id="fl-zillow-low" href="${buildZillowUrl(zip, maxLow)}" target="_blank">🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})</a>
         <a class="farm-link farm-zillow-mod" id="fl-zillow-mod" href="${buildZillowUrl(zip, maxMod)}" target="_blank">🏠 Zillow — Moderate (under $${maxMod.toLocaleString()})</a>
         <a class="farm-link farm-redfin" id="fl-redfin" href="${buildRedfinUrl(zip, maxLow)}" target="_blank">🔴 Redfin — under $${maxLow.toLocaleString()}</a>
+        <a class="farm-link farm-realtor" id="fl-realtor" href="${buildRealtorUrl(zip, maxLow)}" target="_blank">🏡 Realtor.com — under $${maxLow.toLocaleString()}</a>
       </div>
       <div class="farm-adjustments">
         <div class="farm-adj-header">
@@ -713,9 +717,11 @@ function updateFarmStats() {
   const flz = document.getElementById('fl-zillow-low');
   const fzm = document.getElementById('fl-zillow-mod');
   const frm = document.getElementById('fl-redfin');
+  const frt = document.getElementById('fl-realtor');
   if (flz) { flz.href = buildZillowUrl(currentZip, maxLow); flz.textContent = `🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})`; }
   if (fzm) { fzm.href = buildZillowUrl(currentZip, maxMod); fzm.textContent = `🏠 Zillow — Moderate (under $${maxMod.toLocaleString()})`; }
   if (frm) { frm.href = buildRedfinUrl(currentZip, maxLow); frm.textContent = `🔴 Redfin — under $${maxLow.toLocaleString()}`; }
+  if (frt) { frt.href = buildRealtorUrl(currentZip, maxLow); frt.textContent = `🏡 Realtor.com — under $${maxLow.toLocaleString()}`; }
   const note = document.querySelector('.farm-note');
   if (note) note.textContent = `⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower.`;
   const amiLabel = document.querySelector('#fs-income + .farm-stat-label');
