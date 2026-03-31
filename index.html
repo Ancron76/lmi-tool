@@ -10,6 +10,8 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWYyOTM3Ii8+PHBhdGggZD0iTTkwIDI0QzY0IDI0IDQyIDQ2IDQyIDcyYzAgMzggNDggOTIgNDggOTJzNDgtNTQgNDgtOTJjMC0yNi0yMi00OC00OC00OHptMCA2NmEyMiAyMiAwIDEgMSAwLTQ0IDIyIDIyIDAgMCAxIDAgNDR6IiBmaWxsPSIjMGVkMmM4Ii8+PC9zdmc+"/>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231f2937'/%3E%3Cpath d='M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z' fill='%230ed2c8'/%3E%3C/svg%3E"/>
 <title>LMI Prospect Finder</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
@@ -87,7 +89,6 @@
   .farm-redfin { background: #cc0000; color: white; }
   .farm-zillow-mod { background: #0ed2c8; color: #1f2937; }
   .farm-realtor { background: #c0392b; color: white; }
-
   .farm-adjustments { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; border: 1px solid rgba(255,255,255,0.08); }
   .farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
@@ -110,12 +111,10 @@
   .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
   .result-meta { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
   .save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
-
   .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
   .summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
   .summary-num { font-size: 28px; font-weight: 900; color: #1f2937; }
   .summary-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-
   .tract-table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
   .tract-table { width: 100%; border-collapse: collapse; }
   .tract-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 14px 16px; border-bottom: 2px solid #f1f5f9; background: #f8fafc; }
@@ -127,14 +126,12 @@
   .bar-track { background: #e2e8f0; border-radius: 99px; height: 7px; overflow: hidden; margin-top: 4px; }
   .bar-fill { height: 100%; border-radius: 99px; }
   .pct-label { font-size: 12px; font-weight: 700; }
-
   .links-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
   .links-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .link-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; }
   .link-btn:hover { opacity: 0.85; }
   .ffiec { background: #1f2937; color: white; }
   .hud   { background: #0ed2c8; color: #1f2937; }
-
   .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
   .saved-row:last-child { border-bottom: none; }
   .saved-zip { font-weight: 700; color: #1f2937; }
@@ -187,7 +184,6 @@
   .empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
-
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
@@ -357,6 +353,19 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ── FIREBASE CONFIG ───────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDVfulexC0MEzN4FZcqKVxfSG2HQ0srI90",
+  authDomain: "lmi-prospect-finder.firebaseapp.com",
+  projectId: "lmi-prospect-finder",
+  storageBucket: "lmi-prospect-finder.firebasestorage.app",
+  messagingSenderId: "904761299732",
+  appId: "1:904761299732:web:6880710625b81a2c5ea801"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── PROXY & DEFAULTS ──────────────────────────────────────────
 const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
 const DEFAULTS = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
 let farmParams = { ...DEFAULTS };
@@ -364,33 +373,59 @@ let currentAmi = 0;
 let currentZip = '';
 let currentCity = '';
 
+// ── DEFAULT ADMIN ─────────────────────────────────────────────
 const DEFAULT_ADMIN = {
-  id: 'admin-aaron', name: 'Aaron Simonson', email: 'asimonson@golden1.com',
-  password: 'G1Admin2024!', role: 'admin', type: 'N/A', region: 'Both',
-  active: true, branches: [], created: new Date().toLocaleDateString()
+  id: 'admin-aaron',
+  name: 'Aaron Simonson',
+  email: 'asimonson@golden1.com',
+  password: 'G1Admin2024!',
+  role: 'admin',
+  type: 'N/A',
+  region: 'Both',
+  active: true,
+  branches: [],
+  created: new Date().toLocaleDateString()
 };
 
-function getUsers() {
-  const u = localStorage.getItem('g1_users');
-  if (!u) { localStorage.setItem('g1_users', JSON.stringify([DEFAULT_ADMIN])); return [DEFAULT_ADMIN]; }
-  const users = JSON.parse(u);
-  const admin = users.find(u => u.id === 'admin-aaron');
-  if (!admin) { users.unshift(DEFAULT_ADMIN); }
-  else { admin.email = 'asimonson@golden1.com'; if (!admin.branches) admin.branches = []; }
-  users.forEach(u => { if (!u.branches) u.branches = []; });
-  localStorage.setItem('g1_users', JSON.stringify(users));
-  return users;
+// ── USER STORE (Firebase) ─────────────────────────────────────
+async function getUsers() {
+  try {
+    const snapshot = await db.collection('users').get();
+    let users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (!users.find(u => u.id === 'admin-aaron')) {
+      await db.collection('users').doc('admin-aaron').set(DEFAULT_ADMIN);
+      users = [DEFAULT_ADMIN, ...users];
+    }
+    users.forEach(u => { if (!u.branches) u.branches = []; });
+    return users;
+  } catch (e) {
+    console.error('Firebase error:', e);
+    return [DEFAULT_ADMIN];
+  }
 }
-function setUsers(arr) { localStorage.setItem('g1_users', JSON.stringify(arr)); }
+
+async function saveUser(user) {
+  const { id, ...data } = user;
+  await db.collection('users').doc(id).set(data);
+}
+
+async function deleteUserFromDB(id) {
+  await db.collection('users').doc(id).delete();
+}
 
 let currentUser = null;
 let branchTargetId = null;
+let cachedUsers = [];
 
-function tryLogin() {
+// ── AUTH ──────────────────────────────────────────────────────
+async function tryLogin() {
   const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
   const pass = document.getElementById('login-password').value;
-  const users = getUsers();
+  document.querySelector('.login-btn').textContent = 'Signing in...';
+  const users = await getUsers();
+  cachedUsers = users;
   const user = users.find(u => u.email.toLowerCase() === emailInput && u.password === pass && u.active);
+  document.querySelector('.login-btn').textContent = 'Sign In';
   if (user) {
     currentUser = user;
     sessionStorage.setItem('g1_session', JSON.stringify(user));
@@ -413,27 +448,26 @@ function logout() {
   document.getElementById('login-error').style.display = 'none';
 }
 
-function goAdmin() {
+async function goAdmin() {
   if (!currentUser || currentUser.role !== 'admin') return;
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'block';
+  cachedUsers = await getUsers();
   renderAdminStats(); renderUserTable();
 }
 
 function goApp() {
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
-  const users = getUsers();
-  currentUser = users.find(u => u.id === currentUser.id) || currentUser;
   renderBranchShortcuts();
 }
 
-window.onload = () => {
+window.onload = async () => {
   const s = sessionStorage.getItem('g1_session');
   if (s) {
     const saved = JSON.parse(s);
-    const users = getUsers();
-    currentUser = users.find(u => u.id === saved.id) || saved;
+    cachedUsers = await getUsers();
+    currentUser = cachedUsers.find(u => u.id === saved.id) || saved;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     if (currentUser.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
@@ -441,11 +475,12 @@ window.onload = () => {
   }
 };
 
+// ── BRANCH SHORTCUTS ──────────────────────────────────────────
 function getBranchesForCurrentUser() {
   if (!currentUser) return [];
   if (currentUser.role === 'admin') {
     const all = [];
-    getUsers().forEach(u => { (u.branches||[]).forEach(b => all.push({...b, mloName: u.name})); });
+    cachedUsers.forEach(u => { (u.branches||[]).forEach(b => all.push({...b, mloName: u.name})); });
     return all;
   }
   return (currentUser.branches||[]).map(b => ({...b, mloName: null}));
@@ -469,9 +504,10 @@ function renderBranchShortcuts() {
     </div>`;
 }
 
+// ── BRANCH MODAL ──────────────────────────────────────────────
 function openBranchModal(userId) {
   branchTargetId = userId;
-  const user = getUsers().find(u => u.id === userId);
+  const user = cachedUsers.find(u => u.id === userId);
   document.getElementById('modal-user-name').textContent = `Branch Locations — ${user.name}`;
   ['branch-name','branch-zip','branch-city'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('branch-error').style.display = 'none';
@@ -496,7 +532,7 @@ function renderExistingBranches(user) {
       </div>`).join('')}`;
 }
 
-function addBranch() {
+async function addBranch() {
   const name = document.getElementById('branch-name').value.trim();
   const zip  = document.getElementById('branch-zip').value.trim();
   const city = document.getElementById('branch-city').value.trim();
@@ -505,24 +541,24 @@ function addBranch() {
   if (!name) { errEl.textContent = 'Please enter a branch name.'; errEl.style.display = 'block'; return; }
   if (zip.length !== 5) { errEl.textContent = 'Please enter a valid 5-digit ZIP.'; errEl.style.display = 'block'; return; }
   if (!city) { errEl.textContent = 'Please enter a city.'; errEl.style.display = 'block'; return; }
-  const users = getUsers();
-  const user = users.find(u => u.id === branchTargetId);
+  const user = cachedUsers.find(u => u.id === branchTargetId);
   if (user.branches.find(b => b.zip === zip)) { errEl.textContent = 'This ZIP is already assigned.'; errEl.style.display = 'block'; return; }
   user.branches.push({ name, zip, city });
-  setUsers(users);
+  await saveUser(user);
   ['branch-name','branch-zip','branch-city'].forEach(id => document.getElementById(id).value = '');
   renderExistingBranches(user);
   showToast(`✅ Branch added: ${name} (${zip})`);
 }
 
-function removeBranch(index) {
-  const users = getUsers();
-  const user = users.find(u => u.id === branchTargetId);
+async function removeBranch(index) {
+  const user = cachedUsers.find(u => u.id === branchTargetId);
   const removed = user.branches.splice(index, 1);
-  setUsers(users); renderExistingBranches(user);
+  await saveUser(user);
+  renderExistingBranches(user);
   showToast(`🗑 Branch removed: ${removed[0].name}`);
 }
 
+// ── USER MANAGEMENT ───────────────────────────────────────────
 function generatePassword() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
   let p = '';
@@ -530,7 +566,7 @@ function generatePassword() {
   document.getElementById('new-password').value = p;
 }
 
-function addUser() {
+async function addUser() {
   const name   = document.getElementById('new-name').value.trim();
   const email  = document.getElementById('new-email').value.trim().toLowerCase();
   const role   = document.getElementById('new-role').value;
@@ -542,49 +578,55 @@ function addUser() {
   if (!name)  { showFormErr('Please enter a full name.'); return; }
   if (!email || !email.includes('@')) { showFormErr('Please enter a valid email.'); return; }
   if (!pass)  { showFormErr('Please enter or generate a password.'); return; }
-  const users = getUsers();
-  if (users.find(u => u.email.toLowerCase() === email)) { showFormErr('A user with this email already exists.'); return; }
-  users.push({ id:'u-'+Date.now(), name, email, password:pass, role, type, region, active:true, branches:[], created:new Date().toLocaleDateString() });
-  setUsers(users); renderAdminStats(); renderUserTable();
+  if (cachedUsers.find(u => u.email.toLowerCase() === email)) { showFormErr('A user with this email already exists.'); return; }
+  const newUser = {
+    id: 'u-' + Date.now(), name, email, password: pass,
+    role, type, region, active: true, branches: [],
+    created: new Date().toLocaleDateString()
+  };
+  await saveUser(newUser);
+  cachedUsers.push(newUser);
   ['new-name','new-email','new-password'].forEach(id => document.getElementById(id).value = '');
+  renderAdminStats(); renderUserTable();
   showToast(`✅ ${name} added successfully`);
 }
 
 function showFormErr(msg) { const el = document.getElementById('form-error'); el.textContent = msg; el.style.display = 'block'; }
 
-function toggleUser(id) {
-  const users = getUsers();
-  const u = users.find(u => u.id === id);
+async function toggleUser(id) {
+  const u = cachedUsers.find(u => u.id === id);
   if (!u || u.id === currentUser.id) { showToast('⚠️ Cannot deactivate yourself'); return; }
-  u.active = !u.active; setUsers(users); renderAdminStats(); renderUserTable();
+  u.active = !u.active;
+  await saveUser(u);
+  renderAdminStats(); renderUserTable();
   showToast(u.active ? `✅ ${u.name} activated` : `⏸ ${u.name} deactivated`);
 }
 
-function deleteUser(id) {
-  const users = getUsers();
-  const u = users.find(u => u.id === id);
+async function deleteUser(id) {
+  const u = cachedUsers.find(u => u.id === id);
   if (!u || u.id === currentUser.id) { showToast('⚠️ Cannot delete yourself'); return; }
   if (!confirm(`Delete ${u.name}? This cannot be undone.`)) return;
-  setUsers(users.filter(u => u.id !== id)); renderAdminStats(); renderUserTable();
+  await deleteUserFromDB(id);
+  cachedUsers = cachedUsers.filter(u => u.id !== id);
+  renderAdminStats(); renderUserTable();
   showToast(`🗑 ${u.name} removed`);
 }
 
 function copyPassword(id) {
-  const u = getUsers().find(u => u.id === id);
+  const u = cachedUsers.find(u => u.id === id);
   if (!u) return;
   navigator.clipboard.writeText(u.password).then(() => showToast(`📋 Password copied for ${u.name}`));
 }
 
 function renderAdminStats() {
-  const users = getUsers();
-  document.getElementById('stat-total').textContent  = users.length;
-  document.getElementById('stat-active').textContent = users.filter(u => u.active).length;
-  document.getElementById('stat-admins').textContent = users.filter(u => u.role === 'admin').length;
+  document.getElementById('stat-total').textContent  = cachedUsers.length;
+  document.getElementById('stat-active').textContent = cachedUsers.filter(u => u.active).length;
+  document.getElementById('stat-admins').textContent = cachedUsers.filter(u => u.role === 'admin').length;
 }
 
 function renderUserTable() {
   const query = (document.getElementById('user-search')?.value || '').toLowerCase();
-  let users = getUsers();
+  let users = cachedUsers;
   if (query) users = users.filter(u => u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query));
   const wrap = document.getElementById('user-table-wrap');
   if (!users.length) { wrap.innerHTML = '<div class="empty-table">No users found.</div>'; return; }
@@ -617,6 +659,7 @@ function showToast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 
+// ── FARM CALCULATIONS ─────────────────────────────────────────
 function monthlyRateFactor(annualRate, termYears) {
   const r = annualRate / 100 / 12;
   const n = termYears * 12;
@@ -764,6 +807,7 @@ function resetFarmParams() {
   showToast('↺ Reset to default assumptions');
 }
 
+// ── SEARCH ────────────────────────────────────────────────────
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
 
 async function doSearch() {
@@ -856,6 +900,7 @@ function renderResults(zip, tracts) {
     </div>`;
 }
 
+// ── SAVED ─────────────────────────────────────────────────────
 function getSaved() { return JSON.parse(localStorage.getItem('g1_saved') || '[]'); }
 function setSaved(arr) { localStorage.setItem('g1_saved', JSON.stringify(arr)); }
 
