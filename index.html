@@ -6,195 +6,205 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="LMI Prospect Finder"/>
-<meta name="theme-color" content="#1a3a5c"/>
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWEzYTVjIi8+PHBhdGggZD0iTTkwIDIwQzY2IDIwIDQ2IDQwIDQ2IDY0YzAgMzUgNDQgODAgNDQgODBzNDQtNDUgNDQtODBjMC0yNC0yMC00NC00NC00NHptMCA2MGEyMCAyMCAwIDEgMSAwLTQwIDIwIDIwIDAgMCAxIDAgNDB6IiBmaWxsPSIjZjBjMDQwIi8+PC9zdmc+"/>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231a3a5c'/%3E%3Cpath d='M90 20C66 20 46 40 46 64c0 35 44 80 44 80s44-45 44-80c0-24-20-44-44-44zm0 60a20 20 0 1 1 0-40 20 20 0 0 1 0 40z' fill='%23f0c040'/%3E%3C/svg%3E"/>
+<meta name="theme-color" content="#1f2937"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWYyOTM3Ii8+PHBhdGggZD0iTTkwIDI0QzY0IDI0IDQyIDQ2IDQyIDcyYzAgMzggNDggOTIgNDggOTJzNDgtNTQgNDgtOTJjMC0yNi0yMi00OC00OC00OHptMCA2NmEyMiAyMiAwIDEgMSAwLTQ0IDIyIDIyIDAgMCAxIDAgNDR6IiBmaWxsPSIjMGVkMmM4Ii8+PC9zdmc+"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231f2937'/%3E%3Cpath d='M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z' fill='%230ed2c8'/%3E%3C/svg%3E"/>
 <title>LMI Prospect Finder</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; min-height: 100vh; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
 
   #login-screen {
     display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
+    min-height: 100vh; background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
   }
   .login-box {
     background: white; border-radius: 18px; padding: 48px 40px; width: 100%; max-width: 400px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
   }
-  .login-logo { font-size: 48px; margin-bottom: 8px; }
-  .login-title { font-size: 22px; font-weight: 800; color: #1a3a5c; margin-bottom: 4px; }
+  .login-logo { margin-bottom: 12px; display: flex; justify-content: center; }
+  .login-title { font-size: 22px; font-weight: 800; color: #1f2937; margin-bottom: 4px; }
   .login-sub { font-size: 13px; color: #7a8fa6; margin-bottom: 32px; }
   .login-box input {
     width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px;
     font-size: 15px; margin-bottom: 14px; outline: none; transition: border 0.2s;
   }
-  .login-box input:focus { border-color: #2d6a9f; }
+  .login-box input:focus { border-color: #0ed2c8; }
   .login-btn {
-    width: 100%; padding: 14px; background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #1f2937, #374151);
     color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
   }
+  .login-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
   .login-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
 
   #app-screen, #admin-screen { display: none; }
   .header {
-    background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
     padding: 18px 32px; display: flex; align-items: center; justify-content: space-between;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
   }
   .header-left { display: flex; align-items: center; gap: 14px; }
-  .header-icon {
-    width: 44px; height: 44px; background: #f0c040; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .header-icon { width: 44px; height: 44px; background: #0ed2c8; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
   .header-title { color: white; font-size: 20px; font-weight: 800; }
-  .header-sub { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 2px; }
+  .header-sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
   .header-actions { display: flex; gap: 10px; }
-  .hdr-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-weight: 600; }
-  .hdr-btn:hover { background: rgba(255,255,255,0.25); }
-  .hdr-btn.gold { background: #f0c040; color: #1a3a5c; border-color: #f0c040; }
+  .hdr-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  .hdr-btn:hover { background: rgba(255,255,255,0.2); }
+  .hdr-btn.teal { background: #0ed2c8; color: #1f2937; border-color: #0ed2c8; font-weight: 700; }
 
   .main { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
-  .card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
-  .card-title { font-size: 15px; font-weight: 700; color: #1a3a5c; margin-bottom: 6px; }
+  .card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+  .card-title { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 6px; }
   .card-sub { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
 
   .search-row { display: flex; gap: 12px; }
   .search-row input { flex: 1; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; letter-spacing: 3px; outline: none; transition: border 0.2s; }
-  .search-row input:focus { border-color: #2d6a9f; }
-  .search-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .search-row input:focus { border-color: #0ed2c8; }
+  .search-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .search-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
 
   .examples { font-size: 12px; color: #94a3b8; margin-top: 10px; }
-  .examples span { background: #f1f5f9; border-radius: 5px; padding: 3px 8px; margin-right: 6px; cursor: pointer; display: inline-block; margin-bottom: 4px; }
-  .examples span:hover { background: #dbeafe; color: #1a3a5c; }
+  .examples span { background: #f1f5f9; border-radius: 5px; padding: 3px 8px; margin-right: 6px; cursor: pointer; display: inline-block; margin-bottom: 4px; transition: background 0.15s; }
+  .examples span:hover { background: #ccfbf1; color: #0f766e; }
 
   .branch-shortcuts { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
-  .branch-shortcuts-label { font-size: 11px; font-weight: 700; color: #1a3a5c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .branch-shortcuts-label span { background: #f0c040; color: #1a3a5c; font-size: 10px; border-radius: 4px; padding: 2px 6px; }
-  .branch-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
-  .branch-btn:hover { opacity: 0.85; }
+  .branch-shortcuts-label { font-size: 11px; font-weight: 700; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .branch-shortcuts-label span { background: #0ed2c8; color: #1f2937; font-size: 10px; border-radius: 4px; padding: 2px 6px; }
+  .branch-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
+  .branch-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
 
-  .farm-card { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); margin-bottom: 24px; color: white; }
+  /* FARM CARD */
+  .farm-card { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 24px; color: white; }
   .farm-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 3px; }
-  .farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
+  .farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 18px; }
   .farm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
-  .farm-stat { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 12px 16px; }
-  .farm-stat-num { font-size: 20px; font-weight: 900; color: #f0c040; }
-  .farm-stat-label { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .farm-stat { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(14,210,200,0.2); }
+  .farm-stat-num { font-size: 20px; font-weight: 900; color: #0ed2c8; }
+  .farm-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
   .farm-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
   .farm-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 11px 18px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.15s; }
-  .farm-link:hover { opacity: 0.88; }
+  .farm-link:hover { opacity: 0.85; }
   .farm-zillow { background: #006aff; color: white; }
   .farm-redfin { background: #cc0000; color: white; }
-  .farm-zillow-mod { background: #f0c040; color: #1a3a5c; }
-  .farm-adjustments { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; margin-top: 4px; }
+  .farm-zillow-mod { background: #0ed2c8; color: #1f2937; }
+  .farm-adjustments { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; border: 1px solid rgba(255,255,255,0.08); }
   .farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
-  .reset-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
-  .reset-btn:hover { background: rgba(255,255,255,0.25); }
+  .reset-btn { background: rgba(14,210,200,0.15); color: #0ed2c8; border: 1px solid rgba(14,210,200,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .reset-btn:hover { background: rgba(14,210,200,0.25); }
   .adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .adj-row { display: flex; flex-direction: column; gap: 6px; }
-  .adj-label { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .adj-label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
   .adj-controls { display: flex; align-items: center; gap: 8px; }
-  .adj-slider { flex: 1; accent-color: #f0c040; height: 4px; cursor: pointer; }
-  .adj-input { width: 64px; padding: 6px 8px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 7px; background: rgba(255,255,255,0.1); color: white; font-size: 13px; font-weight: 700; text-align: center; outline: none; }
-  .adj-input:focus { border-color: #f0c040; }
-  .adj-unit { font-size: 12px; color: rgba(255,255,255,0.6); min-width: 20px; }
-  .adj-select { flex: 1; padding: 7px 10px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 7px; background: rgba(255,255,255,0.1); color: white; font-size: 13px; font-weight: 700; outline: none; cursor: pointer; }
-  .adj-select option { background: #1a3a5c; color: white; }
-  .farm-note { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 14px; line-height: 1.5; }
+  .adj-slider { flex: 1; accent-color: #0ed2c8; height: 4px; cursor: pointer; }
+  .adj-input { width: 64px; padding: 6px 8px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 7px; background: rgba(255,255,255,0.08); color: white; font-size: 13px; font-weight: 700; text-align: center; outline: none; }
+  .adj-input:focus { border-color: #0ed2c8; }
+  .adj-unit { font-size: 12px; color: rgba(255,255,255,0.5); min-width: 20px; }
+  .adj-select { flex: 1; padding: 7px 10px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 7px; background: rgba(255,255,255,0.08); color: white; font-size: 13px; font-weight: 700; outline: none; cursor: pointer; }
+  .adj-select option { background: #1f2937; color: white; }
+  .farm-note { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 14px; line-height: 1.5; }
 
   .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
-  .result-city { font-size: 24px; font-weight: 800; color: #1a3a5c; }
+  .result-city { font-size: 24px; font-weight: 800; color: #1f2937; }
   .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
   .result-meta { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
   .save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .save-btn:hover { background: #dcfce7; }
+
   .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-  .summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; }
-  .summary-num { font-size: 28px; font-weight: 900; color: #1a3a5c; }
+  .summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
+  .summary-num { font-size: 28px; font-weight: 900; color: #1f2937; }
   .summary-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-  .tract-table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 20px; }
+
+  .tract-table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
   .tract-table { width: 100%; border-collapse: collapse; }
-  .tract-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 14px 16px; border-bottom: 2px solid #f1f5f9; background: #fafafa; }
+  .tract-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 14px 16px; border-bottom: 2px solid #f1f5f9; background: #f8fafc; }
   .tract-table td { padding: 11px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; }
   .tract-table tr:last-child td { border-bottom: none; }
-  .tract-table tr:hover td { background: #f8fafc; }
+  .tract-table tr:hover td { background: #f0fdfa; }
   .lmi-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; display: inline-block; }
   .bar-cell { min-width: 120px; }
   .bar-track { background: #e2e8f0; border-radius: 99px; height: 7px; overflow: hidden; margin-top: 4px; }
   .bar-fill { height: 100%; border-radius: 99px; }
   .pct-label { font-size: 12px; font-weight: 700; }
+
   .links-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
   .links-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .link-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; }
   .link-btn:hover { opacity: 0.85; }
-  .ffiec { background: #1a3a5c; color: white; }
-  .hud   { background: #f0c040; color: #1a3a5c; }
+  .ffiec { background: #1f2937; color: white; }
+  .hud   { background: #0ed2c8; color: #1f2937; }
+
   .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
   .saved-row:last-child { border-bottom: none; }
-  .saved-zip { font-weight: 700; color: #1a3a5c; }
+  .saved-zip { font-weight: 700; color: #1f2937; }
   .saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
-  .lmi-tag { background: #dbeafe; color: #1d4ed8; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+  .lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
   .saved-date { font-size: 12px; color: #94a3b8; }
   .remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; }
   .empty-saved { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
-  .loader { text-align: center; padding: 30px; color: #2d6a9f; font-weight: 600; font-size: 15px; }
-  .not-found { background: white; border-radius: 16px; padding: 36px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
-  .not-found h3 { color: #1a3a5c; font-size: 17px; margin-bottom: 6px; }
+  .loader { text-align: center; padding: 30px; color: #0ed2c8; font-weight: 600; font-size: 15px; }
+  .not-found { background: white; border-radius: 16px; padding: 36px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+  .not-found h3 { color: #1f2937; font-size: 17px; margin-bottom: 6px; }
   .not-found p { color: #64748b; font-size: 13px; }
-  .not-found a { color: #2d6a9f; font-weight: 600; }
-  .api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; border-left: 4px solid #dc2626; }
+  .not-found a { color: #0ed2c8; font-weight: 600; }
+  .api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-left: 4px solid #dc2626; }
   .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
   .api-error p { color: #64748b; font-size: 13px; }
 
+  /* ADMIN */
   .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
   .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
-  .stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-  .stat-num { font-size: 32px; font-weight: 900; color: #1a3a5c; }
+  .stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; }
+  .stat-num { font-size: 32px; font-weight: 900; color: #1f2937; }
   .stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
-  .admin-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
+  .admin-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
   .admin-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-  .admin-card-title { font-size: 16px; font-weight: 700; color: #1a3a5c; }
+  .admin-card-title { font-size: 16px; font-weight: 700; color: #1f2937; }
   .add-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
   .form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; }
   .form-group input, .form-group select { width: 100%; padding: 11px 13px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; }
-  .form-group input:focus, .form-group select:focus { border-color: #2d6a9f; }
-  .add-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
-  .gen-btn { background: #f1f5f9; color: #1a3a5c; border: 2px solid #e2e8f0; border-radius: 9px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .form-group input:focus, .form-group select:focus { border-color: #0ed2c8; }
+  .add-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .add-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+  .gen-btn { background: #f0fdfa; color: #0f766e; border: 2px solid #99f6e4; border-radius: 9px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .form-error { color: #dc2626; font-size: 12px; margin-top: 10px; display: none; }
   .user-table { width: 100%; border-collapse: collapse; }
   .user-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 0 10px 12px 0; border-bottom: 2px solid #f1f5f9; }
   .user-table td { padding: 12px 10px 12px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; vertical-align: top; }
   .user-table tr:last-child td { border-bottom: none; }
   .role-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; }
-  .role-admin { background: #fef3c7; color: #d97706; }
-  .role-mlo { background: #dbeafe; color: #1d4ed8; }
+  .role-admin { background: #ccfbf1; color: #0f766e; }
+  .role-mlo { background: #e0f2fe; color: #0369a1; }
   .type-badge { font-size: 11px; font-weight: 600; border-radius: 5px; padding: 3px 9px; background: #f1f5f9; color: #64748b; }
   .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
-  .status-active { background: #22c55e; }
+  .status-active { background: #0ed2c8; }
   .status-inactive { background: #94a3b8; }
   .action-btn { background: none; border: none; cursor: pointer; padding: 4px 7px; border-radius: 6px; font-size: 13px; }
   .action-btn:hover { background: #f1f5f9; }
   .del-btn { color: #dc2626; }
-  .toggle-btn { color: #2d6a9f; }
+  .toggle-btn { color: #0ed2c8; }
   .copy-btn { color: #059669; }
   .empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
-  .branch-tag { background: #eff6ff; color: #1d4ed8; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
-  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; }
+  .branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
+
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
-  .modal-title { font-size: 17px; font-weight: 800; color: #1a3a5c; margin-bottom: 4px; }
+  .modal-title { font-size: 17px; font-weight: 800; color: #1f2937; margin-bottom: 4px; }
   .modal-sub { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
   .modal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .modal-form .full { grid-column: span 2; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
   .modal-cancel { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .modal-save { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .existing-branches { margin-top: 16px; }
   .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
   .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   .existing-branch-row:last-child { border-bottom: none; }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: #1a3a5c; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
 
   @media (max-width: 640px) {
     .add-form, .summary-grid, .farm-stats, .adj-grid { grid-template-columns: 1fr 1fr; }
@@ -212,9 +222,16 @@
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <svg width="56" height="56" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-        <rect width="180" height="180" rx="40" fill="#1a3a5c"/>
-        <path d="M90 20C66 20 46 40 46 64c0 35 44 80 44 80s44-45 44-80c0-24-20-44-44-44zm0 60a20 20 0 1 1 0-40 20 20 0 0 1 0 40z" fill="#f0c040"/>
+      <svg width="64" height="64" viewBox="0 0 680 370" xmlns="http://www.w3.org/2000/svg">
+        <rect x="190" y="20" width="300" height="300" rx="60" fill="#1f2937"/>
+        <path d="M340 55 C306 55 275 83 275 118 C275 165 340 238 340 238 C340 238 405 165 405 118 C405 83 374 55 340 55 Z" fill="#0ed2c8"/>
+        <circle cx="340" cy="116" r="32" fill="#1f2937"/>
+        <text x="340" y="124" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="800" fill="#0ed2c8" letter-spacing="2">LMI</text>
+        <g opacity="0.5"><polygon points="271,279 282,268 293,279" fill="#0ed2c8"/><rect x="273" y="279" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="278" y="283" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+        <g opacity="0.75"><polygon points="297,277 308,266 319,277" fill="#0ed2c8"/><rect x="299" y="277" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="304" y="281" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+        <polygon points="329,266 340,255 351,266" fill="#0ed2c8"/><rect x="329" y="266" width="22" height="14" rx="1" fill="#0ed2c8"/><rect x="335" y="270" width="8" height="10" rx="0.5" fill="#1f2937"/>
+        <g opacity="0.75"><polygon points="361,277 372,266 383,277" fill="#0ed2c8"/><rect x="363" y="277" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="368" y="281" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+        <g opacity="0.5"><polygon points="387,279 398,268 409,279" fill="#0ed2c8"/><rect x="389" y="279" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="394" y="283" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
       </svg>
     </div>
     <div class="login-title">LMI Prospect Finder</div>
@@ -232,7 +249,7 @@
     <div class="header-left">
       <div class="header-icon">
         <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 10C62 10 38 34 38 62c0 42 52 98 52 98s52-56 52-98c0-28-24-52-52-52zm0 72a24 24 0 1 1 0-48 24 24 0 0 1 0 48z" fill="#1a3a5c"/>
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
         </svg>
       </div>
       <div>
@@ -241,7 +258,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <span id="admin-nav-btn" class="hdr-btn gold" onclick="goAdmin()" style="display:none">⚙️ Admin</span>
+      <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">⚙️ Admin</span>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
     </div>
   </div>
@@ -277,7 +294,7 @@
     <div class="header-left">
       <div class="header-icon">
         <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 10C62 10 38 34 38 62c0 42 52 98 52 98s52-56 52-98c0-28-24-52-52-52zm0 72a24 24 0 1 1 0-48 24 24 0 0 1 0 48z" fill="#1a3a5c"/>
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
         </svg>
       </div>
       <div>
@@ -286,7 +303,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="hdr-btn gold" onclick="goApp()">← Back to Tool</button>
+      <button class="hdr-btn teal" onclick="goApp()">← Back to Tool</button>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
     </div>
   </div>
@@ -300,7 +317,7 @@
       <div class="admin-card-header"><div class="admin-card-title">➕ Add New User</div></div>
       <div class="add-form">
         <div class="form-group"><label>Full Name</label><input type="text" id="new-name" placeholder="Jane Smith" /></div>
-        <div class="form-group"><label>Email</label><input type="email" id="new-email" placeholder="jane@golden1.com" /></div>
+        <div class="form-group"><label>Email</label><input type="email" id="new-email" placeholder="jane@example.com" /></div>
         <div class="form-group"><label>Role</label><select id="new-role"><option value="mlo">MLO</option><option value="admin">Admin</option></select></div>
         <div class="form-group"><label>MLO Type</label><select id="new-type"><option value="Internal">Internal</option><option value="External">External</option><option value="N/A">N/A</option></select></div>
         <div class="form-group"><label>Region</label><select id="new-region"><option value="Central Valley">Central Valley</option><option value="Los Angeles">Los Angeles</option><option value="Both">Both</option></select></div>
@@ -448,7 +465,7 @@ function renderBranchShortcuts() {
       ${branches.map(b => `
         <button class="branch-btn" onclick="quickSearch('${b.zip}')">
           ${b.zip}${isAdmin && b.mloName ? ` · ${b.mloName}` : ''}
-          <span style="font-size:11px;opacity:0.85;margin-left:4px">— ${b.name}, ${b.city}</span>
+          <span style="font-size:11px;opacity:0.75;margin-left:4px">— ${b.name}, ${b.city}</span>
         </button>`).join('')}
     </div>`;
 }
@@ -583,10 +600,10 @@ function renderUserTable() {
           <td><span class="type-badge">${u.type}</span></td>
           <td style="color:#64748b">${u.region}</td>
           <td>${u.type==='Internal'?`<div class="branch-tags">${(u.branches||[]).map(b=>`<span class="branch-tag">${b.zip} ${b.name}</span>`).join('')}${!(u.branches||[]).length?'<span style="font-size:11px;color:#94a3b8">None</span>':''}</div>`:'—'}</td>
-          <td><span class="status-dot ${u.active?'status-active':'status-inactive'}"></span><span style="font-size:12px;color:${u.active?'#16a34a':'#94a3b8'}">${u.active?'Active':'Inactive'}</span></td>
+          <td><span class="status-dot ${u.active?'status-active':'status-inactive'}"></span><span style="font-size:12px;color:${u.active?'#0ed2c8':'#94a3b8'}">${u.active?'Active':'Inactive'}</span></td>
           <td>
             <button class="action-btn copy-btn" onclick="copyPassword('${u.id}')" title="Copy password">📋</button>
-            ${u.type==='Internal'?`<button class="action-btn" style="color:#1a3a5c" onclick="openBranchModal('${u.id}')" title="Manage branches">🏢</button>`:''}
+            ${u.type==='Internal'?`<button class="action-btn" style="color:#0ed2c8" onclick="openBranchModal('${u.id}')" title="Manage branches">🏢</button>`:''}
             <button class="action-btn toggle-btn" onclick="toggleUser('${u.id}')">${u.active?'⏸':'▶️'}</button>
             ${u.id!==currentUser.id?`<button class="action-btn del-btn" onclick="deleteUser('${u.id}')">🗑</button>`:''}
           </td>
@@ -814,7 +831,7 @@ function renderResults(zip, tracts) {
     </div>
     <div class="result-meta">Area Median Income (AMI): <strong>$${ami.toLocaleString()}</strong> · Source: US Census Bureau ACS 2022 · Showing all LMI tracts in county</div>
     <div class="summary-grid">
-      <div class="summary-card"><div class="summary-num" style="color:#1a3a5c">${tracts.length}</div><div class="summary-label">Total LMI Tracts</div></div>
+      <div class="summary-card"><div class="summary-num">${tracts.length}</div><div class="summary-label">Total LMI Tracts</div></div>
       <div class="summary-card"><div class="summary-num" style="color:#dc2626">${low}</div><div class="summary-label">Low Income (&lt;50% AMI)</div></div>
       <div class="summary-card"><div class="summary-num" style="color:#d97706">${moderate}</div><div class="summary-label">Moderate (50–80% AMI)</div></div>
     </div>
@@ -841,7 +858,7 @@ function saveZip(zip, city, region) {
   saved.unshift({ zip, city, region, date: new Date().toLocaleDateString() });
   setSaved(saved); renderSaved();
   const btn = document.querySelector('.save-btn');
-  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#dcfce7'; }
+  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
 }
 
 function removeZip(zip) { setSaved(getSaved().filter(s => s.zip !== zip)); renderSaved(); }
