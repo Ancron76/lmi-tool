@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Golden 1 LMI Prospect Finder</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="LMI Prospect Finder"/>
+<meta name="theme-color" content="#1a3a5c"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWEzYTVjIi8+PHBhdGggZD0iTTkwIDIwQzY2IDIwIDQ2IDQwIDQ2IDY0YzAgMzUgNDQgODAgNDQgODBzNDQtNDUgNDQtODBjMC0yNC0yMC00NC00NC00NHptMCA2MGEyMCAyMCAwIDEgMSAwLTQwIDIwIDIwIDAgMCAxIDAgNDB6IiBmaWxsPSIjZjBjMDQwIi8+PC9zdmc+"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231a3a5c'/%3E%3Cpath d='M90 20C66 20 46 40 46 64c0 35 44 80 44 80s44-45 44-80c0-24-20-44-44-44zm0 60a20 20 0 1 1 0-40 20 20 0 0 1 0 40z' fill='%23f0c040'/%3E%3C/svg%3E"/>
+<title>LMI Prospect Finder</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; min-height: 100vh; }
@@ -37,7 +43,10 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);
   }
   .header-left { display: flex; align-items: center; gap: 14px; }
-  .header-icon { width: 44px; height: 44px; background: #f0c040; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .header-icon {
+    width: 44px; height: 44px; background: #f0c040; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
   .header-title { color: white; font-size: 20px; font-weight: 800; }
   .header-sub { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 2px; }
   .header-actions { display: flex; gap: 10px; }
@@ -65,7 +74,6 @@
   .branch-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
   .branch-btn:hover { opacity: 0.85; }
 
-  /* FARM CARD */
   .farm-card { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); margin-bottom: 24px; color: white; }
   .farm-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 3px; }
   .farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
@@ -79,12 +87,10 @@
   .farm-zillow { background: #006aff; color: white; }
   .farm-redfin { background: #cc0000; color: white; }
   .farm-zillow-mod { background: #f0c040; color: #1a3a5c; }
-
-  /* FARM ADJUSTMENTS */
   .farm-adjustments { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; margin-top: 4px; }
   .farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
-  .reset-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .reset-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
   .reset-btn:hover { background: rgba(255,255,255,0.25); }
   .adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .adj-row { display: flex; flex-direction: column; gap: 6px; }
@@ -98,7 +104,6 @@
   .adj-select option { background: #1a3a5c; color: white; }
   .farm-note { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 14px; line-height: 1.5; }
 
-  /* RESULTS */
   .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
   .result-city { font-size: 24px; font-weight: 800; color: #1a3a5c; }
   .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
@@ -142,7 +147,6 @@
   .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
   .api-error p { color: #64748b; font-size: 13px; }
 
-  /* ADMIN */
   .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
   .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
@@ -207,8 +211,13 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">🏦</div>
-    <div class="login-title">Golden 1 LMI Finder</div>
+    <div class="login-logo">
+      <svg width="56" height="56" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="180" height="180" rx="40" fill="#1a3a5c"/>
+        <path d="M90 20C66 20 46 40 46 64c0 35 44 80 44 80s44-45 44-80c0-24-20-44-44-44zm0 60a20 20 0 1 1 0-40 20 20 0 0 1 0 40z" fill="#f0c040"/>
+      </svg>
+    </div>
+    <div class="login-title">LMI Prospect Finder</div>
     <div class="login-sub">Mortgage Sales Team · Internal Tool</div>
     <input type="text" id="login-email" placeholder="Email address" autocomplete="email" />
     <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()" />
@@ -221,9 +230,13 @@
 <div id="app-screen">
   <div class="header">
     <div class="header-left">
-      <div class="header-icon">🏦</div>
+      <div class="header-icon">
+        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 10C62 10 38 34 38 62c0 42 52 98 52 98s52-56 52-98c0-28-24-52-52-52zm0 72a24 24 0 1 1 0-48 24 24 0 0 1 0 48z" fill="#1a3a5c"/>
+        </svg>
+      </div>
       <div>
-        <div class="header-title">Golden 1 LMI Prospect Finder</div>
+        <div class="header-title">LMI Prospect Finder</div>
         <div class="header-sub">Low-to-Moderate Income Census Tract Tool · CRA/HMDA</div>
       </div>
     </div>
@@ -249,10 +262,8 @@
       </div>
       <div id="branch-shortcuts-container"></div>
     </div>
-
     <div id="farm-card-container"></div>
     <div id="results"></div>
-
     <div class="card">
       <div class="card-title">📌 Saved Prospect ZIPs</div>
       <div id="saved-list"><div class="empty-saved">No ZIPs saved yet.</div></div>
@@ -264,10 +275,14 @@
 <div id="admin-screen">
   <div class="header">
     <div class="header-left">
-      <div class="header-icon">⚙️</div>
+      <div class="header-icon">
+        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 10C62 10 38 34 38 62c0 42 52 98 52 98s52-56 52-98c0-28-24-52-52-52zm0 72a24 24 0 1 1 0-48 24 24 0 0 1 0 48z" fill="#1a3a5c"/>
+        </svg>
+      </div>
       <div>
         <div class="header-title">Admin Panel</div>
-        <div class="header-sub">Golden 1 LMI Tool · User Management</div>
+        <div class="header-sub">LMI Prospect Finder · User Management</div>
       </div>
     </div>
     <div class="header-actions">
@@ -328,15 +343,12 @@
 
 <script>
 const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
-
-// ── DEFAULTS ──────────────────────────────────────────────────
 const DEFAULTS = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
 let farmParams = { ...DEFAULTS };
 let currentAmi = 0;
 let currentZip = '';
 let currentCity = '';
 
-// ── USER STORE ────────────────────────────────────────────────
 const DEFAULT_ADMIN = {
   id: 'admin-aaron', name: 'Aaron Simonson', email: 'asimonson@golden1.com',
   password: 'G1Admin2024!', role: 'admin', type: 'N/A', region: 'Both',
@@ -413,7 +425,6 @@ window.onload = () => {
   }
 };
 
-// ── BRANCH SHORTCUTS ──────────────────────────────────────────
 function getBranchesForCurrentUser() {
   if (!currentUser) return [];
   if (currentUser.role === 'admin') {
@@ -442,7 +453,6 @@ function renderBranchShortcuts() {
     </div>`;
 }
 
-// ── BRANCH MODAL ──────────────────────────────────────────────
 function openBranchModal(userId) {
   branchTargetId = userId;
   const user = getUsers().find(u => u.id === userId);
@@ -497,7 +507,6 @@ function removeBranch(index) {
   showToast(`🗑 Branch removed: ${removed[0].name}`);
 }
 
-// ── USER MANAGEMENT ───────────────────────────────────────────
 function generatePassword() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
   let p = '';
@@ -592,7 +601,6 @@ function showToast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 
-// ── FARM CALCULATIONS ─────────────────────────────────────────
 function monthlyRateFactor(annualRate, termYears) {
   const r = annualRate / 100 / 12;
   const n = termYears * 12;
@@ -603,8 +611,8 @@ function calcFarmPrices(ami, params) {
   const lmiIncome = Math.round(ami * (params.amiPct / 100));
   const modIncome = Math.round(ami * ((params.amiPct - 15) / 100));
   const factor = monthlyRateFactor(params.rate, params.term);
-  const maxLow  = Math.round((lmiIncome  * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
-  const maxMod  = Math.round((modIncome  * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
+  const maxLow  = Math.round((lmiIncome * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
+  const maxMod  = Math.round((modIncome * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
   return { lmiIncome, modIncome, maxLow, maxMod };
 }
 
@@ -615,42 +623,29 @@ function buildRedfinUrl(zip, maxPrice) {
   return `https://www.redfin.com/zipcode/${zip}/filter/max-price=${maxPrice}`;
 }
 
-// ── FARM CARD RENDER ──────────────────────────────────────────
 function renderFarmCard(zip, city, ami) {
   currentZip = zip; currentCity = city; currentAmi = ami;
-  const container = document.getElementById('farm-card-container');
   const { lmiIncome, maxLow, maxMod } = calcFarmPrices(ami, farmParams);
-  container.innerHTML = `
+  document.getElementById('farm-card-container').innerHTML = `
     <div class="farm-card">
       <div class="farm-card-title">🌾 Farm This Area — ${city}, ${zip}</div>
       <div class="farm-card-sub">Pre-filtered listing links based on LMI income limits · AMI $${ami.toLocaleString()}</div>
       <div class="farm-stats">
-        <div class="farm-stat">
-          <div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div>
-          <div class="farm-stat-label">Max LMI Household Income (${farmParams.amiPct}% AMI)</div>
-        </div>
-        <div class="farm-stat">
-          <div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div>
-          <div class="farm-stat-label">Est. Max Price — Low Income</div>
-        </div>
-        <div class="farm-stat">
-          <div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div>
-          <div class="farm-stat-label">Est. Max Price — Moderate Income</div>
-        </div>
+        <div class="farm-stat"><div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div><div class="farm-stat-label">Max LMI Household Income (${farmParams.amiPct}% AMI)</div></div>
+        <div class="farm-stat"><div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div><div class="farm-stat-label">Est. Max Price — Low Income</div></div>
+        <div class="farm-stat"><div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div><div class="farm-stat-label">Est. Max Price — Moderate Income</div></div>
       </div>
-      <div class="farm-links" id="farm-links-row">
+      <div class="farm-links">
         <a class="farm-link farm-zillow" id="fl-zillow-low" href="${buildZillowUrl(zip, maxLow)}" target="_blank">🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})</a>
         <a class="farm-link farm-zillow-mod" id="fl-zillow-mod" href="${buildZillowUrl(zip, maxMod)}" target="_blank">🏠 Zillow — Moderate (under $${maxMod.toLocaleString()})</a>
         <a class="farm-link farm-redfin" id="fl-redfin" href="${buildRedfinUrl(zip, maxLow)}" target="_blank">🔴 Redfin — under $${maxLow.toLocaleString()}</a>
       </div>
-
       <div class="farm-adjustments">
         <div class="farm-adj-header">
           <div class="farm-adj-title">⚙️ Adjust Assumptions</div>
           <button class="reset-btn" onclick="resetFarmParams()">↺ Reset to Defaults</button>
         </div>
         <div class="adj-grid">
-
           <div class="adj-row">
             <div class="adj-label">Interest Rate</div>
             <div class="adj-controls">
@@ -659,7 +654,6 @@ function renderFarmCard(zip, city, ami) {
               <span class="adj-unit">%</span>
             </div>
           </div>
-
           <div class="adj-row">
             <div class="adj-label">Front-End Ratio</div>
             <div class="adj-controls">
@@ -668,7 +662,6 @@ function renderFarmCard(zip, city, ami) {
               <span class="adj-unit">%</span>
             </div>
           </div>
-
           <div class="adj-row">
             <div class="adj-label">LMI Threshold (% of AMI)</div>
             <div class="adj-controls">
@@ -677,7 +670,6 @@ function renderFarmCard(zip, city, ami) {
               <span class="adj-unit">%</span>
             </div>
           </div>
-
           <div class="adj-row">
             <div class="adj-label">Loan Term</div>
             <div class="adj-controls">
@@ -688,38 +680,35 @@ function renderFarmCard(zip, city, ami) {
               </select>
             </div>
           </div>
-
         </div>
       </div>
-      <div class="farm-note">⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower. Confirm individual property tract eligibility via FFIEC below.</div>
+      <div class="farm-note">⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower.</div>
     </div>`;
 }
 
 function updateFarmStats() {
   if (!currentAmi) return;
   const { lmiIncome, maxLow, maxMod } = calcFarmPrices(currentAmi, farmParams);
-  const fs = document.getElementById('fs-income');
-  const fl = document.getElementById('fs-low');
-  const fm = document.getElementById('fs-mod');
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('fs-income', '$' + lmiIncome.toLocaleString());
+  set('fs-low', '$' + maxLow.toLocaleString());
+  set('fs-mod', '$' + maxMod.toLocaleString());
   const flz = document.getElementById('fl-zillow-low');
   const fzm = document.getElementById('fl-zillow-mod');
   const frm = document.getElementById('fl-redfin');
-  const note = document.querySelector('.farm-note');
-  if (fs) fs.textContent = '$' + lmiIncome.toLocaleString();
-  if (fl) fl.textContent = '$' + maxLow.toLocaleString();
-  if (fm) fm.textContent = '$' + maxMod.toLocaleString();
   if (flz) { flz.href = buildZillowUrl(currentZip, maxLow); flz.textContent = `🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})`; }
   if (fzm) { fzm.href = buildZillowUrl(currentZip, maxMod); fzm.textContent = `🏠 Zillow — Moderate (under $${maxMod.toLocaleString()})`; }
   if (frm) { frm.href = buildRedfinUrl(currentZip, maxLow); frm.textContent = `🔴 Redfin — under $${maxLow.toLocaleString()}`; }
-  if (note) note.textContent = `⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower. Confirm individual property tract eligibility via FFIEC below.`;
+  const note = document.querySelector('.farm-note');
+  if (note) note.textContent = `⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower.`;
   const amiLabel = document.querySelector('#fs-income + .farm-stat-label');
   if (amiLabel) amiLabel.textContent = `Max LMI Household Income (${farmParams.amiPct}% AMI)`;
 }
 
 function syncInput(param, val) {
   farmParams[param] = parseFloat(val);
-  const inputMap = { rate:'in-rate', frontEnd:'in-fe', amiPct:'in-ami' };
-  if (inputMap[param]) document.getElementById(inputMap[param]).value = parseFloat(val).toFixed(param==='rate'?1:0);
+  const map = { rate:'in-rate', frontEnd:'in-fe', amiPct:'in-ami' };
+  if (map[param]) document.getElementById(map[param]).value = parseFloat(val).toFixed(param==='rate'?1:0);
   updateFarmStats();
 }
 
@@ -730,17 +719,14 @@ function syncSlider(param, val) {
   const maxs = { rate:12, frontEnd:45, amiPct:80 };
   const clamped = Math.min(maxs[param], Math.max(mins[param], parsed));
   farmParams[param] = clamped;
-  const sliderMap = { rate:'sl-rate', frontEnd:'sl-fe', amiPct:'sl-ami' };
-  const inputMap  = { rate:'in-rate', frontEnd:'in-fe', amiPct:'in-ami' };
-  if (sliderMap[param]) document.getElementById(sliderMap[param]).value = clamped;
-  if (inputMap[param])  document.getElementById(inputMap[param]).value  = clamped.toFixed(param==='rate'?1:0);
+  const sm = { rate:'sl-rate', frontEnd:'sl-fe', amiPct:'sl-ami' };
+  const im = { rate:'in-rate', frontEnd:'in-fe', amiPct:'in-ami' };
+  if (sm[param]) document.getElementById(sm[param]).value = clamped;
+  if (im[param]) document.getElementById(im[param]).value = clamped.toFixed(param==='rate'?1:0);
   updateFarmStats();
 }
 
-function syncTerm(val) {
-  farmParams.term = parseInt(val);
-  updateFarmStats();
-}
+function syncTerm(val) { farmParams.term = parseInt(val); updateFarmStats(); }
 
 function resetFarmParams() {
   farmParams = { ...DEFAULTS };
@@ -755,7 +741,6 @@ function resetFarmParams() {
   showToast('↺ Reset to default assumptions');
 }
 
-// ── SEARCH ────────────────────────────────────────────────────
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
 
 async function doSearch() {
@@ -769,9 +754,7 @@ async function doSearch() {
     if (!response.ok) throw new Error('API error');
     const data = await response.json();
     if (!data || !data.length || data.error) { renderNotFound(zip); return; }
-    const ami  = data[0]?.area_md_fam_income || 0;
-    const city = data[0]?.city || zip;
-    renderFarmCard(zip, city, ami);
+    renderFarmCard(zip, data[0]?.city || zip, data[0]?.area_md_fam_income || 0);
     renderResults(zip, data);
   } catch (err) {
     res.innerHTML = `
@@ -794,7 +777,7 @@ function getCategory(tractIncome, ami) {
 function renderNotFound(zip) {
   document.getElementById('results').innerHTML = `
     <div class="not-found">
-      <div style="font-size:36px;margin-bottom:10px">🔍</div>
+      <div style="font-size:36px;margin-bottom:10px">📍</div>
       <h3>No LMI tract data found for ZIP ${zip}</h3>
       <p>This area may have no LMI tracts, or try checking directly:<br/><br/>
         <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">FFIEC Census Tract Lookup →</a>
@@ -807,7 +790,6 @@ function renderResults(zip, tracts) {
   const ami  = tracts[0]?.area_md_fam_income || 0;
   const low      = tracts.filter(t => (t.tract_md_fam_income / t.area_md_fam_income) < 0.50).length;
   const moderate = tracts.filter(t => { const r = t.tract_md_fam_income / t.area_md_fam_income; return r >= 0.50 && r < 0.80; }).length;
-
   const tractHTML = tracts.map(t => {
     const cat = getCategory(t.tract_md_fam_income, t.area_md_fam_income);
     const pct = Math.round((t.tract_md_fam_income / t.area_md_fam_income) * 100);
@@ -851,7 +833,6 @@ function renderResults(zip, tracts) {
     </div>`;
 }
 
-// ── SAVED ─────────────────────────────────────────────────────
 function getSaved() { return JSON.parse(localStorage.getItem('g1_saved') || '[]'); }
 function setSaved(arr) { localStorage.setItem('g1_saved', JSON.stringify(arr)); }
 
