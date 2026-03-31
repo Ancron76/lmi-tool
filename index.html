@@ -72,7 +72,7 @@
   .tract-id { font-size: 12px; color: #94a3b8; margin-top: 5px; }
   .pct-num { font-size: 26px; font-weight: 900; }
   .pct-label { font-size: 11px; color: #94a3b8; text-align: right; }
-  .income-row { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 7px; }
+  .income-row { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 7px; flex-wrap: wrap; gap: 4px; }
   .income-row strong { color: #1a3a5c; }
   .bar-track { background: #e2e8f0; border-radius: 99px; height: 9px; overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
@@ -106,8 +106,10 @@
   .not-found h3 { color: #1a3a5c; font-size: 17px; margin-bottom: 6px; }
   .not-found p { color: #64748b; font-size: 13px; }
   .not-found a { color: #2d6a9f; font-weight: 600; }
+  .api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; border-left: 4px solid #dc2626; }
+  .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
+  .api-error p { color: #64748b; font-size: 13px; }
 
-  /* ADMIN */
   .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
   .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
@@ -144,20 +146,16 @@
   .branch-action-btn { color: #1a3a5c; }
   .empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
 
-  /* BRANCH TAGS IN TABLE */
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .branch-tag { background: #eff6ff; color: #1d4ed8; font-size: 11px; border-radius: 5px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px; }
-  .branch-tag-remove { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; padding: 0; line-height: 1; }
-  .branch-tag-remove:hover { color: #dc2626; }
 
-  /* BRANCH MODAL */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-overlay.open { display: flex; }
-  .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+  .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
   .modal-title { font-size: 17px; font-weight: 800; color: #1a3a5c; margin-bottom: 4px; }
   .modal-sub { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
   .modal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .modal-form .form-group:last-child { grid-column: span 2; }
+  .modal-form .full { grid-column: span 2; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
   .modal-cancel { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .modal-save { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
@@ -174,7 +172,7 @@
     .header { padding: 14px 16px; }
     .header-title { font-size: 16px; }
     .modal-form { grid-template-columns: 1fr; }
-    .modal-form .form-group:last-child { grid-column: span 1; }
+    .modal-form .full { grid-column: span 1; }
   }
 </style>
 </head>
@@ -211,17 +209,17 @@
   <div class="main">
     <div class="card">
       <div class="card-title">Enter a ZIP Code to Check LMI Status</div>
-      <div class="card-sub">Identifies LMI census tracts, tract income vs. AMI, CRA eligibility, and listing links.</div>
+      <div class="card-sub">Live FFIEC data — works for any ZIP code in the country.</div>
       <div class="search-row">
         <input type="text" id="zip-input" maxlength="5" placeholder="e.g. 93701" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter') doSearch()" />
         <button class="search-btn" onclick="doSearch()">Search</button>
       </div>
       <div class="examples">Try:
         <span onclick="quickSearch('93701')">93701 Fresno</span>
+        <span onclick="quickSearch('93650')">93650 Clovis</span>
         <span onclick="quickSearch('90011')">90011 LA</span>
         <span onclick="quickSearch('95206')">95206 Stockton</span>
         <span onclick="quickSearch('93301')">93301 Bakersfield</span>
-        <span onclick="quickSearch('95351')">95351 Modesto</span>
       </div>
       <div id="branch-shortcuts-container"></div>
     </div>
@@ -290,7 +288,7 @@
     <div class="modal-form">
       <div class="form-group"><label>Branch Name</label><input type="text" id="branch-name" placeholder="e.g. Fresno Main" /></div>
       <div class="form-group"><label>ZIP Code</label><input type="text" id="branch-zip" maxlength="5" placeholder="e.g. 93721" oninput="this.value=this.value.replace(/\D/g,'')" /></div>
-      <div class="form-group"><label>City</label><input type="text" id="branch-city" placeholder="e.g. Fresno" /></div>
+      <div class="form-group full"><label>City</label><input type="text" id="branch-city" placeholder="e.g. Fresno" /></div>
     </div>
     <button class="modal-save" onclick="addBranch()" style="width:100%">+ Add Branch</button>
     <div class="form-error" id="branch-error"></div>
@@ -304,6 +302,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ── PROXY URL ─────────────────────────────────────────────────
+const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
+
+// ── DEFAULT ADMIN ─────────────────────────────────────────────
 const DEFAULT_ADMIN = {
   id: 'admin-aaron', name: 'Aaron Simonson', email: 'asimonson@golden1.com',
   password: 'G1Admin2024!', role: 'admin', type: 'N/A', region: 'Both',
@@ -315,9 +317,10 @@ function getUsers() {
   if (!u) { localStorage.setItem('g1_users', JSON.stringify([DEFAULT_ADMIN])); return [DEFAULT_ADMIN]; }
   const users = JSON.parse(u);
   const admin = users.find(u => u.id === 'admin-aaron');
-  if (!admin) { users.unshift(DEFAULT_ADMIN); localStorage.setItem('g1_users', JSON.stringify(users)); }
-  else { admin.email = 'asimonson@golden1.com'; if (!admin.branches) admin.branches = []; localStorage.setItem('g1_users', JSON.stringify(users)); }
+  if (!admin) { users.unshift(DEFAULT_ADMIN); }
+  else { admin.email = 'asimonson@golden1.com'; if (!admin.branches) admin.branches = []; }
   users.forEach(u => { if (!u.branches) u.branches = []; });
+  localStorage.setItem('g1_users', JSON.stringify(users));
   return users;
 }
 function setUsers(arr) { localStorage.setItem('g1_users', JSON.stringify(arr)); }
@@ -336,8 +339,7 @@ function tryLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
-    renderBranchShortcuts();
-    renderSaved();
+    renderBranchShortcuts(); renderSaved();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -362,19 +364,12 @@ function goAdmin() {
 function goApp() {
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
-  // Refresh current user from storage (branches may have changed)
   const users = getUsers();
   currentUser = users.find(u => u.id === currentUser.id) || currentUser;
   renderBranchShortcuts();
 }
 
 window.onload = () => {
-  const existing = localStorage.getItem('g1_users');
-  if (existing) {
-    const users = JSON.parse(existing);
-    const admin = users.find(u => u.id === 'admin-aaron');
-    if (admin) { admin.email = 'asimonson@golden1.com'; if (!admin.branches) admin.branches = []; localStorage.setItem('g1_users', JSON.stringify(users)); }
-  }
   const s = sessionStorage.getItem('g1_session');
   if (s) {
     const saved = JSON.parse(s);
@@ -391,12 +386,11 @@ window.onload = () => {
 function getBranchesForCurrentUser() {
   if (!currentUser) return [];
   if (currentUser.role === 'admin') {
-    const users = getUsers();
     const all = [];
-    users.forEach(u => { if (u.branches && u.branches.length) u.branches.forEach(b => all.push({ ...b, mloName: u.name })); });
+    getUsers().forEach(u => { (u.branches||[]).forEach(b => all.push({...b, mloName: u.name})); });
     return all;
   }
-  return (currentUser.branches || []).map(b => ({ ...b, mloName: null }));
+  return (currentUser.branches||[]).map(b => ({...b, mloName: null}));
 }
 
 function renderBranchShortcuts() {
@@ -407,7 +401,7 @@ function renderBranchShortcuts() {
   container.innerHTML = `
     <div class="branch-shortcuts">
       <div class="branch-shortcuts-label">
-        🏢 My Branch Locations <span>${isAdmin ? 'Admin View — All Branches' : 'Quick Search'}</span>
+        🏢 My Branch Locations <span>${isAdmin ? 'Admin — All Branches' : 'Quick Search'}</span>
       </div>
       ${branches.map(b => `
         <button class="branch-btn" onclick="quickSearch('${b.zip}')">
@@ -420,12 +414,9 @@ function renderBranchShortcuts() {
 // ── BRANCH MODAL ──────────────────────────────────────────────
 function openBranchModal(userId) {
   branchTargetId = userId;
-  const users = getUsers();
-  const user = users.find(u => u.id === userId);
+  const user = getUsers().find(u => u.id === userId);
   document.getElementById('modal-user-name').textContent = `Branch Locations — ${user.name}`;
-  document.getElementById('branch-name').value = '';
-  document.getElementById('branch-zip').value = '';
-  document.getElementById('branch-city').value = '';
+  ['branch-name','branch-zip','branch-city'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('branch-error').style.display = 'none';
   renderExistingBranches(user);
   document.getElementById('branch-modal').classList.add('open');
@@ -442,12 +433,9 @@ function renderExistingBranches(user) {
   if (!user.branches || !user.branches.length) { el.innerHTML = ''; return; }
   el.innerHTML = `
     <div class="existing-branches-label">Assigned Branches (${user.branches.length})</div>
-    ${user.branches.map((b, i) => `
+    ${user.branches.map((b,i) => `
       <div class="existing-branch-row">
-        <div>
-          <strong>${b.name}</strong>
-          <span style="color:#64748b;margin-left:8px">${b.city} · ${b.zip}</span>
-        </div>
+        <div><strong>${b.name}</strong><span style="color:#64748b;margin-left:8px">${b.city} · ${b.zip}</span></div>
         <button class="action-btn del-btn" onclick="removeBranch(${i})">🗑</button>
       </div>`).join('')}`;
 }
@@ -463,13 +451,10 @@ function addBranch() {
   if (!city) { errEl.textContent = 'Please enter a city.'; errEl.style.display = 'block'; return; }
   const users = getUsers();
   const user = users.find(u => u.id === branchTargetId);
-  if (!user.branches) user.branches = [];
-  if (user.branches.find(b => b.zip === zip)) { errEl.textContent = 'This ZIP is already assigned to this user.'; errEl.style.display = 'block'; return; }
+  if (user.branches.find(b => b.zip === zip)) { errEl.textContent = 'This ZIP is already assigned.'; errEl.style.display = 'block'; return; }
   user.branches.push({ name, zip, city });
   setUsers(users);
-  document.getElementById('branch-name').value = '';
-  document.getElementById('branch-zip').value = '';
-  document.getElementById('branch-city').value = '';
+  ['branch-name','branch-zip','branch-city'].forEach(id => document.getElementById(id).value = '');
   renderExistingBranches(user);
   showToast(`✅ Branch added: ${name} (${zip})`);
 }
@@ -505,7 +490,7 @@ function addUser() {
   if (!pass)  { showFormErr('Please enter or generate a password.'); return; }
   const users = getUsers();
   if (users.find(u => u.email.toLowerCase() === email)) { showFormErr('A user with this email already exists.'); return; }
-  users.push({ id: 'u-' + Date.now(), name, email, password: pass, role, type, region, active: true, branches: [], created: new Date().toLocaleDateString() });
+  users.push({ id:'u-'+Date.now(), name, email, password:pass, role, type, region, active:true, branches:[], created:new Date().toLocaleDateString() });
   setUsers(users);
   ['new-name','new-email','new-password'].forEach(id => document.getElementById(id).value = '');
   renderAdminStats(); renderUserTable();
@@ -534,8 +519,7 @@ function deleteUser(id) {
 }
 
 function copyPassword(id) {
-  const users = getUsers();
-  const u = users.find(u => u.id === id);
+  const u = getUsers().find(u => u.id === id);
   if (!u) return;
   navigator.clipboard.writeText(u.password).then(() => showToast(`📋 Password copied for ${u.name}`));
 }
@@ -555,35 +539,31 @@ function renderUserTable() {
   if (!users.length) { wrap.innerHTML = '<div class="empty-table">No users found.</div>'; return; }
   wrap.innerHTML = `
     <table class="user-table">
-      <thead><tr>
-        <th>Name</th><th>Email</th><th>Role</th><th>Type</th><th>Region</th><th>Branches</th><th>Status</th><th>Actions</th>
-      </tr></thead>
-      <tbody>
-        ${users.map(u => `
-          <tr>
-            <td><strong>${u.name}</strong><br/><span style="font-size:11px;color:#94a3b8">${u.created}</span></td>
-            <td style="color:#64748b">${u.email}</td>
-            <td><span class="role-badge ${u.role==='admin'?'role-admin':'role-mlo'}">${u.role==='admin'?'Admin':'MLO'}</span></td>
-            <td><span class="type-badge">${u.type}</span></td>
-            <td style="color:#64748b">${u.region}</td>
-            <td>
-              ${u.type === 'Internal' ? `
-                <div class="branch-tags">
-                  ${(u.branches||[]).map(b => `<span class="branch-tag">${b.zip} ${b.name}</span>`).join('')}
-                  ${!(u.branches||[]).length ? '<span style="font-size:11px;color:#94a3b8">None assigned</span>' : ''}
-                </div>` : '<span style="font-size:11px;color:#e2e8f0">—</span>'}
-            </td>
-            <td>
-              <span class="status-dot ${u.active?'status-active':'status-inactive'}"></span>
-              <span style="font-size:12px;color:${u.active?'#16a34a':'#94a3b8'}">${u.active?'Active':'Inactive'}</span>
-            </td>
-            <td>
-              <button class="action-btn copy-btn" onclick="copyPassword('${u.id}')" title="Copy password">📋</button>
-              ${u.type==='Internal' ? `<button class="action-btn branch-action-btn" onclick="openBranchModal('${u.id}')" title="Manage branch locations">🏢</button>` : ''}
-              <button class="action-btn toggle-btn" onclick="toggleUser('${u.id}')" title="${u.active?'Deactivate':'Activate'}">${u.active?'⏸':'▶️'}</button>
-              ${u.id!==currentUser.id?`<button class="action-btn del-btn" onclick="deleteUser('${u.id}')" title="Delete">🗑</button>`:''}
-            </td>
-          </tr>`).join('')}
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Type</th><th>Region</th><th>Branches</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${users.map(u => `
+        <tr>
+          <td><strong>${u.name}</strong><br/><span style="font-size:11px;color:#94a3b8">${u.created}</span></td>
+          <td style="color:#64748b">${u.email}</td>
+          <td><span class="role-badge ${u.role==='admin'?'role-admin':'role-mlo'}">${u.role==='admin'?'Admin':'MLO'}</span></td>
+          <td><span class="type-badge">${u.type}</span></td>
+          <td style="color:#64748b">${u.region}</td>
+          <td>${u.type==='Internal'?`
+            <div class="branch-tags">
+              ${(u.branches||[]).map(b=>`<span class="branch-tag">${b.zip} ${b.name}</span>`).join('')}
+              ${!(u.branches||[]).length?'<span style="font-size:11px;color:#94a3b8">None</span>':''}
+            </div>`:'<span style="font-size:11px;color:#e2e8f0">—</span>'}
+          </td>
+          <td>
+            <span class="status-dot ${u.active?'status-active':'status-inactive'}"></span>
+            <span style="font-size:12px;color:${u.active?'#16a34a':'#94a3b8'}">${u.active?'Active':'Inactive'}</span>
+          </td>
+          <td>
+            <button class="action-btn copy-btn" onclick="copyPassword('${u.id}')" title="Copy password">📋</button>
+            ${u.type==='Internal'?`<button class="action-btn branch-action-btn" onclick="openBranchModal('${u.id}')" title="Manage branches">🏢</button>`:''}
+            <button class="action-btn toggle-btn" onclick="toggleUser('${u.id}')">${u.active?'⏸':'▶️'}</button>
+            ${u.id!==currentUser.id?`<button class="action-btn del-btn" onclick="deleteUser('${u.id}')">🗑</button>`:''}
+          </td>
+        </tr>`).join('')}
       </tbody>
     </table>`;
 }
@@ -595,87 +575,92 @@ function showToast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 
-// ── LMI DATA ──────────────────────────────────────────────────
-const LMI_DATA = {
-  "93701": { city:"Fresno", region:"Central Valley", tracts:[{id:"06019001100",income:28400,ami:72300},{id:"06019001200",income:31200,ami:72300}]},
-  "93702": { city:"Fresno", region:"Central Valley", tracts:[{id:"06019001500",income:29800,ami:72300}]},
-  "93706": { city:"Fresno", region:"Central Valley", tracts:[{id:"06019003100",income:26500,ami:72300}]},
-  "93721": { city:"Fresno", region:"Central Valley", tracts:[{id:"06019002100",income:27100,ami:72300}]},
-  "93728": { city:"Fresno", region:"Central Valley", tracts:[{id:"06019003400",income:33500,ami:72300}]},
-  "95206": { city:"Stockton", region:"Central Valley", tracts:[{id:"06077001100",income:32000,ami:69800}]},
-  "95203": { city:"Stockton", region:"Central Valley", tracts:[{id:"06077001200",income:34500,ami:69800}]},
-  "95202": { city:"Stockton", region:"Central Valley", tracts:[{id:"06077001400",income:30100,ami:69800}]},
-  "93301": { city:"Bakersfield", region:"Central Valley", tracts:[{id:"06029000100",income:30200,ami:67500}]},
-  "93304": { city:"Bakersfield", region:"Central Valley", tracts:[{id:"06029000200",income:28900,ami:67500}]},
-  "93307": { city:"Bakersfield", region:"Central Valley", tracts:[{id:"06029000400",income:31400,ami:67500}]},
-  "95351": { city:"Modesto", region:"Central Valley", tracts:[{id:"06099000100",income:31800,ami:68200}]},
-  "95350": { city:"Modesto", region:"Central Valley", tracts:[{id:"06099000200",income:33200,ami:68200}]},
-  "93638": { city:"Madera", region:"Central Valley", tracts:[{id:"06039000100",income:29600,ami:65400}]},
-  "93230": { city:"Hanford", region:"Central Valley", tracts:[{id:"06031000100",income:31000,ami:64800}]},
-  "90011": { city:"Los Angeles", region:"Los Angeles", tracts:[{id:"06037234300",income:31000,ami:80000}]},
-  "90023": { city:"Los Angeles", region:"Los Angeles", tracts:[{id:"06037234500",income:38000,ami:80000}]},
-  "90059": { city:"Los Angeles", region:"Los Angeles", tracts:[{id:"06037600100",income:29500,ami:80000}]},
-  "90001": { city:"Los Angeles", region:"Los Angeles", tracts:[{id:"06037234100",income:35200,ami:80000}]},
-  "90650": { city:"Norwalk", region:"Los Angeles", tracts:[{id:"06037600200",income:52000,ami:80000}]},
-  "91331": { city:"Pacoima", region:"Los Angeles", tracts:[{id:"06037131900",income:45000,ami:80000}]},
-  "90255": { city:"Huntington Park", region:"Los Angeles", tracts:[{id:"06037600300",income:36500,ami:80000}]},
-  "90022": { city:"East Los Angeles", region:"Los Angeles", tracts:[{id:"06037234600",income:34800,ami:80000}]},
-  "90063": { city:"Los Angeles", region:"Los Angeles", tracts:[{id:"06037234700",income:33100,ami:80000}]},
-};
-
-function getCategory(income, ami) {
-  const r = income / ami;
-  if (r < 0.50) return { label:"Low Income", color:"#dc2626", bg:"#fef2f2" };
-  if (r < 0.80) return { label:"Moderate Income", color:"#d97706", bg:"#fffbeb" };
-  if (r < 1.20) return { label:"Middle Income", color:"#059669", bg:"#f0fdf4" };
-  return { label:"Upper Income", color:"#6b7280", bg:"#f9fafb" };
-}
-function isLMI(income, ami) { return (income / ami) < 0.80; }
-
+// ── SEARCH ────────────────────────────────────────────────────
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
 
-function doSearch() {
+async function doSearch() {
   const zip = document.getElementById('zip-input').value.trim();
   if (zip.length !== 5) return;
-  document.getElementById('results').innerHTML = '<div class="loader">🔍 Looking up census tracts...</div>';
-  setTimeout(() => { const data = LMI_DATA[zip]; if (!data) { renderNotFound(zip); return; } renderResults(zip, data); }, 600);
+  const res = document.getElementById('results');
+  res.innerHTML = '<div class="loader">🔍 Looking up live FFIEC census tract data...</div>';
+  try {
+    const response = await fetch(`${PROXY_URL}?zip=${zip}`);
+    if (!response.ok) throw new Error('API error');
+    const data = await response.json();
+    if (!data || !data.length) { renderNotFound(zip); return; }
+    renderResults(zip, data);
+  } catch (err) {
+    res.innerHTML = `
+      <div class="api-error">
+        <h3>⚠️ Could not reach FFIEC data</h3>
+        <p>Check your internet connection or try again in a moment.<br/>
+        You can also look up this ZIP directly at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">FFIEC.gov →</a></p>
+      </div>`;
+  }
+}
+
+function getCategory(tractIncome, ami) {
+  const r = tractIncome / ami;
+  if (r < 0.50) return { label:'Low Income',      color:'#dc2626', bg:'#fef2f2' };
+  if (r < 0.80) return { label:'Moderate Income', color:'#d97706', bg:'#fffbeb' };
+  if (r < 1.20) return { label:'Middle Income',   color:'#059669', bg:'#f0fdf4' };
+  return           { label:'Upper Income',     color:'#6b7280', bg:'#f9fafb' };
 }
 
 function renderNotFound(zip) {
   document.getElementById('results').innerHTML = `
     <div class="not-found">
       <div style="font-size:36px;margin-bottom:10px">🔍</div>
-      <h3>ZIP Code ${zip} not in demo dataset</h3>
-      <p>Check the official source:<br/><br/><a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">FFIEC Census Tract Lookup →</a></p>
+      <h3>No census tract data found for ZIP ${zip}</h3>
+      <p>This ZIP may not have LMI tract designations, or may be outside covered areas.<br/><br/>
+        <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">Check FFIEC directly →</a>
+      </p>
     </div>`;
 }
 
-function renderResults(zip, data) {
+function renderResults(zip, tracts) {
+  const city = tracts[0]?.city || zip;
   let tractHTML = '';
-  data.tracts.forEach(t => {
-    const cat = getCategory(t.income, t.ami);
-    const pct = Math.round((t.income / t.ami) * 100);
-    const lmi = isLMI(t.income, t.ami);
+  let anyLMI = false;
+
+  tracts.forEach(t => {
+    const tractIncome = t.tract_md_fam_income || t.tractMdFamIncome || 0;
+    const ami = t.area_md_fam_income || t.areaMdFamIncome || 1;
+    const tractId = t.tract_id || t.tractId || t.geoid || '';
+    const tractCity = t.county_name || t.countyName || city;
+    const lmi = (tractIncome / ami) < 0.80;
+    if (lmi) anyLMI = true;
+    if (!tractIncome || !ami) return;
+    const cat = getCategory(tractIncome, ami);
+    const pct = Math.round((tractIncome / ami) * 100);
+
     tractHTML += `
       <div class="tract-card" style="border-left:4px solid ${cat.color}">
         <div class="tract-top">
-          <div><span class="lmi-badge" style="background:${cat.bg};color:${cat.color}">${cat.label}</span><div class="tract-id">Census Tract ${t.id}</div></div>
+          <div><span class="lmi-badge" style="background:${cat.bg};color:${cat.color}">${cat.label}</span>
+          <div class="tract-id">Census Tract ${tractId}</div></div>
           <div><div class="pct-num" style="color:${cat.color}">${pct}%</div><div class="pct-label">of AMI</div></div>
         </div>
         <div class="income-row">
-          <span>Tract Median Income: <strong>$${t.income.toLocaleString()}</strong></span>
-          <span>Area Median Income (AMI): <strong>$${t.ami.toLocaleString()}</strong></span>
+          <span>Tract Median Family Income: <strong>$${tractIncome.toLocaleString()}</strong></span>
+          <span>Area Median Income (AMI): <strong>$${ami.toLocaleString()}</strong></span>
         </div>
         <div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct,100)}%;background:${cat.color}"></div></div>
-        <div class="legend"><span style="color:#dc2626">● Low &lt;50%</span><span style="color:#d97706">● Moderate 50–80%</span><span style="color:#059669">● Middle 80–120%</span></div>
+        <div class="legend">
+          <span style="color:#dc2626">● Low &lt;50%</span>
+          <span style="color:#d97706">● Moderate 50–80%</span>
+          <span style="color:#059669">● Middle 80–120%</span>
+        </div>
         ${lmi ? `<div class="cra-badge">✅ <strong>CRA/HMDA Eligible</strong> — This tract qualifies for LMI credit under the Community Reinvestment Act.</div>` : ''}
       </div>`;
   });
-  const anyLMI = data.tracts.some(t => isLMI(t.income, t.ami));
+
+  if (!tractHTML) { renderNotFound(zip); return; }
+
   document.getElementById('results').innerHTML = `
     <div class="result-header">
-      <div><span class="result-city">${data.city}</span><span class="result-zip">ZIP ${zip} · ${data.region}</span></div>
-      ${anyLMI ? `<button class="save-btn" onclick="saveZip('${zip}','${data.city}','${data.region}')">+ Save to Prospect List</button>` : ''}
+      <div><span class="result-city">${city}</span><span class="result-zip">ZIP ${zip}</span></div>
+      ${anyLMI ? `<button class="save-btn" onclick="saveZip('${zip}','${city}','')">+ Save to Prospect List</button>` : ''}
     </div>
     ${tractHTML}
     <div class="card">
@@ -689,6 +674,7 @@ function renderResults(zip, data) {
     </div>`;
 }
 
+// ── SAVED ─────────────────────────────────────────────────────
 function getSaved() { return JSON.parse(localStorage.getItem('g1_saved') || '[]'); }
 function setSaved(arr) { localStorage.setItem('g1_saved', JSON.stringify(arr)); }
 
@@ -709,7 +695,7 @@ function renderSaved() {
   if (!saved.length) { el.innerHTML = '<div class="empty-saved">No ZIPs saved yet. Search a ZIP and click Save.</div>'; return; }
   el.innerHTML = saved.map(s => `
     <div class="saved-row">
-      <div><span class="saved-zip">${s.zip}</span><span class="saved-city">${s.city}</span><span class="lmi-tag">LMI ✓</span><span class="saved-city">· ${s.region}</span></div>
+      <div><span class="saved-zip">${s.zip}</span><span class="saved-city">${s.city}</span><span class="lmi-tag">LMI ✓</span></div>
       <div style="display:flex;align-items:center;gap:12px"><span class="saved-date">${s.date}</span><button class="remove-btn" onclick="removeZip('${s.zip}')">✕</button></div>
     </div>`).join('');
 }
