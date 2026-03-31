@@ -45,7 +45,7 @@
   .hdr-btn:hover { background: rgba(255,255,255,0.25); }
   .hdr-btn.gold { background: #f0c040; color: #1a3a5c; border-color: #f0c040; }
 
-  .main { max-width: 820px; margin: 0 auto; padding: 32px 20px; }
+  .main { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
   .card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
   .card-title { font-size: 15px; font-weight: 700; color: #1a3a5c; margin-bottom: 6px; }
   .card-sub { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
@@ -62,37 +62,69 @@
   .branch-shortcuts { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
   .branch-shortcuts-label { font-size: 11px; font-weight: 700; color: #1a3a5c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
   .branch-shortcuts-label span { background: #f0c040; color: #1a3a5c; font-size: 10px; border-radius: 4px; padding: 2px 6px; }
-  .branch-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; transition: opacity 0.15s; }
+  .branch-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
   .branch-btn:hover { opacity: 0.85; }
-  .branch-btn .branch-name { font-size: 11px; opacity: 0.85; margin-left: 4px; }
 
-  .tract-card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 14px; }
-  .tract-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-  .lmi-badge { font-size: 13px; font-weight: 700; border-radius: 6px; padding: 4px 12px; display: inline-block; }
-  .tract-id { font-size: 12px; color: #94a3b8; margin-top: 5px; }
-  .pct-num { font-size: 26px; font-weight: 900; }
-  .pct-label { font-size: 11px; color: #94a3b8; text-align: right; }
-  .income-row { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 7px; flex-wrap: wrap; gap: 4px; }
-  .income-row strong { color: #1a3a5c; }
-  .bar-track { background: #e2e8f0; border-radius: 99px; height: 9px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
-  .legend { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: #94a3b8; flex-wrap: wrap; }
-  .cra-badge { margin-top: 14px; background: #eff6ff; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #1d4ed8; }
+  /* FARM CARD */
+  .farm-card { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); margin-bottom: 24px; color: white; }
+  .farm-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 3px; }
+  .farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
+  .farm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .farm-stat { background: rgba(255,255,255,0.12); border-radius: 10px; padding: 12px 16px; }
+  .farm-stat-num { font-size: 20px; font-weight: 900; color: #f0c040; }
+  .farm-stat-label { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .farm-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .farm-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 11px 18px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.15s; }
+  .farm-link:hover { opacity: 0.88; }
+  .farm-zillow { background: #006aff; color: white; }
+  .farm-redfin { background: #cc0000; color: white; }
+  .farm-zillow-mod { background: #f0c040; color: #1a3a5c; }
 
+  /* FARM ADJUSTMENTS */
+  .farm-adjustments { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; margin-top: 4px; }
+  .farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
+  .reset-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .reset-btn:hover { background: rgba(255,255,255,0.25); }
+  .adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .adj-row { display: flex; flex-direction: column; gap: 6px; }
+  .adj-label { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .adj-controls { display: flex; align-items: center; gap: 8px; }
+  .adj-slider { flex: 1; accent-color: #f0c040; height: 4px; cursor: pointer; }
+  .adj-input { width: 64px; padding: 6px 8px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 7px; background: rgba(255,255,255,0.1); color: white; font-size: 13px; font-weight: 700; text-align: center; outline: none; }
+  .adj-input:focus { border-color: #f0c040; }
+  .adj-unit { font-size: 12px; color: rgba(255,255,255,0.6); min-width: 20px; }
+  .adj-select { flex: 1; padding: 7px 10px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 7px; background: rgba(255,255,255,0.1); color: white; font-size: 13px; font-weight: 700; outline: none; cursor: pointer; }
+  .adj-select option { background: #1a3a5c; color: white; }
+  .farm-note { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 14px; line-height: 1.5; }
+
+  /* RESULTS */
+  .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
+  .result-city { font-size: 24px; font-weight: 800; color: #1a3a5c; }
+  .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
+  .result-meta { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+  .save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; }
+  .summary-num { font-size: 28px; font-weight: 900; color: #1a3a5c; }
+  .summary-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+  .tract-table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 20px; }
+  .tract-table { width: 100%; border-collapse: collapse; }
+  .tract-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 14px 16px; border-bottom: 2px solid #f1f5f9; background: #fafafa; }
+  .tract-table td { padding: 11px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; }
+  .tract-table tr:last-child td { border-bottom: none; }
+  .tract-table tr:hover td { background: #f8fafc; }
+  .lmi-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; display: inline-block; }
+  .bar-cell { min-width: 120px; }
+  .bar-track { background: #e2e8f0; border-radius: 99px; height: 7px; overflow: hidden; margin-top: 4px; }
+  .bar-fill { height: 100%; border-radius: 99px; }
+  .pct-label { font-size: 12px; font-weight: 700; }
   .links-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
   .links-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .link-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; }
   .link-btn:hover { opacity: 0.85; }
-  .zillow { background: #006aff; color: white; }
-  .redfin { background: #cc0000; color: white; }
-  .ffiec  { background: #1a3a5c; color: white; }
-  .hud    { background: #f0c040; color: #1a3a5c; }
-
-  .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-  .result-city { font-size: 24px; font-weight: 800; color: #1a3a5c; }
-  .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
-  .save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
-
+  .ffiec { background: #1a3a5c; color: white; }
+  .hud   { background: #f0c040; color: #1a3a5c; }
   .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
   .saved-row:last-child { border-bottom: none; }
   .saved-zip { font-weight: 700; color: #1a3a5c; }
@@ -110,6 +142,7 @@
   .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
   .api-error p { color: #64748b; font-size: 13px; }
 
+  /* ADMIN */
   .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
   .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
@@ -118,7 +151,6 @@
   .admin-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 24px; }
   .admin-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
   .admin-card-title { font-size: 16px; font-weight: 700; color: #1a3a5c; }
-
   .add-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
   .form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; }
   .form-group input, .form-group select { width: 100%; padding: 11px 13px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; }
@@ -126,7 +158,6 @@
   .add-btn { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .gen-btn { background: #f1f5f9; color: #1a3a5c; border: 2px solid #e2e8f0; border-radius: 9px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .form-error { color: #dc2626; font-size: 12px; margin-top: 10px; display: none; }
-
   .user-table { width: 100%; border-collapse: collapse; }
   .user-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 0 10px 12px 0; border-bottom: 2px solid #f1f5f9; }
   .user-table td { padding: 12px 10px 12px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; vertical-align: top; }
@@ -143,12 +174,9 @@
   .del-btn { color: #dc2626; }
   .toggle-btn { color: #2d6a9f; }
   .copy-btn { color: #059669; }
-  .branch-action-btn { color: #1a3a5c; }
   .empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
-
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
-  .branch-tag { background: #eff6ff; color: #1d4ed8; font-size: 11px; border-radius: 5px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px; }
-
+  .branch-tag { background: #eff6ff; color: #1d4ed8; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
@@ -158,16 +186,14 @@
   .modal-form .full { grid-column: span 2; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
   .modal-cancel { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .modal-save { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .existing-branches { margin-top: 16px; }
   .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
   .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   .existing-branch-row:last-child { border-bottom: none; }
-
   .toast { position: fixed; bottom: 24px; right: 24px; background: #1a3a5c; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; }
 
   @media (max-width: 640px) {
-    .add-form { grid-template-columns: 1fr 1fr; }
+    .add-form, .summary-grid, .farm-stats, .adj-grid { grid-template-columns: 1fr 1fr; }
     .admin-stats { grid-template-columns: 1fr 1fr; }
     .header { padding: 14px 16px; }
     .header-title { font-size: 16px; }
@@ -209,7 +235,7 @@
   <div class="main">
     <div class="card">
       <div class="card-title">Enter a ZIP Code to Check LMI Status</div>
-      <div class="card-sub">Live FFIEC data — works for any ZIP code in the country.</div>
+      <div class="card-sub">Live Census Bureau data — works for any ZIP code in the US.</div>
       <div class="search-row">
         <input type="text" id="zip-input" maxlength="5" placeholder="e.g. 93701" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter') doSearch()" />
         <button class="search-btn" onclick="doSearch()">Search</button>
@@ -223,7 +249,10 @@
       </div>
       <div id="branch-shortcuts-container"></div>
     </div>
+
+    <div id="farm-card-container"></div>
     <div id="results"></div>
+
     <div class="card">
       <div class="card-title">📌 Saved Prospect ZIPs</div>
       <div id="saved-list"><div class="empty-saved">No ZIPs saved yet.</div></div>
@@ -252,7 +281,6 @@
       <div class="stat-card"><div class="stat-num" id="stat-active">0</div><div class="stat-label">Active Users</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-admins">0</div><div class="stat-label">Admins</div></div>
     </div>
-
     <div class="admin-card">
       <div class="admin-card-header"><div class="admin-card-title">➕ Add New User</div></div>
       <div class="add-form">
@@ -269,7 +297,6 @@
       </div>
       <div class="form-error" id="form-error"></div>
     </div>
-
     <div class="admin-card">
       <div class="admin-card-header">
         <div class="admin-card-title">👥 All Users</div>
@@ -293,19 +320,23 @@
     <button class="modal-save" onclick="addBranch()" style="width:100%">+ Add Branch</button>
     <div class="form-error" id="branch-error"></div>
     <div class="existing-branches" id="existing-branches"></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeBranchModal()">Done</button>
-    </div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="closeBranchModal()">Done</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── PROXY URL ─────────────────────────────────────────────────
 const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
 
-// ── DEFAULT ADMIN ─────────────────────────────────────────────
+// ── DEFAULTS ──────────────────────────────────────────────────
+const DEFAULTS = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
+let farmParams = { ...DEFAULTS };
+let currentAmi = 0;
+let currentZip = '';
+let currentCity = '';
+
+// ── USER STORE ────────────────────────────────────────────────
 const DEFAULT_ADMIN = {
   id: 'admin-aaron', name: 'Aaron Simonson', email: 'asimonson@golden1.com',
   password: 'G1Admin2024!', role: 'admin', type: 'N/A', region: 'Both',
@@ -406,7 +437,7 @@ function renderBranchShortcuts() {
       ${branches.map(b => `
         <button class="branch-btn" onclick="quickSearch('${b.zip}')">
           ${b.zip}${isAdmin && b.mloName ? ` · ${b.mloName}` : ''}
-          <span class="branch-name">— ${b.name}, ${b.city}</span>
+          <span style="font-size:11px;opacity:0.85;margin-left:4px">— ${b.name}, ${b.city}</span>
         </button>`).join('')}
     </div>`;
 }
@@ -424,8 +455,7 @@ function openBranchModal(userId) {
 
 function closeBranchModal() {
   document.getElementById('branch-modal').classList.remove('open');
-  branchTargetId = null;
-  renderUserTable();
+  branchTargetId = null; renderUserTable();
 }
 
 function renderExistingBranches(user) {
@@ -463,8 +493,7 @@ function removeBranch(index) {
   const users = getUsers();
   const user = users.find(u => u.id === branchTargetId);
   const removed = user.branches.splice(index, 1);
-  setUsers(users);
-  renderExistingBranches(user);
+  setUsers(users); renderExistingBranches(user);
   showToast(`🗑 Branch removed: ${removed[0].name}`);
 }
 
@@ -491,9 +520,8 @@ function addUser() {
   const users = getUsers();
   if (users.find(u => u.email.toLowerCase() === email)) { showFormErr('A user with this email already exists.'); return; }
   users.push({ id:'u-'+Date.now(), name, email, password:pass, role, type, region, active:true, branches:[], created:new Date().toLocaleDateString() });
-  setUsers(users);
+  setUsers(users); renderAdminStats(); renderUserTable();
   ['new-name','new-email','new-password'].forEach(id => document.getElementById(id).value = '');
-  renderAdminStats(); renderUserTable();
   showToast(`✅ ${name} added successfully`);
 }
 
@@ -503,8 +531,7 @@ function toggleUser(id) {
   const users = getUsers();
   const u = users.find(u => u.id === id);
   if (!u || u.id === currentUser.id) { showToast('⚠️ Cannot deactivate yourself'); return; }
-  u.active = !u.active; setUsers(users);
-  renderAdminStats(); renderUserTable();
+  u.active = !u.active; setUsers(users); renderAdminStats(); renderUserTable();
   showToast(u.active ? `✅ ${u.name} activated` : `⏸ ${u.name} deactivated`);
 }
 
@@ -513,8 +540,7 @@ function deleteUser(id) {
   const u = users.find(u => u.id === id);
   if (!u || u.id === currentUser.id) { showToast('⚠️ Cannot delete yourself'); return; }
   if (!confirm(`Delete ${u.name}? This cannot be undone.`)) return;
-  setUsers(users.filter(u => u.id !== id));
-  renderAdminStats(); renderUserTable();
+  setUsers(users.filter(u => u.id !== id)); renderAdminStats(); renderUserTable();
   showToast(`🗑 ${u.name} removed`);
 }
 
@@ -547,19 +573,11 @@ function renderUserTable() {
           <td><span class="role-badge ${u.role==='admin'?'role-admin':'role-mlo'}">${u.role==='admin'?'Admin':'MLO'}</span></td>
           <td><span class="type-badge">${u.type}</span></td>
           <td style="color:#64748b">${u.region}</td>
-          <td>${u.type==='Internal'?`
-            <div class="branch-tags">
-              ${(u.branches||[]).map(b=>`<span class="branch-tag">${b.zip} ${b.name}</span>`).join('')}
-              ${!(u.branches||[]).length?'<span style="font-size:11px;color:#94a3b8">None</span>':''}
-            </div>`:'<span style="font-size:11px;color:#e2e8f0">—</span>'}
-          </td>
-          <td>
-            <span class="status-dot ${u.active?'status-active':'status-inactive'}"></span>
-            <span style="font-size:12px;color:${u.active?'#16a34a':'#94a3b8'}">${u.active?'Active':'Inactive'}</span>
-          </td>
+          <td>${u.type==='Internal'?`<div class="branch-tags">${(u.branches||[]).map(b=>`<span class="branch-tag">${b.zip} ${b.name}</span>`).join('')}${!(u.branches||[]).length?'<span style="font-size:11px;color:#94a3b8">None</span>':''}</div>`:'—'}</td>
+          <td><span class="status-dot ${u.active?'status-active':'status-inactive'}"></span><span style="font-size:12px;color:${u.active?'#16a34a':'#94a3b8'}">${u.active?'Active':'Inactive'}</span></td>
           <td>
             <button class="action-btn copy-btn" onclick="copyPassword('${u.id}')" title="Copy password">📋</button>
-            ${u.type==='Internal'?`<button class="action-btn branch-action-btn" onclick="openBranchModal('${u.id}')" title="Manage branches">🏢</button>`:''}
+            ${u.type==='Internal'?`<button class="action-btn" style="color:#1a3a5c" onclick="openBranchModal('${u.id}')" title="Manage branches">🏢</button>`:''}
             <button class="action-btn toggle-btn" onclick="toggleUser('${u.id}')">${u.active?'⏸':'▶️'}</button>
             ${u.id!==currentUser.id?`<button class="action-btn del-btn" onclick="deleteUser('${u.id}')">🗑</button>`:''}
           </td>
@@ -568,11 +586,173 @@ function renderUserTable() {
     </table>`;
 }
 
-// ── TOAST ─────────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.display = 'block';
   setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// ── FARM CALCULATIONS ─────────────────────────────────────────
+function monthlyRateFactor(annualRate, termYears) {
+  const r = annualRate / 100 / 12;
+  const n = termYears * 12;
+  return r / (1 - Math.pow(1 + r, -n));
+}
+
+function calcFarmPrices(ami, params) {
+  const lmiIncome = Math.round(ami * (params.amiPct / 100));
+  const modIncome = Math.round(ami * ((params.amiPct - 15) / 100));
+  const factor = monthlyRateFactor(params.rate, params.term);
+  const maxLow  = Math.round((lmiIncome  * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
+  const maxMod  = Math.round((modIncome  * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
+  return { lmiIncome, modIncome, maxLow, maxMod };
+}
+
+function buildZillowUrl(zip, maxPrice) {
+  return `https://www.zillow.com/homes/for_sale/${zip}_rb/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22filterState%22%3A%7B%22price%22%3A%7B%22max%22%3A${maxPrice}%7D%7D%7D`;
+}
+function buildRedfinUrl(zip, maxPrice) {
+  return `https://www.redfin.com/zipcode/${zip}/filter/max-price=${maxPrice}`;
+}
+
+// ── FARM CARD RENDER ──────────────────────────────────────────
+function renderFarmCard(zip, city, ami) {
+  currentZip = zip; currentCity = city; currentAmi = ami;
+  const container = document.getElementById('farm-card-container');
+  const { lmiIncome, maxLow, maxMod } = calcFarmPrices(ami, farmParams);
+  container.innerHTML = `
+    <div class="farm-card">
+      <div class="farm-card-title">🌾 Farm This Area — ${city}, ${zip}</div>
+      <div class="farm-card-sub">Pre-filtered listing links based on LMI income limits · AMI $${ami.toLocaleString()}</div>
+      <div class="farm-stats">
+        <div class="farm-stat">
+          <div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div>
+          <div class="farm-stat-label">Max LMI Household Income (${farmParams.amiPct}% AMI)</div>
+        </div>
+        <div class="farm-stat">
+          <div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div>
+          <div class="farm-stat-label">Est. Max Price — Low Income</div>
+        </div>
+        <div class="farm-stat">
+          <div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div>
+          <div class="farm-stat-label">Est. Max Price — Moderate Income</div>
+        </div>
+      </div>
+      <div class="farm-links" id="farm-links-row">
+        <a class="farm-link farm-zillow" id="fl-zillow-low" href="${buildZillowUrl(zip, maxLow)}" target="_blank">🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})</a>
+        <a class="farm-link farm-zillow-mod" id="fl-zillow-mod" href="${buildZillowUrl(zip, maxMod)}" target="_blank">🏠 Zillow — Moderate (under $${maxMod.toLocaleString()})</a>
+        <a class="farm-link farm-redfin" id="fl-redfin" href="${buildRedfinUrl(zip, maxLow)}" target="_blank">🔴 Redfin — under $${maxLow.toLocaleString()}</a>
+      </div>
+
+      <div class="farm-adjustments">
+        <div class="farm-adj-header">
+          <div class="farm-adj-title">⚙️ Adjust Assumptions</div>
+          <button class="reset-btn" onclick="resetFarmParams()">↺ Reset to Defaults</button>
+        </div>
+        <div class="adj-grid">
+
+          <div class="adj-row">
+            <div class="adj-label">Interest Rate</div>
+            <div class="adj-controls">
+              <input type="range" class="adj-slider" id="sl-rate" min="3" max="12" step="0.1" value="${farmParams.rate}" oninput="syncInput('rate', this.value)" />
+              <input type="text" class="adj-input" id="in-rate" value="${farmParams.rate}" onchange="syncSlider('rate', this.value)" />
+              <span class="adj-unit">%</span>
+            </div>
+          </div>
+
+          <div class="adj-row">
+            <div class="adj-label">Front-End Ratio</div>
+            <div class="adj-controls">
+              <input type="range" class="adj-slider" id="sl-fe" min="20" max="45" step="1" value="${farmParams.frontEnd}" oninput="syncInput('frontEnd', this.value)" />
+              <input type="text" class="adj-input" id="in-fe" value="${farmParams.frontEnd}" onchange="syncSlider('frontEnd', this.value)" />
+              <span class="adj-unit">%</span>
+            </div>
+          </div>
+
+          <div class="adj-row">
+            <div class="adj-label">LMI Threshold (% of AMI)</div>
+            <div class="adj-controls">
+              <input type="range" class="adj-slider" id="sl-ami" min="50" max="80" step="1" value="${farmParams.amiPct}" oninput="syncInput('amiPct', this.value)" />
+              <input type="text" class="adj-input" id="in-ami" value="${farmParams.amiPct}" onchange="syncSlider('amiPct', this.value)" />
+              <span class="adj-unit">%</span>
+            </div>
+          </div>
+
+          <div class="adj-row">
+            <div class="adj-label">Loan Term</div>
+            <div class="adj-controls">
+              <select class="adj-select" id="sel-term" onchange="syncTerm(this.value)">
+                <option value="15" ${farmParams.term===15?'selected':''}>15 Years</option>
+                <option value="20" ${farmParams.term===20?'selected':''}>20 Years</option>
+                <option value="30" ${farmParams.term===30?'selected':''}>30 Years</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="farm-note">⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower. Confirm individual property tract eligibility via FFIEC below.</div>
+    </div>`;
+}
+
+function updateFarmStats() {
+  if (!currentAmi) return;
+  const { lmiIncome, maxLow, maxMod } = calcFarmPrices(currentAmi, farmParams);
+  const fs = document.getElementById('fs-income');
+  const fl = document.getElementById('fs-low');
+  const fm = document.getElementById('fs-mod');
+  const flz = document.getElementById('fl-zillow-low');
+  const fzm = document.getElementById('fl-zillow-mod');
+  const frm = document.getElementById('fl-redfin');
+  const note = document.querySelector('.farm-note');
+  if (fs) fs.textContent = '$' + lmiIncome.toLocaleString();
+  if (fl) fl.textContent = '$' + maxLow.toLocaleString();
+  if (fm) fm.textContent = '$' + maxMod.toLocaleString();
+  if (flz) { flz.href = buildZillowUrl(currentZip, maxLow); flz.textContent = `🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})`; }
+  if (fzm) { fzm.href = buildZillowUrl(currentZip, maxMod); fzm.textContent = `🏠 Zillow — Moderate (under $${maxMod.toLocaleString()})`; }
+  if (frm) { frm.href = buildRedfinUrl(currentZip, maxLow); frm.textContent = `🔴 Redfin — under $${maxLow.toLocaleString()}`; }
+  if (note) note.textContent = `⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower. Confirm individual property tract eligibility via FFIEC below.`;
+  const amiLabel = document.querySelector('#fs-income + .farm-stat-label');
+  if (amiLabel) amiLabel.textContent = `Max LMI Household Income (${farmParams.amiPct}% AMI)`;
+}
+
+function syncInput(param, val) {
+  farmParams[param] = parseFloat(val);
+  const inputMap = { rate:'in-rate', frontEnd:'in-fe', amiPct:'in-ami' };
+  if (inputMap[param]) document.getElementById(inputMap[param]).value = parseFloat(val).toFixed(param==='rate'?1:0);
+  updateFarmStats();
+}
+
+function syncSlider(param, val) {
+  const parsed = parseFloat(val);
+  if (isNaN(parsed)) return;
+  const mins = { rate:3, frontEnd:20, amiPct:50 };
+  const maxs = { rate:12, frontEnd:45, amiPct:80 };
+  const clamped = Math.min(maxs[param], Math.max(mins[param], parsed));
+  farmParams[param] = clamped;
+  const sliderMap = { rate:'sl-rate', frontEnd:'sl-fe', amiPct:'sl-ami' };
+  const inputMap  = { rate:'in-rate', frontEnd:'in-fe', amiPct:'in-ami' };
+  if (sliderMap[param]) document.getElementById(sliderMap[param]).value = clamped;
+  if (inputMap[param])  document.getElementById(inputMap[param]).value  = clamped.toFixed(param==='rate'?1:0);
+  updateFarmStats();
+}
+
+function syncTerm(val) {
+  farmParams.term = parseInt(val);
+  updateFarmStats();
+}
+
+function resetFarmParams() {
+  farmParams = { ...DEFAULTS };
+  document.getElementById('sl-rate').value  = DEFAULTS.rate;
+  document.getElementById('in-rate').value  = DEFAULTS.rate.toFixed(1);
+  document.getElementById('sl-fe').value    = DEFAULTS.frontEnd;
+  document.getElementById('in-fe').value    = DEFAULTS.frontEnd;
+  document.getElementById('sl-ami').value   = DEFAULTS.amiPct;
+  document.getElementById('in-ami').value   = DEFAULTS.amiPct;
+  document.getElementById('sel-term').value = DEFAULTS.term;
+  updateFarmStats();
+  showToast('↺ Reset to default assumptions');
 }
 
 // ── SEARCH ────────────────────────────────────────────────────
@@ -582,19 +762,23 @@ async function doSearch() {
   const zip = document.getElementById('zip-input').value.trim();
   if (zip.length !== 5) return;
   const res = document.getElementById('results');
-  res.innerHTML = '<div class="loader">🔍 Looking up live FFIEC census tract data...</div>';
+  document.getElementById('farm-card-container').innerHTML = '';
+  res.innerHTML = '<div class="loader">🔍 Looking up live census tract data...</div>';
   try {
     const response = await fetch(`${PROXY_URL}?zip=${zip}`);
     if (!response.ok) throw new Error('API error');
     const data = await response.json();
-    if (!data || !data.length) { renderNotFound(zip); return; }
+    if (!data || !data.length || data.error) { renderNotFound(zip); return; }
+    const ami  = data[0]?.area_md_fam_income || 0;
+    const city = data[0]?.city || zip;
+    renderFarmCard(zip, city, ami);
     renderResults(zip, data);
   } catch (err) {
     res.innerHTML = `
       <div class="api-error">
-        <h3>⚠️ Could not reach FFIEC data</h3>
-        <p>Check your internet connection or try again in a moment.<br/>
-        You can also look up this ZIP directly at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">FFIEC.gov →</a></p>
+        <h3>⚠️ Could not reach census data</h3>
+        <p>Check your connection or try again.<br/>
+        You can also look up at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">FFIEC.gov →</a></p>
       </div>`;
   }
 }
@@ -611,65 +795,58 @@ function renderNotFound(zip) {
   document.getElementById('results').innerHTML = `
     <div class="not-found">
       <div style="font-size:36px;margin-bottom:10px">🔍</div>
-      <h3>No census tract data found for ZIP ${zip}</h3>
-      <p>This ZIP may not have LMI tract designations, or may be outside covered areas.<br/><br/>
-        <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">Check FFIEC directly →</a>
+      <h3>No LMI tract data found for ZIP ${zip}</h3>
+      <p>This area may have no LMI tracts, or try checking directly:<br/><br/>
+        <a href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">FFIEC Census Tract Lookup →</a>
       </p>
     </div>`;
 }
 
 function renderResults(zip, tracts) {
   const city = tracts[0]?.city || zip;
-  let tractHTML = '';
-  let anyLMI = false;
+  const ami  = tracts[0]?.area_md_fam_income || 0;
+  const low      = tracts.filter(t => (t.tract_md_fam_income / t.area_md_fam_income) < 0.50).length;
+  const moderate = tracts.filter(t => { const r = t.tract_md_fam_income / t.area_md_fam_income; return r >= 0.50 && r < 0.80; }).length;
 
-  tracts.forEach(t => {
-    const tractIncome = t.tract_md_fam_income || t.tractMdFamIncome || 0;
-    const ami = t.area_md_fam_income || t.areaMdFamIncome || 1;
-    const tractId = t.tract_id || t.tractId || t.geoid || '';
-    const tractCity = t.county_name || t.countyName || city;
-    const lmi = (tractIncome / ami) < 0.80;
-    if (lmi) anyLMI = true;
-    if (!tractIncome || !ami) return;
-    const cat = getCategory(tractIncome, ami);
-    const pct = Math.round((tractIncome / ami) * 100);
-
-    tractHTML += `
-      <div class="tract-card" style="border-left:4px solid ${cat.color}">
-        <div class="tract-top">
-          <div><span class="lmi-badge" style="background:${cat.bg};color:${cat.color}">${cat.label}</span>
-          <div class="tract-id">Census Tract ${tractId}</div></div>
-          <div><div class="pct-num" style="color:${cat.color}">${pct}%</div><div class="pct-label">of AMI</div></div>
-        </div>
-        <div class="income-row">
-          <span>Tract Median Family Income: <strong>$${tractIncome.toLocaleString()}</strong></span>
-          <span>Area Median Income (AMI): <strong>$${ami.toLocaleString()}</strong></span>
-        </div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct,100)}%;background:${cat.color}"></div></div>
-        <div class="legend">
-          <span style="color:#dc2626">● Low &lt;50%</span>
-          <span style="color:#d97706">● Moderate 50–80%</span>
-          <span style="color:#059669">● Middle 80–120%</span>
-        </div>
-        ${lmi ? `<div class="cra-badge">✅ <strong>CRA/HMDA Eligible</strong> — This tract qualifies for LMI credit under the Community Reinvestment Act.</div>` : ''}
-      </div>`;
-  });
-
-  if (!tractHTML) { renderNotFound(zip); return; }
+  const tractHTML = tracts.map(t => {
+    const cat = getCategory(t.tract_md_fam_income, t.area_md_fam_income);
+    const pct = Math.round((t.tract_md_fam_income / t.area_md_fam_income) * 100);
+    const tractNum = t.county_name ? t.county_name.split(';')[0].replace('Census Tract ','') : t.tract_id;
+    return `
+      <tr>
+        <td><span style="font-size:12px;color:#64748b">Tract ${tractNum}</span></td>
+        <td><span class="lmi-badge" style="background:${cat.bg};color:${cat.color}">${cat.label}</span></td>
+        <td><strong>$${t.tract_md_fam_income.toLocaleString()}</strong></td>
+        <td class="bar-cell">
+          <span class="pct-label" style="color:${cat.color}">${pct}%</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct,100)}%;background:${cat.color}"></div></div>
+        </td>
+        <td style="font-size:11px;color:#94a3b8">${t.tract_id}</td>
+      </tr>`;
+  }).join('');
 
   document.getElementById('results').innerHTML = `
     <div class="result-header">
       <div><span class="result-city">${city}</span><span class="result-zip">ZIP ${zip}</span></div>
-      ${anyLMI ? `<button class="save-btn" onclick="saveZip('${zip}','${city}','')">+ Save to Prospect List</button>` : ''}
+      <button class="save-btn" onclick="saveZip('${zip}','${city}','')">+ Save to Prospect List</button>
     </div>
-    ${tractHTML}
+    <div class="result-meta">Area Median Income (AMI): <strong>$${ami.toLocaleString()}</strong> · Source: US Census Bureau ACS 2022 · Showing all LMI tracts in county</div>
+    <div class="summary-grid">
+      <div class="summary-card"><div class="summary-num" style="color:#1a3a5c">${tracts.length}</div><div class="summary-label">Total LMI Tracts</div></div>
+      <div class="summary-card"><div class="summary-num" style="color:#dc2626">${low}</div><div class="summary-label">Low Income (&lt;50% AMI)</div></div>
+      <div class="summary-card"><div class="summary-num" style="color:#d97706">${moderate}</div><div class="summary-label">Moderate (50–80% AMI)</div></div>
+    </div>
+    <div class="tract-table-wrap">
+      <table class="tract-table">
+        <thead><tr><th>Census Tract</th><th>LMI Category</th><th>Tract Median Income</th><th>% of AMI</th><th>Tract ID</th></tr></thead>
+        <tbody>${tractHTML}</tbody>
+      </table>
+    </div>
     <div class="card">
-      <div class="links-title">Cross-Reference Active Listings</div>
+      <div class="links-title">Verify Individual Properties</div>
       <div class="links-row">
-        <a class="link-btn zillow" href="https://www.zillow.com/homes/${zip}_rb/" target="_blank">🏠 Zillow</a>
-        <a class="link-btn redfin" href="https://www.redfin.com/zipcode/${zip}" target="_blank">🔴 Redfin</a>
-        <a class="link-btn ffiec"  href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">📋 FFIEC Official</a>
-        <a class="link-btn hud"    href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>
+        <a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#${zip}" target="_blank">📋 FFIEC Tract Lookup</a>
+        <a class="link-btn hud"   href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>
       </div>
     </div>`;
 }
