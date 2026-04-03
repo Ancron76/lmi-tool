@@ -1338,7 +1338,7 @@ async function deleteUserFromDB(id){await db.collection('users').doc(id).delete(
 
 // ── PROSPECTS ─────────────────────────────────────────────────
 async function fetchMyProspects(){try{const snap=await db.collection('prospects').where('userId','==',currentUser.id).get();const docs=snap.docs.map(d=>({docId:d.id,...d.data()}));docs.sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));return docs;}catch(e){return[];}}
-async function fetchAllProspects(){try{const snap=await db.collection('prospects').get();const docs=snap.docs.map(d=>({docId:d.id,...d.data()}));docs.sort((a,b)=>new Date(b.savedAt)-new new Date(a.savedAt));return docs;}catch(e){return[];}}
+async function fetchAllProspects(){try{const snap=await db.collection('prospects').get();const docs=snap.docs.map(d=>({docId:d.id,...d.data()}));docs.sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));return docs;}catch(e){return[];}}
 
 // ── REALTORS ──────────────────────────────────────────────────
 async function fetchMyRealtors(){try{const snap=await db.collection('realtors').where('userId','==',currentUser.id).get();const docs=snap.docs.map(d=>({docId:d.id,...d.data()}));docs.sort((a,b)=>a.name.localeCompare(b.name));return docs;}catch(e){return[];}}
