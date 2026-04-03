@@ -675,15 +675,16 @@ function renderSaved() {
       : '';
     return `
       <div class="saved-row">
-        <div>
-          <span class="saved-zip">${s.zip}</span>
+        <div style="cursor:pointer;flex:1" onclick="quickSearch('${s.zip}')" title="Click to re-run search">
+          <span class="saved-zip" style="text-decoration:underline;text-decoration-color:#0ed2c8">${s.zip}</span>
           <span class="saved-city">${s.city}</span>
           <span class="lmi-tag">LMI ✓</span>
           ${borrowerTag}
+          <span style="font-size:11px;color:#0ed2c8;margin-left:6px">↗ search</span>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <span class="saved-date">${new Date(s.savedAt).toLocaleDateString()}</span>
-          <button class="remove-btn" onclick="deleteSaved('${s.docId}')">✕</button>
+          <button class="remove-btn" onclick="event.stopPropagation();deleteSaved('${s.docId}')">✕</button>
         </div>
       </div>`;
   }).join('');
