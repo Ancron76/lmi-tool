@@ -784,6 +784,39 @@
       <button class="realtor-picker-close" onclick="closeRealtorPicker()">✕</button>
     </div>
     <input type="text" class="realtor-picker-search" id="realtor-picker-search" placeholder="Search realtors..." oninput="renderRealtorPicker()" />
+
+    <!-- QUICK ADD REALTOR -->
+    <div id="quick-add-realtor-toggle" style="margin-bottom:12px">
+      <button onclick="toggleQuickAdd()" style="background:#f0f4ff;color:#4f46e5;border:2px dashed #c7d2fe;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;text-align:left">
+        ➕ Add a new realtor quickly
+      </button>
+    </div>
+    <div id="quick-add-realtor-form" style="display:none;background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #e2e8f0">
+      <div style="font-size:12px;font-weight:700;color:#4f46e5;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.4px">Quick Add Realtor</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Full Name *</label>
+          <input type="text" id="qa-name" placeholder="Jane Doe" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Brokerage *</label>
+          <input type="text" id="qa-brokerage" placeholder="Keller Williams" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Phone</label>
+          <input type="tel" id="qa-phone" placeholder="(559) 555-0100" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Email</label>
+          <input type="email" id="qa-email" placeholder="jane@kw.com" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="toggleQuickAdd()" style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Cancel</button>
+        <button onclick="quickAddRealtor()" style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Save & Select</button>
+      </div>
+    </div>
+
     <div class="realtor-picker-list" id="realtor-picker-list"></div>
     <div class="realtor-picker-footer">
       <span class="realtor-picker-count" id="realtor-picker-count">0 selected</span>
@@ -791,9 +824,54 @@
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
+function toggleQuickAdd() {
+  const form = document.getElementById('quick-add-realtor-form');
+  const btn  = document.getElementById('quick-add-realtor-toggle');
+  const showing = form.style.display !== 'none';
+  form.style.display = showing ? 'none' : 'block';
+  if (!showing) document.getElementById('qa-name').focus();
+}
 
+async function quickAddRealtor() {
+  const name      = document.getElementById('qa-name').value.trim();
+  const brokerage = document.getElementById('qa-brokerage').value.trim();
+  const phone     = document.getElementById('qa-phone').value.trim();
+  const email     = document.getElementById('qa-email').value.trim();
+
+  if (!name)      { showToast('⚠️ Please enter a realtor name'); return; }
+  if (!brokerage) { showToast('⚠️ Please enter a brokerage'); return; }
+
+  const data = {
+    userId: currentUser.id, name, brokerage, phone, email,
+    license:'', area:'', notes:'', createdAt: new Date().toISOString()
+  };
+
+  const tempId = 'pending-' + Date.now();
+  cachedRealtors.push({ docId: tempId, ...data });
+  cachedRealtors.sort((a,b) => a.name.localeCompare(b.name));
+
+  // Auto-select the new realtor
+  pendingRealtorAssignments.push(tempId);
+
+  // Clear the form and hide it
+  ['qa-name','qa-brokerage','qa-phone','qa-email'].forEach(id => document.getElementById(id).value='');
+  toggleQuickAdd();
+  renderRealtorPicker();
+  showToast(`✅ ${name} added and selected`);
+
+  // Save to Firebase in background and update docId
+  try {
+    const ref = await db.collection('realtors').add(data);
+    const idx = cachedRealtors.findIndex(r => r.docId === tempId);
+    if (idx > -1) {
+      cachedRealtors[idx].docId = ref.id;
+      // Update pending selection with real docId
+      const selIdx = pendingRealtorAssignments.indexOf(tempId);
+      if (selIdx > -1) pendingRealtorAssignments[selIdx] = ref.id;
+    }
+  } catch(e) { console.error('Quick add realtor error:', e); }
+}
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDVfulexC0MEzN4FZcqKVxfSG2HQ0srI90",
