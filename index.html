@@ -186,6 +186,30 @@
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
 
+  /* SETTINGS PANEL */
+  .settings-overlay { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 200; transition: right 0.3s ease; display: flex; flex-direction: column; }
+  .settings-overlay.open { right: 0; }
+  .settings-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 199; display: none; }
+  .settings-backdrop.open { display: block; }
+  .settings-header { background: linear-gradient(135deg, #1f2937, #374151); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .settings-title { color: white; font-size: 17px; font-weight: 800; }
+  .settings-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .settings-body { flex: 1; overflow-y: auto; padding: 24px; }
+  .settings-user-info { background: #f0fdfa; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; border: 1px solid #99f6e4; }
+  .settings-user-name { font-size: 15px; font-weight: 700; color: #1f2937; }
+  .settings-user-meta { font-size: 12px; color: #64748b; margin-top: 3px; }
+  .settings-section { margin-bottom: 28px; }
+  .settings-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+  .settings-item { display: flex; flex-direction: column; gap: 10px; }
+  .settings-input { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; }
+  .settings-input:focus { border-color: #0ed2c8; }
+  .settings-save-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+  .settings-save-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+  .settings-error { color: #dc2626; font-size: 12px; display: none; }
+  .settings-success { color: #059669; font-size: 12px; display: none; }
+  .settings-coming-soon { background: #f8fafc; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #94a3b8; border: 1px dashed #e2e8f0; text-align: center; }
+
+  /* MODALS */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
@@ -200,11 +224,10 @@
   .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
   .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   .existing-branch-row:last-child { border-bottom: none; }
-  .pw-form { display: flex; flex-direction: column; gap: 14px; }
-  .pw-form input { width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
+  .pw-form { display: flex; flex-direction: column; gap: 10px; }
+  .pw-form input { padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
   .pw-form input:focus { border-color: #0ed2c8; }
   .pw-error { color: #dc2626; font-size: 12px; display: none; }
-  .pw-success { color: #059669; font-size: 12px; display: none; }
   .toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
 
   @media (max-width: 640px) {
@@ -214,6 +237,7 @@
     .header-title { font-size: 16px; }
     .modal-form { grid-template-columns: 1fr; }
     .modal-form .full { grid-column: span 1; }
+    .settings-overlay { width: 100%; right: -100%; }
   }
 </style>
 </head>
@@ -259,8 +283,8 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="hdr-btn" onclick="openChangePasswordModal()" title="Change my password">🔑 Password</button>
-      <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">⚙️ Admin</span>
+      <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
+      <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">🛡 Admin</span>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
     </div>
   </div>
@@ -305,7 +329,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="hdr-btn" onclick="openChangePasswordModal()" title="Change my password">🔑 Password</button>
+      <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
       <button class="hdr-btn teal" onclick="goApp()">← Back to Tool</button>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
     </div>
@@ -342,6 +366,48 @@
   </div>
 </div>
 
+<!-- SETTINGS PANEL -->
+<div class="settings-backdrop" id="settings-backdrop" onclick="closeSettings()"></div>
+<div class="settings-overlay" id="settings-panel">
+  <div class="settings-header">
+    <div class="settings-title">⚙️ Settings</div>
+    <button class="settings-close" onclick="closeSettings()">✕ Close</button>
+  </div>
+  <div class="settings-body">
+
+    <!-- USER INFO -->
+    <div class="settings-user-info">
+      <div class="settings-user-name" id="settings-user-name">—</div>
+      <div class="settings-user-meta" id="settings-user-meta">—</div>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <div class="settings-section">
+      <div class="settings-section-title">🔑 Change Password</div>
+      <div class="settings-item">
+        <input type="password" class="settings-input" id="s-pw-current" placeholder="Current password" />
+        <input type="password" class="settings-input" id="s-pw-new" placeholder="New password (min 8 characters)" />
+        <input type="password" class="settings-input" id="s-pw-confirm" placeholder="Confirm new password" />
+        <div class="settings-error" id="s-pw-error"></div>
+        <div class="settings-success" id="s-pw-success"></div>
+        <button class="settings-save-btn" onclick="saveSettingsPassword()">Update Password</button>
+      </div>
+    </div>
+
+    <!-- COMING SOON SECTIONS -->
+    <div class="settings-section">
+      <div class="settings-section-title">🎨 Preferences</div>
+      <div class="settings-coming-soon">More customization options coming in future updates.</div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">🔔 Notifications</div>
+      <div class="settings-coming-soon">Notification preferences coming soon.</div>
+    </div>
+
+  </div>
+</div>
+
 <!-- BRANCH MODAL -->
 <div class="modal-overlay" id="branch-modal">
   <div class="modal-box">
@@ -356,25 +422,6 @@
     <div class="form-error" id="branch-error"></div>
     <div class="existing-branches" id="existing-branches"></div>
     <div class="modal-actions"><button class="modal-cancel" onclick="closeBranchModal()">Done</button></div>
-  </div>
-</div>
-
-<!-- CHANGE PASSWORD MODAL -->
-<div class="modal-overlay" id="pw-modal">
-  <div class="modal-box">
-    <div class="modal-title">🔑 Change Password</div>
-    <div class="modal-sub" id="pw-modal-sub">Update your login password</div>
-    <div class="pw-form">
-      <input type="password" id="pw-current" placeholder="Current password" />
-      <input type="password" id="pw-new" placeholder="New password (min 8 characters)" />
-      <input type="password" id="pw-confirm" placeholder="Confirm new password" />
-      <div class="pw-error" id="pw-error"></div>
-      <div class="pw-success" id="pw-success"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closePwModal()">Cancel</button>
-      <button class="modal-save" onclick="savePassword()">Update Password</button>
-    </div>
   </div>
 </div>
 
@@ -507,25 +554,28 @@ window.onload = async () => {
   }
 };
 
-// ── CHANGE PASSWORD (own password) ────────────────────────────
-function openChangePasswordModal() {
-  ['pw-current','pw-new','pw-confirm'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('pw-error').style.display = 'none';
-  document.getElementById('pw-success').style.display = 'none';
-  document.getElementById('pw-modal-sub').textContent = `Changing password for ${currentUser.name}`;
-  document.getElementById('pw-modal').classList.add('open');
+// ── SETTINGS PANEL ────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settings-panel').classList.add('open');
+  document.getElementById('settings-backdrop').classList.add('open');
+  document.getElementById('settings-user-name').textContent = currentUser.name;
+  document.getElementById('settings-user-meta').textContent = `${currentUser.email} · ${currentUser.role === 'admin' ? 'Admin' : 'MLO'} · ${currentUser.region}`;
+  ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('s-pw-error').style.display = 'none';
+  document.getElementById('s-pw-success').style.display = 'none';
 }
 
-function closePwModal() {
-  document.getElementById('pw-modal').classList.remove('open');
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+  document.getElementById('settings-backdrop').classList.remove('open');
 }
 
-async function savePassword() {
-  const current  = document.getElementById('pw-current').value;
-  const newPw    = document.getElementById('pw-new').value;
-  const confirm  = document.getElementById('pw-confirm').value;
-  const errEl    = document.getElementById('pw-error');
-  const succEl   = document.getElementById('pw-success');
+async function saveSettingsPassword() {
+  const current = document.getElementById('s-pw-current').value;
+  const newPw   = document.getElementById('s-pw-new').value;
+  const confirm = document.getElementById('s-pw-confirm').value;
+  const errEl   = document.getElementById('s-pw-error');
+  const succEl  = document.getElementById('s-pw-success');
   errEl.style.display = 'none';
   succEl.style.display = 'none';
 
@@ -550,7 +600,8 @@ async function savePassword() {
 
   succEl.textContent = '✅ Password updated successfully!';
   succEl.style.display = 'block';
-  setTimeout(() => closePwModal(), 1500);
+  ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(id => document.getElementById(id).value = '');
+  setTimeout(() => { succEl.style.display = 'none'; }, 3000);
   showToast('✅ Password updated');
 }
 
@@ -574,16 +625,8 @@ async function saveAdminPassword() {
   const confirm = document.getElementById('admin-pw-confirm').value.trim();
   const errEl   = document.getElementById('admin-pw-error');
   errEl.style.display = 'none';
-
-  if (newPw.length < 6) {
-    errEl.textContent = 'Password must be at least 6 characters.';
-    errEl.style.display = 'block'; return;
-  }
-  if (newPw !== confirm) {
-    errEl.textContent = 'Passwords do not match.';
-    errEl.style.display = 'block'; return;
-  }
-
+  if (newPw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
   const user = cachedUsers.find(u => u.id === adminPwTargetId);
   user.password = newPw;
   await saveUser(user);
