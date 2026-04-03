@@ -133,7 +133,6 @@
   .ffiec { background: #1f2937; color: white; }
   .hud   { background: #0ed2c8; color: #1f2937; }
 
-  /* SAVED PROSPECTS */
   .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
   .saved-row:last-child { border-bottom: none; }
   .saved-zip { font-weight: 700; color: #1f2937; }
@@ -305,7 +304,7 @@
     <div id="results"></div>
     <div class="card">
       <div class="card-title">📌 Saved Prospect ZIPs</div>
-      <div id="saved-list"><div class="empty-saved">Loading...</div></div>
+      <div id="saved-list"><div class="empty-saved">No ZIPs saved yet. Search a ZIP and click Save.</div></div>
     </div>
   </div>
 </div>
@@ -359,8 +358,6 @@
       </div>
       <div id="user-table-wrap"></div>
     </div>
-
-    <!-- ADMIN PROSPECTS VIEW -->
     <div class="admin-card">
       <div class="admin-card-header">
         <div class="admin-card-title">📌 Team Saved Prospects</div>
@@ -461,7 +458,7 @@ const DEFAULT_ADMIN = {
   active: true, branches: [], created: new Date().toLocaleDateString()
 };
 
-// ── FIREBASE USER STORE ───────────────────────────────────────
+// ── USER STORE ────────────────────────────────────────────────
 async function getUsers() {
   try {
     const snapshot = await db.collection('users').get();
@@ -484,50 +481,31 @@ async function deleteUserFromDB(id) {
   await db.collection('users').doc(id).delete();
 }
 
-// ── FIREBASE PROSPECTS STORE (Phase 1) ────────────────────────
-async function getSavedProspects(userId) {
+// ── PROSPECTS STORE ───────────────────────────────────────────
+async function fetchMyProspects() {
   try {
-    const snapshot = await db.collection('prospects')
-      .where('userId', '==', userId)
-      .orderBy('savedAt', 'desc')
+    const snap = await db.collection('prospects')
+      .where('userId', '==', currentUser.id)
       .get();
-    return snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+    const docs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    docs.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+    return docs;
   } catch (e) { return []; }
 }
 
-async function getAllProspects() {
+async function fetchAllProspects() {
   try {
-    const snapshot = await db.collection('prospects').orderBy('savedAt', 'desc').get();
-    return snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+    const snap = await db.collection('prospects').get();
+    const docs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    docs.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+    return docs;
   } catch (e) { return []; }
-}
-
-async function saveProspect(zip, city) {
-  const existing = await db.collection('prospects')
-    .where('userId', '==', currentUser.id)
-    .where('zip', '==', zip)
-    .get();
-  if (!existing.empty) {
-    await existing.docs[0].ref.update({ savedAt: new Date().toISOString(), city });
-  } else {
-    await db.collection('prospects').add({
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRegion: currentUser.region,
-      zip, city,
-      savedAt: new Date().toISOString()
-    });
-  }
-}
-
-async function removeProspect(docId) {
-  await db.collection('prospects').doc(docId).delete();
 }
 
 let currentUser = null;
 let branchTargetId = null;
 let cachedUsers = [];
-let cachedProspects = [];
+let cachedProspects = []; // ← in-memory cache, never shows Loading during search
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function tryLogin() {
@@ -546,7 +524,9 @@ async function tryLogin() {
     document.getElementById('app-screen').style.display = 'block';
     if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
     renderBranchShortcuts();
-    await loadAndRenderSaved();
+    // Load prospects once on login — no flash during searches
+    cachedProspects = await fetchMyProspects();
+    renderSaved();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -554,6 +534,7 @@ async function tryLogin() {
 
 function logout() {
   currentUser = null;
+  cachedProspects = [];
   sessionStorage.removeItem('g1_session');
   ['app-screen','admin-screen'].forEach(id => document.getElementById(id).style.display = 'none');
   document.getElementById('login-screen').style.display = 'flex';
@@ -576,6 +557,7 @@ function goApp() {
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
   renderBranchShortcuts();
+  renderSaved(); // render from cache — no fetch, no flash
 }
 
 window.onload = async () => {
@@ -588,17 +570,12 @@ window.onload = async () => {
     document.getElementById('app-screen').style.display = 'block';
     if (currentUser.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
     renderBranchShortcuts();
-    await loadAndRenderSaved();
+    cachedProspects = await fetchMyProspects();
+    renderSaved();
   }
 };
 
 // ── SAVED PROSPECTS ───────────────────────────────────────────
-async function loadAndRenderSaved() {
-  document.getElementById('saved-list').innerHTML = '<div class="empty-saved">Loading...</div>';
-  cachedProspects = await getSavedProspects(currentUser.id);
-  renderSaved();
-}
-
 function renderSaved() {
   const el = document.getElementById('saved-list');
   if (!el) return;
@@ -621,25 +598,66 @@ function renderSaved() {
 }
 
 async function saveZip(zip, city) {
-  await saveProspect(zip, city);
-  cachedProspects = await getSavedProspects(currentUser.id);
+  // Optimistic update — update cache immediately, no Loading flash
+  const existing = cachedProspects.find(p => p.zip === zip);
+  const now = new Date().toISOString();
+  if (existing) {
+    existing.savedAt = now;
+    existing.city = city;
+  } else {
+    cachedProspects.unshift({
+      docId: 'pending-' + Date.now(),
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRegion: currentUser.region,
+      zip, city, savedAt: now
+    });
+  }
   renderSaved();
   const btn = document.querySelector('.save-btn');
   if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
   showToast(`📌 ${zip} saved to prospects`);
+
+  // Write to Firebase in background then refresh cache with real docIds
+  try {
+    const existingSnap = await db.collection('prospects')
+      .where('userId', '==', currentUser.id)
+      .where('zip', '==', zip)
+      .get();
+    if (!existingSnap.empty) {
+      await existingSnap.docs[0].ref.update({ savedAt: now, city });
+    } else {
+      await db.collection('prospects').add({
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userRegion: currentUser.region,
+        zip, city, savedAt: now
+      });
+    }
+    // Silently refresh cache in background to get real docIds
+    cachedProspects = await fetchMyProspects();
+    renderSaved();
+  } catch (e) { console.error('Save error:', e); }
 }
 
 async function deleteSaved(docId) {
-  await removeProspect(docId);
-  cachedProspects = cachedProspects.filter(s => s.docId !== docId);
+  // Optimistic update — remove from cache immediately
+  cachedProspects = cachedProspects.filter(p => p.docId !== docId);
   renderSaved();
+  // Delete from Firebase in background
+  try {
+    if (!docId.startsWith('pending-')) {
+      await db.collection('prospects').doc(docId).delete();
+    }
+  } catch (e) { console.error('Delete error:', e); }
 }
 
-// ── ADMIN PROSPECTS VIEW ──────────────────────────────────────
+// ── ADMIN PROSPECTS ───────────────────────────────────────────
 async function renderAdminProspects() {
   const listEl = document.getElementById('admin-prospect-list');
+  if (!listEl) return;
   listEl.innerHTML = '<div class="empty-saved">Loading...</div>';
-  const all = await getAllProspects();
+  const all = await fetchAllProspects();
   const filterVal = document.getElementById('prospect-filter')?.value || 'all';
   const filtered = filterVal === 'all' ? all : all.filter(p => p.userId === filterVal);
   if (!filtered.length) { listEl.innerHTML = '<div class="empty-saved">No saved prospects yet.</div>'; return; }
@@ -659,7 +677,7 @@ function populateProspectFilter() {
   const select = document.getElementById('prospect-filter');
   if (!select) return;
   select.innerHTML = '<option value="all">All Users</option>';
-  cachedUsers.filter(u => u.role !== 'admin' || u.id === 'admin-aaron').forEach(u => {
+  cachedUsers.forEach(u => {
     const opt = document.createElement('option');
     opt.value = u.id;
     opt.textContent = u.name;
@@ -1076,6 +1094,7 @@ async function doSearch() {
   const res = document.getElementById('results');
   document.getElementById('farm-card-container').innerHTML = '';
   res.innerHTML = '<div class="loader">🔍 Looking up live census tract data...</div>';
+  // NOTE: saved list is NOT touched here — no flash
   try {
     const response = await fetch(`${PROXY_URL}?zip=${zip}`);
     if (!response.ok) throw new Error('API error');
