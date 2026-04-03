@@ -106,6 +106,50 @@
   .adj-select option { background: #1f2937; color: white; }
   .farm-note { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 14px; line-height: 1.5; }
 
+  /* BORROWER QUALIFIER */
+  .qualifier-trigger { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .qualifier-trigger-left { display: flex; align-items: center; gap: 12px; }
+  .qualifier-trigger-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0ed2c8, #06b6aa); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .qualifier-trigger-title { font-size: 14px; font-weight: 700; color: #1f2937; }
+  .qualifier-trigger-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .qualifier-open-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .qualifier-open-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+
+  .qualifier-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #0ed2c8; display: none; }
+  .qualifier-card.open { display: block; }
+  .qualifier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .qualifier-title { font-size: 16px; font-weight: 800; color: #1f2937; }
+  .qualifier-close { background: #f1f5f9; color: #64748b; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .qualifier-input-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
+  .qualifier-input-wrap { flex: 1; }
+  .qualifier-input-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+  .qualifier-input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
+  .qualifier-input:focus { border-color: #0ed2c8; }
+  .qualifier-calc-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .qualifier-calc-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+
+  .qualifier-result { display: none; }
+  .qualifier-result.show { display: block; }
+  .qual-badge-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .qual-category-badge { font-size: 15px; font-weight: 800; border-radius: 10px; padding: 10px 20px; }
+  .qual-pct-label { font-size: 13px; color: #64748b; }
+  .qual-pct-bar-wrap { flex: 1; min-width: 120px; }
+  .qual-pct-bar-track { background: #e2e8f0; border-radius: 99px; height: 10px; overflow: hidden; }
+  .qual-pct-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+  .qual-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .qual-stat { background: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; text-align: center; }
+  .qual-stat-num { font-size: 20px; font-weight: 900; color: #1f2937; }
+  .qual-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+  .qual-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .qual-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.15s; }
+  .qual-link:hover { opacity: 0.85; }
+  .qual-save-row { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; }
+  .qual-save-input { flex: 1; min-width: 180px; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
+  .qual-save-input:focus { border-color: #0ed2c8; }
+  .qual-save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .qual-save-btn:hover { background: #dcfce7; }
+  .qual-note { font-size: 11px; color: #94a3b8; margin-top: 12px; line-height: 1.5; }
+
   .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
   .result-city { font-size: 24px; font-weight: 800; color: #1f2937; }
   .result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
@@ -138,6 +182,7 @@
   .saved-zip { font-weight: 700; color: #1f2937; }
   .saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
   .lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+  .saved-borrower-tag { font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; font-weight: 700; }
   .saved-mlo { color: #94a3b8; font-size: 11px; margin-left: 8px; font-style: italic; }
   .saved-date { font-size: 12px; color: #94a3b8; }
   .remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; }
@@ -226,13 +271,14 @@
   .toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
 
   @media (max-width: 640px) {
-    .add-form, .summary-grid, .farm-stats, .adj-grid { grid-template-columns: 1fr 1fr; }
+    .add-form, .summary-grid, .farm-stats, .adj-grid, .qual-stats { grid-template-columns: 1fr 1fr; }
     .admin-stats { grid-template-columns: 1fr 1fr; }
     .header { padding: 14px 16px; }
     .header-title { font-size: 16px; }
     .modal-form { grid-template-columns: 1fr; }
     .modal-form .full { grid-column: span 1; }
     .settings-overlay { width: 100%; right: -100%; }
+    .qualifier-input-row { flex-direction: column; }
   }
 </style>
 </head>
@@ -284,6 +330,8 @@
     </div>
   </div>
   <div class="main">
+
+    <!-- SEARCH CARD -->
     <div class="card">
       <div class="card-title">Enter a ZIP Code to Check LMI Status</div>
       <div class="card-sub">Live Census Bureau data — works for any ZIP code in the US.</div>
@@ -300,12 +348,53 @@
       </div>
       <div id="branch-shortcuts-container"></div>
     </div>
-<div class="card">
+
+    <!-- SAVED PROSPECTS -->
+    <div class="card">
       <div class="card-title">📌 Saved Prospect ZIPs</div>
       <div id="saved-list"><div class="empty-saved">No ZIPs saved yet. Search a ZIP and click Save.</div></div>
     </div>
+
+    <!-- FARM CARD -->
     <div id="farm-card-container"></div>
+
+    <!-- BORROWER QUALIFIER TRIGGER -->
+    <div id="qualifier-trigger" style="display:none">
+      <div class="qualifier-trigger">
+        <div class="qualifier-trigger-left">
+          <div class="qualifier-trigger-icon">💰</div>
+          <div>
+            <div class="qualifier-trigger-title">Borrower Income Qualifier</div>
+            <div class="qualifier-trigger-sub">Enter a borrower's income to check LMI eligibility and max home price</div>
+          </div>
+        </div>
+        <button class="qualifier-open-btn" onclick="openQualifier()">+ Qualify a Borrower</button>
+      </div>
+    </div>
+
+    <!-- BORROWER QUALIFIER CARD -->
+    <div class="qualifier-card" id="qualifier-card">
+      <div class="qualifier-header">
+        <div class="qualifier-title">💰 Borrower Income Qualifier</div>
+        <button class="qualifier-close" onclick="closeQualifier()">✕ Close</button>
+      </div>
+      <div class="qualifier-input-row">
+        <div class="qualifier-input-wrap">
+          <label class="qualifier-input-label">Borrower Annual Gross Income</label>
+          <input type="text" class="qualifier-input" id="borrower-income" placeholder="e.g. 55000" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter') calcQualifier()" />
+        </div>
+        <div class="qualifier-input-wrap">
+          <label class="qualifier-input-label">Borrower Name (optional)</label>
+          <input type="text" class="qualifier-input" id="borrower-name" placeholder="e.g. John Smith" />
+        </div>
+        <button class="qualifier-calc-btn" onclick="calcQualifier()">Calculate</button>
+      </div>
+      <div class="qualifier-result" id="qualifier-result"></div>
+    </div>
+
+    <!-- RESULTS -->
     <div id="results"></div>
+
   </div>
 </div>
 
@@ -484,9 +573,7 @@ async function deleteUserFromDB(id) {
 // ── PROSPECTS STORE ───────────────────────────────────────────
 async function fetchMyProspects() {
   try {
-    const snap = await db.collection('prospects')
-      .where('userId', '==', currentUser.id)
-      .get();
+    const snap = await db.collection('prospects').where('userId', '==', currentUser.id).get();
     const docs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
     docs.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
     return docs;
@@ -505,7 +592,7 @@ async function fetchAllProspects() {
 let currentUser = null;
 let branchTargetId = null;
 let cachedUsers = [];
-let cachedProspects = []; // ← in-memory cache, never shows Loading during search
+let cachedProspects = [];
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function tryLogin() {
@@ -524,7 +611,6 @@ async function tryLogin() {
     document.getElementById('app-screen').style.display = 'block';
     if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
     renderBranchShortcuts();
-    // Load prospects once on login — no flash during searches
     cachedProspects = await fetchMyProspects();
     renderSaved();
   } else {
@@ -557,7 +643,7 @@ function goApp() {
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
   renderBranchShortcuts();
-  renderSaved(); // render from cache — no fetch, no flash
+  renderSaved();
 }
 
 window.onload = async () => {
@@ -583,73 +669,157 @@ function renderSaved() {
     el.innerHTML = '<div class="empty-saved">No ZIPs saved yet. Search a ZIP and click Save.</div>';
     return;
   }
-  el.innerHTML = cachedProspects.map(s => `
-    <div class="saved-row">
-      <div>
-        <span class="saved-zip">${s.zip}</span>
-        <span class="saved-city">${s.city}</span>
-        <span class="lmi-tag">LMI ✓</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span class="saved-date">${new Date(s.savedAt).toLocaleDateString()}</span>
-        <button class="remove-btn" onclick="deleteSaved('${s.docId}')">✕</button>
-      </div>
-    </div>`).join('');
+  el.innerHTML = cachedProspects.map(s => {
+    const borrowerTag = s.borrowerName
+      ? `<span class="saved-borrower-tag" style="background:${getBorrowerColor(s.borrowerCategory)}20;color:${getBorrowerColor(s.borrowerCategory)}">${s.borrowerName} · ${s.borrowerCategory}</span>`
+      : '';
+    return `
+      <div class="saved-row">
+        <div>
+          <span class="saved-zip">${s.zip}</span>
+          <span class="saved-city">${s.city}</span>
+          <span class="lmi-tag">LMI ✓</span>
+          ${borrowerTag}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="saved-date">${new Date(s.savedAt).toLocaleDateString()}</span>
+          <button class="remove-btn" onclick="deleteSaved('${s.docId}')">✕</button>
+        </div>
+      </div>`;
+  }).join('');
 }
 
-async function saveZip(zip, city) {
-  // Optimistic update — update cache immediately, no Loading flash
-  const existing = cachedProspects.find(p => p.zip === zip);
+function getBorrowerColor(category) {
+  if (category === 'Low Income') return '#dc2626';
+  if (category === 'Moderate Income') return '#d97706';
+  if (category === 'Middle Income') return '#059669';
+  return '#6b7280';
+}
+
+async function saveZip(zip, city, borrowerData = null) {
   const now = new Date().toISOString();
-  if (existing) {
+  const existing = cachedProspects.find(p => p.zip === zip && !p.borrowerName);
+  const prospectData = {
+    userId: currentUser.id,
+    userName: currentUser.name,
+    userRegion: currentUser.region,
+    zip, city, savedAt: now,
+    ...(borrowerData || {})
+  };
+
+  if (borrowerData) {
+    // Always add as new entry when saving with borrower
+    cachedProspects.unshift({ docId: 'pending-' + Date.now(), ...prospectData });
+  } else if (existing) {
     existing.savedAt = now;
     existing.city = city;
   } else {
-    cachedProspects.unshift({
-      docId: 'pending-' + Date.now(),
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRegion: currentUser.region,
-      zip, city, savedAt: now
-    });
+    cachedProspects.unshift({ docId: 'pending-' + Date.now(), ...prospectData });
   }
   renderSaved();
-  const btn = document.querySelector('.save-btn');
+
+  const btn = borrowerData
+    ? document.getElementById('qual-save-btn-el')
+    : document.querySelector('.save-btn');
   if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
   showToast(`📌 ${zip} saved to prospects`);
 
-  // Write to Firebase in background then refresh cache with real docIds
   try {
-    const existingSnap = await db.collection('prospects')
-      .where('userId', '==', currentUser.id)
-      .where('zip', '==', zip)
-      .get();
-    if (!existingSnap.empty) {
-      await existingSnap.docs[0].ref.update({ savedAt: now, city });
-    } else {
-      await db.collection('prospects').add({
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userRegion: currentUser.region,
-        zip, city, savedAt: now
-      });
-    }
-    // Silently refresh cache in background to get real docIds
+    await db.collection('prospects').add(prospectData);
     cachedProspects = await fetchMyProspects();
     renderSaved();
   } catch (e) { console.error('Save error:', e); }
 }
 
 async function deleteSaved(docId) {
-  // Optimistic update — remove from cache immediately
   cachedProspects = cachedProspects.filter(p => p.docId !== docId);
   renderSaved();
-  // Delete from Firebase in background
   try {
     if (!docId.startsWith('pending-')) {
       await db.collection('prospects').doc(docId).delete();
     }
   } catch (e) { console.error('Delete error:', e); }
+}
+
+// ── BORROWER QUALIFIER ────────────────────────────────────────
+function openQualifier() {
+  document.getElementById('qualifier-card').classList.add('open');
+  document.getElementById('borrower-income').focus();
+}
+
+function closeQualifier() {
+  document.getElementById('qualifier-card').classList.remove('open');
+  document.getElementById('qualifier-result').className = 'qualifier-result';
+  document.getElementById('qualifier-result').innerHTML = '';
+  document.getElementById('borrower-income').value = '';
+  document.getElementById('borrower-name').value = '';
+}
+
+function getBorrowerCategory(pctAmi) {
+  if (pctAmi < 50)  return { label: 'Low Income',      color: '#dc2626', bg: '#fef2f2', eligible: true };
+  if (pctAmi < 80)  return { label: 'Moderate Income', color: '#d97706', bg: '#fffbeb', eligible: true };
+  if (pctAmi < 120) return { label: 'Middle Income',   color: '#059669', bg: '#f0fdf4', eligible: false };
+  return                   { label: 'Upper Income',    color: '#6b7280', bg: '#f9fafb', eligible: false };
+}
+
+function calcQualifier() {
+  const incomeRaw = document.getElementById('borrower-income').value.replace(/[^0-9]/g, '');
+  const borrowerName = document.getElementById('borrower-name').value.trim();
+  if (!incomeRaw) { showToast('⚠️ Please enter a borrower income'); return; }
+  if (!currentAmi) { showToast('⚠️ Search a ZIP first to get the local AMI'); return; }
+
+  const income = parseInt(incomeRaw);
+  const pctAmi = Math.round((income / currentAmi) * 100);
+  const cat = getBorrowerCategory(pctAmi);
+
+  // Max price calculation using current farm params
+  const r = farmParams.rate / 100 / 12;
+  const n = farmParams.term * 12;
+  const factor = r / (1 - Math.pow(1 + r, -n));
+  const maxPrice = Math.round((income * (farmParams.frontEnd / 100) / 12) / factor / 1000) * 1000;
+
+  const barWidth = Math.min(pctAmi, 150);
+  const nameLabel = borrowerName ? `${borrowerName} — ` : '';
+
+  document.getElementById('qualifier-result').className = 'qualifier-result show';
+  document.getElementById('qualifier-result').innerHTML = `
+    <div class="qual-badge-row">
+      <span class="qual-category-badge" style="background:${cat.bg};color:${cat.color}">${cat.label}</span>
+      <div class="qual-pct-bar-wrap">
+        <div style="font-size:12px;color:#64748b;margin-bottom:4px">${nameLabel}$${income.toLocaleString()} · <strong style="color:${cat.color}">${pctAmi}% of AMI</strong> · ${cat.eligible ? '✅ LMI Eligible' : '❌ Not LMI Eligible'}</div>
+        <div class="qual-pct-bar-track">
+          <div class="qual-pct-bar-fill" style="width:${barWidth}%;background:${cat.color}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="qual-stats">
+      <div class="qual-stat"><div class="qual-stat-num">$${income.toLocaleString()}</div><div class="qual-stat-label">Annual Income</div></div>
+      <div class="qual-stat"><div class="qual-stat-num">${pctAmi}%</div><div class="qual-stat-label">% of Area Median Income</div></div>
+      <div class="qual-stat"><div class="qual-stat-num">$${maxPrice.toLocaleString()}</div><div class="qual-stat-label">Est. Max Home Price</div></div>
+    </div>
+    <div class="qual-links">
+      <a class="qual-link" style="background:#006aff;color:white" href="${buildZillowUrl(currentZip, maxPrice)}" target="_blank">🏠 Zillow — under $${maxPrice.toLocaleString()}</a>
+      <a class="qual-link" style="background:#cc0000;color:white" href="${buildRedfinUrl(currentZip, maxPrice)}" target="_blank">🔴 Redfin — under $${maxPrice.toLocaleString()}</a>
+      <a class="qual-link" style="background:#c0392b;color:white" href="${buildRealtorUrl(currentZip, maxPrice)}" target="_blank">🏡 Realtor.com — under $${maxPrice.toLocaleString()}</a>
+    </div>
+    <div class="qual-save-row">
+      <span style="font-size:13px;color:#64748b;font-weight:600">Save this borrower to prospects:</span>
+      <button id="qual-save-btn-el" class="qual-save-btn" onclick="saveBorrowerProspect(${income}, '${cat.label}', '${borrowerName.replace(/'/g,"\\'")}', ${maxPrice}, ${pctAmi})">
+        + Save to Prospect List
+      </button>
+    </div>
+    <div class="qual-note">⚠️ Estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Area Median Income: $${currentAmi.toLocaleString()} for ${currentCity}, ${currentZip}.</div>
+  `;
+}
+
+async function saveBorrowerProspect(income, category, borrowerName, maxPrice, pctAmi) {
+  await saveZip(currentZip, currentCity, {
+    borrowerName: borrowerName || 'Unnamed Borrower',
+    borrowerIncome: income,
+    borrowerCategory: category,
+    borrowerMaxPrice: maxPrice,
+    borrowerPctAmi: pctAmi
+  });
 }
 
 // ── ADMIN PROSPECTS ───────────────────────────────────────────
@@ -661,16 +831,22 @@ async function renderAdminProspects() {
   const filterVal = document.getElementById('prospect-filter')?.value || 'all';
   const filtered = filterVal === 'all' ? all : all.filter(p => p.userId === filterVal);
   if (!filtered.length) { listEl.innerHTML = '<div class="empty-saved">No saved prospects yet.</div>'; return; }
-  listEl.innerHTML = filtered.map(p => `
-    <div class="saved-row">
-      <div>
-        <span class="saved-zip">${p.zip}</span>
-        <span class="saved-city">${p.city}</span>
-        <span class="lmi-tag">LMI ✓</span>
-        <span class="saved-mlo">— ${p.userName} · ${p.userRegion}</span>
-      </div>
-      <span class="saved-date">${new Date(p.savedAt).toLocaleDateString()}</span>
-    </div>`).join('');
+  listEl.innerHTML = filtered.map(p => {
+    const borrowerInfo = p.borrowerName
+      ? `<span class="saved-borrower-tag" style="background:${getBorrowerColor(p.borrowerCategory)}20;color:${getBorrowerColor(p.borrowerCategory)};margin-left:8px">${p.borrowerName} · ${p.borrowerCategory} · $${p.borrowerMaxPrice?.toLocaleString()}</span>`
+      : '';
+    return `
+      <div class="saved-row">
+        <div>
+          <span class="saved-zip">${p.zip}</span>
+          <span class="saved-city">${p.city}</span>
+          <span class="lmi-tag">LMI ✓</span>
+          ${borrowerInfo}
+          <span class="saved-mlo">— ${p.userName} · ${p.userRegion}</span>
+        </div>
+        <span class="saved-date">${new Date(p.savedAt).toLocaleDateString()}</span>
+      </div>`;
+  }).join('');
 }
 
 function populateProspectFilter() {
@@ -955,8 +1131,7 @@ function calcFarmPrices(ami, params) {
 }
 
 function buildZillowUrl(zip, maxPrice) {
-  const t = Date.now();
-  return `https://www.zillow.com/homes/for_sale/${zip}_rb/${maxPrice}_price/?t=${t}`;
+  return `https://www.zillow.com/homes/for_sale/${zip}_rb/${maxPrice}_price/?t=${Date.now()}`;
 }
 function buildRedfinUrl(zip, maxPrice) {
   return `https://www.redfin.com/zipcode/${zip}/filter/max-price=${maxPrice}`;
@@ -1027,6 +1202,9 @@ function renderFarmCard(zip, city, ami) {
       </div>
       <div class="farm-note">⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower.</div>
     </div>`;
+
+  // Show borrower qualifier trigger
+  document.getElementById('qualifier-trigger').style.display = 'block';
 }
 
 function updateFarmStats() {
@@ -1093,8 +1271,9 @@ async function doSearch() {
   if (zip.length !== 5) return;
   const res = document.getElementById('results');
   document.getElementById('farm-card-container').innerHTML = '';
+  document.getElementById('qualifier-trigger').style.display = 'none';
+  closeQualifier();
   res.innerHTML = '<div class="loader">🔍 Looking up live census tract data...</div>';
-  // NOTE: saved list is NOT touched here — no flash
   try {
     const response = await fetch(`${PROXY_URL}?zip=${zip}`);
     if (!response.ok) throw new Error('API error');
