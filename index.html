@@ -2083,7 +2083,7 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 function monthlyRateFactor(annualRate,termYears){const r=annualRate/100/12,n=termYears*12;return r/(1-Math.pow(1+r,-n));}
 function calcFarmPrices(ami,params){const modIncome=Math.round(ami*(params.amiPct/100));const lowIncome=Math.round(ami*(Math.max(params.amiPct-30,20)/100));const factor=monthlyRateFactor(params.rate,params.term);const maxMod=Math.round((modIncome*(params.frontEnd/100)/12)/factor/1000)*1000;const maxLow=Math.round((lowIncome*(params.frontEnd/100)/12)/factor/1000)*1000;return{lmiIncome:modIncome,modIncome:lowIncome,maxLow,maxMod};}
 function buildZillowUrl(zip,maxPrice){return `https://www.zillow.com/homes/for_sale/${zip}_rb/${maxPrice}_price/?t=${Date.now()}`;}
-function buildRedfinUrl(zip,maxPrice){return `https://www.redfin.com/zipcode/${zip}/filter
+function buildRedfinUrl(zip,maxPrice){return `https://www.redfin.com/zipcode/${zip}/filter/max-price=${maxPrice}`;}
 /max-price=${maxPrice};} function buildRealtorUrl(zip,maxPrice){return https://www.realtor.com/realestateandhomes-search/zip/price−na−{zip}/price-na-
 zip/price−na−{maxPrice}`;}
 
