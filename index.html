@@ -353,7 +353,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── FIREBASE CONFIG ───────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyDVfulexC0MEzN4FZcqKVxfSG2HQ0srI90",
   authDomain: "lmi-prospect-finder.firebaseapp.com",
@@ -365,7 +364,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ── PROXY & DEFAULTS ──────────────────────────────────────────
 const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
 const DEFAULTS = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
 let farmParams = { ...DEFAULTS };
@@ -373,21 +371,12 @@ let currentAmi = 0;
 let currentZip = '';
 let currentCity = '';
 
-// ── DEFAULT ADMIN ─────────────────────────────────────────────
 const DEFAULT_ADMIN = {
-  id: 'admin-aaron',
-  name: 'Aaron Simonson',
-  email: 'asimonson@golden1.com',
-  password: 'G1Admin2024!',
-  role: 'admin',
-  type: 'N/A',
-  region: 'Both',
-  active: true,
-  branches: [],
-  created: new Date().toLocaleDateString()
+  id: 'admin-aaron', name: 'Aaron Simonson', email: 'asimonson@golden1.com',
+  password: 'G1Admin2024!', role: 'admin', type: 'N/A', region: 'Both',
+  active: true, branches: [], created: new Date().toLocaleDateString()
 };
 
-// ── USER STORE (Firebase) ─────────────────────────────────────
 async function getUsers() {
   try {
     const snapshot = await db.collection('users').get();
@@ -399,7 +388,6 @@ async function getUsers() {
     users.forEach(u => { if (!u.branches) u.branches = []; });
     return users;
   } catch (e) {
-    console.error('Firebase error:', e);
     return [DEFAULT_ADMIN];
   }
 }
@@ -417,15 +405,15 @@ let currentUser = null;
 let branchTargetId = null;
 let cachedUsers = [];
 
-// ── AUTH ──────────────────────────────────────────────────────
 async function tryLogin() {
   const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
   const pass = document.getElementById('login-password').value;
-  document.querySelector('.login-btn').textContent = 'Signing in...';
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Signing in...';
   const users = await getUsers();
   cachedUsers = users;
   const user = users.find(u => u.email.toLowerCase() === emailInput && u.password === pass && u.active);
-  document.querySelector('.login-btn').textContent = 'Sign In';
+  btn.textContent = 'Sign In';
   if (user) {
     currentUser = user;
     sessionStorage.setItem('g1_session', JSON.stringify(user));
@@ -475,7 +463,6 @@ window.onload = async () => {
   }
 };
 
-// ── BRANCH SHORTCUTS ──────────────────────────────────────────
 function getBranchesForCurrentUser() {
   if (!currentUser) return [];
   if (currentUser.role === 'admin') {
@@ -504,7 +491,6 @@ function renderBranchShortcuts() {
     </div>`;
 }
 
-// ── BRANCH MODAL ──────────────────────────────────────────────
 function openBranchModal(userId) {
   branchTargetId = userId;
   const user = cachedUsers.find(u => u.id === userId);
@@ -558,7 +544,6 @@ async function removeBranch(index) {
   showToast(`🗑 Branch removed: ${removed[0].name}`);
 }
 
-// ── USER MANAGEMENT ───────────────────────────────────────────
 function generatePassword() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
   let p = '';
@@ -659,20 +644,20 @@ function showToast(msg) {
   setTimeout(() => t.style.display = 'none', 3000);
 }
 
-// ── FARM CALCULATIONS ─────────────────────────────────────────
 function monthlyRateFactor(annualRate, termYears) {
   const r = annualRate / 100 / 12;
   const n = termYears * 12;
   return r / (1 - Math.pow(1 + r, -n));
 }
 
+// ── FIXED: Low is always lower price, Moderate always higher ──
 function calcFarmPrices(ami, params) {
-  const lmiIncome = Math.round(ami * (params.amiPct / 100));
-  const modIncome = Math.round(ami * ((params.amiPct - 15) / 100));
+  const modIncome = Math.round(ami * (params.amiPct / 100));
+  const lowIncome = Math.round(ami * (Math.max(params.amiPct - 30, 20) / 100));
   const factor = monthlyRateFactor(params.rate, params.term);
-  const maxLow  = Math.round((lmiIncome * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
-  const maxMod  = Math.round((modIncome * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
-  return { lmiIncome, modIncome, maxLow, maxMod };
+  const maxMod = Math.round((modIncome * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
+  const maxLow = Math.round((lowIncome * (params.frontEnd / 100) / 12) / factor / 1000) * 1000;
+  return { lmiIncome: modIncome, modIncome: lowIncome, maxLow, maxMod };
 }
 
 function buildZillowUrl(zip, maxPrice) {
@@ -694,9 +679,18 @@ function renderFarmCard(zip, city, ami) {
       <div class="farm-card-title">🌾 Farm This Area — ${city}, ${zip}</div>
       <div class="farm-card-sub">Pre-filtered listing links based on LMI income limits · AMI $${ami.toLocaleString()}</div>
       <div class="farm-stats">
-        <div class="farm-stat"><div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div><div class="farm-stat-label">Max LMI Household Income (${farmParams.amiPct}% AMI)</div></div>
-        <div class="farm-stat"><div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div><div class="farm-stat-label">Est. Max Price — Low Income</div></div>
-        <div class="farm-stat"><div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div><div class="farm-stat-label">Est. Max Price — Moderate Income</div></div>
+        <div class="farm-stat">
+          <div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div>
+          <div class="farm-stat-label">LMI Income Threshold (${farmParams.amiPct}% of AMI)</div>
+        </div>
+        <div class="farm-stat">
+          <div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div>
+          <div class="farm-stat-label">Est. Max Price — Low Income (&lt;50% AMI)</div>
+        </div>
+        <div class="farm-stat">
+          <div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div>
+          <div class="farm-stat-label">Est. Max Price — Moderate Income (50–80% AMI)</div>
+        </div>
       </div>
       <div class="farm-links">
         <a class="farm-link farm-zillow" id="fl-zillow-low" href="${buildZillowUrl(zip, maxLow)}" target="_blank">🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})</a>
@@ -768,7 +762,7 @@ function updateFarmStats() {
   const note = document.querySelector('.farm-note');
   if (note) note.textContent = `⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower.`;
   const amiLabel = document.querySelector('#fs-income + .farm-stat-label');
-  if (amiLabel) amiLabel.textContent = `Max LMI Household Income (${farmParams.amiPct}% AMI)`;
+  if (amiLabel) amiLabel.textContent = `LMI Income Threshold (${farmParams.amiPct}% of AMI)`;
 }
 
 function syncInput(param, val) {
@@ -807,7 +801,6 @@ function resetFarmParams() {
   showToast('↺ Reset to default assumptions');
 }
 
-// ── SEARCH ────────────────────────────────────────────────────
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
 
 async function doSearch() {
@@ -900,7 +893,6 @@ function renderResults(zip, tracts) {
     </div>`;
 }
 
-// ── SAVED ─────────────────────────────────────────────────────
 function getSaved() { return JSON.parse(localStorage.getItem('g1_saved') || '[]'); }
 function setSaved(arr) { localStorage.setItem('g1_saved', JSON.stringify(arr)); }
 
