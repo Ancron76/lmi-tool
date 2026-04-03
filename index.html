@@ -132,11 +132,14 @@
   .link-btn:hover { opacity: 0.85; }
   .ffiec { background: #1f2937; color: white; }
   .hud   { background: #0ed2c8; color: #1f2937; }
+
+  /* SAVED PROSPECTS */
   .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
   .saved-row:last-child { border-bottom: none; }
   .saved-zip { font-weight: 700; color: #1f2937; }
   .saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
   .lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+  .saved-mlo { color: #94a3b8; font-size: 11px; margin-left: 8px; font-style: italic; }
   .saved-date { font-size: 12px; color: #94a3b8; }
   .remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; }
   .empty-saved { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
@@ -185,7 +188,6 @@
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
 
-  /* SETTINGS PANEL */
   .settings-overlay { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 200; transition: right 0.3s ease; display: flex; flex-direction: column; }
   .settings-overlay.open { right: 0; }
   .settings-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 199; display: none; }
@@ -208,7 +210,6 @@
   .settings-success { color: #059669; font-size: 12px; display: none; }
   .settings-coming-soon { background: #f8fafc; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #94a3b8; border: 1px dashed #e2e8f0; text-align: center; }
 
-  /* MODALS */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
@@ -304,7 +305,7 @@
     <div id="results"></div>
     <div class="card">
       <div class="card-title">📌 Saved Prospect ZIPs</div>
-      <div id="saved-list"><div class="empty-saved">No ZIPs saved yet.</div></div>
+      <div id="saved-list"><div class="empty-saved">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -358,6 +359,17 @@
       </div>
       <div id="user-table-wrap"></div>
     </div>
+
+    <!-- ADMIN PROSPECTS VIEW -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-title">📌 Team Saved Prospects</div>
+        <select id="prospect-filter" onchange="renderAdminProspects()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;">
+          <option value="all">All Users</option>
+        </select>
+      </div>
+      <div id="admin-prospect-list"><div class="empty-saved">Loading...</div></div>
+    </div>
   </div>
 </div>
 
@@ -369,13 +381,10 @@
     <button class="settings-close" onclick="closeSettings()">✕ Close</button>
   </div>
   <div class="settings-body">
-
     <div class="settings-user-info">
       <div class="settings-user-name" id="settings-user-name">—</div>
       <div class="settings-user-meta" id="settings-user-meta">—</div>
     </div>
-
-    <!-- CHANGE OWN PASSWORD -->
     <div class="settings-section">
       <div class="settings-section-title">🔑 Change My Password</div>
       <div class="settings-item">
@@ -387,32 +396,24 @@
         <button class="settings-save-btn" onclick="saveSettingsPassword()">Update Password</button>
       </div>
     </div>
-
-    <!-- ADMIN: RESET USER PASSWORD -->
     <div class="settings-section" id="admin-reset-section" style="display:none">
       <div class="settings-section-title">🛡 Reset a User's Password</div>
       <div class="settings-item">
-        <select class="settings-input" id="s-admin-user-select">
-          <option value="">Select a user...</option>
-        </select>
+        <select class="settings-input" id="s-admin-user-select"><option value="">Select a user...</option></select>
         <input type="text" class="settings-input" id="s-admin-pw-new" placeholder="New password" />
         <input type="text" class="settings-input" id="s-admin-pw-confirm" placeholder="Confirm new password" />
         <div class="settings-error" id="s-admin-pw-error"></div>
         <button class="settings-save-btn" onclick="saveAdminPasswordFromSettings()">Reset Password</button>
       </div>
     </div>
-
-    <!-- COMING SOON -->
     <div class="settings-section">
       <div class="settings-section-title">🎨 Preferences</div>
       <div class="settings-coming-soon">More customization options coming in future updates.</div>
     </div>
-
     <div class="settings-section">
       <div class="settings-section-title">🔔 Notifications</div>
       <div class="settings-coming-soon">Notification preferences coming soon.</div>
     </div>
-
   </div>
 </div>
 
@@ -460,6 +461,7 @@ const DEFAULT_ADMIN = {
   active: true, branches: [], created: new Date().toLocaleDateString()
 };
 
+// ── FIREBASE USER STORE ───────────────────────────────────────
 async function getUsers() {
   try {
     const snapshot = await db.collection('users').get();
@@ -482,10 +484,52 @@ async function deleteUserFromDB(id) {
   await db.collection('users').doc(id).delete();
 }
 
+// ── FIREBASE PROSPECTS STORE (Phase 1) ────────────────────────
+async function getSavedProspects(userId) {
+  try {
+    const snapshot = await db.collection('prospects')
+      .where('userId', '==', userId)
+      .orderBy('savedAt', 'desc')
+      .get();
+    return snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+  } catch (e) { return []; }
+}
+
+async function getAllProspects() {
+  try {
+    const snapshot = await db.collection('prospects').orderBy('savedAt', 'desc').get();
+    return snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+  } catch (e) { return []; }
+}
+
+async function saveProspect(zip, city) {
+  const existing = await db.collection('prospects')
+    .where('userId', '==', currentUser.id)
+    .where('zip', '==', zip)
+    .get();
+  if (!existing.empty) {
+    await existing.docs[0].ref.update({ savedAt: new Date().toISOString(), city });
+  } else {
+    await db.collection('prospects').add({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRegion: currentUser.region,
+      zip, city,
+      savedAt: new Date().toISOString()
+    });
+  }
+}
+
+async function removeProspect(docId) {
+  await db.collection('prospects').doc(docId).delete();
+}
+
 let currentUser = null;
 let branchTargetId = null;
 let cachedUsers = [];
+let cachedProspects = [];
 
+// ── AUTH ──────────────────────────────────────────────────────
 async function tryLogin() {
   const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
   const pass = document.getElementById('login-password').value;
@@ -501,7 +545,8 @@ async function tryLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
-    renderBranchShortcuts(); renderSaved();
+    renderBranchShortcuts();
+    await loadAndRenderSaved();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -523,6 +568,8 @@ async function goAdmin() {
   document.getElementById('admin-screen').style.display = 'block';
   cachedUsers = await getUsers();
   renderAdminStats(); renderUserTable();
+  await renderAdminProspects();
+  populateProspectFilter();
 }
 
 function goApp() {
@@ -540,11 +587,87 @@ window.onload = async () => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     if (currentUser.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
-    renderBranchShortcuts(); renderSaved();
+    renderBranchShortcuts();
+    await loadAndRenderSaved();
   }
 };
 
-// ── SETTINGS PANEL ────────────────────────────────────────────
+// ── SAVED PROSPECTS ───────────────────────────────────────────
+async function loadAndRenderSaved() {
+  document.getElementById('saved-list').innerHTML = '<div class="empty-saved">Loading...</div>';
+  cachedProspects = await getSavedProspects(currentUser.id);
+  renderSaved();
+}
+
+function renderSaved() {
+  const el = document.getElementById('saved-list');
+  if (!el) return;
+  if (!cachedProspects.length) {
+    el.innerHTML = '<div class="empty-saved">No ZIPs saved yet. Search a ZIP and click Save.</div>';
+    return;
+  }
+  el.innerHTML = cachedProspects.map(s => `
+    <div class="saved-row">
+      <div>
+        <span class="saved-zip">${s.zip}</span>
+        <span class="saved-city">${s.city}</span>
+        <span class="lmi-tag">LMI ✓</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="saved-date">${new Date(s.savedAt).toLocaleDateString()}</span>
+        <button class="remove-btn" onclick="deleteSaved('${s.docId}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+async function saveZip(zip, city) {
+  await saveProspect(zip, city);
+  cachedProspects = await getSavedProspects(currentUser.id);
+  renderSaved();
+  const btn = document.querySelector('.save-btn');
+  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
+  showToast(`📌 ${zip} saved to prospects`);
+}
+
+async function deleteSaved(docId) {
+  await removeProspect(docId);
+  cachedProspects = cachedProspects.filter(s => s.docId !== docId);
+  renderSaved();
+}
+
+// ── ADMIN PROSPECTS VIEW ──────────────────────────────────────
+async function renderAdminProspects() {
+  const listEl = document.getElementById('admin-prospect-list');
+  listEl.innerHTML = '<div class="empty-saved">Loading...</div>';
+  const all = await getAllProspects();
+  const filterVal = document.getElementById('prospect-filter')?.value || 'all';
+  const filtered = filterVal === 'all' ? all : all.filter(p => p.userId === filterVal);
+  if (!filtered.length) { listEl.innerHTML = '<div class="empty-saved">No saved prospects yet.</div>'; return; }
+  listEl.innerHTML = filtered.map(p => `
+    <div class="saved-row">
+      <div>
+        <span class="saved-zip">${p.zip}</span>
+        <span class="saved-city">${p.city}</span>
+        <span class="lmi-tag">LMI ✓</span>
+        <span class="saved-mlo">— ${p.userName} · ${p.userRegion}</span>
+      </div>
+      <span class="saved-date">${new Date(p.savedAt).toLocaleDateString()}</span>
+    </div>`).join('');
+}
+
+function populateProspectFilter() {
+  const select = document.getElementById('prospect-filter');
+  if (!select) return;
+  select.innerHTML = '<option value="all">All Users</option>';
+  cachedUsers.filter(u => u.role !== 'admin' || u.id === 'admin-aaron').forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = u.name;
+    select.appendChild(opt);
+  });
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
 function openSettings() {
   document.getElementById('settings-panel').classList.add('open');
   document.getElementById('settings-backdrop').classList.add('open');
@@ -553,7 +676,6 @@ function openSettings() {
   ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('s-pw-error').style.display = 'none';
   document.getElementById('s-pw-success').style.display = 'none';
-
   if (currentUser.role === 'admin') {
     document.getElementById('admin-reset-section').style.display = 'block';
     const select = document.getElementById('s-admin-user-select');
@@ -582,8 +704,7 @@ async function saveSettingsPassword() {
   const confirm = document.getElementById('s-pw-confirm').value;
   const errEl   = document.getElementById('s-pw-error');
   const succEl  = document.getElementById('s-pw-success');
-  errEl.style.display = 'none';
-  succEl.style.display = 'none';
+  errEl.style.display = 'none'; succEl.style.display = 'none';
   if (current !== currentUser.password) { errEl.textContent = 'Current password is incorrect.'; errEl.style.display = 'block'; return; }
   if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
   if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
@@ -834,18 +955,9 @@ function renderFarmCard(zip, city, ami) {
       <div class="farm-card-title">🌾 Farm This Area — ${city}, ${zip}</div>
       <div class="farm-card-sub">Pre-filtered listing links based on LMI income limits · AMI $${ami.toLocaleString()}</div>
       <div class="farm-stats">
-        <div class="farm-stat">
-          <div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div>
-          <div class="farm-stat-label">LMI Income Threshold (${farmParams.amiPct}% of AMI)</div>
-        </div>
-        <div class="farm-stat">
-          <div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div>
-          <div class="farm-stat-label">Est. Max Price — Low Income (&lt;50% AMI)</div>
-        </div>
-        <div class="farm-stat">
-          <div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div>
-          <div class="farm-stat-label">Est. Max Price — Moderate Income (50–80% AMI)</div>
-        </div>
+        <div class="farm-stat"><div class="farm-stat-num" id="fs-income">$${lmiIncome.toLocaleString()}</div><div class="farm-stat-label">LMI Income Threshold (${farmParams.amiPct}% of AMI)</div></div>
+        <div class="farm-stat"><div class="farm-stat-num" id="fs-low">$${maxLow.toLocaleString()}</div><div class="farm-stat-label">Est. Max Price — Low Income (&lt;50% AMI)</div></div>
+        <div class="farm-stat"><div class="farm-stat-num" id="fs-mod">$${maxMod.toLocaleString()}</div><div class="farm-stat-label">Est. Max Price — Moderate Income (50–80% AMI)</div></div>
       </div>
       <div class="farm-links">
         <a class="farm-link farm-zillow" id="fl-zillow-low" href="${buildZillowUrl(zip, maxLow)}" target="_blank">🏠 Zillow — Low Income (under $${maxLow.toLocaleString()})</a>
@@ -1025,7 +1137,7 @@ function renderResults(zip, tracts) {
   document.getElementById('results').innerHTML = `
     <div class="result-header">
       <div><span class="result-city">${city}</span><span class="result-zip">ZIP ${zip}</span></div>
-      <button class="save-btn" onclick="saveZip('${zip}','${city}','')">+ Save to Prospect List</button>
+      <button class="save-btn" onclick="saveZip('${zip}','${city}')">+ Save to Prospect List</button>
     </div>
     <div class="result-meta">Area Median Income (AMI): <strong>$${ami.toLocaleString()}</strong> · Source: US Census Bureau ACS 2022 · Showing all LMI tracts in county</div>
     <div class="summary-grid">
@@ -1046,31 +1158,6 @@ function renderResults(zip, tracts) {
         <a class="link-btn hud"   href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>
       </div>
     </div>`;
-}
-
-function getSaved() { return JSON.parse(localStorage.getItem('g1_saved') || '[]'); }
-function setSaved(arr) { localStorage.setItem('g1_saved', JSON.stringify(arr)); }
-
-function saveZip(zip, city, region) {
-  const saved = getSaved().filter(s => s.zip !== zip);
-  saved.unshift({ zip, city, region, date: new Date().toLocaleDateString() });
-  setSaved(saved); renderSaved();
-  const btn = document.querySelector('.save-btn');
-  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
-}
-
-function removeZip(zip) { setSaved(getSaved().filter(s => s.zip !== zip)); renderSaved(); }
-
-function renderSaved() {
-  const saved = getSaved();
-  const el = document.getElementById('saved-list');
-  if (!el) return;
-  if (!saved.length) { el.innerHTML = '<div class="empty-saved">No ZIPs saved yet. Search a ZIP and click Save.</div>'; return; }
-  el.innerHTML = saved.map(s => `
-    <div class="saved-row">
-      <div><span class="saved-zip">${s.zip}</span><span class="saved-city">${s.city}</span><span class="lmi-tag">LMI ✓</span></div>
-      <div style="display:flex;align-items:center;gap:12px"><span class="saved-date">${s.date}</span><button class="remove-btn" onclick="removeZip('${s.zip}')">✕</button></div>
-    </div>`).join('');
 }
 </script>
 </body>
