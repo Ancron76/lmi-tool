@@ -181,7 +181,6 @@
   .del-btn { color: #dc2626; }
   .toggle-btn { color: #0ed2c8; }
   .copy-btn { color: #059669; }
-  .pw-btn { color: #7c3aed; }
   .empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
   .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
@@ -201,7 +200,7 @@
   .settings-section { margin-bottom: 28px; }
   .settings-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
   .settings-item { display: flex; flex-direction: column; gap: 10px; }
-  .settings-input { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; }
+  .settings-input { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
   .settings-input:focus { border-color: #0ed2c8; }
   .settings-save-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
   .settings-save-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
@@ -224,10 +223,6 @@
   .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
   .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   .existing-branch-row:last-child { border-bottom: none; }
-  .pw-form { display: flex; flex-direction: column; gap: 10px; }
-  .pw-form input { padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
-  .pw-form input:focus { border-color: #0ed2c8; }
-  .pw-error { color: #dc2626; font-size: 12px; display: none; }
   .toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
 
   @media (max-width: 640px) {
@@ -375,15 +370,14 @@
   </div>
   <div class="settings-body">
 
-    <!-- USER INFO -->
     <div class="settings-user-info">
       <div class="settings-user-name" id="settings-user-name">—</div>
       <div class="settings-user-meta" id="settings-user-meta">—</div>
     </div>
 
-    <!-- CHANGE PASSWORD -->
+    <!-- CHANGE OWN PASSWORD -->
     <div class="settings-section">
-      <div class="settings-section-title">🔑 Change Password</div>
+      <div class="settings-section-title">🔑 Change My Password</div>
       <div class="settings-item">
         <input type="password" class="settings-input" id="s-pw-current" placeholder="Current password" />
         <input type="password" class="settings-input" id="s-pw-new" placeholder="New password (min 8 characters)" />
@@ -394,7 +388,21 @@
       </div>
     </div>
 
-    <!-- COMING SOON SECTIONS -->
+    <!-- ADMIN: RESET USER PASSWORD -->
+    <div class="settings-section" id="admin-reset-section" style="display:none">
+      <div class="settings-section-title">🛡 Reset a User's Password</div>
+      <div class="settings-item">
+        <select class="settings-input" id="s-admin-user-select">
+          <option value="">Select a user...</option>
+        </select>
+        <input type="text" class="settings-input" id="s-admin-pw-new" placeholder="New password" />
+        <input type="text" class="settings-input" id="s-admin-pw-confirm" placeholder="Confirm new password" />
+        <div class="settings-error" id="s-admin-pw-error"></div>
+        <button class="settings-save-btn" onclick="saveAdminPasswordFromSettings()">Reset Password</button>
+      </div>
+    </div>
+
+    <!-- COMING SOON -->
     <div class="settings-section">
       <div class="settings-section-title">🎨 Preferences</div>
       <div class="settings-coming-soon">More customization options coming in future updates.</div>
@@ -422,23 +430,6 @@
     <div class="form-error" id="branch-error"></div>
     <div class="existing-branches" id="existing-branches"></div>
     <div class="modal-actions"><button class="modal-cancel" onclick="closeBranchModal()">Done</button></div>
-  </div>
-</div>
-
-<!-- ADMIN RESET PASSWORD MODAL -->
-<div class="modal-overlay" id="admin-pw-modal">
-  <div class="modal-box">
-    <div class="modal-title">🔑 Reset Password</div>
-    <div class="modal-sub" id="admin-pw-sub">Reset password for user</div>
-    <div class="pw-form">
-      <input type="text" id="admin-pw-new" placeholder="New password" />
-      <input type="text" id="admin-pw-confirm" placeholder="Confirm new password" />
-      <div class="pw-error" id="admin-pw-error"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeAdminPwModal()">Cancel</button>
-      <button class="modal-save" onclick="saveAdminPassword()">Reset Password</button>
-    </div>
   </div>
 </div>
 
@@ -493,7 +484,6 @@ async function deleteUserFromDB(id) {
 
 let currentUser = null;
 let branchTargetId = null;
-let adminPwTargetId = null;
 let cachedUsers = [];
 
 async function tryLogin() {
@@ -563,6 +553,22 @@ function openSettings() {
   ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('s-pw-error').style.display = 'none';
   document.getElementById('s-pw-success').style.display = 'none';
+
+  if (currentUser.role === 'admin') {
+    document.getElementById('admin-reset-section').style.display = 'block';
+    const select = document.getElementById('s-admin-user-select');
+    select.innerHTML = '<option value="">Select a user...</option>';
+    cachedUsers.filter(u => u.id !== currentUser.id).forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = `${u.name} (${u.email})`;
+      select.appendChild(opt);
+    });
+    ['s-admin-pw-new','s-admin-pw-confirm'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('s-admin-pw-error').style.display = 'none';
+  } else {
+    document.getElementById('admin-reset-section').style.display = 'none';
+  }
 }
 
 function closeSettings() {
@@ -578,26 +584,14 @@ async function saveSettingsPassword() {
   const succEl  = document.getElementById('s-pw-success');
   errEl.style.display = 'none';
   succEl.style.display = 'none';
-
-  if (current !== currentUser.password) {
-    errEl.textContent = 'Current password is incorrect.';
-    errEl.style.display = 'block'; return;
-  }
-  if (newPw.length < 8) {
-    errEl.textContent = 'New password must be at least 8 characters.';
-    errEl.style.display = 'block'; return;
-  }
-  if (newPw !== confirm) {
-    errEl.textContent = 'Passwords do not match.';
-    errEl.style.display = 'block'; return;
-  }
-
+  if (current !== currentUser.password) { errEl.textContent = 'Current password is incorrect.'; errEl.style.display = 'block'; return; }
+  if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
   currentUser.password = newPw;
   await saveUser(currentUser);
   sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
   const idx = cachedUsers.findIndex(u => u.id === currentUser.id);
   if (idx > -1) cachedUsers[idx].password = newPw;
-
   succEl.textContent = '✅ Password updated successfully!';
   succEl.style.display = 'block';
   ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(id => document.getElementById(id).value = '');
@@ -605,32 +599,20 @@ async function saveSettingsPassword() {
   showToast('✅ Password updated');
 }
 
-// ── ADMIN RESET PASSWORD ──────────────────────────────────────
-function openAdminPwModal(userId) {
-  adminPwTargetId = userId;
-  const user = cachedUsers.find(u => u.id === userId);
-  document.getElementById('admin-pw-sub').textContent = `Reset password for ${user.name}`;
-  ['admin-pw-new','admin-pw-confirm'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('admin-pw-error').style.display = 'none';
-  document.getElementById('admin-pw-modal').classList.add('open');
-}
-
-function closeAdminPwModal() {
-  document.getElementById('admin-pw-modal').classList.remove('open');
-  adminPwTargetId = null;
-}
-
-async function saveAdminPassword() {
-  const newPw   = document.getElementById('admin-pw-new').value.trim();
-  const confirm = document.getElementById('admin-pw-confirm').value.trim();
-  const errEl   = document.getElementById('admin-pw-error');
+async function saveAdminPasswordFromSettings() {
+  const userId  = document.getElementById('s-admin-user-select').value;
+  const newPw   = document.getElementById('s-admin-pw-new').value.trim();
+  const confirm = document.getElementById('s-admin-pw-confirm').value.trim();
+  const errEl   = document.getElementById('s-admin-pw-error');
   errEl.style.display = 'none';
+  if (!userId) { errEl.textContent = 'Please select a user.'; errEl.style.display = 'block'; return; }
   if (newPw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
   if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
-  const user = cachedUsers.find(u => u.id === adminPwTargetId);
+  const user = cachedUsers.find(u => u.id === userId);
   user.password = newPw;
   await saveUser(user);
-  closeAdminPwModal();
+  ['s-admin-pw-new','s-admin-pw-confirm'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('s-admin-user-select').value = '';
   showToast(`✅ Password reset for ${user.name}`);
 }
 
@@ -802,7 +784,6 @@ function renderUserTable() {
           <td><span class="status-dot ${u.active?'status-active':'status-inactive'}"></span><span style="font-size:12px;color:${u.active?'#0ed2c8':'#94a3b8'}">${u.active?'Active':'Inactive'}</span></td>
           <td>
             <button class="action-btn copy-btn" onclick="copyPassword('${u.id}')" title="Copy password">📋</button>
-            <button class="action-btn pw-btn" onclick="openAdminPwModal('${u.id}')" title="Reset password">🔑</button>
             ${u.type==='Internal'?`<button class="action-btn" style="color:#0ed2c8" onclick="openBranchModal('${u.id}')" title="Manage branches">🏢</button>`:''}
             <button class="action-btn toggle-btn" onclick="toggleUser('${u.id}')">${u.active?'⏸':'▶️'}</button>
             ${u.id!==currentUser.id?`<button class="action-btn del-btn" onclick="deleteUser('${u.id}')">🗑</button>`:''}
