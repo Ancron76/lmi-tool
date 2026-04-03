@@ -1,25 +1,3 @@
-Perfect. Here's the full plan before I build so you can confirm:
-
-**Settings panel** gets a new **My Profile** section where each MLO enters their phone, email, NMLS number, and headshot URL once. Saved to Firebase on their user record.
-
-**Marketing tab** in the header shows three generators. Each piece also has a **🖨 Generate** button directly on saved prospect rows for the borrower-specific pieces.
-
-**Three marketing pieces:**
-
-**1 — Realtor Shopping List** (borrower-specific)
-Pulls from a saved prospect. Shows borrower's name, LMI category, % of AMI, max home price, pre-filtered Zillow/Redfin/Realtor links, the ZIP's AMI data, and assigned realtors. MLO contact block at bottom. PDF download + shareable link.
-
-**2 — Area Flyer** (ZIP-specific)
-Pulls from any ZIP the MLO has searched. Shows city name, LMI tract count, AMI, income limits by category, listing links, FFIEC verification link. MLO contact block at bottom. PDF download + shareable link.
-
-**3 — Referral Partner One-Pager** (MLO profile)
-About the MLO — headshot, name, NMLS, phone, email, their region, what LMI/CRA lending means, why realtors should partner with them. Pre-filled from their profile. PDF download + shareable link.
-
-**Shareable links** work like the invite system — generate a token, store the data in Firebase under that token, the link renders a clean public page at `lmitool.com/?flyer=TOKEN`.
-
-This is the biggest build yet — give me a moment to put it all together cleanly.
-
-Building now...
 
 ```html
 <!DOCTYPE html>
