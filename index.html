@@ -1167,7 +1167,7 @@ function clearDashDates(){
 async function renderDashboard(){
   const {from,to}=getDateFilter();
   const hour=new Date().getHours();
-  const greeting=hour<12?'Good morning':'hour<17?'Good afternoon':'Good evening';
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('dash-greeting').textContent=`${greeting}, ${currentUser.name.split(' ')[0]}! 👋`;
   document.getElementById('dash-greeting-sub').textContent=from||to?`Showing activity ${from?'from '+from:''} ${to?'to '+to:''}`.trim():'Showing all-time activity';
 
