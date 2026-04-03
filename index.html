@@ -117,11 +117,13 @@
 
   .qualifier-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #0ed2c8; display: none; }
   .qualifier-card.open { display: block; }
-  .qualifier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .qualifier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .qualifier-title { font-size: 16px; font-weight: 800; color: #1f2937; }
   .qualifier-close { background: #f1f5f9; color: #64748b; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
-  .qualifier-input-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
-  .qualifier-input-wrap { flex: 1; }
+  .qualifier-editing-badge { background: #fef3c7; color: #d97706; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 4px 10px; border: 1px solid #fde68a; margin-bottom: 16px; display: none; }
+  .qualifier-editing-badge.show { display: inline-block; }
+  .qualifier-input-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
+  .qualifier-input-wrap { flex: 1; min-width: 160px; }
   .qualifier-input-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
   .qualifier-input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
   .qualifier-input:focus { border-color: #0ed2c8; }
@@ -132,7 +134,6 @@
   .qualifier-result.show { display: block; }
   .qual-badge-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
   .qual-category-badge { font-size: 15px; font-weight: 800; border-radius: 10px; padding: 10px 20px; }
-  .qual-pct-label { font-size: 13px; color: #64748b; }
   .qual-pct-bar-wrap { flex: 1; min-width: 120px; }
   .qual-pct-bar-track { background: #e2e8f0; border-radius: 99px; height: 10px; overflow: hidden; }
   .qual-pct-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
@@ -144,11 +145,33 @@
   .qual-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.15s; }
   .qual-link:hover { opacity: 0.85; }
   .qual-save-row { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; }
-  .qual-save-input { flex: 1; min-width: 180px; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
-  .qual-save-input:focus { border-color: #0ed2c8; }
   .qual-save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
   .qual-save-btn:hover { background: #dcfce7; }
+  .qual-save-btn.update { background: #fffbeb; color: #d97706; border-color: #fde68a; }
   .qual-note { font-size: 11px; color: #94a3b8; margin-top: 12px; line-height: 1.5; }
+
+  /* SAVED PROSPECTS */
+  .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
+  .saved-row:last-child { border-bottom: none; }
+  .saved-row-clickable { cursor: pointer; flex: 1; padding: 4px 8px 4px 0; border-radius: 8px; transition: background 0.15s; }
+  .saved-row-clickable:hover { background: #f0fdfa; }
+  .saved-zip { font-weight: 700; color: #1f2937; }
+  .saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
+  .lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+  .saved-borrower-tag { font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; font-weight: 700; }
+  .saved-reopen { font-size: 11px; color: #0ed2c8; margin-left: 6px; }
+  .saved-mlo { color: #94a3b8; font-size: 11px; margin-left: 8px; font-style: italic; }
+  .saved-date { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+  .remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; flex-shrink: 0; }
+  .empty-saved { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
+  .loader { text-align: center; padding: 30px; color: #0ed2c8; font-weight: 600; font-size: 15px; }
+  .not-found { background: white; border-radius: 16px; padding: 36px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+  .not-found h3 { color: #1f2937; font-size: 17px; margin-bottom: 6px; }
+  .not-found p { color: #64748b; font-size: 13px; }
+  .not-found a { color: #0ed2c8; font-weight: 600; }
+  .api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-left: 4px solid #dc2626; }
+  .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
+  .api-error p { color: #64748b; font-size: 13px; }
 
   .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
   .result-city { font-size: 24px; font-weight: 800; color: #1f2937; }
@@ -176,25 +199,6 @@
   .link-btn:hover { opacity: 0.85; }
   .ffiec { background: #1f2937; color: white; }
   .hud   { background: #0ed2c8; color: #1f2937; }
-
-  .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
-  .saved-row:last-child { border-bottom: none; }
-  .saved-zip { font-weight: 700; color: #1f2937; }
-  .saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
-  .lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
-  .saved-borrower-tag { font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; font-weight: 700; }
-  .saved-mlo { color: #94a3b8; font-size: 11px; margin-left: 8px; font-style: italic; }
-  .saved-date { font-size: 12px; color: #94a3b8; }
-  .remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; }
-  .empty-saved { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
-  .loader { text-align: center; padding: 30px; color: #0ed2c8; font-weight: 600; font-size: 15px; }
-  .not-found { background: white; border-radius: 16px; padding: 36px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
-  .not-found h3 { color: #1f2937; font-size: 17px; margin-bottom: 6px; }
-  .not-found p { color: #64748b; font-size: 13px; }
-  .not-found a { color: #0ed2c8; font-weight: 600; }
-  .api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-left: 4px solid #dc2626; }
-  .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
-  .api-error p { color: #64748b; font-size: 13px; }
 
   .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
   .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
@@ -331,7 +335,7 @@
   </div>
   <div class="main">
 
-    <!-- SEARCH CARD -->
+    <!-- SEARCH -->
     <div class="card">
       <div class="card-title">Enter a ZIP Code to Check LMI Status</div>
       <div class="card-sub">Live Census Bureau data — works for any ZIP code in the US.</div>
@@ -358,7 +362,7 @@
     <!-- FARM CARD -->
     <div id="farm-card-container"></div>
 
-    <!-- BORROWER QUALIFIER TRIGGER -->
+    <!-- QUALIFIER TRIGGER -->
     <div id="qualifier-trigger" style="display:none">
       <div class="qualifier-trigger">
         <div class="qualifier-trigger-left">
@@ -372,12 +376,13 @@
       </div>
     </div>
 
-    <!-- BORROWER QUALIFIER CARD -->
+    <!-- QUALIFIER CARD -->
     <div class="qualifier-card" id="qualifier-card">
       <div class="qualifier-header">
         <div class="qualifier-title">💰 Borrower Income Qualifier</div>
         <button class="qualifier-close" onclick="closeQualifier()">✕ Close</button>
       </div>
+      <div class="qualifier-editing-badge" id="qualifier-editing-badge">✏️ Editing saved borrower — save will replace existing record</div>
       <div class="qualifier-input-row">
         <div class="qualifier-input-wrap">
           <label class="qualifier-input-label">Borrower Annual Gross Income</label>
@@ -394,7 +399,6 @@
 
     <!-- RESULTS -->
     <div id="results"></div>
-
   </div>
 </div>
 
@@ -529,7 +533,7 @@ const firebaseConfig = {
   projectId: "lmi-prospect-finder",
   storageBucket: "lmi-prospect-finder.firebasestorage.app",
   messagingSenderId: "904761299732",
-  appId: "1:904761299732:web:6880710625b81a2c5ea801"
+  appId: "1:904761299742:web:6880710625b81a2c5ea801"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -540,6 +544,7 @@ let farmParams = { ...DEFAULTS };
 let currentAmi = 0;
 let currentZip = '';
 let currentCity = '';
+let editingProspectDocId = null; // tracks which prospect is being edited
 
 const DEFAULT_ADMIN = {
   id: 'admin-aaron', name: 'Aaron Simonson', email: 'asimonson@golden1.com',
@@ -621,6 +626,7 @@ async function tryLogin() {
 function logout() {
   currentUser = null;
   cachedProspects = [];
+  editingProspectDocId = null;
   sessionStorage.removeItem('g1_session');
   ['app-screen','admin-screen'].forEach(id => document.getElementById(id).style.display = 'none');
   document.getElementById('login-screen').style.display = 'flex';
@@ -662,6 +668,13 @@ window.onload = async () => {
 };
 
 // ── SAVED PROSPECTS ───────────────────────────────────────────
+function getBorrowerColor(category) {
+  if (category === 'Low Income')      return '#dc2626';
+  if (category === 'Moderate Income') return '#d97706';
+  if (category === 'Middle Income')   return '#059669';
+  return '#6b7280';
+}
+
 function renderSaved() {
   const el = document.getElementById('saved-list');
   if (!el) return;
@@ -673,16 +686,19 @@ function renderSaved() {
     const borrowerTag = s.borrowerName
       ? `<span class="saved-borrower-tag" style="background:${getBorrowerColor(s.borrowerCategory)}20;color:${getBorrowerColor(s.borrowerCategory)}">${s.borrowerName} · ${s.borrowerCategory}</span>`
       : '';
+    const reopenHint = s.borrowerName
+      ? `<span class="saved-reopen">✏️ click to update</span>`
+      : `<span class="saved-reopen">↗ click to search</span>`;
     return `
       <div class="saved-row">
-        <div style="cursor:pointer;flex:1" onclick="quickSearch('${s.zip}')" title="Click to re-run search">
-          <span class="saved-zip" style="text-decoration:underline;text-decoration-color:#0ed2c8">${s.zip}</span>
+        <div class="saved-row-clickable" onclick="clickSavedProspect('${s.docId}')">
+          <span class="saved-zip">${s.zip}</span>
           <span class="saved-city">${s.city}</span>
           <span class="lmi-tag">LMI ✓</span>
           ${borrowerTag}
-          <span style="font-size:11px;color:#0ed2c8;margin-left:6px">↗ search</span>
+          ${reopenHint}
         </div>
-        <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
           <span class="saved-date">${new Date(s.savedAt).toLocaleDateString()}</span>
           <button class="remove-btn" onclick="event.stopPropagation();deleteSaved('${s.docId}')">✕</button>
         </div>
@@ -690,60 +706,42 @@ function renderSaved() {
   }).join('');
 }
 
-function getBorrowerColor(category) {
-  if (category === 'Low Income') return '#dc2626';
-  if (category === 'Moderate Income') return '#d97706';
-  if (category === 'Middle Income') return '#059669';
-  return '#6b7280';
-}
+// ── CLICK SAVED PROSPECT ──────────────────────────────────────
+async function clickSavedProspect(docId) {
+  const prospect = cachedProspects.find(p => p.docId === docId);
+  if (!prospect) return;
 
-async function saveZip(zip, city, borrowerData = null) {
-  const now = new Date().toISOString();
-  const existing = cachedProspects.find(p => p.zip === zip && !p.borrowerName);
-  const prospectData = {
-    userId: currentUser.id,
-    userName: currentUser.name,
-    userRegion: currentUser.region,
-    zip, city, savedAt: now,
-    ...(borrowerData || {})
-  };
+  // Always re-run the search
+  document.getElementById('zip-input').value = prospect.zip;
+  await doSearch();
 
-  if (borrowerData) {
-    // Always add as new entry when saving with borrower
-    cachedProspects.unshift({ docId: 'pending-' + Date.now(), ...prospectData });
-  } else if (existing) {
-    existing.savedAt = now;
-    existing.city = city;
-  } else {
-    cachedProspects.unshift({ docId: 'pending-' + Date.now(), ...prospectData });
+  // If borrower data exists, pre-fill and open qualifier after search completes
+  if (prospect.borrowerName || prospect.borrowerIncome) {
+    // Wait for farm card to render before opening qualifier
+    setTimeout(() => {
+      editingProspectDocId = docId;
+      document.getElementById('borrower-income').value = prospect.borrowerIncome || '';
+      document.getElementById('borrower-name').value = prospect.borrowerName || '';
+      document.getElementById('qualifier-editing-badge').classList.add('show');
+      document.getElementById('qualifier-card').classList.add('open');
+      // Auto-calculate so results show immediately
+      calcQualifier();
+      // Scroll qualifier into view
+      document.getElementById('qualifier-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 800);
   }
-  renderSaved();
-
-  const btn = borrowerData
-    ? document.getElementById('qual-save-btn-el')
-    : document.querySelector('.save-btn');
-  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
-  showToast(`📌 ${zip} saved to prospects`);
-
-  try {
-    await db.collection('prospects').add(prospectData);
-    cachedProspects = await fetchMyProspects();
-    renderSaved();
-  } catch (e) { console.error('Save error:', e); }
 }
 
-async function deleteSaved(docId) {
-  cachedProspects = cachedProspects.filter(p => p.docId !== docId);
-  renderSaved();
-  try {
-    if (!docId.startsWith('pending-')) {
-      await db.collection('prospects').doc(docId).delete();
-    }
-  } catch (e) { console.error('Delete error:', e); }
-}
-
-// ── BORROWER QUALIFIER ────────────────────────────────────────
-function openQualifier() {
+// ── QUALIFIER ─────────────────────────────────────────────────
+function openQualifier(prefill = null) {
+  editingProspectDocId = null;
+  document.getElementById('qualifier-editing-badge').classList.remove('show');
+  if (!prefill) {
+    document.getElementById('borrower-income').value = '';
+    document.getElementById('borrower-name').value = '';
+    document.getElementById('qualifier-result').className = 'qualifier-result';
+    document.getElementById('qualifier-result').innerHTML = '';
+  }
   document.getElementById('qualifier-card').classList.add('open');
   document.getElementById('borrower-income').focus();
 }
@@ -754,6 +752,8 @@ function closeQualifier() {
   document.getElementById('qualifier-result').innerHTML = '';
   document.getElementById('borrower-income').value = '';
   document.getElementById('borrower-name').value = '';
+  document.getElementById('qualifier-editing-badge').classList.remove('show');
+  editingProspectDocId = null;
 }
 
 function getBorrowerCategory(pctAmi) {
@@ -773,7 +773,6 @@ function calcQualifier() {
   const pctAmi = Math.round((income / currentAmi) * 100);
   const cat = getBorrowerCategory(pctAmi);
 
-  // Max price calculation using current farm params
   const r = farmParams.rate / 100 / 12;
   const n = farmParams.term * 12;
   const factor = r / (1 - Math.pow(1 + r, -n));
@@ -781,6 +780,9 @@ function calcQualifier() {
 
   const barWidth = Math.min(pctAmi, 150);
   const nameLabel = borrowerName ? `${borrowerName} — ` : '';
+  const isEditing = !!editingProspectDocId;
+  const saveBtnLabel = isEditing ? '💾 Update Borrower Record' : '+ Save to Prospect List';
+  const saveBtnClass = isEditing ? 'qual-save-btn update' : 'qual-save-btn';
 
   document.getElementById('qualifier-result').className = 'qualifier-result show';
   document.getElementById('qualifier-result').innerHTML = `
@@ -804,9 +806,9 @@ function calcQualifier() {
       <a class="qual-link" style="background:#c0392b;color:white" href="${buildRealtorUrl(currentZip, maxPrice)}" target="_blank">🏡 Realtor.com — under $${maxPrice.toLocaleString()}</a>
     </div>
     <div class="qual-save-row">
-      <span style="font-size:13px;color:#64748b;font-weight:600">Save this borrower to prospects:</span>
-      <button id="qual-save-btn-el" class="qual-save-btn" onclick="saveBorrowerProspect(${income}, '${cat.label}', '${borrowerName.replace(/'/g,"\\'")}', ${maxPrice}, ${pctAmi})">
-        + Save to Prospect List
+      <span style="font-size:13px;color:#64748b;font-weight:600">${isEditing ? 'Update this borrower record:' : 'Save this borrower to prospects:'}</span>
+      <button id="qual-save-btn-el" class="${saveBtnClass}" onclick="saveBorrowerProspect(${income}, '${cat.label}', \`${borrowerName.replace(/`/g,'\\`')}\`, ${maxPrice}, ${pctAmi})">
+        ${saveBtnLabel}
       </button>
     </div>
     <div class="qual-note">⚠️ Estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Area Median Income: $${currentAmi.toLocaleString()} for ${currentCity}, ${currentZip}.</div>
@@ -814,13 +816,91 @@ function calcQualifier() {
 }
 
 async function saveBorrowerProspect(income, category, borrowerName, maxPrice, pctAmi) {
-  await saveZip(currentZip, currentCity, {
+  const now = new Date().toISOString();
+  const prospectData = {
+    userId: currentUser.id,
+    userName: currentUser.name,
+    userRegion: currentUser.region,
+    zip: currentZip,
+    city: currentCity,
+    savedAt: now,
     borrowerName: borrowerName || 'Unnamed Borrower',
     borrowerIncome: income,
     borrowerCategory: category,
     borrowerMaxPrice: maxPrice,
     borrowerPctAmi: pctAmi
-  });
+  };
+
+  if (editingProspectDocId && !editingProspectDocId.startsWith('pending-')) {
+    // Replace existing record
+    const idx = cachedProspects.findIndex(p => p.docId === editingProspectDocId);
+    if (idx > -1) cachedProspects[idx] = { docId: editingProspectDocId, ...prospectData };
+    renderSaved();
+    showToast(`💾 ${borrowerName || 'Borrower'} record updated`);
+    const btn = document.getElementById('qual-save-btn-el');
+    if (btn) { btn.textContent = '✓ Updated!'; btn.style.background = '#ccfbf1'; }
+    try {
+      await db.collection('prospects').doc(editingProspectDocId).set(prospectData);
+      cachedProspects = await fetchMyProspects();
+      renderSaved();
+    } catch (e) { console.error('Update error:', e); }
+  } else {
+    // New record
+    cachedProspects.unshift({ docId: 'pending-' + Date.now(), ...prospectData });
+    renderSaved();
+    showToast(`📌 ${borrowerName || 'Borrower'} saved to prospects`);
+    const btn = document.getElementById('qual-save-btn-el');
+    if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
+    try {
+      await db.collection('prospects').add(prospectData);
+      cachedProspects = await fetchMyProspects();
+      renderSaved();
+    } catch (e) { console.error('Save error:', e); }
+  }
+}
+
+async function saveZip(zip, city) {
+  const now = new Date().toISOString();
+  const prospectData = {
+    userId: currentUser.id,
+    userName: currentUser.name,
+    userRegion: currentUser.region,
+    zip, city, savedAt: now
+  };
+  const existing = cachedProspects.find(p => p.zip === zip && !p.borrowerName);
+  if (existing) {
+    existing.savedAt = now;
+  } else {
+    cachedProspects.unshift({ docId: 'pending-' + Date.now(), ...prospectData });
+  }
+  renderSaved();
+  const btn = document.querySelector('.save-btn');
+  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
+  showToast(`📌 ${zip} saved to prospects`);
+  try {
+    const existingSnap = await db.collection('prospects')
+      .where('userId', '==', currentUser.id)
+      .where('zip', '==', zip)
+      .get();
+    const noName = existingSnap.docs.filter(d => !d.data().borrowerName);
+    if (noName.length) {
+      await noName[0].ref.update({ savedAt: now, city });
+    } else {
+      await db.collection('prospects').add(prospectData);
+    }
+    cachedProspects = await fetchMyProspects();
+    renderSaved();
+  } catch (e) { console.error('Save error:', e); }
+}
+
+async function deleteSaved(docId) {
+  cachedProspects = cachedProspects.filter(p => p.docId !== docId);
+  renderSaved();
+  try {
+    if (!docId.startsWith('pending-')) {
+      await db.collection('prospects').doc(docId).delete();
+    }
+  } catch (e) { console.error('Delete error:', e); }
 }
 
 // ── ADMIN PROSPECTS ───────────────────────────────────────────
@@ -1203,8 +1283,6 @@ function renderFarmCard(zip, city, ami) {
       </div>
       <div class="farm-note">⚠️ Price estimates use ${farmParams.frontEnd}% front-end ratio at ${farmParams.rate}% rate, ${farmParams.term}-year fixed. Actual qualifying prices will vary by borrower.</div>
     </div>`;
-
-  // Show borrower qualifier trigger
   document.getElementById('qualifier-trigger').style.display = 'block';
 }
 
