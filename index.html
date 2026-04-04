@@ -1,4 +1,1568 @@
-// ── MARKETING ENGINE ──────────────────────────────────────────
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="LMI Prospect Finder"/>
+<meta name="theme-color" content="#1f2937"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWYyOTM3Ii8+PHBhdGggZD0iTTkwIDI0QzY0IDI0IDQyIDQ2IDQyIDcyYzAgMzggNDggOTIgNDggOTJzNDgtNTQgNDgtOTJjMC0yNi0yMi00OC00OC00OHptMCA2NmEyMiAyMiAwIDEgMSAwLTQ0IDIyIDIyIDAgMCAxIDAgNDR6IiBmaWxsPSIjMGVkMmM4Ii8+PC9zdmc+"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231f2937'/%3E%3Cpath d='M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z' fill='%230ed2c8'/%3E%3C/svg%3E"/>
+<title>LMI Prospect Finder</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+.login-box {
+  background: white; border-radius: 18px; padding: 48px 40px; width: 100%; max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+}
+.login-logo { margin-bottom: 12px; display: flex; justify-content: center; }
+.login-title { font-size: 22px; font-weight: 800; color: #1f2937; margin-bottom: 4px; }
+.login-sub { font-size: 13px; color: #7a8fa6; margin-bottom: 32px; }
+.login-box input {
+  width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px;
+  font-size: 15px; margin-bottom: 14px; outline: none; transition: border 0.2s;
+}
+.login-box input:focus { border-color: #0ed2c8; }
+.login-btn {
+  width: 100%; padding: 14px; background: linear-gradient(135deg, #1f2937, #374151);
+  color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.login-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.login-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
+
+#app-screen, #admin-screen { display: none; }
+
+.header {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  padding: 0 32px; display: flex; align-items: stretch; justify-content: space-between;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2); min-height: 70px;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-icon { width: 44px; height: 44px; background: #0ed2c8; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-title { color: white; font-size: 20px; font-weight: 800; }
+.header-sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
+.header-nav { display: flex; align-items: stretch; gap: 0; margin-left: 24px; }
+.nav-tab { color: rgba(255,255,255,0.6); border: none; background: none; padding: 0 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
+.nav-tab.active { color: #0ed2c8; border-bottom-color: #0ed2c8; }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.hdr-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-weight: 600; }
+.hdr-btn:hover { background: rgba(255,255,255,0.2); }
+.hdr-btn.teal { background: #0ed2c8; color: #1f2937; border-color: #0ed2c8; font-weight: 700; }
+
+.main { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
+.card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+.card-title { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 6px; }
+.card-sub { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+
+.search-row { display: flex; gap: 12px; }
+.search-row input { flex: 1; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; letter-spacing: 3px; outline: none; transition: border 0.2s; }
+.search-row input:focus { border-color: #0ed2c8; }
+.search-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.search-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.examples { font-size: 12px; color: #94a3b8; margin-top: 10px; }
+.examples span { background: #f1f5f9; border-radius: 5px; padding: 3px 8px; margin-right: 6px; cursor: pointer; display: inline-block; margin-bottom: 4px; }
+.examples span:hover { background: #ccfbf1; color: #0f766e; }
+.branch-shortcuts { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+.branch-shortcuts-label { font-size: 11px; font-weight: 700; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.branch-shortcuts-label span { background: #0ed2c8; color: #1f2937; font-size: 10px; border-radius: 4px; padding: 2px 6px; }
+.branch-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
+.branch-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+
+.farm-card { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 24px; color: white; }
+.farm-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 3px; }
+.farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 18px; }
+.farm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.farm-stat { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(14,210,200,0.2); }
+.farm-stat-num { font-size: 20px; font-weight: 900; color: #0ed2c8; }
+.farm-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+.farm-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.farm-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 11px 18px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.15s; }
+.farm-link:hover { opacity: 0.85; }
+.farm-zillow { background: #006aff; color: white; }
+.farm-redfin { background: #cc0000; color: white; }
+.farm-zillow-mod { background: #0ed2c8; color: #1f2937; }
+.farm-realtor-link { background: #c0392b; color: white; }
+.farm-adjustments { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; border: 1px solid rgba(255,255,255,0.08); }
+.farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
+.reset-btn { background: rgba(14,210,200,0.15); color: #0ed2c8; border: 1px solid rgba(14,210,200,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.adj-row { display: flex; flex-direction: column; gap: 6px; }
+.adj-label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.adj-controls { display: flex; align-items: center; gap: 8px; }
+.adj-slider { flex: 1; accent-color: #0ed2c8; height: 4px; cursor: pointer; }
+.adj-input { width: 64px; padding: 6px 8px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 7px; background: rgba(255,255,255,0.08); color: white; font-size: 13px; font-weight: 700; text-align: center; outline: none; }
+.adj-unit { font-size: 12px; color: rgba(255,255,255,0.5); min-width: 20px; }
+.adj-select { flex: 1; padding: 7px 10px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 7px; background: rgba(255,255,255,0.08); color: white; font-size: 13px; font-weight: 700; outline: none; cursor: pointer; }
+.adj-select option { background: #1f2937; }
+.farm-note { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 14px; line-height: 1.5; }
+
+.qualifier-trigger { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.qualifier-trigger-left { display: flex; align-items: center; gap: 12px; }
+.qualifier-trigger-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0ed2c8, #06b6aa); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.qualifier-trigger-title { font-size: 14px; font-weight: 700; color: #1f2937; }
+.qualifier-trigger-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.qualifier-open-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.qualifier-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #0ed2c8; display: none; }
+.qualifier-card.open { display: block; }
+.qualifier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.qualifier-title { font-size: 16px; font-weight: 800; color: #1f2937; }
+.qualifier-close { background: #f1f5f9; color: #64748b; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.qualifier-editing-badge { background: #fef3c7; color: #d97706; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 4px 10px; border: 1px solid #fde68a; margin-bottom: 16px; display: none; }
+.qualifier-editing-badge.show { display: inline-block; }
+.qualifier-input-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
+.qualifier-input-wrap { flex: 1; min-width: 160px; }
+.qualifier-input-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+.qualifier-input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
+.qualifier-input:focus { border-color: #0ed2c8; }
+.qualifier-calc-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.qualifier-result { display: none; }
+.qualifier-result.show { display: block; }
+.qual-badge-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.qual-category-badge { font-size: 15px; font-weight: 800; border-radius: 10px; padding: 10px 20px; }
+.qual-pct-bar-wrap { flex: 1; min-width: 120px; }
+.qual-pct-bar-track { background: #e2e8f0; border-radius: 99px; height: 10px; overflow: hidden; }
+.qual-pct-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.qual-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.qual-stat { background: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; text-align: center; }
+.qual-stat-num { font-size: 20px; font-weight: 900; color: #1f2937; }
+.qual-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.qual-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.qual-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; }
+.qual-action-row { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; align-items: center; }
+.qual-save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.qual-save-btn.update { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+.qual-realtor-btn { background: #f0f4ff; color: #4f46e5; border: 2px solid #c7d2fe; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.qual-assigned-realtors { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.qual-realtor-tag { background: #f0f4ff; color: #4f46e5; font-size: 12px; font-weight: 700; border-radius: 20px; padding: 4px 12px; border: 1px solid #c7d2fe; display: flex; align-items: center; gap: 6px; }
+.qual-realtor-tag-remove { cursor: pointer; color: #a5b4fc; font-size: 14px; }
+.qual-note { font-size: 11px; color: #94a3b8; margin-top: 12px; line-height: 1.5; }
+
+.saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
+.saved-row:last-child { border-bottom: none; }
+.saved-row-clickable { cursor: pointer; flex: 1; padding: 4px 8px 4px 0; border-radius: 8px; transition: background 0.15s; }
+.saved-row-clickable:hover { background: #f0fdfa; }
+.saved-zip { font-weight: 700; color: #1f2937; }
+.saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
+.lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+.saved-borrower-tag { font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; font-weight: 700; }
+.saved-realtor-tag { background: #f0f4ff; color: #4f46e5; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 4px; font-weight: 600; }
+.saved-reopen { font-size: 11px; color: #0ed2c8; margin-left: 6px; }
+.saved-mlo { color: #94a3b8; font-size: 11px; margin-left: 8px; font-style: italic; }
+.saved-date { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+.remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; flex-shrink: 0; }
+.mkt-btn { background: none; border: 1px solid #0ed2c8; color: #0ed2c8; cursor: pointer; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+.mkt-btn:hover { background: #ccfbf1; }
+.empty-saved { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
+
+.loader { text-align: center; padding: 30px; color: #0ed2c8; font-weight: 600; font-size: 15px; }
+.not-found { background: white; border-radius: 16px; padding: 36px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+.not-found h3 { color: #1f2937; font-size: 17px; margin-bottom: 6px; }
+.not-found p { color: #64748b; font-size: 13px; }
+.not-found a { color: #0ed2c8; font-weight: 600; }
+.api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px; border-left: 4px solid #dc2626; }
+.api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
+.api-error p { color: #64748b; font-size: 13px; }
+.result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; }
+.result-city { font-size: 24px; font-weight: 800; color: #1f2937; }
+.result-zip { font-size: 14px; color: #64748b; margin-left: 10px; }
+.result-meta { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
+.save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
+.summary-num { font-size: 28px; font-weight: 900; color: #1f2937; }
+.summary-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.tract-table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
+.tract-table { width: 100%; border-collapse: collapse; }
+.tract-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 14px 16px; border-bottom: 2px solid #f1f5f9; background: #f8fafc; }
+.tract-table td { padding: 11px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; }
+.tract-table tr:last-child td { border-bottom: none; }
+.tract-table tr:hover td { background: #f0fdfa; }
+.lmi-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; display: inline-block; }
+.bar-cell { min-width: 120px; }
+.bar-track { background: #e2e8f0; border-radius: 99px; height: 7px; overflow: hidden; margin-top: 4px; }
+.bar-fill { height: 100%; border-radius: 99px; }
+.pct-label { font-size: 12px; font-weight: 700; }
+.links-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
+.links-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.link-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; }
+.link-btn:hover { opacity: 0.85; }
+.ffiec { background: #1f2937; color: white; }
+.hud { background: #0ed2c8; color: #1f2937; }
+
+/* MARKETING TAB */
+.marketing-main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+.mkt-header-title { font-size: 22px; font-weight: 800; color: #1f2937; margin-bottom: 28px; }
+.mkt-profile-warn { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #d97706; margin-bottom: 24px; display: none; }
+.mkt-profile-warn a { color: #d97706; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.mkt-pieces-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+.mkt-piece-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 4px solid #0ed2c8; }
+.mkt-piece-card.purple { border-top-color: #4f46e5; }
+.mkt-piece-card.green { border-top-color: #059669; }
+.mkt-piece-icon { font-size: 32px; margin-bottom: 12px; }
+.mkt-piece-title { font-size: 15px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
+.mkt-piece-desc { font-size: 12px; color: #64748b; line-height: 1.5; margin-bottom: 16px; }
+.mkt-piece-select { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 13px; outline: none; margin-bottom: 12px; }
+.mkt-generate-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.mkt-generate-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.mkt-generate-btn.purple { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+.mkt-generate-btn.green { background: linear-gradient(135deg, #059669, #047857); }
+
+/* FLYER MODAL */
+.flyer-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-start; justify-content: center; z-index: 400; overflow-y: auto; padding: 20px; }
+.flyer-modal-overlay.open { display: flex; }
+.flyer-modal-box { background: #f0f4f8; border-radius: 16px; width: 100%; max-width: 720px; margin: auto; }
+.flyer-modal-header { background: linear-gradient(135deg, #1f2937, #374151); border-radius: 16px 16px 0 0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+.flyer-modal-title { color: white; font-size: 16px; font-weight: 700; }
+.flyer-modal-actions { display: flex; gap: 10px; align-items: center; }
+.flyer-action-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.flyer-action-btn.teal { background: #0ed2c8; color: #1f2937; border-color: #0ed2c8; }
+.flyer-close-btn { background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 16px; cursor: pointer; }
+.flyer-share-row { background: white; margin: 16px; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.flyer-share-url { flex: 1; font-size: 12px; color: #64748b; word-break: break-all; }
+.flyer-copy-btn { background: #f0f4f8; color: #1f2937; border: none; border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.flyer-copy-btn:hover { background: #ccfbf1; color: #0f766e; }
+.flyer-preview-wrap { padding: 16px; }
+.flyer-preview { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+/* FLYER PRINT STYLES */
+.flyer { font-family: 'Segoe UI', Arial, sans-serif; background: white; max-width: 680px; margin: 0 auto; }
+.flyer-top-bar { background: #1f2937; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; }
+.flyer-logo-area { display: flex; align-items: center; gap: 12px; }
+.flyer-logo-icon { width: 40px; height: 40px; background: #0ed2c8; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.flyer-logo-text { color: white; font-size: 14px; font-weight: 800; }
+.flyer-logo-sub { color: rgba(255,255,255,0.6); font-size: 11px; }
+.flyer-type-badge { background: #0ed2c8; color: #1f2937; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 4px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.flyer-hero { padding: 28px 32px; border-bottom: 2px solid #f1f5f9; }
+.flyer-hero-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.flyer-hero-name { font-size: 26px; font-weight: 900; color: #1f2937; margin-bottom: 4px; }
+.flyer-hero-sub { font-size: 13px; color: #64748b; }
+.flyer-body { padding: 24px 32px; }
+.flyer-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; }
+.flyer-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.flyer-stat { background: #f8fafc; border-radius: 10px; padding: 14px 16px; border-left: 3px solid #0ed2c8; }
+.flyer-stat-num { font-size: 20px; font-weight: 900; color: #1f2937; }
+.flyer-stat-label { font-size: 10px; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+.flyer-links-section { margin-bottom: 20px; }
+.flyer-link-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; text-decoration: none; }
+.flyer-link-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.flyer-link-label { font-size: 12px; font-weight: 700; color: #1f2937; }
+.flyer-link-url { font-size: 11px; color: #0ed2c8; word-break: break-all; }
+.flyer-lmi-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.flyer-lmi-table th { text-align: left; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; padding: 8px 12px; background: #f8fafc; }
+.flyer-lmi-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; font-size: 13px; }
+.flyer-lmi-badge { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
+.flyer-mlo-footer { background: #1f2937; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+.flyer-mlo-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #0ed2c8; flex-shrink: 0; }
+.flyer-mlo-photo-placeholder { width: 56px; height: 56px; border-radius: 50%; background: #374151; border: 2px solid #0ed2c8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.flyer-mlo-name { color: white; font-size: 15px; font-weight: 800; }
+.flyer-mlo-details { color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 3px; line-height: 1.6; }
+.flyer-mlo-nmls { color: #0ed2c8; font-size: 11px; font-weight: 700; margin-top: 2px; }
+.flyer-disclaimer { padding: 12px 32px; font-size: 9px; color: #94a3b8; line-height: 1.5; background: #f8fafc; }
+.flyer-profile-hero { padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start; border-bottom: 2px solid #f1f5f9; }
+.flyer-profile-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #0ed2c8; flex-shrink: 0; }
+.flyer-profile-photo-placeholder { width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; border: 3px solid #0ed2c8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.flyer-value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.flyer-value-item { background: #f8fafc; border-radius: 10px; padding: 14px 16px; }
+.flyer-value-icon { font-size: 18px; margin-bottom: 6px; }
+.flyer-value-title { font-size: 12px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+.flyer-value-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
+
+/* FLYER PUBLIC VIEW */
+#flyer-public-screen { display: none; min-height: 100vh; background: #f0f4f8; }
+.flyer-public-header { background: linear-gradient(135deg, #1f2937, #374151); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+.flyer-public-logo { display: flex; align-items: center; gap: 10px; color: white; font-size: 14px; font-weight: 700; }
+.flyer-public-content { max-width: 720px; margin: 32px auto; padding: 0 20px; }
+
+/* DASHBOARD */
+.dashboard-main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+.dashboard-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px; }
+.dashboard-greeting { font-size: 22px; font-weight: 800; color: #1f2937; }
+.dashboard-greeting-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+.date-range-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.date-range-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; }
+.date-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 13px; outline: none; }
+.date-input:focus { border-color: #0ed2c8; }
+.date-apply-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.date-clear-btn { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.dash-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+.dash-stat-card { background: white; border-radius: 14px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
+.dash-stat-card.purple { border-top-color: #4f46e5; }
+.dash-stat-card.green { border-top-color: #059669; }
+.dash-stat-card.orange { border-top-color: #d97706; }
+.dash-stat-card.red { border-top-color: #dc2626; }
+.dash-stat-num { font-size: 30px; font-weight: 900; color: #1f2937; }
+.dash-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; line-height: 1.4; }
+.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.dash-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.dash-card-title { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-chart-row { display: flex; align-items: center; gap: 10px; }
+.bar-chart-label { font-size: 12px; color: #64748b; font-weight: 600; min-width: 130px; text-align: right; }
+.bar-chart-bar-wrap { flex: 1; background: #f1f5f9; border-radius: 99px; height: 22px; overflow: hidden; }
+.bar-chart-bar { height: 100%; border-radius: 99px; display: flex; align-items: center; padding-left: 10px; font-size: 11px; font-weight: 700; color: white; transition: width 0.5s ease; min-width: 2px; }
+.bar-chart-count { font-size: 12px; font-weight: 700; color: #1f2937; min-width: 24px; }
+.lmi-breakdown { display: flex; flex-direction: column; gap: 10px; }
+.lmi-row { display: flex; align-items: center; gap: 10px; }
+.lmi-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.lmi-name { font-size: 13px; color: #64748b; flex: 1; }
+.lmi-bar-wrap { width: 120px; background: #f1f5f9; border-radius: 99px; height: 8px; overflow: hidden; }
+.lmi-bar { height: 100%; border-radius: 99px; }
+.lmi-count { font-size: 12px; font-weight: 700; color: #1f2937; min-width: 24px; text-align: right; }
+.lmi-pct { font-size: 11px; color: #94a3b8; min-width: 36px; text-align: right; }
+.recent-activity-list { display: flex; flex-direction: column; gap: 8px; }
+.recent-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
+.recent-item:last-child { border-bottom: none; }
+.recent-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.recent-content { flex: 1; }
+.recent-title { font-size: 13px; font-weight: 700; color: #1f2937; }
+.recent-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.recent-date { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+.team-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.team-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; text-align: center; }
+.team-stat-num { font-size: 28px; font-weight: 900; color: #1f2937; }
+.team-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.mlo-leaderboard { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+.mlo-leaderboard-title { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 16px; }
+.mlo-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+.mlo-row:last-child { border-bottom: none; }
+.mlo-rank { font-size: 16px; font-weight: 900; color: #94a3b8; min-width: 28px; }
+.mlo-rank.gold { color: #d97706; }
+.mlo-rank.silver { color: #94a3b8; }
+.mlo-rank.bronze { color: #b45309; }
+.mlo-info { flex: 1; }
+.mlo-name-dash { font-size: 14px; font-weight: 700; color: #1f2937; }
+.mlo-region { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.mlo-stats-row { display: flex; gap: 16px; }
+.mlo-stat-pill { background: #f1f5f9; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #64748b; }
+.mlo-stat-pill.teal { background: #ccfbf1; color: #0f766e; }
+.mlo-stat-pill.blue { background: #eff6ff; color: #2563eb; }
+.mlo-stat-pill.green { background: #f0fdf4; color: #059669; }
+.empty-dash { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
+
+/* REALTORS */
+.realtors-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+.realtor-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+.realtor-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #4f46e5; text-align: center; }
+.realtor-stat-num { font-size: 28px; font-weight: 900; color: #1f2937; }
+.realtor-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.realtor-form-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #4f46e5; }
+.realtor-form-title { font-size: 16px; font-weight: 800; color: #1f2937; margin-bottom: 20px; }
+.realtor-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.realtor-form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.realtor-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+.realtor-field input, .realtor-field textarea { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; font-family: inherit; }
+.realtor-field input:focus, .realtor-field textarea:focus { border-color: #4f46e5; }
+.realtor-field textarea { resize: vertical; min-height: 60px; }
+.realtor-submit-row { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
+.realtor-submit-btn { background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; border: none; border-radius: 9px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.realtor-clear-btn { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.realtor-list-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.realtor-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.realtor-list-title { font-size: 16px; font-weight: 700; color: #1f2937; }
+.realtor-search-input { padding: 9px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 13px; outline: none; width: 220px; }
+.realtor-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; transition: border 0.2s; }
+.realtor-card:hover { border-color: #4f46e5; }
+.realtor-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.realtor-card-name { font-size: 15px; font-weight: 800; color: #1f2937; }
+.realtor-card-brokerage { font-size: 12px; color: #64748b; margin-top: 2px; }
+.realtor-card-actions { display: flex; gap: 8px; }
+.realtor-card-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+.realtor-info-item { font-size: 12px; }
+.realtor-info-label { color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; font-size: 10px; }
+.realtor-info-value { color: #1f2937; font-weight: 600; margin-top: 2px; }
+.realtor-notes { font-size: 12px; color: #64748b; font-style: italic; margin-top: 6px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+.realtor-clients { margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+.realtor-clients-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+.realtor-client-tag { background: #f0fdf4; color: #059669; font-size: 11px; font-weight: 600; border-radius: 5px; padding: 2px 8px; margin-right: 6px; margin-bottom: 4px; display: inline-block; }
+.empty-realtors { text-align: center; color: #94a3b8; font-size: 13px; padding: 40px 0; }
+
+/* REALTOR PICKER */
+.realtor-picker-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; }
+.realtor-picker-overlay.open { display: flex; }
+.realtor-picker-box { background: white; border-radius: 18px; padding: 28px; width: 100%; max-width: 560px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.realtor-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.realtor-picker-title { font-size: 17px; font-weight: 800; color: #1f2937; }
+.realtor-picker-close { background: #f1f5f9; color: #64748b; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.realtor-picker-search { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; margin-bottom: 14px; }
+.realtor-picker-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.realtor-picker-item { border: 2px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; }
+.realtor-picker-item:hover { border-color: #4f46e5; background: #f5f3ff; }
+.realtor-picker-item.selected { border-color: #4f46e5; background: #f0f4ff; }
+.realtor-picker-item-name { font-size: 14px; font-weight: 700; color: #1f2937; }
+.realtor-picker-item-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+.realtor-picker-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.realtor-picker-item.selected .realtor-picker-check { background: #4f46e5; border-color: #4f46e5; color: white; }
+.realtor-picker-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.realtor-picker-count { font-size: 13px; color: #64748b; }
+.realtor-picker-confirm { background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; border: none; border-radius: 9px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.realtor-picker-empty { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
+
+/* ACTIVITY */
+.activity-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+.activity-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.activity-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; text-align: center; }
+.activity-stat-num { font-size: 28px; font-weight: 900; color: #1f2937; }
+.activity-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.log-form-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #0ed2c8; }
+.log-form-title { font-size: 16px; font-weight: 800; color: #1f2937; margin-bottom: 20px; }
+.log-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.log-form-grid-wide { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.log-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+.log-field input, .log-field select, .log-field textarea { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; font-family: inherit; }
+.log-field input:focus, .log-field select:focus, .log-field textarea:focus { border-color: #0ed2c8; }
+.log-field textarea { resize: vertical; min-height: 72px; }
+.log-submit-row { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
+.log-submit-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.log-clear-btn { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.log-list-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.log-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.log-list-title { font-size: 16px; font-weight: 700; color: #1f2937; }
+.log-filters { display: flex; gap: 10px; flex-wrap: wrap; }
+.log-filter-select { padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; }
+.activity-entry { border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; transition: border 0.2s; }
+.activity-entry:hover { border-color: #0ed2c8; }
+.activity-entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.activity-type-badge { font-size: 12px; font-weight: 700; border-radius: 7px; padding: 4px 12px; }
+.activity-entry-meta { font-size: 12px; color: #94a3b8; }
+.activity-entry-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+.activity-field { font-size: 12px; }
+.activity-field-label { color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; font-size: 10px; }
+.activity-field-value { color: #1f2937; font-weight: 600; margin-top: 2px; }
+.activity-notes { font-size: 12px; color: #64748b; font-style: italic; margin-top: 6px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+.activity-delete-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 13px; padding: 4px 8px; border-radius: 6px; }
+.empty-activity { text-align: center; color: #94a3b8; font-size: 13px; padding: 40px 0; }
+
+/* ADMIN */
+.admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+.admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; }
+.stat-num { font-size: 32px; font-weight: 900; color: #1f2937; }
+.stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.admin-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
+.admin-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.admin-card-title { font-size: 16px; font-weight: 700; color: #1f2937; }
+.add-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; }
+.form-group input, .form-group select { width: 100%; padding: 11px 13px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; }
+.form-group input:focus, .form-group select:focus { border-color: #0ed2c8; }
+.add-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.invite-btn { background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.gen-btn { background: #f0fdfa; color: #0f766e; border: 2px solid #99f6e4; border-radius: 9px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.form-error { color: #dc2626; font-size: 12px; margin-top: 10px; display: none; }
+.form-success { color: #059669; font-size: 12px; margin-top: 10px; display: none; }
+.user-table { width: 100%; border-collapse: collapse; }
+.user-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 0 10px 12px 0; border-bottom: 2px solid #f1f5f9; }
+.user-table td { padding: 12px 10px 12px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; vertical-align: top; }
+.user-table tr:last-child td { border-bottom: none; }
+.role-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; }
+.role-admin { background: #ccfbf1; color: #0f766e; }
+.role-mlo { background: #e0f2fe; color: #0369a1; }
+.type-badge { font-size: 11px; font-weight: 600; border-radius: 5px; padding: 3px 9px; background: #f1f5f9; color: #64748b; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.status-active { background: #0ed2c8; }
+.status-inactive { background: #94a3b8; }
+.action-btn { background: none; border: none; cursor: pointer; padding: 4px 7px; border-radius: 6px; font-size: 13px; }
+.action-btn:hover { background: #f1f5f9; }
+.del-btn { color: #dc2626; }
+.toggle-btn { color: #0ed2c8; }
+.copy-btn { color: #059669; }
+.empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
+.branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
+
+/* SETTINGS */
+.settings-overlay { position: fixed; top: 0; right: -440px; width: 420px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 200; transition: right 0.3s ease; display: flex; flex-direction: column; }
+.settings-overlay.open { right: 0; }
+.settings-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 199; display: none; }
+.settings-backdrop.open { display: block; }
+.settings-header { background: linear-gradient(135deg, #1f2937, #374151); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+.settings-title { color: white; font-size: 17px; font-weight: 800; }
+.settings-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.settings-body { flex: 1; overflow-y: auto; padding: 24px; }
+.settings-user-info { background: #f0fdfa; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; border: 1px solid #99f6e4; }
+.settings-user-name { font-size: 15px; font-weight: 700; color: #1f2937; }
+.settings-user-meta { font-size: 12px; color: #64748b; margin-top: 3px; }
+.settings-section { margin-bottom: 28px; }
+.settings-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+.settings-item { display: flex; flex-direction: column; gap: 10px; }
+.settings-input { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
+.settings-input:focus { border-color: #0ed2c8; }
+.settings-save-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+.settings-save-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.settings-error { color: #dc2626; font-size: 12px; display: none; }
+.settings-success { color: #059669; font-size: 12px; display: none; }
+.settings-coming-soon { background: #f8fafc; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #94a3b8; border: 1px dashed #e2e8f0; text-align: center; }
+.profile-photo-preview { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #0ed2c8; display: none; }
+
+/* MODALS */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 17px; font-weight: 800; color: #1f2937; margin-bottom: 4px; }
+.modal-sub { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
+.modal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.modal-form .full { grid-column: span 2; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-cancel { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.existing-branches { margin-top: 16px; }
+.existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+.existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+
+/* INVITE MODAL */
+.invite-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); display: none; align-items: center; justify-content: center; z-index: 500; }
+.invite-modal-overlay.open { display: flex; }
+.invite-modal-box { background: white; border-radius: 20px; padding: 48px 40px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); text-align: center; }
+.invite-modal-logo { margin-bottom: 16px; display: flex; justify-content: center; }
+.invite-modal-title { font-size: 22px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
+.invite-modal-sub { font-size: 13px; color: #94a3b8; margin-bottom: 28px; line-height: 1.5; }
+.invite-modal-name { font-size: 18px; font-weight: 700; color: #0ed2c8; margin-bottom: 4px; }
+.invite-modal-email { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+.invite-field { text-align: left; margin-bottom: 14px; }
+.invite-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+.invite-field input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.2s; }
+.invite-field input:focus { border-color: #0ed2c8; }
+.invite-submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+.invite-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
+.invite-success-box { display: none; }
+.invite-success-icon { font-size: 48px; margin-bottom: 16px; }
+.invite-success-title { font-size: 20px; font-weight: 800; color: #1f2937; margin-bottom: 8px; }
+.invite-success-sub { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+.invite-success-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.invite-expired-box { display: none; text-align: center; padding: 20px 0; }
+.invite-expired-icon { font-size: 48px; margin-bottom: 16px; }
+.invite-expired-title { font-size: 18px; font-weight: 800; color: #dc2626; margin-bottom: 8px; }
+.invite-expired-sub { font-size: 13px; color: #64748b; }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
+
+@media (max-width: 768px) {
+  .dash-stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .dash-two-col { grid-template-columns: 1fr; }
+  .team-stats-grid { grid-template-columns: 1fr 1fr; }
+  .mkt-pieces-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .add-form, .summary-grid, .farm-stats, .adj-grid, .qual-stats, .realtor-stats { grid-template-columns: 1fr 1fr; }
+  .admin-stats, .activity-stats { grid-template-columns: 1fr 1fr; }
+  .log-form-grid, .log-form-grid-wide, .activity-entry-body, .realtor-form-grid, .realtor-form-grid-2, .realtor-card-body { grid-template-columns: 1fr 1fr; }
+  .dash-stats-grid { grid-template-columns: 1fr 1fr; }
+  .header { padding: 0 16px; }
+  .header-title { font-size: 15px; }
+  .header-nav { display: none; }
+  .modal-form { grid-template-columns: 1fr; }
+  .modal-form .full { grid-column: span 1; }
+  .settings-overlay { width: 100%; right: -100%; }
+  .qualifier-input-row { flex-direction: column; }
+  .invite-modal-box { padding: 32px 24px; margin: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- FLYER PUBLIC SCREEN -->
+<div id="flyer-public-screen">
+  <div class="flyer-public-header">
+    <div class="flyer-public-logo">
+      <svg width="28" height="28" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="180" height="180" rx="40" fill="#0ed2c8"/>
+        <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+      </svg>
+      LMI Prospect Finder
+    </div>
+    <button class="flyer-action-btn teal" onclick="downloadPublicFlyer()">⬇ Download PDF</button>
+  </div>
+  <div class="flyer-public-content">
+    <div id="flyer-public-render"></div>
+  </div>
+</div>
+
+<!-- INVITE MODAL -->
+<div class="invite-modal-overlay" id="invite-modal">
+  <div class="invite-modal-box">
+    <div class="invite-modal-logo">
+      <svg width="56" height="56" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="180" height="180" rx="40" fill="#1f2937"/>
+        <path d="M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#0ed2c8"/>
+      </svg>
+    </div>
+    <div id="invite-loading"><div class="invite-modal-title">Checking your invite...</div><div class="invite-modal-sub">Just a moment.</div></div>
+    <div class="invite-expired-box" id="invite-expired">
+      <div class="invite-expired-icon">⏰</div>
+      <div class="invite-expired-title">Invite Expired or Invalid</div>
+      <div class="invite-expired-sub">This invite link has expired or already been used.<br/>Contact your admin for a new invite.</div>
+    </div>
+    <div id="invite-form" style="display:none">
+      <div class="invite-modal-title">Welcome to LMI Prospect Finder</div>
+      <div class="invite-modal-sub">You've been invited to join your team's mortgage prospecting tool. Set your password to get started.</div>
+      <div class="invite-modal-name" id="invite-display-name"></div>
+      <div class="invite-modal-email" id="invite-display-email"></div>
+      <div class="invite-field"><label>Create Password</label><input type="password" id="invite-pw" placeholder="Minimum 8 characters" onkeydown="if(event.key==='Enter') submitInviteSetup()" /></div>
+      <div class="invite-field"><label>Confirm Password</label><input type="password" id="invite-pw-confirm" placeholder="Repeat your password" onkeydown="if(event.key==='Enter') submitInviteSetup()" /></div>
+      <div class="invite-error" id="invite-error"></div>
+      <button class="invite-submit-btn" onclick="submitInviteSetup()">Create Account & Sign In →</button>
+    </div>
+    <div class="invite-success-box" id="invite-success">
+      <div class="invite-success-icon">✅</div>
+      <div class="invite-success-title">Account Created!</div>
+      <div class="invite-success-sub">Your password has been set. You're ready to start prospecting.</div>
+      <button class="invite-success-btn" onclick="closeInviteAndLogin()">Go to LMI Prospect Finder →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="64" height="64" viewBox="0 0 680 370" xmlns="http://www.w3.org/2000/svg">
+        <rect x="190" y="20" width="300" height="300" rx="60" fill="#1f2937"/>
+        <path d="M340 55 C306 55 275 83 275 118 C275 165 340 238 340 238 C340 238 405 165 405 118 C405 83 374 55 340 55 Z" fill="#0ed2c8"/>
+        <circle cx="340" cy="116" r="32" fill="#1f2937"/>
+        <text x="340" y="124" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="800" fill="#0ed2c8" letter-spacing="2">LMI</text>
+        <g opacity="0.5"><polygon points="271,279 282,268 293,279" fill="#0ed2c8"/><rect x="273" y="279" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="278" y="283" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+        <g opacity="0.75"><polygon points="297,277 308,266 319,277" fill="#0ed2c8"/><rect x="299" y="277" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="304" y="281" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+        <polygon points="329,266 340,255 351,266" fill="#0ed2c8"/><rect x="329" y="266" width="22" height="14" rx="1" fill="#0ed2c8"/><rect x="335" y="270" width="8" height="10" rx="0.5" fill="#1f2937"/>
+        <g opacity="0.75"><polygon points="361,277 372,266 383,277" fill="#0ed2c8"/><rect x="363" y="277" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="368" y="281" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+        <g opacity="0.5"><polygon points="387,279 398,268 409,279" fill="#0ed2c8"/><rect x="389" y="279" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="394" y="283" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+      </svg>
+    </div>
+    <div class="login-title">LMI Prospect Finder</div>
+    <div class="login-sub">Mortgage Sales Team · Internal Tool</div>
+    <input type="text" id="login-email" placeholder="Email address" autocomplete="email" />
+    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()" />
+    <button class="login-btn" onclick="tryLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Incorrect email or password.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">LMI Prospect Finder</div>
+        <div class="header-sub">CRA/HMDA · Mortgage Sales</div>
+      </div>
+      <nav class="header-nav">
+        <button class="nav-tab active" id="tab-search" onclick="showTab('search')">🔍 Search</button>
+        <button class="nav-tab" id="tab-dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
+        <button class="nav-tab" id="tab-realtors" onclick="showTab('realtors')">🏠 Realtors</button>
+        <button class="nav-tab" id="tab-activity" onclick="showTab('activity')">📋 Activity Log</button>
+        <button class="nav-tab" id="tab-marketing" onclick="showTab('marketing')">🖨 Marketing</button>
+      </nav>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
+      <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">🛡 Admin</span>
+      <button class="hdr-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- SEARCH TAB -->
+  <div id="tab-search-content">
+    <div class="main">
+      <div class="card">
+        <div class="card-title">Enter a ZIP Code to Check LMI Status</div>
+        <div class="card-sub">Live Census Bureau data — works for any ZIP code in the US.</div>
+        <div class="search-row">
+          <input type="text" id="zip-input" maxlength="5" placeholder="e.g. 93701" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter') doSearch()" />
+          <button class="search-btn" onclick="doSearch()">Search</button>
+        </div>
+        <div class="examples">Try:
+          <span onclick="quickSearch('93701')">93701 Fresno</span>
+          <span onclick="quickSearch('93650')">93650 Clovis</span>
+          <span onclick="quickSearch('90011')">90011 LA</span>
+          <span onclick="quickSearch('95206')">95206 Stockton</span>
+          <span onclick="quickSearch('93301')">93301 Bakersfield</span>
+        </div>
+        <div id="branch-shortcuts-container"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📌 Saved Prospect ZIPs</div>
+        <div id="saved-list"><div class="empty-saved">No ZIPs saved yet.</div></div>
+      </div>
+      <div id="farm-card-container"></div>
+      <div id="qualifier-trigger" style="display:none">
+        <div class="qualifier-trigger">
+          <div class="qualifier-trigger-left">
+            <div class="qualifier-trigger-icon">💰</div>
+            <div>
+              <div class="qualifier-trigger-title">Borrower Income Qualifier</div>
+              <div class="qualifier-trigger-sub">Enter a borrower's income to check LMI eligibility and max home price</div>
+            </div>
+          </div>
+          <button class="qualifier-open-btn" onclick="openQualifier()">+ Qualify a Borrower</button>
+        </div>
+      </div>
+      <div class="qualifier-card" id="qualifier-card">
+        <div class="qualifier-header">
+          <div class="qualifier-title">💰 Borrower Income Qualifier</div>
+          <button class="qualifier-close" onclick="closeQualifier()">✕ Close</button>
+        </div>
+        <div class="qualifier-editing-badge" id="qualifier-editing-badge">✏️ Editing saved borrower — save will replace existing record</div>
+        <div class="qualifier-input-row">
+          <div class="qualifier-input-wrap">
+            <label class="qualifier-input-label">Borrower Annual Gross Income</label>
+            <input type="text" class="qualifier-input" id="borrower-income" placeholder="e.g. 55000" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter') calcQualifier()" />
+          </div>
+          <div class="qualifier-input-wrap">
+            <label class="qualifier-input-label">Borrower Name (optional)</label>
+            <input type="text" class="qualifier-input" id="borrower-name" placeholder="e.g. John Smith" />
+          </div>
+          <button class="qualifier-calc-btn" onclick="calcQualifier()">Calculate</button>
+        </div>
+        <div class="qualifier-result" id="qualifier-result"></div>
+      </div>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard-content" style="display:none">
+    <div class="dashboard-main">
+      <div class="dashboard-header-row">
+        <div>
+          <div class="dashboard-greeting" id="dash-greeting">Good morning! 👋</div>
+          <div class="dashboard-greeting-sub" id="dash-greeting-sub">Here's your LMI activity snapshot</div>
+        </div>
+        <div class="date-range-row">
+          <span class="date-range-label">Date Range:</span>
+          <input type="date" class="date-input" id="dash-date-from" />
+          <span style="color:#94a3b8;font-size:13px">to</span>
+          <input type="date" class="date-input" id="dash-date-to" />
+          <button class="date-apply-btn" onclick="renderDashboard()">Apply</button>
+          <button class="date-clear-btn" onclick="clearDashDates()">All Time</button>
+        </div>
+      </div>
+      <div class="dash-stats-grid">
+        <div class="dash-stat-card"><div class="dash-stat-num" id="ds-prospects">—</div><div class="dash-stat-label">Saved Prospects</div></div>
+        <div class="dash-stat-card purple"><div class="dash-stat-num" id="ds-borrowers">—</div><div class="dash-stat-label">Borrowers Qualified</div></div>
+        <div class="dash-stat-card green"><div class="dash-stat-num" id="ds-activities">—</div><div class="dash-stat-label">CRA Activities</div></div>
+        <div class="dash-stat-card orange"><div class="dash-stat-num" id="ds-lmi">—</div><div class="dash-stat-label">LMI Eligible</div></div>
+        <div class="dash-stat-card red"><div class="dash-stat-num" id="ds-realtors">—</div><div class="dash-stat-label">Realtor Contacts</div></div>
+      </div>
+      <div class="dash-two-col">
+        <div class="dash-card"><div class="dash-card-title">📊 Activity by Type</div><div class="bar-chart" id="dash-bar-chart"><div class="empty-dash">No activities logged yet.</div></div></div>
+        <div class="dash-card"><div class="dash-card-title">🏘 LMI Category Breakdown</div><div class="lmi-breakdown" id="dash-lmi-breakdown"><div class="empty-dash">No activities logged yet.</div></div></div>
+      </div>
+      <div class="dash-card" style="margin-bottom:24px">
+        <div class="dash-card-title">🕐 Recent Activity</div>
+        <div class="recent-activity-list" id="dash-recent-activity"><div class="empty-dash">No recent activity.</div></div>
+      </div>
+      <div id="dash-admin-section" style="display:none">
+        <div style="border-top:2px solid #f1f5f9;margin-bottom:28px;padding-top:28px">
+          <div class="dashboard-greeting" style="font-size:18px;margin-bottom:4px">🛡 Team Dashboard</div>
+          <div class="dashboard-greeting-sub">Activity across your entire team</div>
+        </div>
+        <div class="team-stats-grid">
+          <div class="team-stat-card"><div class="team-stat-num" id="ts-total-acts">—</div><div class="team-stat-label">Total Team Activities</div></div>
+          <div class="team-stat-card"><div class="team-stat-num" id="ts-total-apps">—</div><div class="team-stat-label">Applications Taken</div></div>
+          <div class="team-stat-card"><div class="team-stat-num" id="ts-total-closed">—</div><div class="team-stat-label">Loans Closed</div></div>
+          <div class="team-stat-card"><div class="team-stat-num" id="ts-total-lmi">—</div><div class="team-stat-label">LMI Eligible Activities</div></div>
+        </div>
+        <div class="dash-card" style="margin-bottom:24px">
+          <div class="dash-card-title" style="justify-content:space-between">
+            <span>📊 Team Activity by Type</span>
+            <select id="team-region-filter" onchange="renderTeamChart()" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none">
+              <option value="all">All Regions</option>
+              <option value="Central Valley">Central Valley</option>
+              <option value="Los Angeles">Los Angeles</option>
+            </select>
+          </div>
+          <div class="bar-chart" id="dash-team-bar-chart" style="margin-top:16px"><div class="empty-dash">No team activities yet.</div></div>
+        </div>
+        <div class="mlo-leaderboard">
+          <div class="mlo-leaderboard-title">🏆 MLO Activity Leaderboard</div>
+          <div id="dash-leaderboard"><div class="empty-dash">No MLO activity yet.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REALTORS TAB -->
+  <div id="tab-realtors-content" style="display:none">
+    <div class="realtors-main">
+      <div class="realtor-stats">
+        <div class="realtor-stat-card"><div class="realtor-stat-num" id="rt-stat-total">0</div><div class="realtor-stat-label">Total Realtors</div></div>
+        <div class="realtor-stat-card"><div class="realtor-stat-num" id="rt-stat-brokerages">0</div><div class="realtor-stat-label">Brokerages</div></div>
+        <div class="realtor-stat-card"><div class="realtor-stat-num" id="rt-stat-assigned">0</div><div class="realtor-stat-label">Assigned to Clients</div></div>
+      </div>
+      <div class="realtor-form-card" id="realtor-form-card">
+        <div class="realtor-form-title" id="realtor-form-title">➕ Add New Realtor</div>
+        <input type="hidden" id="editing-realtor-id" />
+        <div class="realtor-form-grid">
+          <div class="realtor-field"><label>Full Name</label><input type="text" id="r-name" placeholder="Jane Doe" /></div>
+          <div class="realtor-field"><label>Brokerage</label><input type="text" id="r-brokerage" placeholder="Keller Williams" /></div>
+          <div class="realtor-field"><label>License Number</label><input type="text" id="r-license" placeholder="CA-12345678" /></div>
+        </div>
+        <div class="realtor-form-grid">
+          <div class="realtor-field"><label>Phone</label><input type="tel" id="r-phone" placeholder="(559) 555-0100" /></div>
+          <div class="realtor-field"><label>Email</label><input type="email" id="r-email" placeholder="jane@kw.com" /></div>
+          <div class="realtor-field"><label>Speciality Area / ZIP</label><input type="text" id="r-area" placeholder="e.g. 93701, Fresno" /></div>
+        </div>
+        <div class="realtor-form-grid-2">
+          <div class="realtor-field"><label>Notes</label><textarea id="r-notes" placeholder="Any notes about this realtor..."></textarea></div>
+        </div>
+        <div class="realtor-submit-row">
+          <button class="realtor-clear-btn" onclick="clearRealtorForm()">Cancel</button>
+          <button class="realtor-submit-btn" onclick="submitRealtor()">Save Realtor</button>
+        </div>
+      </div>
+      <div class="realtor-list-card">
+        <div class="realtor-list-header">
+          <div class="realtor-list-title">🏠 My Realtor Contacts</div>
+          <input type="text" class="realtor-search-input" id="realtor-search" placeholder="Search realtors..." oninput="renderRealtorList()" />
+        </div>
+        <div id="realtor-list"><div class="empty-realtors">No realtors added yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY TAB -->
+  <div id="tab-activity-content" style="display:none">
+    <div class="activity-main">
+      <div class="activity-stats">
+        <div class="activity-stat-card"><div class="activity-stat-num" id="act-stat-total">0</div><div class="activity-stat-label">Total Activities</div></div>
+        <div class="activity-stat-card"><div class="activity-stat-num" id="act-stat-apps">0</div><div class="activity-stat-label">Applications</div></div>
+        <div class="activity-stat-card"><div class="activity-stat-num" id="act-stat-closed">0</div><div class="activity-stat-label">Loans Closed</div></div>
+        <div class="activity-stat-card"><div class="activity-stat-num" id="act-stat-lmi">0</div><div class="activity-stat-label">LMI Eligible</div></div>
+      </div>
+      <div class="log-form-card">
+        <div class="log-form-title">➕ Log New CRA Activity</div>
+        <div class="log-form-grid">
+          <div class="log-field"><label>Activity Type</label>
+            <select id="log-type" onchange="handleActivityTypeChange()">
+              <option value="">Select type...</option>
+              <option value="Application Taken">Application Taken</option>
+              <option value="Loan Closed">Loan Closed</option>
+              <option value="Community Contact">Community Contact</option>
+              <option value="Pre-qualification">Pre-qualification</option>
+              <option value="Referral Made">Referral Made</option>
+              <option value="Event Attended">Event Attended</option>
+              <option value="Open House">Open House</option>
+            </select>
+          </div>
+          <div class="log-field"><label>Borrower / Contact Name</label><input type="text" id="log-borrower" placeholder="e.g. Jane Smith" /></div>
+          <div class="log-field"><label>Date</label><input type="date" id="log-date" /></div>
+        </div>
+        <div class="log-form-grid">
+          <div class="log-field"><label>Property ZIP Code</label><input type="text" id="log-zip" maxlength="5" placeholder="e.g. 93701" oninput="this.value=this.value.replace(/\D/g,'')" /></div>
+          <div class="log-field"><label>City</label><input type="text" id="log-city" placeholder="e.g. Fresno" /></div>
+          <div class="log-field"><label>LMI Category</label>
+            <select id="log-lmi">
+              <option value="">Select category...</option>
+              <option value="Low Income">Low Income (&lt;50% AMI)</option>
+              <option value="Moderate Income">Moderate Income (50–80% AMI)</option>
+              <option value="Middle Income">Middle Income (80–120% AMI)</option>
+              <option value="Upper Income">Upper Income (&gt;120% AMI)</option>
+              <option value="Unknown">Unknown / Not Determined</option>
+            </select>
+          </div>
+        </div>
+        <div id="open-house-fields" style="display:none">
+          <div class="log-form-grid">
+            <div class="log-field"><label>Hosting Realtor</label><select id="log-realtor"><option value="">Select realtor...</option></select></div>
+            <div class="log-field"><label>Property Address</label><input type="text" id="log-address" placeholder="e.g. 123 Main St" /></div>
+            <div class="log-field"><label>Clients Attending</label><input type="text" id="log-clients" placeholder="e.g. John Smith, Jane Doe" /></div>
+          </div>
+        </div>
+        <div class="log-form-grid-wide">
+          <div class="log-field"><label>Loan Amount (optional)</label><input type="text" id="log-amount" placeholder="e.g. 285000" oninput="this.value=this.value.replace(/[^0-9]/g,'')" /></div>
+          <div class="log-field"><label>Notes (optional)</label><textarea id="log-notes" placeholder="Any additional context..."></textarea></div>
+        </div>
+        <div class="log-submit-row">
+          <button class="log-clear-btn" onclick="clearLogForm()">Clear</button>
+          <button class="log-submit-btn" onclick="submitActivity()">Log Activity</button>
+        </div>
+      </div>
+      <div class="log-list-card">
+        <div class="log-list-header">
+          <div class="log-list-title">📋 My Activity Log</div>
+          <div class="log-filters">
+            <select class="log-filter-select" id="filter-type" onchange="renderActivityLog()">
+              <option value="all">All Types</option>
+              <option value="Application Taken">Applications</option>
+              <option value="Loan Closed">Loans Closed</option>
+              <option value="Community Contact">Community Contacts</option>
+              <option value="Pre-qualification">Pre-qualifications</option>
+              <option value="Referral Made">Referrals</option>
+              <option value="Event Attended">Events</option>
+              <option value="Open House">Open Houses</option>
+            </select>
+            <select class="log-filter-select" id="filter-lmi" onchange="renderActivityLog()">
+              <option value="all">All Categories</option>
+              <option value="Low Income">Low Income</option>
+              <option value="Moderate Income">Moderate Income</option>
+              <option value="Middle Income">Middle Income</option>
+              <option value="Upper Income">Upper Income</option>
+            </select>
+          </div>
+        </div>
+        <div id="activity-log-list"><div class="empty-activity">No activities logged yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKETING TAB -->
+  <div id="tab-marketing-content" style="display:none">
+    <div class="marketing-main">
+      <div class="mkt-header-title">🖨 Marketing Engine</div>
+      <div class="mkt-profile-warn" id="mkt-profile-warn">
+        ⚠️ Your MLO profile is incomplete. <a onclick="openSettings()">Add your phone, NMLS, and headshot in Settings</a> to personalize these materials.
+      </div>
+      <div class="mkt-pieces-grid">
+        <div class="mkt-piece-card">
+          <div class="mkt-piece-icon">🛒</div>
+          <div class="mkt-piece-title">Realtor Shopping List</div>
+          <div class="mkt-piece-desc">A one-page borrower profile showing their LMI category, max home price, and pre-filtered listing links. Share with a realtor to go shopping.</div>
+          <select class="mkt-piece-select" id="mkt-borrower-select"><option value="">Select a saved borrower...</option></select>
+          <button class="mkt-generate-btn" onclick="generateShoppingList()">Generate Shopping List</button>
+        </div>
+        <div class="mkt-piece-card purple">
+          <div class="mkt-piece-icon">📍</div>
+          <div class="mkt-piece-title">Area Flyer</div>
+          <div class="mkt-piece-desc">A one-page ZIP code overview showing LMI tract data, area median income, and listing links. Perfect for open houses and realtor presentations.</div>
+          <select class="mkt-piece-select" id="mkt-zip-select"><option value="">Select a saved ZIP...</option></select>
+          <button class="mkt-generate-btn purple" onclick="generateAreaFlyer()">Generate Area Flyer</button>
+        </div>
+        <div class="mkt-piece-card green">
+          <div class="mkt-piece-icon">👤</div>
+          <div class="mkt-piece-title">Referral Partner One-Pager</div>
+          <div class="mkt-piece-desc">Your professional profile as an LMI mortgage specialist. Share with realtors so they know who to call when they have an LMI buyer.</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:12px;padding:10px;background:#f8fafc;border-radius:8px">Uses your profile from Settings — name, photo, phone, email, NMLS.</div>
+          <button class="mkt-generate-btn green" onclick="generateReferralOnePager()">Generate One-Pager</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div id="admin-screen">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+        </svg>
+      </div>
+      <div><div class="header-title">Admin Panel</div><div class="header-sub">LMI Prospect Finder · User Management</div></div>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
+      <button class="hdr-btn teal" onclick="goApp()">← Back to Tool</button>
+      <button class="hdr-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="admin-main">
+    <div class="admin-stats">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-active">0</div><div class="stat-label">Active Users</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-admins">0</div><div class="stat-label">Admins</div></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header"><div class="admin-card-title">✉️ Invite New User</div></div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px">Send an email invite — they set their own password when they click the link.</div>
+      <div class="add-form">
+        <div class="form-group"><label>Full Name</label><input type="text" id="new-name" placeholder="Jane Smith" /></div>
+        <div class="form-group"><label>Email</label><input type="email" id="new-email" placeholder="jane@example.com" /></div>
+        <div class="form-group"><label>Role</label><select id="new-role"><option value="mlo">MLO</option><option value="admin">Admin</option></select></div>
+        <div class="form-group"><label>MLO Type</label><select id="new-type"><option value="Internal">Internal</option><option value="External">External</option><option value="N/A">N/A</option></select></div>
+        <div class="form-group"><label>Region</label><select id="new-region"><option value="Central Valley">Central Valley</option><option value="Los Angeles">Los Angeles</option><option value="Both">Both</option></select></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="invite-btn" onclick="sendInvite()">✉️ Send Invite Email</button>
+        <span style="color:#94a3b8;font-size:12px">or</span>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="form-group" style="min-width:200px;margin:0"><input type="text" id="new-password" placeholder="Set password manually" /></div>
+          <button class="gen-btn" onclick="generatePassword()">🔀 Generate</button>
+          <button class="add-btn" onclick="addUser()">Add Manually</button>
+        </div>
+      </div>
+      <div class="form-error" id="form-error"></div>
+      <div class="form-success" id="form-success"></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-title">👥 All Users</div>
+        <input type="text" id="user-search" placeholder="Search by name or email..." oninput="renderUserTable()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;width:240px" />
+      </div>
+      <div id="user-table-wrap"></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-title">📌 Team Saved Prospects</div>
+        <select id="prospect-filter" onchange="renderAdminProspects()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;"><option value="all">All Users</option></select>
+      </div>
+      <div id="admin-prospect-list"><div class="empty-saved">Loading...</div></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-title">📋 Team CRA Activity Log</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select id="admin-filter-user" onchange="renderAdminActivity()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;"><option value="all">All MLOs</option></select>
+          <select id="admin-filter-type" onchange="renderAdminActivity()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;">
+            <option value="all">All Types</option>
+            <option value="Application Taken">Applications</option>
+            <option value="Loan Closed">Loans Closed</option>
+            <option value="Open House">Open Houses</option>
+            <option value="Community Contact">Community Contacts</option>
+            <option value="Pre-qualification">Pre-qualifications</option>
+            <option value="Referral Made">Referrals</option>
+            <option value="Event Attended">Events</option>
+          </select>
+        </div>
+      </div>
+      <div id="admin-activity-list"><div class="empty-activity">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-backdrop" id="settings-backdrop" onclick="closeSettings()"></div>
+<div class="settings-overlay" id="settings-panel">
+  <div class="settings-header"><div class="settings-title">⚙️ Settings</div><button class="settings-close" onclick="closeSettings()">✕ Close</button></div>
+  <div class="settings-body">
+    <div class="settings-user-info">
+      <div class="settings-user-name" id="settings-user-name">—</div>
+      <div class="settings-user-meta" id="settings-user-meta">—</div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">👤 My Profile · Marketing Materials</div>
+      <div class="settings-item">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+          <img id="profile-photo-preview" class="profile-photo-preview" src="" alt="Profile photo" />
+          <div style="flex:1"><input type="text" class="settings-input" id="s-profile-photo" placeholder="Headshot URL (https://...)" oninput="previewProfilePhoto()" /></div>
+        </div>
+        <input type="text" class="settings-input" id="s-profile-phone" placeholder="Phone (559) 555-0100" />
+        <input type="text" class="settings-input" id="s-profile-email" placeholder="Work email for marketing materials" />
+        <input type="text" class="settings-input" id="s-profile-nmls" placeholder="NMLS # (e.g. 123456)" />
+        <input type="text" class="settings-input" id="s-profile-title" placeholder="Title (e.g. Mortgage Loan Officer)" />
+        <div class="settings-error" id="s-profile-error"></div>
+        <div class="settings-success" id="s-profile-success"></div>
+        <button class="settings-save-btn" onclick="saveProfile()">Save Profile</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">🔑 Change My Password</div>
+      <div class="settings-item">
+        <input type="password" class="settings-input" id="s-pw-current" placeholder="Current password" />
+        <input type="password" class="settings-input" id="s-pw-new" placeholder="New password (min 8 characters)" />
+        <input type="password" class="settings-input" id="s-pw-confirm" placeholder="Confirm new password" />
+        <div class="settings-error" id="s-pw-error"></div>
+        <div class="settings-success" id="s-pw-success"></div>
+        <button class="settings-save-btn" onclick="saveSettingsPassword()">Update Password</button>
+      </div>
+    </div>
+    <div class="settings-section" id="admin-reset-section" style="display:none">
+      <div class="settings-section-title">🛡 Reset a User's Password</div>
+      <div class="settings-item">
+        <select class="settings-input" id="s-admin-user-select"><option value="">Select a user...</option></select>
+        <input type="text" class="settings-input" id="s-admin-pw-new" placeholder="New password" />
+        <input type="text" class="settings-input" id="s-admin-pw-confirm" placeholder="Confirm new password" />
+        <div class="settings-error" id="s-admin-pw-error"></div>
+        <button class="settings-save-btn" onclick="saveAdminPasswordFromSettings()">Reset Password</button>
+      </div>
+    </div>
+    <div class="settings-section"><div class="settings-section-title">🎨 Preferences</div><div class="settings-coming-soon">More customization options coming in future updates.</div></div>
+  </div>
+</div>
+
+<!-- BRANCH MODAL -->
+<div class="modal-overlay" id="branch-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-user-name">Assign Branch Locations</div>
+    <div class="modal-sub">Internal MLO · Add branch ZIPs that will appear as shortcuts</div>
+    <div class="modal-form">
+      <div class="form-group"><label>Branch Name</label><input type="text" id="branch-name" placeholder="e.g. Fresno Main" /></div>
+      <div class="form-group"><label>ZIP Code</label><input type="text" id="branch-zip" maxlength="5" placeholder="e.g. 93721" oninput="this.value=this.value.replace(/\D/g,'')" /></div>
+      <div class="form-group full"><label>City</label><input type="text" id="branch-city" placeholder="e.g. Fresno" /></div>
+    </div>
+    <button style="width:100%;padding:12px;background:linear-gradient(135deg,#1f2937,#374151);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer" onclick="addBranch()">+ Add Branch</button>
+    <div class="form-error" id="branch-error"></div>
+    <div class="existing-branches" id="existing-branches"></div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="closeBranchModal()">Done</button></div>
+  </div>
+</div>
+
+<!-- REALTOR PICKER -->
+<div class="realtor-picker-overlay" id="realtor-picker">
+  <div class="realtor-picker-box">
+    <div class="realtor-picker-header">
+      <div class="realtor-picker-title">🏠 Assign Realtors to Borrower</div>
+      <button class="realtor-picker-close" onclick="closeRealtorPicker()">✕</button>
+    </div>
+    <input type="text" class="realtor-picker-search" id="realtor-picker-search" placeholder="Search realtors..." oninput="renderRealtorPicker()" />
+    <div id="quick-add-realtor-toggle" style="margin-bottom:12px">
+      <button onclick="toggleQuickAdd()" style="background:#f0f4ff;color:#4f46e5;border:2px dashed #c7d2fe;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;text-align:left">➕ Add a new realtor quickly</button>
+    </div>
+    <div id="quick-add-realtor-form" style="display:none;background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #e2e8f0">
+      <div style="font-size:12px;font-weight:700;color:#4f46e5;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.4px">Quick Add Realtor</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Full Name *</label><input type="text" id="qa-name" placeholder="Jane Doe" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" /></div>
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Brokerage *</label><input type="text" id="qa-brokerage" placeholder="Keller Williams" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" /></div>
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Phone</label><input type="tel" id="qa-phone" placeholder="(559) 555-0100" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" /></div>
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px">Email</label><input type="email" id="qa-email" placeholder="jane@kw.com" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" /></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="toggleQuickAdd()" style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Cancel</button>
+        <button onclick="quickAddRealtor()" style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer">Save & Select</button>
+      </div>
+    </div>
+    <div class="realtor-picker-list" id="realtor-picker-list"></div>
+    <div class="realtor-picker-footer">
+      <span class="realtor-picker-count" id="realtor-picker-count">0 selected</span>
+      <button class="realtor-picker-confirm" onclick="confirmRealtorSelection()">Confirm Selection</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLYER PREVIEW MODAL -->
+<div class="flyer-modal-overlay" id="flyer-modal">
+  <div class="flyer-modal-box">
+    <div class="flyer-modal-header">
+      <div class="flyer-modal-title" id="flyer-modal-title">Marketing Material Preview</div>
+      <div class="flyer-modal-actions">
+        <button class="flyer-action-btn teal" onclick="downloadFlyer()">⬇ Download PDF</button>
+        <button class="flyer-close-btn" onclick="closeFlyerModal()">✕</button>
+      </div>
+    </div>
+    <div class="flyer-share-row">
+      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap">Shareable Link:</div>
+      <div class="flyer-share-url" id="flyer-share-url">Generating link...</div>
+      <button class="flyer-copy-btn" onclick="copyFlyerLink()">📋 Copy</button>
+    </div>
+    <div class="flyer-preview-wrap">
+      <div class="flyer-preview" id="flyer-preview-content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const EMAILJS_PUBLIC_KEY  = 'uSiYFQtZ-GzxmJ53A';
+const EMAILJS_SERVICE_ID  = 'service_g1ghxq2';
+const EMAILJS_TEMPLATE_ID = 'template_fksjm5e';
+const APP_URL = 'https://lmitool.com';
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDVfulexC0MEzN4FZcqKVxfSG2HQ0srI90",
+  authDomain: "lmi-prospect-finder.firebaseapp.com",
+  projectId: "lmi-prospect-finder",
+  storageBucket: "lmi-prospect-finder.firebasestorage.app",
+  messagingSenderId: "904761299732",
+  appId: "1:904761299732:web:6880710625b81a2c5ea801"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
+const DEFAULTS = { rate:7.0, frontEnd:28, amiPct:80, term:30 };
+let farmParams = {...DEFAULTS};
+let currentAmi = 0, currentZip = '', currentCity = '';
+let editingProspectDocId = null;
+let pendingRealtorAssignments = [], currentBorrowerRealtors = [];
+let inviteUserData = null;
+let currentFlyerHtml = '', currentFlyerToken = '', currentFlyerType = '';
+
+const ACTIVITY_COLORS = {
+  'Application Taken': {bg:'#eff6ff',color:'#2563eb'},
+  'Loan Closed':       {bg:'#f0fdf4',color:'#16a34a'},
+  'Community Contact': {bg:'#fdf4ff',color:'#9333ea'},
+  'Pre-qualification': {bg:'#fff7ed',color:'#ea580c'},
+  'Referral Made':     {bg:'#f0fdfa',color:'#0d9488'},
+  'Event Attended':    {bg:'#fef9c3',color:'#ca8a04'},
+  'Open House':        {bg:'#f0f4ff',color:'#4f46e5'}
+};
+const ACTIVITY_BAR_COLORS = {
+  'Application Taken':'#2563eb','Loan Closed':'#16a34a','Community Contact':'#9333ea',
+  'Pre-qualification':'#ea580c','Referral Made':'#0d9488','Event Attended':'#ca8a04','Open House':'#4f46e5'
+};
+const DEFAULT_ADMIN = {
+  id:'admin-aaron', name:'Aaron Simonson', email:'asimonson@golden1.com',
+  password:'G1Admin2024!', role:'admin', type:'N/A', region:'Both',
+  active:true, branches:[], created:new Date().toLocaleDateString()
+};
+
+// ── TOKEN GENERATOR ───────────────────────────────────────────
+function generateToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── INVITE SYSTEM ─────────────────────────────────────────────
+async function sendInvite() {
+  const name   = document.getElementById('new-name').value.trim();
+  const email  = document.getElementById('new-email').value.trim().toLowerCase();
+  const role   = document.getElementById('new-role').value;
+  const type   = document.getElementById('new-type').value;
+  const region = document.getElementById('new-region').value;
+  const errEl  = document.getElementById('form-error');
+  const succEl = document.getElementById('form-success');
+  errEl.style.display = 'none';
+  succEl.style.display = 'none';
+  if (!name)  { showFormErr('Please enter a full name.'); return; }
+  if (!email || !email.includes('@')) { showFormErr('Please enter a valid email.'); return; }
+  if (cachedUsers.find(u => u.email.toLowerCase() === email)) { showFormErr('A user with this email already exists.'); return; }
+  const btn = document.querySelector('.invite-btn');
+  btn.textContent = '⏳ Sending...';
+  btn.disabled = true;
+  const token = generateToken();
+  const expiresAt = Date.now() + (72 * 60 * 60 * 1000);
+  const inviteLink = APP_URL + '/?invite=' + token;
+  const inviteData = { token, name, email, role, type, region, expiresAt, used: false, createdAt: new Date().toISOString() };
+  try {
+    await db.collection('invites').doc(token).set(inviteData);
+  } catch(e) {
+    btn.textContent = '✉️ Send Invite Email';
+    btn.disabled = false;
+    showFormErr('Failed to create invite. Try again.');
+    return;
+  }
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: name, to_email: email, invite_link: inviteLink });
+    btn.textContent = '✉️ Send Invite Email';
+    btn.disabled = false;
+    succEl.textContent = '✅ Invite sent to ' + email + '! Link expires in 72 hours.';
+    succEl.style.display = 'block';
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-email').value = '';
+    showToast('✉️ Invite sent to ' + name);
+    setTimeout(function() { succEl.style.display = 'none'; }, 5000);
+  } catch(e) {
+    btn.textContent = '✉️ Send Invite Email';
+    btn.disabled = false;
+    showFormErr('Email failed to send. Check your EmailJS config.');
+  }
+}
+
+async function checkInviteParam() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('invite');
+  if (!token) return;
+  document.getElementById('invite-modal').classList.add('open');
+  document.getElementById('login-screen').style.display = 'none';
+  try {
+    const doc = await db.collection('invites').doc(token).get();
+    if (!doc.exists) { showInviteExpired(); return; }
+    const invite = doc.data();
+    if (invite.used || Date.now() > invite.expiresAt) { showInviteExpired(); return; }
+    inviteUserData = Object.assign({}, invite, { token: token });
+    document.getElementById('invite-loading').style.display = 'none';
+    document.getElementById('invite-form').style.display = 'block';
+    document.getElementById('invite-display-name').textContent = invite.name;
+    document.getElementById('invite-display-email').textContent = invite.email;
+    document.getElementById('invite-pw').focus();
+  } catch(e) { showInviteExpired(); }
+}
+
+function showInviteExpired() {
+  document.getElementById('invite-loading').style.display = 'none';
+  document.getElementById('invite-expired').style.display = 'block';
+}
+
+async function submitInviteSetup() {
+  const pw      = document.getElementById('invite-pw').value;
+  const confirm = document.getElementById('invite-pw-confirm').value;
+  const errEl   = document.getElementById('invite-error');
+  errEl.style.display = 'none';
+  if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (pw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+  const btn = document.querySelector('.invite-submit-btn');
+  btn.textContent = 'Creating account...';
+  btn.disabled = true;
+  const newUser = {
+    id: 'u-' + Date.now(),
+    name: inviteUserData.name,
+    email: inviteUserData.email,
+    password: pw,
+    role: inviteUserData.role,
+    type: inviteUserData.type,
+    region: inviteUserData.region,
+    active: true,
+    branches: [],
+    created: new Date().toLocaleDateString()
+  };
+  try {
+    await db.collection('users').doc(newUser.id).set(newUser);
+    await db.collection('invites').doc(inviteUserData.token).update({ used: true });
+    document.getElementById('invite-form').style.display = 'none';
+    document.getElementById('invite-success').style.display = 'block';
+    inviteUserData.createdUser = newUser;
+  } catch(e) {
+    btn.textContent = 'Create Account & Sign In →';
+    btn.disabled = false;
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+function closeInviteAndLogin() {
+  document.getElementById('invite-modal').classList.remove('open');
+  window.history.replaceState({}, document.title, window.location.pathname);
+  if (inviteUserData && inviteUserData.createdUser) {
+    document.getElementById('login-email').value = inviteUserData.createdUser.email;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-password').focus();
+  }
+}
+
+// ── FLYER PUBLIC VIEW ─────────────────────────────────────────
+async function checkFlyerParam() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('flyer');
+  if (!token) return false;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('flyer-public-screen').style.display = 'block';
+  try {
+    const doc = await db.collection('flyers').doc(token).get();
+    if (!doc.exists) {
+      document.getElementById('flyer-public-render').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:18px;font-weight:700">Flyer not found</div></div>';
+      return true;
+    }
+    const flyer = doc.data();
+    currentFlyerHtml = flyer.html;
+    currentFlyerType = flyer.type;
+    document.getElementById('flyer-public-render').innerHTML = flyer.html;
+  } catch(e) {
+    document.getElementById('flyer-public-render').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8">Error loading flyer.</div>';
+  }
+  return true;
+}
+
+function downloadPublicFlyer() {
+  const el = document.getElementById('flyer-public-render').firstChild;
+  if (!el) return;
+  html2pdf().set({ margin:0, filename:'lmi-flyer.pdf', html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(el).save();
+}
+
+// ── USER STORE ────────────────────────────────────────────────
+async function getUsers() {
+  try {
+    const snapshot = await db.collection('users').get();
+    let users = snapshot.docs.map(function(doc) { return Object.assign({ id: doc.id }, doc.data()); });
+    if (!users.find(function(u) { return u.id === 'admin-aaron'; })) {
+      await db.collection('users').doc('admin-aaron').set(DEFAULT_ADMIN);
+      users = [DEFAULT_ADMIN].concat(users);
+    }
+    users.forEach(function(u) { if (!u.branches) u.branches = []; });
+    return users;
+  } catch(e) { return [DEFAULT_ADMIN]; }
+}
+async function saveUser(user) {
+  const id = user.id;
+  const data = Object.assign({}, user);
+  delete data.id;
+  await db.collection('users').doc(id).set(data);
+}
+async function deleteUserFromDB(id) { await db.collection('users').doc(id).delete(); }
+
+// ── PROSPECTS ─────────────────────────────────────────────────
+async function fetchMyProspects() {
+  try {
+    const snap = await db.collection('prospects').where('userId','==',currentUser.id).get();
+    const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
+    docs.sort(function(a,b) { return new Date(b.savedAt) - new Date(a.savedAt); });
+    return docs;
+  } catch(e) { return []; }
+}
+async function fetchAllProspects() {
+  try {
+    const snap = await db.collection('prospects').get();
+    const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
+    docs.sort(function(a,b) { return new Date(b.savedAt) - new Date(a.savedAt); });
+    return docs;
+  } catch(e) { return []; }
+}
+
+// ── REALTORS ──────────────────────────────────────────────────
+async function fetchMyRealtors() {
+  try {
+    const snap = await db.collection('realtors').where('userId','==',currentUser.id).get();
+    const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
+    docs.sort(function(a,b) { return a.name.localeCompare(b.name); });
+    return docs;
+  } catch(e) { return []; }
+}
+
+// ── ACTIVITIES ────────────────────────────────────────────────
+async function fetchMyActivities() {
+  try {
+    const snap = await db.collection('activity').where('userId','==',currentUser.id).get();
+    const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
+    docs.sort(function(a,b) { return new Date(b.loggedAt) - new Date(a.loggedAt); });
+    return docs;
+  } catch(e) { return []; }
+}
+async function fetchAllActivities() {
+  try {
+    const snap = await db.collection('activity').get();
+    const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
+    docs.sort(function(a,b) { return new Date(b.loggedAt) - new Date(a.loggedAt); });
+    return docs;
+  } catch(e) { return []; }
+}
+
+let currentUser = null, branchTargetId = null;
+let cachedUsers = [], cachedProspects = [], cachedActivities = [], cachedRealtors = [];
+let allTeamActivities = [];
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function tryLogin() {
+  const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
+  const pass = document.getElementById('login-password').value;
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Signing in...';
+  const users = await getUsers();
+  cachedUsers = users;
+  const user = users.find(function(u) { return u.email.toLowerCase() === emailInput && u.password === pass && u.active; });
+  btn.textContent = 'Sign In';
+  if (user) {
+    currentUser = user;
+    sessionStorage.setItem('g1_session', JSON.stringify(user));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
+    renderBranchShortcuts();
+    cachedProspects = await fetchMyProspects();
+    renderSaved();
+    cachedRealtors = await fetchMyRealtors();
+    cachedActivities = await fetchMyActivities();
+    if (user.role === 'admin') allTeamActivities = await fetchAllActivities();
+    setDefaultDate();
+    loadProfileToSettings();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function logout() {
+  currentUser = null;
+  cachedProspects = []; cachedActivities = []; cachedRealtors = []; allTeamActivities = [];
+  editingProspectDocId = null;
+  sessionStorage.removeItem('g1_session');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+async function goAdmin() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  cachedUsers = await getUsers();
+  renderAdminStats(); renderUserTable();
+  await renderAdminProspects(); populateProspectFilter();
+  await renderAdminActivity(); populateAdminActivityFilter();
+}
+
+function goApp() {
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  renderBranchShortcuts(); renderSaved();
+}
+
+window.onload = async function() {
+  const isFlyerPage = await checkFlyerParam();
+  if (isFlyerPage) return;
+  await checkInviteParam();
+  const s = sessionStorage.getItem('g1_session');
+  if (s && !new URLSearchParams(window.location.search).get('invite')) {
+    const saved = JSON.parse(s);
+    cachedUsers = await getUsers();
+    currentUser = cachedUsers.find(function(u) { return u.id === saved.id; }) || saved;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    if (currentUser.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
+    renderBranchShortcuts();
+    cachedProspects = await fetchMyProspects(); renderSaved();
+    cachedRealtors = await fetchMyRealtors();
+    cachedActivities = await fetchMyActivities();
+    if (currentUser.role === 'admin') allTeamActivities = await fetchAllActivities();
+    setDefaultDate();
+    loadProfileToSettings();
+  }
+};
+
+// ── TAB NAV ───────────────────────────────────────────────────
+function showTab(tab) {
+  ['search','dashboard','realtors','activity','marketing'].forEach(function(t) {
+    document.getElementById('tab-' + t + '-content').style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'realtors') { renderRealtorStats(); renderRealtorList(); }
+  if (tab === 'activity') { renderActivityLog(); renderActivityStats(); }
+  if (tab === 'marketing') renderMarketingTab();
+}
+
+// ── PROFILE ───────────────────────────────────────────────────
+function loadProfileToSettings() {
+  if (!currentUser) return;
+  const p = currentUser.profile || {};
+  document.getElementById('s-profile-photo').value = p.photo || '';
+  document.getElementById('s-profile-phone').value = p.phone || '';
+  document.getElementById('s-profile-email').value = p.email || currentUser.email || '';
+  document.getElementById('s-profile-nmls').value  = p.nmls  || '';
+  document.getElementById('s-profile-title').value = p.title || '';
+  previewProfilePhoto();
+}
+
+function previewProfilePhoto() {
+  const url = document.getElementById('s-profile-photo').value.trim();
+  const preview = document.getElementById('profile-photo-preview');
+  if (url) { preview.src = url; preview.style.display = 'block'; }
+  else { preview.style.display = 'none'; }
+}
+
+async function saveProfile() {
+  const profile = {
+    photo: document.getElementById('s-profile-photo').value.trim(),
+    phone: document.getElementById('s-profile-phone').value.trim(),
+    email: document.getElementById('s-profile-email').value.trim(),
+    nmls:  document.getElementById('s-profile-nmls').value.trim(),
+    title: document.getElementById('s-profile-title').value.trim()
+  };
+  currentUser.profile = profile;
+  await saveUser(currentUser);
+  sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
+  const idx = cachedUsers.findIndex(function(u) { return u.id === currentUser.id; });
+  if (idx > -1) cachedUsers[idx].profile = profile;
+  const succEl = document.getElementById('s-profile-success');
+  succEl.textContent = '✅ Profile saved!';
+  succEl.style.display = 'block';
+  setTimeout(function() { succEl.style.display = 'none'; }, 3000);
+  showToast('✅ Profile saved for marketing materials');
+}
+
+// ────────────────────────────────────────────────────────────
+// !! SPLIT POINT — END OF PART 1 — PASTE PART 2 IMMEDIATELY AFTER
+// ────────────────────────────────────────────────────────────
+  // ── MARKETING ENGINE ──────────────────────────────────────────
 function renderMarketingTab() {
   const profile = currentUser && currentUser.profile ? currentUser.profile : {};
   const warn = document.getElementById('mkt-profile-warn');
@@ -1044,7 +2608,7 @@ async function addBranch() {
   if (zip.length !== 5) { errEl.textContent = 'Please enter a valid 5-digit ZIP.'; errEl.style.display = 'block'; return; }
   if (!city) { errEl.textContent = 'Please enter a city.'; errEl.style.display = 'block'; return; }
   const user = cachedUsers.
-   find(function(u) { return u.id === branchTargetId; });
+    find(function(u) { return u.id === branchTargetId; });
   if (user.branches.find(function(b) { return b.zip === zip; })) { errEl.textContent = 'This ZIP is already assigned.'; errEl.style.display = 'block'; return; }
   user.branches.push({ name: name, zip: zip, city: city });
   await saveUser(user);
