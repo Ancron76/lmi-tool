@@ -1832,6 +1832,12 @@ admin@lmitool.com</div>
   </div>
   <!-- Home Tab -->
   <div id="rp-tab-home" class="rportal-content">
+    <!-- Unreviewed buyer profiles notification banner -->
+    <div id="rp-new-buyer-banner" style="display:none;background:linear-gradient(135deg,#0ed2c8,#0891b2);color:white;border-radius:14px;padding:14px 18px;margin-bottom:16px;cursor:pointer;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(14,210,200,0.3)" onclick="rpScrollToBuyerProfiles()">
+      <span style="font-size:22px;flex-shrink:0">💰</span>
+      <span id="rp-buyer-banner-text" style="font-size:14px;font-weight:700;flex:1"></span>
+      <span style="font-size:18px;opacity:0.8">›</span>
+    </div>
     <div class="rp-welcome-card">
       <div class="rp-welcome-greeting" id="rp-welcome-greeting">Good morning! 👋</div>
       <div class="rp-welcome-sub">Your LMI mortgage partnership dashboard</div>
@@ -1854,6 +1860,11 @@ admin@lmitool.com</div>
       <div class="rp-quick-btn" onclick="rpShowTab('openhouses')">
         <div class="rp-quick-btn-icon">📅</div>
         <div class="rp-quick-btn-label">Open Houses</div>
+      </div>
+      <div class="rp-quick-btn" onclick="rpScrollToBuyerProfiles()" style="position:relative">
+        <div class="rp-quick-btn-icon">💰</div>
+        <div class="rp-quick-btn-label">Buyer Profiles</div>
+        <span id="rp-buyer-quick-badge" style="display:none;position:absolute;top:-7px;right:-7px;background:#dc2626;color:white;border-radius:50%;min-width:20px;height:20px;font-size:11px;font-weight:800;line-height:20px;text-align:center;padding:0 4px;box-sizing:border-box"></span>
       </div>
     </div>
     <div id="rp-buyer-profiles-section" style="display:none">
@@ -6132,45 +6143,107 @@ async function loadRealtorPushes() {
   } catch(e) {}
 }
 
+function rpScrollToBuyerProfiles() {
+  var section = document.getElementById('rp-buyer-profiles-section');
+  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function renderRPBuyerProfiles() {
   var section = document.getElementById('rp-buyer-profiles-section');
   var list    = document.getElementById('rp-buyer-profiles-list');
   var title   = document.getElementById('rp-buyer-profiles-title');
+  var banner  = document.getElementById('rp-new-buyer-banner');
+  var bannerText = document.getElementById('rp-buyer-banner-text');
+  var quickBadge = document.getElementById('rp-buyer-quick-badge');
   if (!section || !list) return;
+
+  // Count unreviewed
+  var unreviewed = realtorPushes.filter(function(p) { return !p.viewed; });
+  var unreviewedCount = unreviewed.length;
+  var mloLabel = realtorPortalMlo ? realtorPortalMlo.name : 'your MLO';
+
+  // Notification banner
+  if (banner) {
+    if (unreviewedCount > 0) {
+      banner.style.display = 'flex';
+      if (bannerText) bannerText.textContent = 'You have ' + unreviewedCount + ' new buyer profile' + (unreviewedCount > 1 ? 's' : '') + ' from ' + mloLabel + ' — tap to view';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  // Quick action badge
+  if (quickBadge) {
+    if (unreviewedCount > 0) {
+      quickBadge.style.display = 'block';
+      quickBadge.textContent = unreviewedCount;
+    } else {
+      quickBadge.style.display = 'none';
+    }
+  }
+
   if (!realtorPushes.length) { section.style.display = 'none'; return; }
-  var mloLabel = realtorPortalMlo ? realtorPortalMlo.name : 'Your MLO';
   if (title) title.textContent = '📬 Buyer Profiles from ' + mloLabel;
   section.style.display = 'block';
+
   var catColors = { 'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#059669','Upper Income':'#6b7280' };
   var catBg     = { 'Low Income':'#fef2f2','Moderate Income':'#fffbeb','Middle Income':'#f0fdf4','Upper Income':'#f8fafc' };
+
   list.innerHTML = realtorPushes.map(function(p) {
-    var newBadge = !p.viewed ? '<span class="rp-badge rp-badge-teal" style="vertical-align:middle">New</span> ' : '';
+    var isNew = !p.viewed;
+    var newBadge = isNew ? '<span style="background:#dcfce7;color:#059669;font-size:10px;font-weight:800;border-radius:4px;padding:2px 7px;vertical-align:middle;margin-right:6px">NEW</span>' : '';
     var cat = p.borrowerCategory || '';
     var catBadgeHtml = cat
       ? '<span class="rp-badge" style="background:' + (catBg[cat]||'#f1f5f9') + ';color:' + (catColors[cat]||'#64748b') + '">' + cat + '</span>'
       : '';
-    var dateStr = p.sentAt ? new Date(p.sentAt).toLocaleDateString() : '—';
-    return '<div class="rp-search-card" id="rp-push-' + p.id + '">'
-      + '<div class="rp-search-card-top" onclick="rpTogglePush(\'' + p.id + '\')" style="cursor:pointer">'
-      + '<div>'
+    var dateStr = p.sentAt ? new Date(p.sentAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+    var safeId = p.id;
+    var pqPrefill = JSON.stringify({ zip: p.zip||'', buyerName: p.borrowerName||'' }).replace(/"/g,"'");
+    return '<div class="rp-search-card" id="rp-push-' + safeId + '" style="' + (isNew ? 'border-left:3px solid #0ed2c8;' : '') + '">'
+      // — Card header (always visible, click to expand)
+      + '<div class="rp-search-card-top" onclick="rpTogglePush(\'' + safeId + '\')" style="cursor:pointer">'
+      + '<div style="flex:1;min-width:0">'
       + '<div class="rp-search-buyer">' + newBadge + (p.borrowerName || 'Unnamed Buyer') + '</div>'
-      + '<div class="rp-search-meta">' + dateStr + ' · $' + (p.borrowerMaxPrice||0).toLocaleString() + ' max · ZIP ' + (p.zip||'—') + '</div>'
+      + '<div class="rp-search-meta">Received ' + dateStr + ' · ZIP ' + (p.zip||'—') + (p.city ? ' · ' + p.city : '') + '</div>'
       + '</div>'
-      + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + catBadgeHtml + '<span style="font-size:18px;color:#94a3b8">›</span></div>'
+      + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">' + catBadgeHtml + '<span style="font-size:18px;color:#94a3b8" id="rp-push-arrow-' + safeId + '">›</span></div>'
       + '</div>'
-      + '<div id="rp-push-detail-' + p.id + '" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9">'
-      + '<div style="font-size:13px;color:#374151;line-height:1.8;margin-bottom:10px">'
-      + '💰 Income: $' + (p.borrowerIncome||0).toLocaleString() + ' (' + (p.borrowerPctAmi||0) + '% of AMI)<br>'
-      + '🏠 Est. Max Price: <strong>$' + (p.borrowerMaxPrice||0).toLocaleString() + '</strong><br>'
-      + '📍 ' + (p.zip||'') + (p.city ? ' · ' + p.city : '')
-      + (p.mloNotes ? '<br>💬 <em>' + p.mloNotes + '</em>' : '')
+      // — Collapsed summary (visible even when not expanded)
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;padding:8px 0 0;font-size:13px;color:#374151">'
+      + '<span style="font-weight:700;color:#1f2937">💰 $' + (p.borrowerMaxPrice||0).toLocaleString() + ' max</span>'
+      + '<span style="color:#64748b">· ' + (p.borrowerPctAmi||0) + '% AMI</span>'
+      + (p.mloNotes ? '<span style="color:#6366f1;font-style:italic">· "' + p.mloNotes + '"</span>' : '')
       + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
-      + (p.zillowUrl ? '<a href="' + p.zillowUrl + '" target="_blank" style="background:#006aff;color:white;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;text-decoration:none">🏠 Zillow</a>' : '')
-      + (p.redfinUrl ? '<a href="' + p.redfinUrl + '" target="_blank" style="background:#cc0000;color:white;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;text-decoration:none">🔴 Redfin</a>' : '')
-      + (p.realtorUrl ? '<a href="' + p.realtorUrl + '" target="_blank" style="background:#c0392b;color:white;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;text-decoration:none">🏡 Realtor.com</a>' : '')
+      // — Expanded detail panel
+      + '<div id="rp-push-detail-' + safeId + '" style="display:none;margin-top:14px;padding-top:14px;border-top:2px solid #f0fdfa">'
+      + '<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;color:#374151;line-height:2">'
+      + '<div><span style="font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.4px">Buyer</span><br><span style="font-size:15px;font-weight:800;color:#1f2937">' + (p.borrowerName || '—') + '</span></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
+      + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">Income</div><div style="font-weight:700;color:#1f2937">$' + (p.borrowerIncome||0).toLocaleString() + '</div></div>'
+      + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">% of AMI</div><div style="font-weight:700;color:#1f2937">' + (p.borrowerPctAmi||0) + '%</div></div>'
+      + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">LMI Category</div><div>' + catBadgeHtml + '</div></div>'
+      + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">Est. Max Price</div><div style="font-weight:800;color:#059669;font-size:15px">$' + (p.borrowerMaxPrice||0).toLocaleString() + '</div></div>'
+      + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">ZIP / City</div><div style="font-weight:700;color:#1f2937">' + (p.zip||'—') + (p.city ? ' · ' + p.city : '') + '</div></div>'
+      + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">Received</div><div style="font-weight:700;color:#1f2937">' + dateStr + '</div></div>'
       + '</div>'
-      + (!p.viewed ? '<button onclick="rpMarkPushViewed(\'' + p.id + '\')" style="background:#f1f5f9;color:#64748b;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">✓ Mark as Reviewed</button>' : '<span style="font-size:12px;color:#94a3b8">✓ Reviewed</span>')
+      + (p.mloNotes ? '<div style="margin-top:10px;padding:10px 12px;background:#f0f9ff;border-radius:8px;font-style:italic;color:#0369a1">💬 ' + p.mloNotes + '</div>' : '')
+      + '</div>'
+      // Listing links
+      + '<div style="margin-bottom:12px">'
+      + '<div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Search Listings</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + (p.zillowUrl ? '<a href="' + p.zillowUrl + '" target="_blank" style="background:#006aff;color:white;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">🏠 Zillow</a>' : '')
+      + (p.redfinUrl ? '<a href="' + p.redfinUrl + '" target="_blank" style="background:#cc0000;color:white;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">🔴 Redfin</a>' : '')
+      + (p.realtorUrl ? '<a href="' + p.realtorUrl + '" target="_blank" style="background:#c0392b;color:white;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">🏡 Realtor.com</a>' : '')
+      + '</div>'
+      + '</div>'
+      // Action buttons
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+      + (!p.viewed
+          ? '<button onclick="rpMarkPushViewed(\'' + safeId + '\')" style="background:#f0fdf4;color:#059669;border:1.5px solid #bbf7d0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">✓ Mark as Reviewed</button>'
+          : '<span style="font-size:12px;color:#94a3b8;font-weight:600">✓ Reviewed</span>')
+      + '<button onclick="openPrequalModal(' + pqPrefill + ')" style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">📋 Request Pre-Qual</button>'
+      + '</div>'
       + '</div>'
       + '</div>';
   }).join('');
@@ -6178,9 +6251,11 @@ function renderRPBuyerProfiles() {
 
 function rpTogglePush(id) {
   var det = document.getElementById('rp-push-detail-' + id);
+  var arrow = document.getElementById('rp-push-arrow-' + id);
   if (!det) return;
   var isHidden = det.style.display === 'none';
   det.style.display = isHidden ? 'block' : 'none';
+  if (arrow) arrow.style.transform = isHidden ? 'rotate(90deg)' : '';
   // Mark viewed when first opened
   if (isHidden) {
     var p = realtorPushes.find(function(x) { return x.id === id; });
@@ -6193,17 +6268,25 @@ function rpMarkPushViewed(id) {
   if (!p || p.viewed) return;
   p.viewed = true;
   try { db.collection('realtor_pushes').doc(id).update({ viewed: true }); } catch(e) {}
-  // Remove "New" badge from this card
+  // Update card: remove left border accent, update reviewed button
   var card = document.getElementById('rp-push-' + id);
   if (card) {
-    var buyerDiv = card.querySelector('.rp-search-buyer');
-    if (buyerDiv) {
-      var badge = buyerDiv.querySelector('.rp-badge-teal');
-      if (badge) badge.remove();
-    }
+    card.style.borderLeft = '';
     var btn = card.querySelector('button[onclick*="rpMarkPushViewed"]');
-    if (btn) btn.outerHTML = '<span style="font-size:12px;color:#94a3b8">✓ Reviewed</span>';
+    if (btn) btn.outerHTML = '<span style="font-size:12px;color:#94a3b8;font-weight:600">✓ Reviewed</span>';
+    // Remove NEW badge inside buyer name
+    var newBadge = card.querySelector('[style*="dcfce7"]');
+    if (newBadge) newBadge.remove();
   }
+  // Recount and update banner + quick badge
+  var unreviewedCount = realtorPushes.filter(function(x) { return !x.viewed; }).length;
+  var mloLabel = realtorPortalMlo ? realtorPortalMlo.name : 'your MLO';
+  var banner = document.getElementById('rp-new-buyer-banner');
+  var bannerText = document.getElementById('rp-buyer-banner-text');
+  var quickBadge = document.getElementById('rp-buyer-quick-badge');
+  if (banner) banner.style.display = unreviewedCount > 0 ? 'flex' : 'none';
+  if (bannerText && unreviewedCount > 0) bannerText.textContent = 'You have ' + unreviewedCount + ' new buyer profile' + (unreviewedCount > 1 ? 's' : '') + ' from ' + mloLabel + ' — tap to view';
+  if (quickBadge) { quickBadge.style.display = unreviewedCount > 0 ? 'block' : 'none'; quickBadge.textContent = unreviewedCount; }
 }
 </script>
 
