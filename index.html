@@ -568,6 +568,63 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
   .qualifier-input-row { flex-direction: column; }
   .invite-modal-box { padding: 32px 24px; margin: 20px; }
 }
+
+/* HAMBURGER MENU */
+.hamburger-menu { position: relative; margin-left: 24px; }
+.hamburger-btn { color: white; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1); padding: 8px 16px; font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.hamburger-btn:hover { background: rgba(255,255,255,0.2); }
+.hamburger-dropdown { display: none; position: absolute; top: calc(100% + 8px); left: 0; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); min-width: 210px; z-index: 500; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+.hamburger-dropdown.open { display: block; }
+.hamburger-item { display: block; width: 100%; text-align: left; padding: 13px 18px; color: rgba(255,255,255,0.75); background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.hamburger-item:last-child { border-bottom: none; }
+.hamburger-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.hamburger-item.active { color: #0ed2c8; background: rgba(14,210,200,0.08); }
+
+/* OYZ DASHBOARD */
+.oyz-main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+.oyz-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.oyz-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #7c3aed; text-align: center; }
+.oyz-stat-num { font-size: 28px; font-weight: 900; color: #1f2937; }
+.oyz-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.oyz-form-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #7c3aed; }
+.oyz-form-title { font-size: 16px; font-weight: 800; color: #1f2937; margin-bottom: 20px; }
+.oyz-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.oyz-form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.oyz-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
+.oyz-field input, .oyz-field select, .oyz-field textarea { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; transition: border 0.2s; font-family: inherit; }
+.oyz-field input:focus, .oyz-field select:focus, .oyz-field textarea:focus { border-color: #7c3aed; }
+.oyz-field textarea { resize: vertical; min-height: 72px; }
+.oyz-submit-row { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
+.oyz-submit-btn { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; border-radius: 9px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.oyz-clear-btn { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.oyz-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.oyz-list-title { font-size: 16px; font-weight: 700; color: #1f2937; }
+.oyz-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border-left: 4px solid #7c3aed; }
+.oyz-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.oyz-card-address { font-size: 15px; font-weight: 800; color: #1f2937; }
+.oyz-card-realtor { font-size: 12px; color: #64748b; margin-top: 3px; }
+.oyz-status-badge { font-size: 12px; font-weight: 700; border-radius: 7px; padding: 4px 12px; white-space: nowrap; }
+.oyz-status-upcoming { background: #eff6ff; color: #2563eb; }
+.oyz-status-weekend { background: #ccfbf1; color: #0f766e; }
+.oyz-status-followup { background: #fff7ed; color: #d97706; }
+.oyz-status-complete { background: #f1f5f9; color: #64748b; }
+.oyz-card-dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+.oyz-date-item { font-size: 12px; }
+.oyz-date-label { color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; font-size: 10px; }
+.oyz-date-value { color: #1f2937; font-weight: 600; margin-top: 2px; }
+.oyz-card-notes { font-size: 12px; color: #64748b; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+.oyz-card-actions { display: flex; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; flex-wrap: wrap; }
+.oyz-complete-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.oyz-delete-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 13px; padding: 4px 8px; border-radius: 6px; margin-left: auto; }
+.oyz-delete-btn:hover { background: #fef2f2; }
+.oyz-mlo-badge { font-size: 11px; color: #94a3b8; font-style: italic; }
+.empty-oyz { text-align: center; color: #94a3b8; font-size: 13px; padding: 40px 0; }
+
+@media (max-width: 640px) {
+  .oyz-stats { grid-template-columns: 1fr 1fr; }
+  .oyz-form-grid, .oyz-form-grid-2 { grid-template-columns: 1fr 1fr; }
+  .oyz-card-dates { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
@@ -661,13 +718,17 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
         <div class="header-title">LMI Prospect Finder</div>
         <div class="header-sub">CRA/HMDA · Mortgage Sales</div>
       </div>
-      <nav class="header-nav">
-        <button class="nav-tab active" id="tab-search" onclick="showTab('search')">🔍 Search</button>
-        <button class="nav-tab" id="tab-dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
-        <button class="nav-tab" id="tab-realtors" onclick="showTab('realtors')">🏠 Realtors</button>
-        <button class="nav-tab" id="tab-activity" onclick="showTab('activity')">📋 Activity Log</button>
-        <button class="nav-tab" id="tab-marketing" onclick="showTab('marketing')">🖨 Marketing</button>
-      </nav>
+      <div class="hamburger-menu" id="hamburger-menu">
+        <button class="hamburger-btn" onclick="toggleHamburger(event)">☰ Menu</button>
+        <div class="hamburger-dropdown" id="hamburger-dropdown">
+          <button class="hamburger-item active" id="tab-search" onclick="showTab('search');closeHamburger()">🔍 Search</button>
+          <button class="hamburger-item" id="tab-dashboard" onclick="showTab('dashboard');closeHamburger()">📊 Dashboard</button>
+          <button class="hamburger-item" id="tab-realtors" onclick="showTab('realtors');closeHamburger()">🏠 Realtors</button>
+          <button class="hamburger-item" id="tab-activity" onclick="showTab('activity');closeHamburger()">📋 Activity Log</button>
+          <button class="hamburger-item" id="tab-marketing" onclick="showTab('marketing');closeHamburger()">🖨 Marketing</button>
+          <button class="hamburger-item" id="tab-oyz" onclick="showTab('oyz');closeHamburger()">🏡 OYZ</button>
+        </div>
+      </div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
@@ -921,6 +982,59 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
     </div>
   </div>
 
+  <!-- OYZ TAB -->
+  <div id="tab-oyz-content" style="display:none">
+    <div class="oyz-main">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#1f2937">🏡 OYZ — Open House Prospecting</div>
+          <div style="font-size:13px;color:#94a3b8;margin-top:2px">Plan and track open house outreach with realtors</div>
+        </div>
+      </div>
+      <div class="oyz-stats">
+        <div class="oyz-stat-card"><div class="oyz-stat-num" id="oyz-stat-total">0</div><div class="oyz-stat-label">Total Planned</div></div>
+        <div class="oyz-stat-card"><div class="oyz-stat-num" id="oyz-stat-weekend">0</div><div class="oyz-stat-label">This Weekend</div></div>
+        <div class="oyz-stat-card"><div class="oyz-stat-num" id="oyz-stat-followup">0</div><div class="oyz-stat-label">Needs Follow-up</div></div>
+        <div class="oyz-stat-card"><div class="oyz-stat-num" id="oyz-stat-complete">0</div><div class="oyz-stat-label">Completed</div></div>
+      </div>
+      <div class="oyz-form-card">
+        <div class="oyz-form-title">➕ Add Open House Entry</div>
+        <div class="oyz-form-grid">
+          <div class="oyz-field"><label>Property Address</label><input type="text" id="oyz-address" placeholder="e.g. 123 Main St, Fresno" /></div>
+          <div class="oyz-field"><label>Realtor</label>
+            <div style="display:flex;gap:8px">
+              <select id="oyz-realtor-select" style="flex:1;padding:11px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:14px;outline:none;" onchange="oyzRealtorSelectChange()">
+                <option value="">Pick from list or type below...</option>
+              </select>
+            </div>
+            <input type="text" id="oyz-realtor-name" placeholder="Or type realtor name" style="margin-top:6px;width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:14px;outline:none;" />
+          </div>
+          <div class="oyz-field"><label>Open House Date</label><input type="date" id="oyz-oh-date" /></div>
+        </div>
+        <div class="oyz-form-grid">
+          <div class="oyz-field"><label>First Contact Date</label><input type="date" id="oyz-first-contact" /></div>
+          <div class="oyz-field"><label>Next Connection Date</label><input type="date" id="oyz-next-connection" /></div>
+          <div class="oyz-field"><label>Notes</label><textarea id="oyz-notes" placeholder="Any notes about this open house..."></textarea></div>
+        </div>
+        <div class="oyz-submit-row">
+          <button class="oyz-clear-btn" onclick="clearOYZForm()">Clear</button>
+          <button class="oyz-submit-btn" onclick="submitOYZ()">Save Entry</button>
+        </div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07)">
+        <div class="oyz-list-header">
+          <div class="oyz-list-title">🏡 Open House Entries</div>
+          <div id="oyz-admin-filter" style="display:none">
+            <select id="oyz-filter-mlo" onchange="renderOYZList()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;">
+              <option value="all">All MLOs</option>
+            </select>
+          </div>
+        </div>
+        <div id="oyz-list"><div class="empty-oyz">No entries yet. Add your first open house above.</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- MARKETING TAB -->
   <div id="tab-marketing-content" style="display:none">
     <div class="marketing-main">
@@ -965,6 +1079,17 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
         </svg>
       </div>
       <div><div class="header-title">Admin Panel</div><div class="header-sub">LMI Prospect Finder · User Management</div></div>
+      <div class="hamburger-menu" id="admin-hamburger-menu">
+        <button class="hamburger-btn" onclick="toggleAdminHamburger(event)">☰ Menu</button>
+        <div class="hamburger-dropdown" id="admin-hamburger-dropdown">
+          <button class="hamburger-item" onclick="navigateToTab('search')">🔍 Search</button>
+          <button class="hamburger-item" onclick="navigateToTab('dashboard')">📊 Dashboard</button>
+          <button class="hamburger-item" onclick="navigateToTab('realtors')">🏠 Realtors</button>
+          <button class="hamburger-item" onclick="navigateToTab('activity')">📋 Activity Log</button>
+          <button class="hamburger-item" onclick="navigateToTab('marketing')">🖨 Marketing</button>
+          <button class="hamburger-item" onclick="navigateToTab('oyz')">🏡 OYZ</button>
+        </div>
+      </div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
@@ -1510,14 +1635,243 @@ window.onload = async function() {
 
 // ── TAB NAV ───────────────────────────────────────────────────
 function showTab(tab) {
-  ['search','dashboard','realtors','activity','marketing'].forEach(function(t) {
+  ['search','dashboard','realtors','activity','marketing','oyz'].forEach(function(t) {
     document.getElementById('tab-' + t + '-content').style.display = t === tab ? 'block' : 'none';
-    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    var btn = document.getElementById('tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
   });
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'realtors') { renderRealtorStats(); renderRealtorList(); }
   if (tab === 'activity') { renderActivityLog(); renderActivityStats(); }
   if (tab === 'marketing') renderMarketingTab();
+  if (tab === 'oyz') loadOYZ();
+}
+
+// ── HAMBURGER MENU ────────────────────────────────────────────
+function toggleHamburger(e) {
+  e.stopPropagation();
+  document.getElementById('hamburger-dropdown').classList.toggle('open');
+}
+function closeHamburger() {
+  var d = document.getElementById('hamburger-dropdown');
+  if (d) d.classList.remove('open');
+}
+function toggleAdminHamburger(e) {
+  e.stopPropagation();
+  document.getElementById('admin-hamburger-dropdown').classList.toggle('open');
+}
+function closeAdminHamburger() {
+  var d = document.getElementById('admin-hamburger-dropdown');
+  if (d) d.classList.remove('open');
+}
+function navigateToTab(tab) {
+  closeAdminHamburger();
+  goApp();
+  showTab(tab);
+}
+document.addEventListener('click', function() {
+  closeHamburger();
+  closeAdminHamburger();
+});
+
+// ── OYZ ───────────────────────────────────────────────────────
+var cachedOYZ = [];
+
+function oyzGetStatus(entry) {
+  if (entry.status === 'complete') return 'complete';
+  if (!entry.openHouseDate) return 'upcoming';
+  var now = new Date();
+  now.setHours(0,0,0,0);
+  var ohDate = new Date(entry.openHouseDate + 'T00:00:00');
+  var diffDays = Math.floor((ohDate - now) / 86400000);
+  if (diffDays > 2) return 'upcoming';
+  if (diffDays >= -1 && diffDays <= 2) return 'weekend';
+  // openHouseDate has passed — check if Monday or later
+  var dayOfWeek = now.getDay(); // 0=Sun,1=Mon,...
+  if (dayOfWeek >= 1) return 'followup';
+  return 'weekend';
+}
+
+function oyzStatusLabel(s) {
+  if (s === 'upcoming') return { text: 'Upcoming', cls: 'oyz-status-upcoming' };
+  if (s === 'weekend')  return { text: 'This Weekend', cls: 'oyz-status-weekend' };
+  if (s === 'followup') return { text: 'Needs Follow-up', cls: 'oyz-status-followup' };
+  return { text: 'Complete', cls: 'oyz-status-complete' };
+}
+
+function loadOYZ() {
+  if (!db || !currentUser) return;
+  populateOYZRealtorSelect();
+  var isAdmin = currentUser.role === 'admin';
+  var adminFilter = document.getElementById('oyz-admin-filter');
+  if (adminFilter) adminFilter.style.display = isAdmin ? 'block' : 'none';
+
+  var query = db.collection('oyz').orderBy('openHouseDate', 'asc');
+  if (!isAdmin) query = query.where('userId', '==', currentUser.id);
+
+  query.get().then(function(snap) {
+    cachedOYZ = [];
+    snap.forEach(function(doc) { cachedOYZ.push(Object.assign({ id: doc.id }, doc.data())); });
+    if (isAdmin) populateOYZMLOFilter();
+    renderOYZList();
+    renderOYZStats();
+  }).catch(function(err) { console.error('OYZ load error', err); });
+}
+
+function populateOYZRealtorSelect() {
+  var sel = document.getElementById('oyz-realtor-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Pick from list or type below...</option>';
+  (cachedRealtors || []).forEach(function(r) {
+    sel.innerHTML += '<option value="' + r.id + '" data-name="' + (r.name || '') + '">' + (r.name || '') + (r.brokerage ? ' — ' + r.brokerage : '') + '</option>';
+  });
+}
+
+function oyzRealtorSelectChange() {
+  var sel = document.getElementById('oyz-realtor-select');
+  var nameInput = document.getElementById('oyz-realtor-name');
+  if (!sel || !nameInput) return;
+  var opt = sel.options[sel.selectedIndex];
+  if (opt && opt.dataset.name) nameInput.value = opt.dataset.name;
+  else nameInput.value = '';
+}
+
+function populateOYZMLOFilter() {
+  var sel = document.getElementById('oyz-filter-mlo');
+  if (!sel) return;
+  var names = {};
+  cachedOYZ.forEach(function(e) { if (e.userName) names[e.userId] = e.userName; });
+  sel.innerHTML = '<option value="all">All MLOs</option>';
+  Object.keys(names).forEach(function(uid) {
+    sel.innerHTML += '<option value="' + uid + '">' + names[uid] + '</option>';
+  });
+}
+
+function renderOYZStats() {
+  var total = cachedOYZ.length;
+  var weekend = 0, followup = 0, complete = 0;
+  cachedOYZ.forEach(function(e) {
+    var s = oyzGetStatus(e);
+    if (s === 'weekend') weekend++;
+    if (s === 'followup') followup++;
+    if (s === 'complete') complete++;
+  });
+  document.getElementById('oyz-stat-total').textContent = total;
+  document.getElementById('oyz-stat-weekend').textContent = weekend;
+  document.getElementById('oyz-stat-followup').textContent = followup;
+  document.getElementById('oyz-stat-complete').textContent = complete;
+}
+
+function renderOYZList() {
+  var list = document.getElementById('oyz-list');
+  if (!list) return;
+  var isAdmin = currentUser && currentUser.role === 'admin';
+  var filterMlo = isAdmin ? (document.getElementById('oyz-filter-mlo') ? document.getElementById('oyz-filter-mlo').value : 'all') : 'all';
+  var entries = cachedOYZ.filter(function(e) {
+    if (filterMlo !== 'all' && e.userId !== filterMlo) return false;
+    return true;
+  });
+  if (!entries.length) { list.innerHTML = '<div class="empty-oyz">No entries yet. Add your first open house above.</div>'; return; }
+
+  list.innerHTML = entries.map(function(e) {
+    var status = oyzGetStatus(e);
+    var sl = oyzStatusLabel(status);
+    var completeBtn = status !== 'complete'
+      ? '<button class="oyz-complete-btn" onclick="markOYZComplete(\'' + e.id + '\')">✓ Mark Complete</button>'
+      : '<span style="font-size:12px;color:#059669;font-weight:700">✓ Completed</span>';
+    var mloLine = isAdmin && e.userName ? '<span class="oyz-mlo-badge">· ' + e.userName + '</span>' : '';
+    return '<div class="oyz-card">'
+      + '<div class="oyz-card-top">'
+      + '<div><div class="oyz-card-address">' + (e.propertyAddress || '—') + '</div>'
+      + '<div class="oyz-card-realtor">Realtor: ' + (e.realtorName || '—') + ' ' + mloLine + '</div></div>'
+      + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span>'
+      + '</div>'
+      + '<div class="oyz-card-dates">'
+      + '<div class="oyz-date-item"><div class="oyz-date-label">Open House</div><div class="oyz-date-value">' + fmtOYZDate(e.openHouseDate) + '</div></div>'
+      + '<div class="oyz-date-item"><div class="oyz-date-label">First Contact</div><div class="oyz-date-value">' + fmtOYZDate(e.firstContactDate) + '</div></div>'
+      + '<div class="oyz-date-item"><div class="oyz-date-label">Next Connection</div><div class="oyz-date-value">' + fmtOYZDate(e.nextConnectionDate) + '</div></div>'
+      + '</div>'
+      + (e.notes ? '<div class="oyz-card-notes">' + e.notes + '</div>' : '')
+      + '<div class="oyz-card-actions">'
+      + completeBtn
+      + '<button class="oyz-delete-btn" onclick="deleteOYZ(\'' + e.id + '\')">🗑 Delete</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function fmtOYZDate(d) {
+  if (!d) return '—';
+  var parts = d.split('-');
+  if (parts.length !== 3) return d;
+  return parts[1] + '/' + parts[2] + '/' + parts[0];
+}
+
+function submitOYZ() {
+  if (!db || !currentUser) return;
+  var address = document.getElementById('oyz-address').value.trim();
+  var ohDate = document.getElementById('oyz-oh-date').value;
+  if (!address || !ohDate) { showToast('Property address and open house date are required.'); return; }
+
+  var sel = document.getElementById('oyz-realtor-select');
+  var realtorId = sel.value || '';
+  var realtorName = document.getElementById('oyz-realtor-name').value.trim();
+  if (!realtorName && sel.selectedIndex > 0) {
+    realtorName = sel.options[sel.selectedIndex].dataset.name || '';
+  }
+
+  var entry = {
+    propertyAddress: address,
+    realtorId: realtorId,
+    realtorName: realtorName,
+    openHouseDate: ohDate,
+    firstContactDate: document.getElementById('oyz-first-contact').value || '',
+    nextConnectionDate: document.getElementById('oyz-next-connection').value || '',
+    notes: document.getElementById('oyz-notes').value.trim(),
+    status: 'active',
+    userId: currentUser.id,
+    userName: currentUser.name,
+    userRegion: currentUser.region || '',
+    savedAt: new Date().toISOString()
+  };
+
+  db.collection('oyz').add(entry).then(function() {
+    showToast('✅ OYZ entry saved!');
+    clearOYZForm();
+    loadOYZ();
+  }).catch(function(err) { console.error(err); showToast('Error saving entry.'); });
+}
+
+function clearOYZForm() {
+  document.getElementById('oyz-address').value = '';
+  document.getElementById('oyz-realtor-select').value = '';
+  document.getElementById('oyz-realtor-name').value = '';
+  document.getElementById('oyz-oh-date').value = '';
+  document.getElementById('oyz-first-contact').value = '';
+  document.getElementById('oyz-next-connection').value = '';
+  document.getElementById('oyz-notes').value = '';
+}
+
+function markOYZComplete(id) {
+  if (!db) return;
+  db.collection('oyz').doc(id).update({ status: 'complete' }).then(function() {
+    var entry = cachedOYZ.find(function(e) { return e.id === id; });
+    if (entry) entry.status = 'complete';
+    renderOYZList();
+    renderOYZStats();
+    showToast('✓ Marked as complete');
+  });
+}
+
+function deleteOYZ(id) {
+  if (!db) return;
+  if (!confirm('Delete this OYZ entry?')) return;
+  db.collection('oyz').doc(id).delete().then(function() {
+    cachedOYZ = cachedOYZ.filter(function(e) { return e.id !== id; });
+    renderOYZList();
+    renderOYZStats();
+    showToast('Deleted');
+  });
 }
 
 // ── PROFILE ───────────────────────────────────────────────────

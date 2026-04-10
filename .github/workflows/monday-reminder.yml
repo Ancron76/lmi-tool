@@ -1,0 +1,137 @@
+name: OYZ Monday Follow-up Reminder
+
+on:
+  schedule:
+    # Every Monday at 8am Pacific (16:00 UTC)
+    - cron: "0 16 * * 1"
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install firebase-admin node-fetch
+
+      - name: Send OYZ follow-up reminders
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node << 'EOF'
+          const admin = require('firebase-admin');
+          const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+
+          // Initialize Firebase Admin
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+          const db = admin.firestore();
+
+          const EMAILJS_SERVICE_ID  = 'service_g1ghxq2';
+          const EMAILJS_TEMPLATE_ID = 'template_fksjm5e';
+          const EMAILJS_PUBLIC_KEY  = 'uSiYFQtZ-GzxmJ53A';
+
+          async function sendEmail(toEmail, params) {
+            const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                service_id:  EMAILJS_SERVICE_ID,
+                template_id: EMAILJS_TEMPLATE_ID,
+                user_id:     EMAILJS_PUBLIC_KEY,
+                template_params: params
+              })
+            });
+            if (!res.ok) {
+              const text = await res.text();
+              throw new Error('EmailJS error: ' + text);
+            }
+            return res.text();
+          }
+
+          async function main() {
+            const now = new Date();
+
+            // Find last Saturday and Sunday
+            const dayOfWeek = now.getDay(); // 1 = Monday
+            const lastSat = new Date(now);
+            lastSat.setDate(now.getDate() - 2); // Saturday
+            const lastSun = new Date(now);
+            lastSun.setDate(now.getDate() - 1); // Sunday
+
+            function toDateStr(d) {
+              return d.toISOString().split('T')[0];
+            }
+
+            const lastSatStr = toDateStr(lastSat);
+            const lastSunStr = toDateStr(lastSun);
+
+            console.log(`Checking for open houses on ${lastSatStr} or ${lastSunStr}`);
+
+            // Query oyz entries for last weekend, not yet complete
+            const snap = await db.collection('oyz')
+              .where('status', '!=', 'complete')
+              .get();
+
+            const entries = [];
+            snap.forEach(doc => {
+              const data = doc.data();
+              if (data.openHouseDate === lastSatStr || data.openHouseDate === lastSunStr) {
+                entries.push({ id: doc.id, ...data });
+              }
+            });
+
+            console.log(`Found ${entries.length} entries needing follow-up`);
+
+            if (!entries.length) {
+              console.log('No follow-up reminders needed.');
+              return;
+            }
+
+            // Look up MLO profile emails from users collection
+            const userSnap = await db.collection('users').get();
+            const userEmails = {};
+            userSnap.forEach(doc => {
+              const d = doc.data();
+              const email = (d.profile && d.profile.email) ? d.profile.email : d.email;
+              if (email) userEmails[doc.id] = email;
+            });
+
+            for (const entry of entries) {
+              const toEmail = userEmails[entry.userId];
+              if (!toEmail) {
+                console.log(`No email found for user ${entry.userId}, skipping.`);
+                continue;
+              }
+
+              const params = {
+                to_email:         toEmail,
+                to_name:          entry.userName || 'Team Member',
+                realtor_name:     entry.realtorName || '—',
+                property_address: entry.propertyAddress || '—',
+                open_house_date:  entry.openHouseDate || '—',
+                notes:            entry.notes || '(no notes)',
+                next_connection:  entry.nextConnectionDate || '—',
+                subject:          'OYZ Follow-up Reminder — Time to reach out!'
+              };
+
+              try {
+                await sendEmail(toEmail, params);
+                console.log(`Reminder sent to ${toEmail} for ${entry.propertyAddress}`);
+              } catch (err) {
+                console.error(`Failed to send to ${toEmail}:`, err.message);
+              }
+            }
+
+            console.log('Done.');
+          }
+
+          main().catch(err => { console.error(err); process.exit(1); });
+          EOF
