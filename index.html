@@ -742,6 +742,30 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .add-note-form.open { display: block; }
 .add-note-textarea { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 13px; outline: none; resize: vertical; min-height: 80px; font-family: inherit; }
 .add-note-textarea:focus { border-color: #7c3aed; }
+/* SCHEDULED ACTIVITIES */
+.sched-activity-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px 14px; align-items: start; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+.sched-activity-row:last-child { border-bottom: none; padding-bottom: 0; }
+.sched-activity-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding-top: 2px; }
+.sched-activity-date { font-size: 13px; font-weight: 600; color: #1f2937; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sched-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #64748b; }
+.sched-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.sched-dot-upcoming { background: #94a3b8; }
+.sched-dot-today { background: #0ed2c8; animation: pulse-dot 1.2s infinite; }
+.sched-dot-past { background: #059669; }
+@keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.5); } }
+.sched-activity-notes { grid-column: 1 / -1; font-size: 13px; color: #374151; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 9px; min-height: 36px; outline: none; transition: border-color 0.2s; line-height: 1.5; }
+.sched-activity-notes:focus { border-color: #0ed2c8; }
+.sched-activity-notes:empty:before { content: attr(data-placeholder); color: #94a3b8; }
+.sched-activity-log-btn { grid-column: 1 / -1; background: #f0f9ff; color: #0369a1; border: 1.5px solid #bae6fd; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; width: fit-content; }
+.sched-activity-log-btn:hover { background: #e0f2fe; }
+/* NOTES TIMELINE */
+.note-timeline-item { background: #fafbff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.note-timeline-item:last-child { margin-bottom: 0; }
+.note-timeline-text { font-size: 13px; color: #1f2937; line-height: 1.6; white-space: pre-line; }
+.note-timeline-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.note-timeline-ts { font-size: 11px; color: #94a3b8; font-style: italic; }
+.note-delete-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 6px; }
+.note-delete-btn:hover { background: #fef2f2; }
 
 /* REALTOR PROFILE OVERLAY */
 .realtor-profile-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; z-index: 700; overflow-y: auto; padding: 24px 20px; }
@@ -2747,11 +2771,18 @@ function renderOYZStats() {
   document.getElementById('oyz-stat-complete').textContent = complete;
 }
 
+function getOutcomeStyle(outcome) {
+  if (outcome === 'Captured') return { bg: '#f0fdf4', color: '#059669' };
+  if (outcome === 'Lost')     return { bg: '#fef2f2', color: '#dc2626' };
+  if (outcome === 'House Still For Sale') return { bg: '#eff6ff', color: '#2563eb' };
+  return { bg: '#fffbeb', color: '#d97706' }; // Pending / default
+}
+
 function oyzCardHtml(e, isAdmin) {
   var status = oyzGetStatus(e);
   var sl = oyzStatusLabel(status);
-  var outcomeColor = e.dealOutcome === 'Captured' ? '#059669' : e.dealOutcome === 'Lost' ? '#dc2626' : '#d97706';
-  var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + (e.dealOutcome==='Captured'?'#f0fdf4':e.dealOutcome==='Lost'?'#fef2f2':'#fffbeb') + ';color:' + outcomeColor + '">' + e.dealOutcome + '</span>' : '';
+  var _os = getOutcomeStyle(e.dealOutcome);
+  var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + _os.bg + ';color:' + _os.color + '">' + e.dealOutcome + '</span>' : '';
   var mloLine = isAdmin && e.userName ? '<span class="oyz-mlo-badge">· ' + e.userName + '</span>' : '';
   var realtorId = e.realtorId || '';
   var realtorLink = realtorId
@@ -2959,6 +2990,61 @@ function deleteOYZ(id) {
 }
 
 // ── PROPERTY DETAIL ──────────────────────────────────────────
+function buildScheduledActivitiesHtml(entry) {
+  var acts = [
+    { label: 'First Contact',   dateField: 'firstContactDate',   notesField: 'firstContactNotes',   date: entry.firstContactDate,   notes: entry.firstContactNotes   || '' },
+    { label: 'Open House',      dateField: 'openHouseDate',      notesField: 'openHouseNotes',      date: entry.openHouseDate,      notes: entry.openHouseNotes      || '' },
+    { label: 'Next Connection', dateField: 'nextConnectionDate', notesField: 'nextConnectionNotes', date: entry.nextConnectionDate, notes: entry.nextConnectionNotes || '' }
+  ];
+  var now = new Date(); now.setHours(0,0,0,0);
+  return acts.map(function(act) {
+    var dateObj = act.date ? new Date(act.date + 'T00:00:00') : null;
+    var dotHtml = '', statusLabel = '';
+    if (dateObj) {
+      var diff = Math.round((dateObj - now) / 86400000);
+      if (diff === 0)      { dotHtml = '<span class="sched-dot sched-dot-today"></span>';    statusLabel = 'Today'; }
+      else if (diff > 0)   { dotHtml = '<span class="sched-dot sched-dot-upcoming"></span>'; statusLabel = 'Upcoming'; }
+      else                 { dotHtml = '<span class="sched-dot sched-dot-past"></span>';     statusLabel = 'Past'; }
+    }
+    var formatted = dateObj ? dateObj.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : '—';
+    var safeId = entry.id.replace(/'/g, '');
+    var safeField = act.notesField;
+    return '<div class="sched-activity-row">'
+      + '<div class="sched-activity-label">' + act.label + '</div>'
+      + '<div class="sched-activity-date">' + formatted
+        + (dateObj ? '<span class="sched-status">' + dotHtml + statusLabel + '</span>' : '')
+      + '</div>'
+      + '<div class="sched-activity-notes" contenteditable="true" onblur="saveActivityNote(\'' + safeId + '\',\'' + safeField + '\',this.textContent)" data-placeholder="Add notes...">' + act.notes + '</div>'
+      + '<button class="sched-activity-log-btn" onclick="addActivityFromOYZ(\'' + safeId + '\',\'' + act.label + '\',\'' + (act.date || '') + '\')">📋 Add to Activity Log</button>'
+      + '</div>';
+  }).join('');
+}
+
+function saveActivityNote(id, field, text) {
+  if (!db) return;
+  var entry = cachedOYZ.find(function(e) { return e.id === id; });
+  if (!entry) return;
+  var update = {};
+  update[field] = text.trim();
+  db.collection('oyz').doc(id).update(update).then(function() {
+    entry[field] = text.trim();
+  });
+}
+
+function addActivityFromOYZ(id, label, date) {
+  var entry = cachedOYZ.find(function(e) { return e.id === id; });
+  closePropDetail();
+  navigateToTab('activity');
+  setTimeout(function() {
+    var typeEl = document.getElementById('act-type');
+    if (typeEl) typeEl.value = label === 'Open House' ? 'Open House' : 'Follow-Up';
+    var notesEl = document.getElementById('act-notes');
+    if (notesEl && entry) notesEl.value = entry.propertyAddress || '';
+    var dateEl = document.getElementById('act-date');
+    if (dateEl && date) dateEl.value = date;
+  }, 350);
+}
+
 function openPropDetail(id) {
   var entry = cachedOYZ.find(function(e) { return e.id === id; });
   if (!entry) return;
@@ -2968,7 +3054,7 @@ function openPropDetail(id) {
   var titleEl = document.getElementById('prop-detail-title');
   if (titleEl) titleEl.textContent = '🏡 ' + (entry.propertyAddress || 'Property Detail');
 
-  // Build timeline from cachedActivities matching this property ZIP or address
+  // Build CRA linked timeline
   var zip = entry.propertyZip || '';
   var addr = (entry.propertyAddress || '').toLowerCase();
   var timeline = [];
@@ -2976,22 +3062,48 @@ function openPropDetail(id) {
     var match = (zip && a.zip === zip) || (addr && ((a.borrower || '').toLowerCase().includes(addr) || (a.notes || '').toLowerCase().includes(addr)));
     if (match) timeline.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#0ed2c8' });
   });
-  if (entry.notes) timeline.push({ date: entry.savedAt || '', title: 'OYZ Note: ' + entry.notes, source: 'oyz', color: '#7c3aed' });
   timeline.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
 
   var realtorLinkHtml = (entry.realtorId || entry.realtorName)
     ? '<button style="background:none;border:none;color:#4f46e5;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;padding:0" onclick="closePropDetail();openRealtorProfileById(\'' + (entry.realtorId||'') + '\',\'' + (entry.realtorName||'').replace(/'/g,"&#39;") + '\')">View ' + (entry.realtorName || 'Realtor') + ' Profile →</button>'
     : '—';
 
-  var timelineHtml = timeline.length
+  var craTimelineHtml = timeline.length
     ? timeline.map(function(t) {
         return '<div class="timeline-item">'
           + '<div class="timeline-dot" style="background:' + t.color + '"></div>'
           + '<div class="timeline-content"><div class="timeline-title">' + t.title + '</div>'
-          + '<div class="timeline-meta">' + (t.date ? new Date(t.date).toLocaleDateString() : '') + ' · ' + (t.source === 'cra' ? 'CRA Activity' : 'OYZ') + '</div>'
+          + '<div class="timeline-meta">' + (t.date ? new Date(t.date).toLocaleDateString() : '') + ' · CRA Activity</div>'
           + '</div></div>';
       }).join('')
-    : '<div style="color:#94a3b8;font-size:13px;padding:10px 0">No linked activity found.</div>';
+    : '<div style="color:#94a3b8;font-size:13px;padding:10px 0">No linked CRA activity found.</div>';
+
+  // Build notes timeline (new notesList array, with backward-compat for legacy notes string)
+  var notesList = entry.notesList ? entry.notesList.slice() : [];
+  if (!notesList.length && entry.notes) {
+    var legacyParts = entry.notes.split(/\n\n(?=\[)/);
+    legacyParts.forEach(function(part, i) {
+      var m = part.match(/^\[(.+?)\]\s*([\s\S]*)/);
+      if (m) {
+        notesList.push({ id: 'legacy-' + i, text: m[2].trim(), timestamp: m[1] });
+      } else if (part.trim()) {
+        notesList.push({ id: 'legacy-' + i, text: part.trim(), timestamp: '' });
+      }
+    });
+  }
+
+  var notesTimelineHtml = notesList.length
+    ? notesList.map(function(n) {
+        var isLegacy = String(n.id).indexOf('legacy-') === 0;
+        return '<div class="note-timeline-item">'
+          + '<div class="note-timeline-text">' + (n.text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</div>'
+          + '<div class="note-timeline-footer">'
+          + '<span class="note-timeline-ts">' + (n.timestamp || '') + '</span>'
+          + (!isLegacy ? '<button class="note-delete-btn" onclick="deleteOYZNote(\'' + entry.id + '\',\'' + n.id + '\')" title="Delete note">🗑</button>' : '')
+          + '</div>'
+          + '</div>';
+      }).join('')
+    : '<div style="color:#94a3b8;font-size:13px;padding:6px 0">No notes yet.</div>';
 
   var body = document.getElementById('prop-detail-body');
   body.innerHTML =
@@ -3001,33 +3113,38 @@ function openPropDetail(id) {
     + '<div class="prop-detail-item"><label>Address</label><span>' + (entry.propertyAddress || '—') + '</span></div>'
     + '<div class="prop-detail-item"><label>Status</label><span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
     + '<div class="prop-detail-item"><label>Realtor</label><span>' + realtorLinkHtml + '</span></div>'
-    + '<div class="prop-detail-item"><label>Open House</label><span>' + fmtOYZDate(entry.openHouseDate) + '</span></div>'
-    + '<div class="prop-detail-item"><label>First Contact</label><span>' + fmtOYZDate(entry.firstContactDate) + '</span></div>'
-    + '<div class="prop-detail-item"><label>Next Connection</label><span>' + fmtOYZDate(entry.nextConnectionDate) + '</span></div>'
     + '</div>'
-    + (entry.notes ? '<div style="margin-top:12px;font-size:13px;color:#64748b;font-style:italic">📝 ' + entry.notes + '</div>' : '')
     + '</div>'
     + '<div class="prop-detail-section">'
     + '<div class="prop-detail-section-title">Deal Outcome</div>'
     + '<select class="outcome-select" id="prop-outcome-select" onchange="savePropOutcome(\'' + entry.id + '\')">'
     + '<option value="">— Select outcome —</option>'
+    + '<option value="Pending"' + (entry.dealOutcome === 'Pending' ? ' selected' : '') + '>⏳ Pending</option>'
     + '<option value="Captured"' + (entry.dealOutcome === 'Captured' ? ' selected' : '') + '>✅ Captured</option>'
     + '<option value="Lost"' + (entry.dealOutcome === 'Lost' ? ' selected' : '') + '>❌ Lost</option>'
-    + '<option value="Pending"' + (entry.dealOutcome === 'Pending' ? ' selected' : '') + '>⏳ Pending</option>'
+    + '<option value="House Still For Sale"' + (entry.dealOutcome === 'House Still For Sale' ? ' selected' : '') + '>🏠 House Still For Sale</option>'
     + '</select>'
     + '</div>'
     + '<div class="prop-detail-section">'
+    + '<div class="prop-detail-section-title">📅 Scheduled Activities</div>'
+    + buildScheduledActivitiesHtml(entry)
+    + '</div>'
+    + '<div class="prop-detail-section">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    + '<div class="prop-detail-section-title" style="margin-bottom:0">Activity Timeline</div>'
+    + '<div class="prop-detail-section-title" style="margin-bottom:0">📝 Notes</div>'
     + '<button style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">+ Add Note</button>'
     + '</div>'
+    + notesTimelineHtml
     + '<div class="add-note-form" id="add-note-form-' + entry.id + '">'
     + '<textarea class="add-note-textarea" id="add-note-text-' + entry.id + '" placeholder="Add a note about this property..."></textarea>'
     + '<div style="display:flex;gap:8px;margin-top:8px">'
     + '<button style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer" onclick="saveOYZNote(\'' + entry.id + '\')">Save Note</button>'
     + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">Cancel</button>'
     + '</div></div>'
-    + timelineHtml
+    + '</div>'
+    + '<div class="prop-detail-section">'
+    + '<div class="prop-detail-section-title">Linked CRA Activity</div>'
+    + craTimelineHtml
     + '</div>';
 
   overlay.classList.add('open');
@@ -3064,12 +3181,30 @@ function saveOYZNote(id) {
   if (!noteText) return;
   var entry = cachedOYZ.find(function(e) { return e.id === id; });
   if (!entry) return;
-  var newNotes = entry.notes ? entry.notes + '\n\n[' + new Date().toLocaleDateString() + '] ' + noteText : '[' + new Date().toLocaleDateString() + '] ' + noteText;
-  db.collection('oyz').doc(id).update({ notes: newNotes }).then(function() {
-    entry.notes = newNotes;
+  var notesList = entry.notesList ? entry.notesList.slice() : [];
+  var newNote = {
+    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+    text: noteText,
+    timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+  };
+  notesList.push(newNote);
+  db.collection('oyz').doc(id).update({ notesList: notesList }).then(function() {
+    entry.notesList = notesList;
     showToast('✅ Note saved');
-    openPropDetail(id); // refresh the detail panel
-  });
+    openPropDetail(id);
+  }).catch(function(err) { showToast('Error saving note: ' + (err.message || err)); });
+}
+
+function deleteOYZNote(id, noteId) {
+  if (!db) return;
+  var entry = cachedOYZ.find(function(e) { return e.id === id; });
+  if (!entry) return;
+  var notesList = (entry.notesList || []).filter(function(n) { return n.id !== noteId; });
+  db.collection('oyz').doc(id).update({ notesList: notesList }).then(function() {
+    entry.notesList = notesList;
+    showToast('Note deleted');
+    openPropDetail(id);
+  }).catch(function(err) { showToast('Error deleting note: ' + (err.message || err)); });
 }
 
 // ── REALTOR PROFILE ───────────────────────────────────────────
@@ -3132,7 +3267,8 @@ function openRealtorProfile(docId) {
 
   var oyzCardsHtml = oyzEntries.length ? oyzEntries.map(function(e) {
     var s = oyzGetStatus(e); var sl = oyzStatusLabel(s);
-    var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + (e.dealOutcome==='Captured'?'#f0fdf4':e.dealOutcome==='Lost'?'#fef2f2':'#fffbeb') + ';color:' + (e.dealOutcome==='Captured'?'#059669':e.dealOutcome==='Lost'?'#dc2626':'#d97706') + '">' + e.dealOutcome + '</span>' : '';
+    var _ros = getOutcomeStyle(e.dealOutcome);
+    var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + _ros.bg + ';color:' + _ros.color + '">' + e.dealOutcome + '</span>' : '';
     return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer" onclick="closeRealtorProfile();openPropDetail(\'' + e.id + '\')">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       + '<div style="font-size:13px;font-weight:700;color:#1f2937">' + (e.propertyAddress || '—') + '</div>'
@@ -5435,8 +5571,8 @@ function renderRPOpenHouses() {
       var entries = [];
       snap.forEach(function(d) { entries.push(Object.assign({ id: d.id }, d.data())); });
       if (!entries.length) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div>'; return; }
-      var statusColors = { 'Captured':'#f0fdf4', 'Lost':'#fef2f2', 'Pending':'#fffbeb' };
-      var statusText   = { 'Captured':'#059669', 'Lost':'#dc2626', 'Pending':'#d97706' };
+      var statusColors = { 'Captured':'#f0fdf4', 'Lost':'#fef2f2', 'Pending':'#fffbeb', 'House Still For Sale':'#eff6ff' };
+      var statusText   = { 'Captured':'#059669', 'Lost':'#dc2626', 'Pending':'#d97706', 'House Still For Sale':'#2563eb' };
       el.innerHTML = entries.map(function(e) {
         var outcome = e.dealOutcome || '';
         var outcomeBadge = outcome ? '<span style="font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;background:' + (statusColors[outcome]||'#f1f5f9') + ';color:' + (statusText[outcome]||'#64748b') + '">' + outcome + '</span>' : '';
