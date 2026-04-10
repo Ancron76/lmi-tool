@@ -5500,6 +5500,13 @@ function rpShowTab(tab) {
 }
 
 function renderRPHome() {
+  // Greeting (set here so it's always correct when tab is re-visited)
+  var hr = new Date().getHours();
+  var greetWord = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  var firstName = (currentUser && currentUser.name) ? currentUser.name.split(' ')[0] : 'there';
+  var greetEl = document.getElementById('rp-welcome-greeting');
+  if (greetEl) greetEl.textContent = greetWord + ', ' + firstName + '! 👋';
+
   // Stats
   var converted = realtorSearches.filter(function(s) { return s.mloConverted; }).length;
   var statS = document.getElementById('rp-stat-searches');
@@ -6134,18 +6141,36 @@ async function doSendToRealtor() {
 // ── REALTOR PORTAL — BUYER PROFILES ──────────────────────────
 async function loadRealtorPushes() {
   realtorPushes = [];
-  if (!db || !currentUser.realtorDocId) return;
+  if (!db) return;
   try {
-    var snap = await db.collection('realtor_pushes')
-      .where('realtorDocId', '==', currentUser.realtorDocId)
-      .orderBy('sentAt', 'desc').limit(30).get();
+    var snap = null;
+    // Primary: query by realtorDocId (the realtor's doc ID in the realtors collection)
+    if (currentUser.realtorDocId) {
+      snap = await db.collection('realtor_pushes')
+        .where('realtorDocId', '==', currentUser.realtorDocId)
+        .orderBy('sentAt', 'desc').limit(30).get();
+    }
+    // Fallback: query by realtorUserId (the realtor's user account ID) in case realtorDocId isn't set
+    if (!snap || snap.empty) {
+      snap = await db.collection('realtor_pushes')
+        .where('realtorUserId', '==', currentUser.id)
+        .orderBy('sentAt', 'desc').limit(30).get();
+    }
     snap.forEach(function(d) { realtorPushes.push(Object.assign({ id: d.id }, d.data())); });
-  } catch(e) {}
+  } catch(e) { console.warn('loadRealtorPushes error:', e); }
 }
 
 function rpScrollToBuyerProfiles() {
+  // Re-render first so the section is always visible before scrolling
+  renderRPBuyerProfiles();
   var section = document.getElementById('rp-buyer-profiles-section');
-  if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!section) return;
+  // Force visible — even if no profiles yet, show an empty state
+  if (section.style.display === 'none') section.style.display = 'block';
+  // Small delay so display change repaints before scrollIntoView fires
+  setTimeout(function() {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 60);
 }
 
 function renderRPBuyerProfiles() {
@@ -6182,7 +6207,17 @@ function renderRPBuyerProfiles() {
     }
   }
 
-  if (!realtorPushes.length) { section.style.display = 'none'; return; }
+  if (!realtorPushes.length) {
+    // Show empty state rather than hiding entirely (so scroll-to works)
+    if (title) title.textContent = '📬 Buyer Profiles';
+    section.style.display = 'block';
+    list.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#94a3b8">'
+      + '<div style="font-size:32px;margin-bottom:8px">💰</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#64748b;margin-bottom:4px">No buyer profiles yet</div>'
+      + '<div style="font-size:13px">When your MLO sends you a buyer profile it will appear here.</div>'
+      + '</div>';
+    return;
+  }
   if (title) title.textContent = '📬 Buyer Profiles from ' + mloLabel;
   section.style.display = 'block';
 
