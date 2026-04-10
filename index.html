@@ -625,6 +625,80 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
   .oyz-form-grid, .oyz-form-grid-2 { grid-template-columns: 1fr 1fr; }
   .oyz-card-dates { grid-template-columns: 1fr 1fr; }
 }
+
+/* HOME LANDING */
+.home-main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+.home-greeting { font-size: 26px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
+.home-sub { font-size: 14px; color: #94a3b8; margin-bottom: 36px; }
+.home-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.home-card { background: white; border-radius: 18px; padding: 28px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); cursor: pointer; transition: all 0.18s; border: 2px solid transparent; text-align: center; }
+.home-card:hover { border-color: #0ed2c8; box-shadow: 0 4px 20px rgba(14,210,200,0.15); transform: translateY(-2px); }
+.home-card-icon { font-size: 36px; margin-bottom: 14px; }
+.home-card-title { font-size: 15px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
+.home-card-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+@media (max-width: 640px) { .home-cards-grid { grid-template-columns: 1fr 1fr; } }
+
+/* PROPERTY DETAIL OVERLAY */
+.prop-detail-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; z-index: 600; overflow-y: auto; padding: 24px 20px; }
+.prop-detail-overlay.open { display: flex; }
+.prop-detail-box { background: #f0f4f8; border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.prop-detail-header { background: linear-gradient(135deg, #7c3aed, #6d28d9); border-radius: 18px 18px 0 0; padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; }
+.prop-detail-title { color: white; font-size: 17px; font-weight: 800; }
+.prop-detail-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+.prop-detail-body { padding: 24px 28px; }
+.prop-detail-section { background: white; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.prop-detail-section-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+.prop-detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.prop-detail-item label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 3px; }
+.prop-detail-item span { font-size: 13px; font-weight: 600; color: #1f2937; }
+.outcome-select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; font-weight: 600; outline: none; width: 100%; }
+.outcome-select:focus { border-color: #7c3aed; }
+.timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
+.timeline-item:last-child { border-bottom: none; }
+.timeline-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.timeline-content { flex: 1; }
+.timeline-title { font-size: 13px; font-weight: 700; color: #1f2937; }
+.timeline-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.add-note-form { margin-top: 12px; display: none; }
+.add-note-form.open { display: block; }
+.add-note-textarea { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 13px; outline: none; resize: vertical; min-height: 80px; font-family: inherit; }
+.add-note-textarea:focus { border-color: #7c3aed; }
+
+/* REALTOR PROFILE OVERLAY */
+.realtor-profile-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; z-index: 700; overflow-y: auto; padding: 24px 20px; }
+.realtor-profile-overlay.open { display: flex; }
+.realtor-profile-box { background: #f0f4f8; border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.realtor-profile-header { background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 18px 18px 0 0; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; }
+.realtor-profile-name { color: white; font-size: 20px; font-weight: 800; }
+.realtor-profile-brokerage { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 3px; }
+.realtor-profile-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+.realtor-profile-body { padding: 24px 28px; }
+.rp-section { background: white; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.rp-section-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+.rp-perf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.rp-perf-item { text-align: center; }
+.rp-perf-num { font-size: 24px; font-weight: 900; color: #1f2937; }
+.rp-perf-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.rp-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rp-contact-item label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 3px; }
+.rp-contact-item span { font-size: 13px; font-weight: 600; color: #1f2937; }
+.schedule-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.schedule-form { background: #f8fafc; border-radius: 10px; padding: 16px; margin-top: 14px; display: none; }
+.schedule-form.open { display: block; }
+.schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.schedule-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; }
+.schedule-field input, .schedule-field select, .schedule-field textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; }
+.schedule-field input:focus, .schedule-field select:focus, .schedule-field textarea:focus { border-color: #4f46e5; }
+.oyz-inline-realtor-toggle { background: none; border: none; color: #7c3aed; font-size: 13px; font-weight: 700; cursor: pointer; padding: 6px 0; display: flex; align-items: center; gap: 6px; }
+.oyz-inline-realtor-form { background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 12px; padding: 18px; margin-top: 10px; display: none; }
+.oyz-inline-realtor-form.open { display: block; }
+.oyz-inline-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.oyz-inline-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; }
+.oyz-inline-field input, .oyz-inline-field textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; }
+.oyz-inline-field input:focus, .oyz-inline-field textarea:focus { border-color: #7c3aed; }
+.realtor-name-link { cursor: pointer; color: #4f46e5; text-decoration: underline; font-weight: 800; }
+.realtor-oyz-summary { font-size: 12px; color: #64748b; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
+.realtor-oyz-pill { background: #f5f3ff; color: #7c3aed; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 2px 8px; }
 </style>
 </head>
 <body>
@@ -721,7 +795,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <div class="hamburger-menu" id="hamburger-menu">
         <button class="hamburger-btn" onclick="toggleHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="hamburger-dropdown">
-          <button class="hamburger-item active" id="tab-search" onclick="showTab('search');closeHamburger()">🔍 Search</button>
+          <button class="hamburger-item" id="tab-search" onclick="showTab('search');closeHamburger()">🔍 LMI Search</button>
           <button class="hamburger-item" id="tab-dashboard" onclick="showTab('dashboard');closeHamburger()">📊 Dashboard</button>
           <button class="hamburger-item" id="tab-realtors" onclick="showTab('realtors');closeHamburger()">🏠 Realtors</button>
           <button class="hamburger-item" id="tab-activity" onclick="showTab('activity');closeHamburger()">📋 Activity Log</button>
@@ -734,6 +808,46 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
       <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">🛡 Admin</span>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- HOME TAB -->
+  <div id="tab-home-content" style="display:none">
+    <div class="home-main">
+      <div class="home-greeting" id="home-greeting">Welcome back! 👋</div>
+      <div class="home-sub">Where would you like to go?</div>
+      <div class="home-cards-grid">
+        <div class="home-card" onclick="showTab('search')">
+          <div class="home-card-icon">🔍</div>
+          <div class="home-card-title">LMI Search</div>
+          <div class="home-card-desc">Search and analyze LMI census tract data by ZIP code</div>
+        </div>
+        <div class="home-card" onclick="showTab('dashboard')">
+          <div class="home-card-icon">📊</div>
+          <div class="home-card-title">Dashboard</div>
+          <div class="home-card-desc">View your activity stats and team performance overview</div>
+        </div>
+        <div class="home-card" onclick="showTab('realtors')">
+          <div class="home-card-icon">🏠</div>
+          <div class="home-card-title">Realtors</div>
+          <div class="home-card-desc">Manage your realtor contact list and track partnerships</div>
+        </div>
+        <div class="home-card" onclick="showTab('activity')">
+          <div class="home-card-icon">📋</div>
+          <div class="home-card-title">Activity Log</div>
+          <div class="home-card-desc">Log and track CRA-qualifying mortgage activities</div>
+        </div>
+        <div class="home-card" onclick="showTab('marketing')">
+          <div class="home-card-icon">🖨</div>
+          <div class="home-card-title">Marketing</div>
+          <div class="home-card-desc">Generate flyers, shopping lists, and marketing materials</div>
+        </div>
+        <div class="home-card" onclick="showTab('oyz')">
+          <div class="home-card-icon">🏡</div>
+          <div class="home-card-title">OYZ</div>
+          <div class="home-card-desc">Plan open house prospecting and realtor outreach</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1000,21 +1114,37 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <div class="oyz-form-card">
         <div class="oyz-form-title">➕ Add Open House Entry</div>
         <div class="oyz-form-grid">
-          <div class="oyz-field"><label>Property Address</label><input type="text" id="oyz-address" placeholder="e.g. 123 Main St, Fresno" /></div>
-          <div class="oyz-field"><label>Realtor</label>
-            <div style="display:flex;gap:8px">
-              <select id="oyz-realtor-select" style="flex:1;padding:11px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:14px;outline:none;" onchange="oyzRealtorSelectChange()">
-                <option value="">Pick from list or type below...</option>
-              </select>
-            </div>
-            <input type="text" id="oyz-realtor-name" placeholder="Or type realtor name" style="margin-top:6px;width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:14px;outline:none;" />
-          </div>
-          <div class="oyz-field"><label>Open House Date</label><input type="date" id="oyz-oh-date" /></div>
+          <div class="oyz-field"><label>Street Address</label><input type="text" id="oyz-street" placeholder="e.g. 123 Main St" /></div>
+          <div class="oyz-field"><label>City</label><input type="text" id="oyz-city-field" placeholder="e.g. Fresno" /></div>
+          <div class="oyz-field"><label>State</label><input type="text" id="oyz-state-field" placeholder="e.g. CA" maxlength="2" /></div>
         </div>
         <div class="oyz-form-grid">
+          <div class="oyz-field"><label>ZIP Code</label><input type="text" id="oyz-zip-field" placeholder="e.g. 93701" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" /></div>
+          <div class="oyz-field"><label>Open House Date</label><input type="date" id="oyz-oh-date" /></div>
           <div class="oyz-field"><label>First Contact Date</label><input type="date" id="oyz-first-contact" /></div>
+        </div>
+        <div class="oyz-form-grid-2">
           <div class="oyz-field"><label>Next Connection Date</label><input type="date" id="oyz-next-connection" /></div>
           <div class="oyz-field"><label>Notes</label><textarea id="oyz-notes" placeholder="Any notes about this open house..."></textarea></div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Realtor</label>
+          <select id="oyz-realtor-select" style="width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:14px;outline:none;margin-bottom:8px;" onchange="oyzRealtorSelectChange()">
+            <option value="">Select existing realtor...</option>
+          </select>
+          <button class="oyz-inline-realtor-toggle" type="button" onclick="toggleOYZInlineRealtor()">➕ Add New Realtor to System</button>
+          <div class="oyz-inline-realtor-form" id="oyz-inline-realtor-form">
+            <div style="font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:12px">New Realtor — will be saved to your Realtors list</div>
+            <div class="oyz-inline-form-grid">
+              <div class="oyz-inline-field"><label>Full Name *</label><input type="text" id="oyz-nr-name" placeholder="Jane Doe" /></div>
+              <div class="oyz-inline-field"><label>Brokerage *</label><input type="text" id="oyz-nr-brokerage" placeholder="Keller Williams" /></div>
+              <div class="oyz-inline-field"><label>License #</label><input type="text" id="oyz-nr-license" placeholder="CA-12345678" /></div>
+              <div class="oyz-inline-field"><label>Phone</label><input type="tel" id="oyz-nr-phone" placeholder="(559) 555-0100" /></div>
+              <div class="oyz-inline-field"><label>Email</label><input type="email" id="oyz-nr-email" placeholder="jane@kw.com" /></div>
+              <div class="oyz-inline-field"><label>Specialty Area / ZIP</label><input type="text" id="oyz-nr-area" placeholder="e.g. Fresno, 93701" /></div>
+            </div>
+            <div class="oyz-inline-field" style="margin-bottom:0"><label>Notes</label><textarea id="oyz-nr-notes" placeholder="Any notes..."></textarea></div>
+          </div>
         </div>
         <div class="oyz-submit-row">
           <button class="oyz-clear-btn" onclick="clearOYZForm()">Clear</button>
@@ -1032,6 +1162,31 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
         </div>
         <div id="oyz-list"><div class="empty-oyz">No entries yet. Add your first open house above.</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- PROPERTY DETAIL OVERLAY -->
+  <div class="prop-detail-overlay" id="prop-detail-overlay">
+    <div class="prop-detail-box">
+      <div class="prop-detail-header">
+        <div class="prop-detail-title" id="prop-detail-title">Property Detail</div>
+        <button class="prop-detail-close" onclick="closePropDetail()">✕ Close</button>
+      </div>
+      <div class="prop-detail-body" id="prop-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- REALTOR PROFILE OVERLAY -->
+  <div class="realtor-profile-overlay" id="realtor-profile-overlay">
+    <div class="realtor-profile-box">
+      <div class="realtor-profile-header">
+        <div>
+          <div class="realtor-profile-name" id="rp-name">—</div>
+          <div class="realtor-profile-brokerage" id="rp-brokerage">—</div>
+        </div>
+        <button class="realtor-profile-close" onclick="closeRealtorProfile()">✕ Close</button>
+      </div>
+      <div class="realtor-profile-body" id="realtor-profile-body"></div>
     </div>
   </div>
 
@@ -1082,7 +1237,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <div class="hamburger-menu" id="admin-hamburger-menu">
         <button class="hamburger-btn" onclick="toggleAdminHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="admin-hamburger-dropdown">
-          <button class="hamburger-item" onclick="navigateToTab('search')">🔍 Search</button>
+          <button class="hamburger-item" onclick="navigateToTab('search')">🔍 LMI Search</button>
           <button class="hamburger-item" onclick="navigateToTab('dashboard')">📊 Dashboard</button>
           <button class="hamburger-item" onclick="navigateToTab('realtors')">🏠 Realtors</button>
           <button class="hamburger-item" onclick="navigateToTab('activity')">📋 Activity Log</button>
@@ -1577,6 +1732,7 @@ async function tryLogin() {
     if (user.role === 'admin') allTeamActivities = await fetchAllActivities();
     setDefaultDate();
     loadProfileToSettings();
+    showTab('home');
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -1630,13 +1786,15 @@ window.onload = async function() {
     if (currentUser.role === 'admin') allTeamActivities = await fetchAllActivities();
     setDefaultDate();
     loadProfileToSettings();
+    showTab('home');
   }
 };
 
 // ── TAB NAV ───────────────────────────────────────────────────
 function showTab(tab) {
-  ['search','dashboard','realtors','activity','marketing','oyz'].forEach(function(t) {
-    document.getElementById('tab-' + t + '-content').style.display = t === tab ? 'block' : 'none';
+  ['home','search','dashboard','realtors','activity','marketing','oyz'].forEach(function(t) {
+    var el = document.getElementById('tab-' + t + '-content');
+    if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
     if (btn) btn.classList.toggle('active', t === tab);
   });
@@ -1645,6 +1803,10 @@ function showTab(tab) {
   if (tab === 'activity') { renderActivityLog(); renderActivityStats(); }
   if (tab === 'marketing') renderMarketingTab();
   if (tab === 'oyz') loadOYZ();
+  if (tab === 'home' && currentUser) {
+    var h = document.getElementById('home-greeting');
+    if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋'; }
+  }
 }
 
 // ── HAMBURGER MENU ────────────────────────────────────────────
@@ -1776,15 +1938,17 @@ function renderOYZList() {
   list.innerHTML = entries.map(function(e) {
     var status = oyzGetStatus(e);
     var sl = oyzStatusLabel(status);
-    var completeBtn = status !== 'complete'
-      ? '<button class="oyz-complete-btn" onclick="markOYZComplete(\'' + e.id + '\')">✓ Mark Complete</button>'
-      : '<span style="font-size:12px;color:#059669;font-weight:700">✓ Completed</span>';
+    var outcomeColor = e.dealOutcome === 'Captured' ? '#059669' : e.dealOutcome === 'Lost' ? '#dc2626' : '#d97706';
+    var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + (e.dealOutcome==='Captured'?'#f0fdf4':e.dealOutcome==='Lost'?'#fef2f2':'#fffbeb') + ';color:' + outcomeColor + '">' + e.dealOutcome + '</span>' : '';
     var mloLine = isAdmin && e.userName ? '<span class="oyz-mlo-badge">· ' + e.userName + '</span>' : '';
-    return '<div class="oyz-card">'
+    var realtorLink = e.realtorId
+      ? '<span class="realtor-name-link" onclick="event.stopPropagation();openRealtorProfile(\'' + e.realtorId + '\')">' + (e.realtorName || '—') + '</span>'
+      : (e.realtorName || '—');
+    return '<div class="oyz-card" onclick="openPropDetail(\'' + e.id + '\')" style="cursor:pointer">'
       + '<div class="oyz-card-top">'
       + '<div><div class="oyz-card-address">' + (e.propertyAddress || '—') + '</div>'
-      + '<div class="oyz-card-realtor">Realtor: ' + (e.realtorName || '—') + ' ' + mloLine + '</div></div>'
-      + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span>'
+      + '<div class="oyz-card-realtor">Realtor: ' + realtorLink + ' ' + mloLine + '</div></div>'
+      + '<div style="display:flex;gap:8px;align-items:center">' + outcomeBadge + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
       + '</div>'
       + '<div class="oyz-card-dates">'
       + '<div class="oyz-date-item"><div class="oyz-date-label">Open House</div><div class="oyz-date-value">' + fmtOYZDate(e.openHouseDate) + '</div></div>'
@@ -1792,8 +1956,8 @@ function renderOYZList() {
       + '<div class="oyz-date-item"><div class="oyz-date-label">Next Connection</div><div class="oyz-date-value">' + fmtOYZDate(e.nextConnectionDate) + '</div></div>'
       + '</div>'
       + (e.notes ? '<div class="oyz-card-notes">' + e.notes + '</div>' : '')
-      + '<div class="oyz-card-actions">'
-      + completeBtn
+      + '<div class="oyz-card-actions" onclick="event.stopPropagation()">'
+      + (status !== 'complete' ? '<button class="oyz-complete-btn" onclick="markOYZComplete(\'' + e.id + '\')">✓ Mark Complete</button>' : '<span style="font-size:12px;color:#059669;font-weight:700">✓ Completed</span>')
       + '<button class="oyz-delete-btn" onclick="deleteOYZ(\'' + e.id + '\')">🗑 Delete</button>'
       + '</div>'
       + '</div>';
@@ -1807,21 +1971,60 @@ function fmtOYZDate(d) {
   return parts[1] + '/' + parts[2] + '/' + parts[0];
 }
 
-function submitOYZ() {
-  if (!db || !currentUser) return;
-  var address = document.getElementById('oyz-address').value.trim();
-  var ohDate = document.getElementById('oyz-oh-date').value;
-  if (!address || !ohDate) { showToast('Property address and open house date are required.'); return; }
+function toggleOYZInlineRealtor() {
+  var form = document.getElementById('oyz-inline-realtor-form');
+  if (form) form.classList.toggle('open');
+}
 
+async function submitOYZ() {
+  if (!db || !currentUser) return;
+  var street = document.getElementById('oyz-street').value.trim();
+  var cityField = document.getElementById('oyz-city-field').value.trim();
+  var stateField = document.getElementById('oyz-state-field').value.trim();
+  var zipField = document.getElementById('oyz-zip-field').value.trim();
+  var ohDate = document.getElementById('oyz-oh-date').value;
+  if (!street || !ohDate) { showToast('Street address and open house date are required.'); return; }
+
+  var address = street + (cityField ? ', ' + cityField : '') + (stateField ? ', ' + stateField : '') + (zipField ? ' ' + zipField : '');
+
+  // Save inline new realtor if form is open
   var sel = document.getElementById('oyz-realtor-select');
   var realtorId = sel.value || '';
-  var realtorName = document.getElementById('oyz-realtor-name').value.trim();
-  if (!realtorName && sel.selectedIndex > 0) {
+  var realtorName = '';
+  var inlineForm = document.getElementById('oyz-inline-realtor-form');
+  if (inlineForm && inlineForm.classList.contains('open')) {
+    var nrName = document.getElementById('oyz-nr-name').value.trim();
+    var nrBrokerage = document.getElementById('oyz-nr-brokerage').value.trim();
+    if (!nrName || !nrBrokerage) { showToast('New realtor requires name and brokerage.'); return; }
+    var nrData = {
+      userId: currentUser.id,
+      name: nrName,
+      brokerage: nrBrokerage,
+      license: document.getElementById('oyz-nr-license').value.trim(),
+      phone: document.getElementById('oyz-nr-phone').value.trim(),
+      email: document.getElementById('oyz-nr-email').value.trim(),
+      area: document.getElementById('oyz-nr-area').value.trim(),
+      notes: document.getElementById('oyz-nr-notes').value.trim(),
+      createdAt: new Date().toISOString()
+    };
+    try {
+      var ref = await db.collection('realtors').add(nrData);
+      realtorId = ref.id;
+      realtorName = nrName;
+      cachedRealtors.push(Object.assign({ docId: ref.id }, nrData));
+      cachedRealtors.sort(function(a,b) { return a.name.localeCompare(b.name); });
+    } catch(e) { console.error(e); showToast('Error saving new realtor.'); return; }
+  } else if (sel.selectedIndex > 0) {
+    realtorId = sel.value;
     realtorName = sel.options[sel.selectedIndex].dataset.name || '';
   }
 
   var entry = {
     propertyAddress: address,
+    streetAddress: street,
+    propertyCity: cityField,
+    propertyState: stateField,
+    propertyZip: zipField,
     realtorId: realtorId,
     realtorName: realtorName,
     openHouseDate: ohDate,
@@ -1829,6 +2032,7 @@ function submitOYZ() {
     nextConnectionDate: document.getElementById('oyz-next-connection').value || '',
     notes: document.getElementById('oyz-notes').value.trim(),
     status: 'active',
+    dealOutcome: '',
     userId: currentUser.id,
     userName: currentUser.name,
     userRegion: currentUser.region || '',
@@ -1843,13 +2047,15 @@ function submitOYZ() {
 }
 
 function clearOYZForm() {
-  document.getElementById('oyz-address').value = '';
+  ['oyz-street','oyz-city-field','oyz-state-field','oyz-zip-field','oyz-oh-date','oyz-first-contact','oyz-next-connection','oyz-notes'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
   document.getElementById('oyz-realtor-select').value = '';
-  document.getElementById('oyz-realtor-name').value = '';
-  document.getElementById('oyz-oh-date').value = '';
-  document.getElementById('oyz-first-contact').value = '';
-  document.getElementById('oyz-next-connection').value = '';
-  document.getElementById('oyz-notes').value = '';
+  ['oyz-nr-name','oyz-nr-brokerage','oyz-nr-license','oyz-nr-phone','oyz-nr-email','oyz-nr-area','oyz-nr-notes'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var inlineForm = document.getElementById('oyz-inline-realtor-form');
+  if (inlineForm) inlineForm.classList.remove('open');
 }
 
 function markOYZComplete(id) {
@@ -1872,6 +2078,246 @@ function deleteOYZ(id) {
     renderOYZStats();
     showToast('Deleted');
   });
+}
+
+// ── PROPERTY DETAIL ──────────────────────────────────────────
+function openPropDetail(id) {
+  var entry = cachedOYZ.find(function(e) { return e.id === id; });
+  if (!entry) return;
+  var status = oyzGetStatus(entry);
+  var sl = oyzStatusLabel(status);
+  var overlay = document.getElementById('prop-detail-overlay');
+  var titleEl = document.getElementById('prop-detail-title');
+  if (titleEl) titleEl.textContent = '🏡 ' + (entry.propertyAddress || 'Property Detail');
+
+  // Build timeline from cachedActivities matching this property ZIP or address
+  var zip = entry.propertyZip || '';
+  var addr = (entry.propertyAddress || '').toLowerCase();
+  var timeline = [];
+  (cachedActivities || []).forEach(function(a) {
+    var match = (zip && a.zip === zip) || (addr && ((a.borrower || '').toLowerCase().includes(addr) || (a.notes || '').toLowerCase().includes(addr)));
+    if (match) timeline.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#0ed2c8' });
+  });
+  if (entry.notes) timeline.push({ date: entry.savedAt || '', title: 'OYZ Note: ' + entry.notes, source: 'oyz', color: '#7c3aed' });
+  timeline.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+
+  var realtorLinkHtml = entry.realtorId
+    ? '<button style="background:none;border:none;color:#4f46e5;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;padding:0" onclick="closePropDetail();openRealtorProfile(\'' + entry.realtorId + '\')">View ' + (entry.realtorName || 'Realtor') + ' Profile →</button>'
+    : (entry.realtorName ? '<span style="font-size:13px;color:#64748b">' + entry.realtorName + '</span>' : '—');
+
+  var timelineHtml = timeline.length
+    ? timeline.map(function(t) {
+        return '<div class="timeline-item">'
+          + '<div class="timeline-dot" style="background:' + t.color + '"></div>'
+          + '<div class="timeline-content"><div class="timeline-title">' + t.title + '</div>'
+          + '<div class="timeline-meta">' + (t.date ? new Date(t.date).toLocaleDateString() : '') + ' · ' + (t.source === 'cra' ? 'CRA Activity' : 'OYZ') + '</div>'
+          + '</div></div>';
+      }).join('')
+    : '<div style="color:#94a3b8;font-size:13px;padding:10px 0">No linked activity found.</div>';
+
+  var body = document.getElementById('prop-detail-body');
+  body.innerHTML =
+    '<div class="prop-detail-section">'
+    + '<div class="prop-detail-section-title">Property Info</div>'
+    + '<div class="prop-detail-grid">'
+    + '<div class="prop-detail-item"><label>Address</label><span>' + (entry.propertyAddress || '—') + '</span></div>'
+    + '<div class="prop-detail-item"><label>Status</label><span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
+    + '<div class="prop-detail-item"><label>Realtor</label><span>' + realtorLinkHtml + '</span></div>'
+    + '<div class="prop-detail-item"><label>Open House</label><span>' + fmtOYZDate(entry.openHouseDate) + '</span></div>'
+    + '<div class="prop-detail-item"><label>First Contact</label><span>' + fmtOYZDate(entry.firstContactDate) + '</span></div>'
+    + '<div class="prop-detail-item"><label>Next Connection</label><span>' + fmtOYZDate(entry.nextConnectionDate) + '</span></div>'
+    + '</div>'
+    + (entry.notes ? '<div style="margin-top:12px;font-size:13px;color:#64748b;font-style:italic">📝 ' + entry.notes + '</div>' : '')
+    + '</div>'
+    + '<div class="prop-detail-section">'
+    + '<div class="prop-detail-section-title">Deal Outcome</div>'
+    + '<select class="outcome-select" id="prop-outcome-select" onchange="savePropOutcome(\'' + entry.id + '\')">'
+    + '<option value="">— Select outcome —</option>'
+    + '<option value="Captured"' + (entry.dealOutcome === 'Captured' ? ' selected' : '') + '>✅ Captured</option>'
+    + '<option value="Lost"' + (entry.dealOutcome === 'Lost' ? ' selected' : '') + '>❌ Lost</option>'
+    + '<option value="Pending"' + (entry.dealOutcome === 'Pending' ? ' selected' : '') + '>⏳ Pending</option>'
+    + '</select>'
+    + '</div>'
+    + '<div class="prop-detail-section">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<div class="prop-detail-section-title" style="margin-bottom:0">Activity Timeline</div>'
+    + '<button style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">+ Add Note</button>'
+    + '</div>'
+    + '<div class="add-note-form" id="add-note-form-' + entry.id + '">'
+    + '<textarea class="add-note-textarea" id="add-note-text-' + entry.id + '" placeholder="Add a note about this property..."></textarea>'
+    + '<div style="display:flex;gap:8px;margin-top:8px">'
+    + '<button style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer" onclick="saveOYZNote(\'' + entry.id + '\')">Save Note</button>'
+    + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">Cancel</button>'
+    + '</div></div>'
+    + timelineHtml
+    + '</div>';
+
+  overlay.classList.add('open');
+}
+
+function closePropDetail() {
+  document.getElementById('prop-detail-overlay').classList.remove('open');
+}
+
+function savePropOutcome(id) {
+  var sel = document.getElementById('prop-outcome-select');
+  if (!sel || !db) return;
+  var outcome = sel.value;
+  db.collection('oyz').doc(id).update({ dealOutcome: outcome }).then(function() {
+    var entry = cachedOYZ.find(function(e) { return e.id === id; });
+    if (entry) entry.dealOutcome = outcome;
+    renderOYZList();
+    renderOYZStats();
+    showToast('Deal outcome saved: ' + (outcome || 'cleared'));
+  });
+}
+
+function toggleAddNoteForm(id) {
+  var form = document.getElementById('add-note-form-' + id);
+  if (form) form.classList.toggle('open');
+}
+
+function saveOYZNote(id) {
+  var textarea = document.getElementById('add-note-text-' + id);
+  if (!textarea || !db) return;
+  var noteText = textarea.value.trim();
+  if (!noteText) return;
+  var entry = cachedOYZ.find(function(e) { return e.id === id; });
+  if (!entry) return;
+  var newNotes = entry.notes ? entry.notes + '\n\n[' + new Date().toLocaleDateString() + '] ' + noteText : '[' + new Date().toLocaleDateString() + '] ' + noteText;
+  db.collection('oyz').doc(id).update({ notes: newNotes }).then(function() {
+    entry.notes = newNotes;
+    showToast('✅ Note saved');
+    openPropDetail(id); // refresh the detail panel
+  });
+}
+
+// ── REALTOR PROFILE ───────────────────────────────────────────
+function openRealtorProfile(docId) {
+  var r = cachedRealtors.find(function(r) { return r.docId === docId; });
+  if (!r) return;
+  document.getElementById('rp-name').textContent = r.name || '—';
+  document.getElementById('rp-brokerage').textContent = (r.brokerage || '') + (r.license ? ' · Lic: ' + r.license : '');
+
+  // OYZ entries for this realtor
+  var oyzEntries = cachedOYZ.filter(function(e) { return e.realtorId === docId; });
+  var captured = oyzEntries.filter(function(e) { return e.dealOutcome === 'Captured'; }).length;
+  var lost     = oyzEntries.filter(function(e) { return e.dealOutcome === 'Lost'; }).length;
+  var pending  = oyzEntries.filter(function(e) { return e.dealOutcome === 'Pending'; }).length;
+  var total    = oyzEntries.length;
+  var capRate  = total > 0 ? Math.round((captured / total) * 100) : 0;
+
+  // Last contact = most recent OYZ savedAt or activity date
+  var lastDates = oyzEntries.map(function(e) { return e.savedAt || ''; }).filter(Boolean);
+  var lastContact = lastDates.length ? lastDates.sort().reverse()[0] : null;
+
+  // Activity timeline: CRA activities mentioning this realtor by name
+  var rNameLower = (r.name || '').toLowerCase();
+  var timelineItems = [];
+  (cachedActivities || []).forEach(function(a) {
+    if ((a.borrower || '').toLowerCase().includes(rNameLower) || (a.notes || '').toLowerCase().includes(rNameLower) || (a.realtorName || '').toLowerCase() === rNameLower) {
+      timelineItems.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#0ed2c8' });
+    }
+  });
+  oyzEntries.forEach(function(e) {
+    timelineItems.push({ date: e.savedAt || '', title: '🏡 ' + (e.propertyAddress || 'Open House') + (e.dealOutcome ? ' · ' + e.dealOutcome : ''), source: 'oyz', color: '#7c3aed', id: e.id });
+  });
+  timelineItems.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+
+  var oyzCardsHtml = oyzEntries.length ? oyzEntries.map(function(e) {
+    var s = oyzGetStatus(e); var sl = oyzStatusLabel(s);
+    var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + (e.dealOutcome==='Captured'?'#f0fdf4':e.dealOutcome==='Lost'?'#fef2f2':'#fffbeb') + ';color:' + (e.dealOutcome==='Captured'?'#059669':e.dealOutcome==='Lost'?'#dc2626':'#d97706') + '">' + e.dealOutcome + '</span>' : '';
+    return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer" onclick="closeRealtorProfile();openPropDetail(\'' + e.id + '\')">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<div style="font-size:13px;font-weight:700;color:#1f2937">' + (e.propertyAddress || '—') + '</div>'
+      + '<div style="display:flex;gap:6px">' + outcomeBadge + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
+      + '</div>'
+      + '<div style="font-size:11px;color:#94a3b8">Open House: ' + fmtOYZDate(e.openHouseDate) + '</div>'
+      + '</div>';
+  }).join('') : '<div style="color:#94a3b8;font-size:13px;padding:10px 0">No OYZ entries yet.</div>';
+
+  var timelineHtml = timelineItems.length ? timelineItems.map(function(t) {
+    var clickable = t.id ? ' style="cursor:pointer" onclick="closeRealtorProfile();openPropDetail(\'' + t.id + '\')"' : '';
+    return '<div class="timeline-item"' + clickable + '>'
+      + '<div class="timeline-dot" style="background:' + t.color + '"></div>'
+      + '<div class="timeline-content"><div class="timeline-title">' + t.title + '</div>'
+      + '<div class="timeline-meta">' + (t.date ? new Date(t.date).toLocaleDateString() : '') + ' · ' + (t.source === 'cra' ? 'CRA Activity' : 'OYZ') + '</div>'
+      + '</div></div>';
+  }).join('') : '<div style="color:#94a3b8;font-size:13px;padding:10px 0">No activity found.</div>';
+
+  document.getElementById('realtor-profile-body').innerHTML =
+    '<div class="rp-section">'
+    + '<div class="rp-section-title">Contact Info</div>'
+    + '<div class="rp-contact-grid">'
+    + (r.phone ? '<div class="rp-contact-item"><label>Phone</label><span><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></span></div>' : '')
+    + (r.email ? '<div class="rp-contact-item"><label>Email</label><span><a href="mailto:' + r.email + '" style="color:#0ed2c8;text-decoration:none">' + r.email + '</a></span></div>' : '')
+    + (r.area  ? '<div class="rp-contact-item"><label>Area / ZIP</label><span>' + r.area + '</span></div>' : '')
+    + (r.notes ? '<div class="rp-contact-item"><label>Notes</label><span style="font-style:italic;color:#64748b">' + r.notes + '</span></div>' : '')
+    + (lastContact ? '<div class="rp-contact-item"><label>Last OYZ Contact</label><span>' + new Date(lastContact).toLocaleDateString() + '</span></div>' : '')
+    + '</div>'
+    + '</div>'
+    + '<div class="rp-section">'
+    + '<div class="rp-section-title">Performance Summary</div>'
+    + '<div class="rp-perf-grid">'
+    + '<div class="rp-perf-item"><div class="rp-perf-num">' + total + '</div><div class="rp-perf-label">Open Houses</div></div>'
+    + '<div class="rp-perf-item"><div class="rp-perf-num" style="color:#059669">' + captured + '</div><div class="rp-perf-label">Captured</div></div>'
+    + '<div class="rp-perf-item"><div class="rp-perf-num" style="color:#dc2626">' + lost + '</div><div class="rp-perf-label">Lost</div></div>'
+    + '<div class="rp-perf-item"><div class="rp-perf-num" style="color:#7c3aed">' + capRate + '%</div><div class="rp-perf-label">Capture Rate</div></div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="rp-section">'
+    + '<div class="rp-section-title">OYZ Open Houses</div>'
+    + oyzCardsHtml
+    + '</div>'
+    + '<div class="rp-section">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<div class="rp-section-title" style="margin-bottom:0">Activity Timeline</div>'
+    + '<button class="schedule-btn" onclick="toggleScheduleForm()">+ Schedule Activity</button>'
+    + '</div>'
+    + '<div class="schedule-form" id="rp-schedule-form">'
+    + '<div class="schedule-grid">'
+    + '<div class="schedule-field"><label>Activity Type</label><select id="rp-sch-type"><option value="">Select type...</option><option>Application Taken</option><option>Loan Closed</option><option>Community Contact</option><option>Pre-qualification</option><option>Referral Made</option><option>Event Attended</option><option>Open House</option></select></div>'
+    + '<div class="schedule-field"><label>Date</label><input type="date" id="rp-sch-date" /></div>'
+    + '<div class="schedule-field"><label>Property ZIP</label><input type="text" id="rp-sch-zip" placeholder="e.g. 93701" maxlength="5" /></div>'
+    + '<div class="schedule-field"><label>Notes</label><input type="text" id="rp-sch-notes" placeholder="Optional notes..." /></div>'
+    + '</div>'
+    + '<button style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px" onclick="saveScheduledActivity(\'' + docId + '\',\'' + (r.name||'') + '\')">Log Activity</button>'
+    + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer" onclick="toggleScheduleForm()">Cancel</button>'
+    + '</div>'
+    + timelineHtml
+    + '</div>';
+
+  document.getElementById('realtor-profile-overlay').classList.add('open');
+}
+
+function closeRealtorProfile() {
+  document.getElementById('realtor-profile-overlay').classList.remove('open');
+}
+
+function toggleScheduleForm() {
+  var f = document.getElementById('rp-schedule-form');
+  if (f) f.classList.toggle('open');
+}
+
+async function saveScheduledActivity(realtorDocId, realtorName) {
+  if (!db || !currentUser) return;
+  var type  = document.getElementById('rp-sch-type').value;
+  var date  = document.getElementById('rp-sch-date').value;
+  var zip   = document.getElementById('rp-sch-zip').value.trim();
+  var notes = document.getElementById('rp-sch-notes').value.trim();
+  if (!type || !date) { showToast('Type and date are required.'); return; }
+  var entry = {
+    type: type, date: date, zip: zip, notes: notes,
+    realtorName: realtorName, realtorId: realtorDocId,
+    userId: currentUser.id, userName: currentUser.name,
+    loggedAt: new Date().toISOString()
+  };
+  try {
+    await db.collection('activity').add(entry);
+    cachedActivities.push(entry);
+    showToast('✅ Activity logged!');
+    toggleScheduleForm();
+  } catch(e) { console.error(e); showToast('Error logging activity.'); }
 }
 
 // ── PROFILE ───────────────────────────────────────────────────
@@ -2405,8 +2851,25 @@ function renderRealtorList() {
   cachedProspects.forEach(function(p) { (p.assignedRealtors || []).forEach(function(r) { if (!clientMap[r.docId]) clientMap[r.docId] = []; if (p.borrowerName) clientMap[r.docId].push(p.borrowerName); }); });
   el.innerHTML = realtors.map(function(r) {
     const clients = clientMap[r.docId] || [];
+    // OYZ summary
+    const oyzForRealtor = cachedOYZ.filter(function(e) { return e.realtorId === r.docId; });
+    const captured = oyzForRealtor.filter(function(e) { return e.dealOutcome === 'Captured'; }).length;
+    const lost     = oyzForRealtor.filter(function(e) { return e.dealOutcome === 'Lost'; }).length;
+    const capRate  = oyzForRealtor.length > 0 ? Math.round((captured / oyzForRealtor.length) * 100) : 0;
+    const lastOYZ  = oyzForRealtor.length ? oyzForRealtor.map(function(e) { return e.openHouseDate || ''; }).filter(Boolean).sort().reverse()[0] : null;
+    const oyzSummary = oyzForRealtor.length
+      ? '<div class="realtor-oyz-summary">'
+        + '<span class="realtor-oyz-pill">🏡 ' + oyzForRealtor.length + ' Open Houses</span>'
+        + '<span class="realtor-oyz-pill" style="background:#f0fdf4;color:#059669">✅ ' + capRate + '% Capture</span>'
+        + (lastOYZ ? '<span style="font-size:11px;color:#94a3b8">Last: ' + fmtOYZDate(lastOYZ) + '</span>' : '')
+        + '</div>'
+      : '';
     return '<div class="realtor-card">'
-      + '<div class="realtor-card-top"><div><div class="realtor-card-name">' + r.name + '</div><div class="realtor-card-brokerage">' + r.brokerage + (r.license ? ' · Lic: ' + r.license : '') + '</div></div>'
+      + '<div class="realtor-card-top"><div>'
+      + '<div class="realtor-card-name realtor-name-link" onclick="openRealtorProfile(\'' + r.docId + '\')">' + r.name + '</div>'
+      + '<div class="realtor-card-brokerage">' + r.brokerage + (r.license ? ' · Lic: ' + r.license : '') + '</div>'
+      + oyzSummary
+      + '</div>'
       + '<div class="realtor-card-actions"><button class="action-btn" style="color:#4f46e5" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
       + '<div class="realtor-card-body">'
       + (r.phone ? '<div class="realtor-info-item"><div class="realtor-info-label">Phone</div><div class="realtor-info-value"><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></div></div>' : '')
