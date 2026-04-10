@@ -5476,7 +5476,9 @@ async function rpDoSearch() {
     var ami  = data[0].area_md_fam_income || 0;
     rpCurrentZip = zip; rpCurrentCity = city; rpCurrentAmi = ami;
     var topCat = getCategory(data[0].tract_md_fam_income, ami);
-    currentRPSearchResult = { zip: zip, lmiCategory: topCat.label, ami: ami, city: city };
+    var lmiCount = data.filter(function(t) { var r = t.tract_md_fam_income / t.area_md_fam_income; return r < 0.80; }).length;
+    var lmiPct = data.length ? Math.round((lmiCount / data.length) * 100) : 0;
+    currentRPSearchResult = { zip: zip, lmiCategory: topCat.label, lmiPct: lmiPct, ami: ami, city: city };
     rpRenderFarmCard(zip, city, ami);
     rpRenderResults(zip, data);
   } catch(err) {
@@ -5603,37 +5605,73 @@ function rpResetFarmParams() {
 }
 
 async function rpSaveSearch() {
-  if (!currentRPSearchResult) { showToast('⚠️ No search to save'); return; }
+  // ── diagnostics ──
+  console.log('[rpSaveSearch] currentUser:', currentUser);
+  console.log('[rpSaveSearch] currentUser.id:', currentUser && currentUser.id);
+  console.log('[rpSaveSearch] currentUser.realtorDocId:', currentUser && currentUser.realtorDocId);
+  console.log('[rpSaveSearch] currentRPSearchResult:', currentRPSearchResult);
+  console.log('[rpSaveSearch] db:', db);
+
+  if (!currentRPSearchResult) {
+    console.warn('[rpSaveSearch] Blocked: currentRPSearchResult is null');
+    showToast('⚠️ No search to save — please search a ZIP first');
+    return;
+  }
+  if (!currentUser || !currentUser.id) {
+    console.warn('[rpSaveSearch] Blocked: currentUser has no id');
+    showToast('⚠️ Not logged in. Please refresh and sign in again.');
+    return;
+  }
+
   var buyerName = (document.getElementById('rp-save-buyer').value || '').trim();
-  var notes = (document.getElementById('rp-save-notes').value || '').trim();
-  var isShared = document.getElementById('rp-save-shared').checked;
+  var notes     = (document.getElementById('rp-save-notes').value || '').trim();
+  var isShared  = document.getElementById('rp-save-shared').checked;
+
   var data = {
     realtorUserId: currentUser.id,
-    realtorName: currentUser.name || '',
-    realtorDocId: currentUser.realtorDocId || '',
-    linkedMloId: currentUser.linkedMloId || '',
-    zip: currentRPSearchResult.zip,
-    lmiCategory: currentRPSearchResult.lmiCategory,
-    lmiPct: currentRPSearchResult.lmiPct,
-    buyerName: buyerName,
-    notes: notes,
-    isShared: isShared,
-    mloConverted: false,
-    savedAt: new Date().toISOString()
+    realtorName:   currentUser.name   || '',
+    realtorDocId:  currentUser.realtorDocId || '',
+    linkedMloId:   currentUser.linkedMloId  || '',
+    zip:           currentRPSearchResult.zip          || '',
+    city:          currentRPSearchResult.city         || '',
+    lmiCategory:   currentRPSearchResult.lmiCategory  || '',
+    lmiPct:        currentRPSearchResult.lmiPct       || 0,
+    buyerName:     buyerName,
+    notes:         notes,
+    isShared:      isShared,
+    mloConverted:  false,
+    savedAt:       new Date().toISOString()
   };
+
+  console.log('[rpSaveSearch] data to write:', data);
+
+  // Validate: no undefined values (Firestore rejects them)
+  var badFields = Object.keys(data).filter(function(k) { return data[k] === undefined; });
+  if (badFields.length) {
+    console.error('[rpSaveSearch] undefined fields:', badFields);
+    showToast('⚠️ Save error: undefined fields — ' + badFields.join(', '));
+    return;
+  }
+
+  var saveBtn = document.querySelector('.rp-save-btn[onclick="rpSaveSearch()"]');
+  if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
+
   try {
     var ref = await db.collection('realtor_searches').add(data);
+    console.log('[rpSaveSearch] ✅ saved with id:', ref.id);
     realtorSearches.unshift(Object.assign({ id: ref.id }, data));
     document.getElementById('rp-save-form').classList.remove('open');
     document.getElementById('rp-show-save-btn').style.display = 'none';
     document.getElementById('rp-save-buyer').value = '';
     document.getElementById('rp-save-notes').value = '';
     showToast('✅ Search saved' + (isShared ? ' and shared with your MLO' : ''));
-    // Update home stats
     var statS = document.getElementById('rp-stat-searches');
     if (statS) statS.textContent = realtorSearches.length;
   } catch(e) {
-    showToast('⚠️ Could not save search. Try again.');
+    console.error('[rpSaveSearch] Firebase error:', e.code, e.message, e);
+    showToast('⚠️ Save failed: ' + (e.message || e.code || 'unknown error'));
+  } finally {
+    if (saveBtn) { saveBtn.textContent = '💾 Save Search'; saveBtn.disabled = false; }
   }
 }
 
