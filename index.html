@@ -849,6 +849,86 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
   .team-goal-bar-label { width: 90px; }
 }
 
+/* REALTOR PORTAL */
+#realtor-portal-screen { display: none; }
+.rportal-header { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; min-height: 64px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+.rportal-header-left { display: flex; align-items: center; gap: 12px; }
+.rportal-icon { width: 38px; height: 38px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rportal-title { color: white; font-size: 16px; font-weight: 800; }
+.rportal-subtitle { color: rgba(255,255,255,0.7); font-size: 11px; }
+.rportal-tab-bar { background: white; display: flex; overflow-x: auto; border-bottom: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; scrollbar-width: none; position: sticky; top: 0; z-index: 10; }
+.rportal-tab-bar::-webkit-scrollbar { display: none; }
+.rportal-tab-btn { flex: 0 0 auto; padding: 14px 18px; font-size: 13px; font-weight: 600; color: #64748b; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
+.rportal-tab-btn.active { color: #0d9488; border-bottom-color: #0d9488; }
+.rportal-tab-btn:hover { color: #1f2937; background: #f8fafc; }
+.rportal-content { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+.rp-welcome-card { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); border-radius: 16px; padding: 24px; color: white; margin-bottom: 20px; }
+.rp-welcome-greeting { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+.rp-welcome-sub { font-size: 13px; color: rgba(255,255,255,0.8); }
+.rp-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.rp-stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.rp-stat-num { font-size: 24px; font-weight: 900; color: #0d9488; }
+.rp-stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
+.rp-biz-card { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 14px; padding: 20px 22px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
+.rp-biz-photo { width: 60px; height: 60px; border-radius: 50%; background: #0ed2c8; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #1f2937; }
+.rp-biz-photo img { width: 100%; height: 100%; object-fit: cover; }
+.rp-biz-name { font-size: 17px; font-weight: 800; margin-bottom: 2px; }
+.rp-biz-title { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+.rp-biz-contacts { display: flex; flex-direction: column; gap: 4px; }
+.rp-biz-contact { font-size: 12px; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 6px; }
+.rp-biz-contact a { color: #0ed2c8; text-decoration: none; }
+.rp-quick-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.rp-quick-btn { flex: 1; min-width: 130px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.rp-quick-btn:hover { border-color: #0d9488; background: #f0fdfa; }
+.rp-quick-btn-icon { font-size: 24px; margin-bottom: 6px; }
+.rp-quick-btn-label { font-size: 13px; font-weight: 700; color: #1f2937; }
+.rp-search-card { background: white; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.rp-search-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.rp-search-buyer { font-size: 14px; font-weight: 700; color: #1f2937; }
+.rp-search-meta { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+.rp-search-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.rp-badge { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 8px; }
+.rp-badge-teal { background: #f0fdfa; color: #0d9488; }
+.rp-badge-purple { background: #fdf4ff; color: #9333ea; }
+.rp-badge-green { background: #f0fdf4; color: #059669; }
+.rp-badge-blue { background: #eff6ff; color: #2563eb; }
+.rp-badge-gray { background: #f1f5f9; color: #64748b; }
+.privacy-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid #f1f5f9; margin-bottom: 12px; }
+.privacy-toggle-label { font-size: 13px; font-weight: 600; color: #1f2937; }
+.privacy-toggle-sub { font-size: 11px; color: #94a3b8; }
+.privacy-toggle { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+.privacy-toggle input { opacity: 0; width: 0; height: 0; }
+.privacy-toggle-slider { position: absolute; inset: 0; background: #e2e8f0; border-radius: 13px; cursor: pointer; transition: background 0.2s; }
+.privacy-toggle-slider:before { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; }
+.privacy-toggle input:checked + .privacy-toggle-slider { background: #0d9488; }
+.privacy-toggle input:checked + .privacy-toggle-slider:before { transform: translateX(22px); }
+.rp-save-form { background: white; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: none; }
+.rp-save-form.open { display: block; }
+.rp-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.rp-form-group { flex: 1; min-width: 140px; }
+.rp-form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.rp-form-group input, .rp-form-group textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: border 0.2s; font-family: inherit; }
+.rp-form-group input:focus, .rp-form-group textarea:focus { border-color: #0d9488; }
+.rp-save-btn { background: linear-gradient(135deg, #0f766e, #0d9488); color: white; border: none; border-radius: 9px; padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.rp-save-btn:hover { opacity: 0.9; }
+.prequal-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 900; padding: 20px; }
+.prequal-modal-overlay.open { display: flex; }
+.prequal-modal-box { background: white; border-radius: 18px; width: 100%; max-width: 480px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+.prequal-modal-header { background: linear-gradient(135deg, #0f766e, #0d9488); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+.prequal-modal-title { color: white; font-size: 16px; font-weight: 800; }
+.prequal-modal-close { background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 7px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+.prequal-modal-body { padding: 24px; }
+.prequal-submit-btn { width: 100%; background: linear-gradient(135deg, #0f766e, #0d9488); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px; }
+.rp-shared-search-item { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.rp-shared-search-buyer { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+.rp-shared-search-meta { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+.invite-portal-btn { background: linear-gradient(135deg, #0f766e, #0d9488); color: white; border: none; border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.invite-portal-btn:hover { opacity: 0.85; }
+.share-flyer-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 900; padding: 20px; }
+.share-flyer-modal-overlay.open { display: flex; }
+.share-flyer-modal-box { background: white; border-radius: 16px; width: 100%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+@media (max-width: 480px) { .rp-stats-grid { grid-template-columns: 1fr 1fr; } .rp-biz-card { flex-direction: column; align-items: flex-start; } }
+
 /* NOTIFICATION BELL */
 .notif-bell-btn { position: relative; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-size: 18px; cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; line-height: 1; }
 .notif-bell-btn:hover { background: rgba(255,255,255,0.2); }
@@ -1647,9 +1727,10 @@ asimonson@golden1.com</div>
       <div class="add-form">
         <div class="form-group"><label>Full Name</label><input type="text" id="new-name" placeholder="Jane Smith" /></div>
         <div class="form-group"><label>Email</label><input type="email" id="new-email" placeholder="jane@example.com" /></div>
-        <div class="form-group"><label>Role</label><select id="new-role"><option value="mlo">MLO</option><option value="admin">Admin</option></select></div>
+        <div class="form-group"><label>Role</label><select id="new-role" onchange="toggleRealtorLinkField()"><option value="mlo">MLO</option><option value="admin">Admin</option><option value="realtor">Realtor</option></select></div>
         <div class="form-group"><label>MLO Type</label><select id="new-type"><option value="Internal">Internal</option><option value="External">External</option><option value="N/A">N/A</option></select></div>
         <div class="form-group"><label>Region</label><select id="new-region"><option value="Central Valley">Central Valley</option><option value="Los Angeles">Los Angeles</option><option value="Both">Both</option></select></div>
+        <div class="form-group" id="realtor-link-field" style="display:none"><label>Link to Realtor Record</label><select id="new-realtor-docid"><option value="">— select realtor —</option></select></div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <button class="invite-btn" onclick="sendInvite()">✉️ Send Invite Email</button>
@@ -1695,6 +1776,204 @@ asimonson@golden1.com</div>
         </div>
       </div>
       <div id="admin-activity-list"><div class="empty-activity">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REALTOR PORTAL SCREEN -->
+<div id="realtor-portal-screen">
+  <div class="rportal-header">
+    <div class="rportal-header-left">
+      <div class="rportal-icon">
+        <svg width="22" height="22" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="white"/>
+        </svg>
+      </div>
+      <div>
+        <div class="rportal-title">LMI Realtor Portal</div>
+        <div class="rportal-subtitle" id="rportal-subtitle">Powered by your MLO partner</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600" id="rportal-user-name"></span>
+      <button style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="rportal-tab-bar">
+    <button class="rportal-tab-btn active" id="rptab-home" onclick="rpShowTab('home')">🏠 Home</button>
+    <button class="rportal-tab-btn" id="rptab-search" onclick="rpShowTab('search')">🔍 LMI Search</button>
+    <button class="rportal-tab-btn" id="rptab-searches" onclick="rpShowTab('searches')">📊 My Searches</button>
+    <button class="rportal-tab-btn" id="rptab-resources" onclick="rpShowTab('resources')">📄 Resources</button>
+    <button class="rportal-tab-btn" id="rptab-openhouses" onclick="rpShowTab('openhouses')">📅 Open Houses</button>
+  </div>
+  <!-- Home Tab -->
+  <div id="rp-tab-home" class="rportal-content">
+    <div class="rp-welcome-card">
+      <div class="rp-welcome-greeting" id="rp-welcome-greeting">Good morning! 👋</div>
+      <div class="rp-welcome-sub">Your LMI mortgage partnership dashboard</div>
+    </div>
+    <div class="rp-stats-grid">
+      <div class="rp-stat-card"><div class="rp-stat-num" id="rp-stat-searches">0</div><div class="rp-stat-label">Searches Saved</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-num" id="rp-stat-prequals">0</div><div class="rp-stat-label">Pre-Qual Requests</div></div>
+      <div class="rp-stat-card"><div class="rp-stat-num" id="rp-stat-converted">0</div><div class="rp-stat-label">Converted to Pipeline</div></div>
+    </div>
+    <div id="rp-biz-card-wrap"></div>
+    <div class="rp-quick-btns">
+      <div class="rp-quick-btn" onclick="rpShowTab('search')">
+        <div class="rp-quick-btn-icon">🔍</div>
+        <div class="rp-quick-btn-label">Search LMI Zones</div>
+      </div>
+      <div class="rp-quick-btn" onclick="openPrequalModal(null)">
+        <div class="rp-quick-btn-icon">📋</div>
+        <div class="rp-quick-btn-label">Request Pre-Qual</div>
+      </div>
+      <div class="rp-quick-btn" onclick="rpShowTab('openhouses')">
+        <div class="rp-quick-btn-icon">📅</div>
+        <div class="rp-quick-btn-label">Open Houses</div>
+      </div>
+    </div>
+  </div>
+  <!-- LMI Search Tab -->
+  <div id="rp-tab-search" class="rportal-content" style="display:none">
+    <div class="card">
+      <div class="card-title">🔍 LMI Zone Lookup</div>
+      <div class="card-sub">Enter a ZIP code to check LMI status and income limits</div>
+      <div class="search-row">
+        <input type="text" id="rp-zip-input" placeholder="Enter ZIP code" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter')rpSearch()" />
+        <button class="search-btn" onclick="rpSearch()">Search</button>
+      </div>
+    </div>
+    <div id="rp-search-status" style="font-size:13px;color:#64748b;margin:0 0 12px;display:none"></div>
+    <div id="rp-search-result" style="display:none">
+      <div id="rp-result-card"></div>
+      <div class="rp-save-form" id="rp-save-form">
+        <div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:14px">💾 Save This Search</div>
+        <div class="rp-form-row">
+          <div class="rp-form-group">
+            <label>Buyer Name (optional)</label>
+            <input type="text" id="rp-save-buyer" placeholder="e.g. John Smith" />
+          </div>
+          <div class="rp-form-group">
+            <label>Notes</label>
+            <input type="text" id="rp-save-notes" placeholder="e.g. First-time buyer, $85k income" />
+          </div>
+        </div>
+        <div class="privacy-toggle-row">
+          <div>
+            <div class="privacy-toggle-label">Share with my MLO</div>
+            <div class="privacy-toggle-sub">Your MLO can see this search and may reach out</div>
+          </div>
+          <label class="privacy-toggle">
+            <input type="checkbox" id="rp-save-shared" checked />
+            <span class="privacy-toggle-slider"></span>
+          </label>
+        </div>
+        <button class="rp-save-btn" onclick="rpSaveSearch()">💾 Save Search</button>
+        <button style="background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;margin-left:10px" onclick="document.getElementById('rp-save-form').classList.remove('open');document.getElementById('rp-show-save-btn').style.display=''">Cancel</button>
+      </div>
+      <button class="rp-save-btn" id="rp-show-save-btn" onclick="document.getElementById('rp-save-form').classList.add('open');this.style.display='none'" style="width:100%;margin-bottom:16px">💾 Save This Search</button>
+    </div>
+  </div>
+  <!-- My Searches Tab -->
+  <div id="rp-tab-searches" class="rportal-content" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800;color:#1f2937">📊 My Saved Searches</div>
+    </div>
+    <div id="rp-searches-list"><div style="text-align:center;color:#94a3b8;padding:40px">Loading...</div></div>
+  </div>
+  <!-- Resources Tab -->
+  <div id="rp-tab-resources" class="rportal-content" style="display:none">
+    <div class="card">
+      <div class="card-title">📄 LMI Program Guide</div>
+      <div class="card-sub">Community Reinvestment Act — What it means for your buyers</div>
+      <div style="font-size:14px;color:#374151;line-height:1.7">
+        <p style="margin-bottom:12px"><strong>What is LMI?</strong> Low-to-Moderate Income (LMI) refers to census tracts where the median family income is at or below 80% of the Area Median Income (AMI). Under the Community Reinvestment Act (CRA), lenders are encouraged to make mortgage loans in these areas.</p>
+        <p style="margin-bottom:12px"><strong>Why does it matter for your buyers?</strong> LMI zone properties may qualify for special mortgage programs with reduced down payments, lower rates, and relaxed qualification standards. Your MLO partner specializes in these programs.</p>
+        <p style="margin-bottom:12px"><strong>Income categories:</strong></p>
+        <ul style="margin-left:20px;margin-bottom:12px">
+          <li><strong style="color:#dc2626">Low Income</strong> — Tract MFI &lt; 50% of AMI</li>
+          <li><strong style="color:#d97706">Moderate Income</strong> — Tract MFI 50–79% of AMI</li>
+          <li><strong style="color:#059669">Middle Income</strong> — Tract MFI 80–119% of AMI</li>
+          <li><strong style="color:#6b7280">Upper Income</strong> — Tract MFI ≥ 120% of AMI</li>
+        </ul>
+        <p style="margin-bottom:12px"><strong>How to use this tool:</strong> Use the LMI Search tab to look up any ZIP code before showing properties. Identifying LMI zones early helps match buyers to the best programs.</p>
+        <p><strong>Questions?</strong> Contact your MLO partner directly using the business card on the Home tab.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">💡 Tips for Realtors</div>
+      <div style="font-size:14px;color:#374151;line-height:1.7">
+        <ul style="margin-left:20px">
+          <li style="margin-bottom:8px">Save your LMI searches so your MLO partner can match buyers to programs</li>
+          <li style="margin-bottom:8px">Use "Request Pre-Qualification" for buyers ready to move forward — you'll get a response quickly</li>
+          <li style="margin-bottom:8px">Share open house locations so your MLO can prepare LMI materials in advance</li>
+          <li style="margin-bottom:8px">LMI buyers often qualify for down payment assistance — always check before ruling out a buyer</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- Open Houses Tab -->
+  <div id="rp-tab-openhouses" class="rportal-content" style="display:none">
+    <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">📅 My Open Houses</div>
+    <div id="rp-openhouses-list"><div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div></div>
+  </div>
+</div>
+
+<!-- PREQUAL REQUEST MODAL -->
+<div class="prequal-modal-overlay" id="prequal-modal">
+  <div class="prequal-modal-box">
+    <div class="prequal-modal-header">
+      <div class="prequal-modal-title">📋 Request Pre-Qualification</div>
+      <button class="prequal-modal-close" onclick="closePrequalModal()">✕</button>
+    </div>
+    <div class="prequal-modal-body">
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px">Fill in your buyer's details and your MLO partner will reach out to start the pre-qualification process.</div>
+      <div class="rp-form-group" style="margin-bottom:12px">
+        <label>Buyer Name *</label>
+        <input type="text" id="pq-buyer-name" placeholder="e.g. John &amp; Jane Smith" />
+      </div>
+      <div class="rp-form-row">
+        <div class="rp-form-group">
+          <label>Buyer Phone</label>
+          <input type="tel" id="pq-buyer-phone" placeholder="(559) 555-0100" />
+        </div>
+        <div class="rp-form-group">
+          <label>Buyer Email</label>
+          <input type="email" id="pq-buyer-email" placeholder="buyer@email.com" />
+        </div>
+      </div>
+      <div class="rp-form-row">
+        <div class="rp-form-group">
+          <label>Property ZIP Code</label>
+          <input type="text" id="pq-zip" placeholder="e.g. 93701" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" />
+        </div>
+        <div class="rp-form-group">
+          <label>Est. Annual Income</label>
+          <input type="text" id="pq-income" placeholder="e.g. $75,000" />
+        </div>
+      </div>
+      <div class="rp-form-group" style="margin-bottom:4px">
+        <label>Additional Notes</label>
+        <textarea id="pq-notes" rows="3" placeholder="Any other details about the buyer or property..." style="resize:vertical"></textarea>
+      </div>
+      <div style="color:#dc2626;font-size:12px;margin-top:8px;display:none" id="pq-error"></div>
+      <button class="prequal-submit-btn" onclick="submitPrequalRequest()">📤 Send Pre-Qual Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE FLYER MODAL -->
+<div class="share-flyer-modal-overlay" id="share-flyer-modal">
+  <div class="share-flyer-modal-box">
+    <div style="background:linear-gradient(135deg,#1f2937,#374151);padding:18px 22px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:800">📤 Share Flyer with Realtor</div>
+      <button onclick="closeShareFlyerModal()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:7px;padding:6px 12px;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <div style="padding:22px">
+      <div style="font-size:13px;color:#64748b;margin-bottom:14px">Select a realtor to email this flyer link to:</div>
+      <select id="share-flyer-realtor-select" style="width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:14px;outline:none;margin-bottom:16px"></select>
+      <div style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none" id="share-flyer-error"></div>
+      <button onclick="doShareFlyer()" style="width:100%;background:linear-gradient(135deg,#1f2937,#374151);color:white;border:none;border-radius:9px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">📤 Send Flyer Link</button>
     </div>
   </div>
 </div>
@@ -1840,6 +2119,7 @@ asimonson@golden1.com</div>
     <div class="flyer-modal-header">
       <div class="flyer-modal-title" id="flyer-modal-title">Marketing Material Preview</div>
       <div class="flyer-modal-actions">
+        <button class="flyer-action-btn" onclick="openShareFlyerModal()">📤 Share</button>
         <button class="flyer-action-btn teal" onclick="downloadFlyer()">⬇ Download PDF</button>
         <button class="flyer-close-btn" onclick="closeFlyerModal()">✕</button>
       </div>
@@ -1930,7 +2210,8 @@ async function sendInvite() {
   const token = generateToken();
   const expiresAt = Date.now() + (72 * 60 * 60 * 1000);
   const inviteLink = APP_URL + '/?invite=' + token;
-  const inviteData = { token, name, email, role, type, region, expiresAt, used: false, createdAt: new Date().toISOString() };
+  const realtorDocId = role === 'realtor' ? (document.getElementById('new-realtor-docid').value || '') : '';
+  const inviteData = { token, name, email, role, type, region, linkedMloId: role === 'realtor' ? currentUser.id : '', realtorDocId, expiresAt, used: false, createdAt: new Date().toISOString() };
   try {
     await db.collection('invites').doc(token).set(inviteData);
   } catch(e) {
@@ -2003,6 +2284,10 @@ async function submitInviteSetup() {
     branches: [],
     created: new Date().toLocaleDateString()
   };
+  if (inviteUserData.role === 'realtor') {
+    newUser.linkedMloId = inviteUserData.linkedMloId || '';
+    newUser.realtorDocId = inviteUserData.realtorDocId || '';
+  }
   try {
     await db.collection('users').doc(newUser.id).set(newUser);
     await db.collection('invites').doc(inviteUserData.token).update({ used: true });
@@ -2154,6 +2439,10 @@ async function tryLogin() {
     currentUser = user;
     sessionStorage.setItem('g1_session', JSON.stringify(user));
     document.getElementById('login-screen').style.display = 'none';
+    if (user.role === 'realtor') {
+      await showRealtorPortal();
+      return;
+    }
     document.getElementById('app-screen').style.display = 'block';
     if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
     renderBranchShortcuts();
@@ -2176,10 +2465,12 @@ async function tryLogin() {
 function logout() {
   currentUser = null;
   cachedProspects = []; cachedActivities = []; cachedRealtors = []; allTeamActivities = [];
+  realtorPortalMlo = null; realtorSearches = []; realtorPrequals = [];
   editingProspectDocId = null;
   sessionStorage.removeItem('g1_session');
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('realtor-portal-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
@@ -2212,6 +2503,10 @@ window.onload = async function() {
     cachedUsers = await getUsers();
     currentUser = cachedUsers.find(function(u) { return u.id === saved.id; }) || saved;
     document.getElementById('login-screen').style.display = 'none';
+    if (currentUser.role === 'realtor') {
+      await showRealtorPortal();
+      return;
+    }
     document.getElementById('app-screen').style.display = 'block';
     if (currentUser.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
     renderBranchShortcuts();
@@ -2859,9 +3154,43 @@ function openRealtorProfile(docId) {
     + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer" onclick="toggleScheduleForm()">Cancel</button>'
     + '</div>'
     + timelineHtml
+    + '</div>'
+    + '<div class="rp-section" id="rp-shared-searches-section">'
+    + '<div class="rp-section-title">🔍 Shared Searches</div>'
+    + '<div id="rp-shared-searches-body"><div style="color:#94a3b8;font-size:13px;padding:8px 0">Loading shared searches...</div></div>'
     + '</div>';
 
   document.getElementById('realtor-profile-overlay').classList.add('open');
+
+  // Async: load shared searches from this realtor's portal account
+  if (db) {
+    db.collection('realtor_searches')
+      .where('realtorDocId', '==', docId)
+      .where('isShared', '==', true)
+      .orderBy('savedAt', 'desc')
+      .limit(20)
+      .get()
+      .then(function(snap) {
+        var items = [];
+        snap.forEach(function(d) { items.push(Object.assign({ id: d.id }, d.data())); });
+        var bodyEl = document.getElementById('rp-shared-searches-body');
+        if (!bodyEl) return;
+        if (!items.length) { bodyEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:8px 0">No shared searches yet.</div>'; return; }
+        bodyEl.innerHTML = items.map(function(s) {
+          var convertedBadge = s.mloConverted ? '<span class="rp-badge rp-badge-green">✅ In Pipeline</span>' : '<button style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer" onclick="pullIntoPipeline(\'' + s.id + '\',event)">+ Pull into Pipeline</button>';
+          return '<div class="rp-shared-search-item">'
+            + '<div class="rp-shared-search-buyer">' + (s.buyerName || 'Unnamed Buyer') + '</div>'
+            + '<div class="rp-shared-search-meta">ZIP: ' + (s.zip || '—') + ' · ' + (s.lmiCategory || '—') + (s.savedAt ? ' · ' + new Date(s.savedAt).toLocaleDateString() : '') + '</div>'
+            + (s.notes ? '<div style="font-size:12px;color:#64748b;margin-bottom:8px;font-style:italic">' + s.notes + '</div>' : '')
+            + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + convertedBadge + '</div>'
+            + '</div>';
+        }).join('');
+      })
+      .catch(function() {
+        var bodyEl = document.getElementById('rp-shared-searches-body');
+        if (bodyEl) bodyEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:8px 0">Could not load shared searches.</div>';
+      });
+  }
 }
 
 function closeRealtorProfile() {
@@ -3445,7 +3774,7 @@ function renderRealtorList() {
       + '<div class="realtor-card-brokerage">' + r.brokerage + (r.license ? ' · Lic: ' + r.license : '') + '</div>'
       + oyzSummary
       + '</div>'
-      + '<div class="realtor-card-actions"><button class="action-btn" style="color:#4f46e5" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
+      + '<div class="realtor-card-actions"><button class="invite-portal-btn" onclick="inviteRealtorToPortal(\'' + r.docId + '\')" title="Invite to Realtor Portal">📧 Invite</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
       + '<div class="realtor-card-body">'
       + (r.phone ? '<div class="realtor-info-item"><div class="realtor-info-label">Phone</div><div class="realtor-info-value"><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></div></div>' : '')
       + (r.email ? '<div class="realtor-info-item"><div class="realtor-info-label">Email</div><div class="realtor-info-value"><a href="mailto:' + r.email + '" style="color:#0ed2c8;text-decoration:none">' + r.email + '</a></div></div>' : '')
@@ -4920,6 +5249,441 @@ function renderResults(zip, tracts) {
     + '<a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">📋 FFIEC Tract Lookup</a>'
     + '<a class="link-btn hud" href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>'
     + '</div></div>';
+}
+
+// ── REALTOR PORTAL ────────────────────────────────────────────
+var realtorPortalMlo = null;
+var realtorSearches = [];
+var realtorPrequals = [];
+var currentRPSearchResult = null;
+
+async function showRealtorPortal() {
+  document.getElementById('realtor-portal-screen').style.display = 'block';
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'none';
+
+  var nameEl = document.getElementById('rportal-user-name');
+  if (nameEl) nameEl.textContent = currentUser.name || '';
+
+  var hr = new Date().getHours();
+  var greeting = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening');
+  var greetEl = document.getElementById('rp-welcome-greeting');
+  if (greetEl) greetEl.textContent = greeting + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋';
+
+  // Load linked MLO
+  realtorPortalMlo = null;
+  if (currentUser.linkedMloId && db) {
+    try {
+      var mloDoc = await db.collection('users').doc(currentUser.linkedMloId).get();
+      if (mloDoc.exists) realtorPortalMlo = Object.assign({ id: mloDoc.id }, mloDoc.data());
+    } catch(e) {}
+  }
+
+  // Subtitle
+  var subEl = document.getElementById('rportal-subtitle');
+  if (subEl && realtorPortalMlo) subEl.textContent = 'Powered by ' + (realtorPortalMlo.name || 'your MLO partner');
+
+  // Load searches and prequals
+  realtorSearches = [];
+  realtorPrequals = [];
+  if (db) {
+    try {
+      var sSnap = await db.collection('realtor_searches').where('realtorUserId', '==', currentUser.id).orderBy('savedAt', 'desc').limit(50).get();
+      sSnap.forEach(function(d) { realtorSearches.push(Object.assign({ id: d.id }, d.data())); });
+    } catch(e) {}
+    try {
+      var pSnap = await db.collection('prequal').where('realtorUserId', '==', currentUser.id).orderBy('requestedAt', 'desc').limit(50).get();
+      pSnap.forEach(function(d) { realtorPrequals.push(Object.assign({ id: d.id }, d.data())); });
+    } catch(e) {}
+  }
+
+  rpShowTab('home');
+}
+
+function rpShowTab(tab) {
+  ['home','search','searches','resources','openhouses'].forEach(function(t) {
+    var el = document.getElementById('rp-tab-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+    var btn = document.getElementById('rptab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'home') renderRPHome();
+  if (tab === 'searches') renderRPSearches();
+  if (tab === 'openhouses') renderRPOpenHouses();
+}
+
+function renderRPHome() {
+  // Stats
+  var converted = realtorSearches.filter(function(s) { return s.mloConverted; }).length;
+  var statS = document.getElementById('rp-stat-searches');
+  var statP = document.getElementById('rp-stat-prequals');
+  var statC = document.getElementById('rp-stat-converted');
+  if (statS) statS.textContent = realtorSearches.length;
+  if (statP) statP.textContent = realtorPrequals.length;
+  if (statC) statC.textContent = converted;
+
+  // MLO business card
+  var wrap = document.getElementById('rp-biz-card-wrap');
+  if (!wrap) return;
+  if (!realtorPortalMlo) { wrap.innerHTML = ''; return; }
+  var mlo = realtorPortalMlo;
+  var profile = mlo.profile || {};
+  var photoHtml = profile.photo
+    ? '<img src="' + profile.photo + '" alt="' + (mlo.name||'') + '" />'
+    : (mlo.name ? mlo.name.split(' ').map(function(w) { return w[0]; }).join('').slice(0,2).toUpperCase() : '?');
+  var nmls = profile.nmls || mlo.nmls || '';
+  var phone = profile.phone || mlo.phone || '';
+  var email = profile.email || mlo.email || '';
+  wrap.innerHTML = '<div class="rp-biz-card">'
+    + '<div class="rp-biz-photo">' + photoHtml + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div class="rp-biz-name">' + (mlo.name || '—') + '</div>'
+    + '<div class="rp-biz-title">Mortgage Loan Officer' + (nmls ? ' · NMLS #' + nmls : '') + '</div>'
+    + '<div class="rp-biz-contacts">'
+    + (phone ? '<div class="rp-biz-contact">📞 <a href="tel:' + phone + '">' + phone + '</a></div>' : '')
+    + (email ? '<div class="rp-biz-contact">✉️ <a href="mailto:' + email + '">' + email + '</a></div>' : '')
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function renderRPSearches() {
+  var el = document.getElementById('rp-searches-list');
+  if (!el) return;
+  if (!realtorSearches.length) {
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 20px">'
+      + '<div style="font-size:32px;margin-bottom:8px">🔍</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:4px">No searches yet</div>'
+      + '<div style="font-size:13px">Use the LMI Search tab to look up ZIP codes and save your searches.</div>'
+      + '</div>';
+    return;
+  }
+  var catColors = { 'Low Income':'#fef2f2','Moderate Income':'#fffbeb','Middle Income':'#f0fdf4','Upper Income':'#f8fafc' };
+  var catText   = { 'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#059669','Upper Income':'#6b7280' };
+  el.innerHTML = realtorSearches.map(function(s) {
+    var cat = s.lmiCategory || '';
+    var catBadge = cat ? '<span class="rp-badge" style="background:' + (catColors[cat]||'#f1f5f9') + ';color:' + (catText[cat]||'#64748b') + '">' + cat + '</span>' : '';
+    var sharedBadge = s.isShared ? '<span class="rp-badge rp-badge-teal">Shared with MLO</span>' : '<span class="rp-badge rp-badge-gray">Private</span>';
+    var convertedBadge = s.mloConverted ? '<span class="rp-badge rp-badge-green">✅ In Pipeline</span>' : '';
+    var pqBtn = !s.mloConverted ? '<button style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;margin-left:auto" onclick="openPrequalModal(' + JSON.stringify({zip:s.zip,buyerName:s.buyerName||''}).replace(/"/g,"'") + ')">📋 Request Pre-Qual</button>' : '';
+    return '<div class="rp-search-card">'
+      + '<div class="rp-search-card-top">'
+      + '<div>'
+      + '<div class="rp-search-buyer">' + (s.buyerName || 'Unnamed Search') + '</div>'
+      + '<div class="rp-search-meta">ZIP ' + (s.zip||'—') + (s.savedAt ? ' · ' + new Date(s.savedAt).toLocaleDateString() : '') + (s.notes ? ' · ' + s.notes : '') + '</div>'
+      + '</div>'
+      + pqBtn
+      + '</div>'
+      + '<div class="rp-search-badges">' + catBadge + sharedBadge + convertedBadge + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderRPOpenHouses() {
+  var el = document.getElementById('rp-openhouses-list');
+  if (!el) return;
+  if (!currentUser.linkedMloId || !db) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">No linked MLO found.</div>'; return; }
+  el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">Loading...</div>';
+  db.collection('oyz')
+    .where('userId', '==', currentUser.linkedMloId)
+    .where('realtorId', '==', currentUser.realtorDocId || '')
+    .orderBy('openHouseDate', 'desc')
+    .limit(30)
+    .get()
+    .then(function(snap) {
+      var entries = [];
+      snap.forEach(function(d) { entries.push(Object.assign({ id: d.id }, d.data())); });
+      if (!entries.length) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div>'; return; }
+      var statusColors = { 'Captured':'#f0fdf4', 'Lost':'#fef2f2', 'Pending':'#fffbeb' };
+      var statusText   = { 'Captured':'#059669', 'Lost':'#dc2626', 'Pending':'#d97706' };
+      el.innerHTML = entries.map(function(e) {
+        var outcome = e.dealOutcome || '';
+        var outcomeBadge = outcome ? '<span style="font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;background:' + (statusColors[outcome]||'#f1f5f9') + ';color:' + (statusText[outcome]||'#64748b') + '">' + outcome + '</span>' : '';
+        return '<div class="rp-search-card">'
+          + '<div class="rp-search-card-top">'
+          + '<div>'
+          + '<div class="rp-search-buyer">' + (e.propertyAddress || 'Open House') + '</div>'
+          + '<div class="rp-search-meta">' + (e.openHouseDate ? 'Date: ' + e.openHouseDate : '—') + (e.city ? ' · ' + e.city : '') + '</div>'
+          + '</div>'
+          + outcomeBadge
+          + '</div>'
+          + (e.notes ? '<div style="font-size:12px;color:#64748b;margin-top:6px;font-style:italic">' + e.notes + '</div>' : '')
+          + '</div>';
+      }).join('');
+    })
+    .catch(function() { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">Could not load open houses.</div>'; });
+}
+
+async function rpSearch() {
+  var zip = (document.getElementById('rp-zip-input').value || '').trim();
+  if (!/^\d{5}$/.test(zip)) { showToast('⚠️ Please enter a 5-digit ZIP code'); return; }
+  var statusEl = document.getElementById('rp-search-status');
+  var resultEl = document.getElementById('rp-search-result');
+  statusEl.textContent = 'Searching...'; statusEl.style.display = 'block';
+  resultEl.style.display = 'none';
+  document.getElementById('rp-save-form').classList.remove('open');
+  document.getElementById('rp-show-save-btn').style.display = '';
+  currentRPSearchResult = null;
+  try {
+    var resp = await fetch(PROXY_URL + '?zip=' + zip);
+    var data = await resp.json();
+    statusEl.style.display = 'none';
+    if (!data || data.error || !data.tracts || !data.tracts.length) {
+      resultEl.innerHTML = '<div class="card" style="text-align:center;color:#94a3b8;padding:32px">No LMI data found for ZIP ' + zip + '.</div>';
+      resultEl.style.display = 'block'; return;
+    }
+    var tracts = data.tracts;
+    var lmi = tracts.filter(function(t) { return t.lmi_category === 'Low Income' || t.lmi_category === 'Moderate Income'; });
+    var lmiPct = tracts.length ? Math.round((lmi.length / tracts.length) * 100) : 0;
+    var topCat = tracts[0] ? tracts[0].lmi_category : 'Unknown';
+    var catColors = { 'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#059669','Upper Income':'#6b7280' };
+    var catBg     = { 'Low Income':'#fef2f2','Moderate Income':'#fffbeb','Middle Income':'#f0fdf4','Upper Income':'#f8fafc' };
+    currentRPSearchResult = { zip: zip, lmiCategory: topCat, tracts: tracts, lmiPct: lmiPct };
+    document.getElementById('rp-result-card').innerHTML = '<div class="card">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">'
+      + '<div><div style="font-size:18px;font-weight:900;color:#1f2937">ZIP ' + zip + '</div>'
+      + '<div style="font-size:13px;color:#64748b;margin-top:2px">' + (data.city || '') + ', ' + (data.state || '') + '</div></div>'
+      + '<span style="font-size:13px;font-weight:800;border-radius:8px;padding:6px 14px;background:' + (catBg[topCat]||'#f1f5f9') + ';color:' + (catColors[topCat]||'#64748b') + '">' + topCat + '</span>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      + '<div style="background:#f8fafc;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#0d9488">' + lmiPct + '%</div><div style="font-size:11px;color:#64748b">LMI Tracts</div></div>'
+      + '<div style="background:#f8fafc;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#1f2937">' + tracts.length + '</div><div style="font-size:11px;color:#64748b">Census Tracts</div></div>'
+      + '</div></div>';
+    resultEl.style.display = 'block';
+  } catch(e) {
+    statusEl.textContent = 'Search failed. Please try again.'; statusEl.style.display = 'block';
+  }
+}
+
+async function rpSaveSearch() {
+  if (!currentRPSearchResult) { showToast('⚠️ No search to save'); return; }
+  var buyerName = (document.getElementById('rp-save-buyer').value || '').trim();
+  var notes = (document.getElementById('rp-save-notes').value || '').trim();
+  var isShared = document.getElementById('rp-save-shared').checked;
+  var data = {
+    realtorUserId: currentUser.id,
+    realtorName: currentUser.name || '',
+    realtorDocId: currentUser.realtorDocId || '',
+    linkedMloId: currentUser.linkedMloId || '',
+    zip: currentRPSearchResult.zip,
+    lmiCategory: currentRPSearchResult.lmiCategory,
+    lmiPct: currentRPSearchResult.lmiPct,
+    buyerName: buyerName,
+    notes: notes,
+    isShared: isShared,
+    mloConverted: false,
+    savedAt: new Date().toISOString()
+  };
+  try {
+    var ref = await db.collection('realtor_searches').add(data);
+    realtorSearches.unshift(Object.assign({ id: ref.id }, data));
+    document.getElementById('rp-save-form').classList.remove('open');
+    document.getElementById('rp-show-save-btn').style.display = 'none';
+    document.getElementById('rp-save-buyer').value = '';
+    document.getElementById('rp-save-notes').value = '';
+    showToast('✅ Search saved' + (isShared ? ' and shared with your MLO' : ''));
+    // Update home stats
+    var statS = document.getElementById('rp-stat-searches');
+    if (statS) statS.textContent = realtorSearches.length;
+  } catch(e) {
+    showToast('⚠️ Could not save search. Try again.');
+  }
+}
+
+function openPrequalModal(prefill) {
+  if (prefill) {
+    if (prefill.zip) document.getElementById('pq-zip').value = prefill.zip;
+    if (prefill.buyerName) document.getElementById('pq-buyer-name').value = prefill.buyerName;
+  } else {
+    ['pq-buyer-name','pq-buyer-phone','pq-buyer-email','pq-zip','pq-income','pq-notes'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+  }
+  document.getElementById('pq-error').style.display = 'none';
+  document.getElementById('prequal-modal').classList.add('open');
+}
+
+function closePrequalModal() {
+  document.getElementById('prequal-modal').classList.remove('open');
+}
+
+async function submitPrequalRequest() {
+  var buyerName = (document.getElementById('pq-buyer-name').value || '').trim();
+  var errEl = document.getElementById('pq-error');
+  errEl.style.display = 'none';
+  if (!buyerName) { errEl.textContent = 'Please enter the buyer\'s name.'; errEl.style.display = 'block'; return; }
+  var btn = document.querySelector('.prequal-submit-btn');
+  btn.textContent = '⏳ Sending...'; btn.disabled = true;
+  var phone = document.getElementById('pq-buyer-phone').value.trim();
+  var email = document.getElementById('pq-buyer-email').value.trim();
+  var zip   = document.getElementById('pq-zip').value.trim();
+  var income = document.getElementById('pq-income').value.trim();
+  var notes  = document.getElementById('pq-notes').value.trim();
+  var data = {
+    realtorUserId: currentUser.id,
+    realtorName: currentUser.name || '',
+    realtorEmail: currentUser.email || '',
+    linkedMloId: currentUser.linkedMloId || '',
+    buyerName: buyerName, buyerPhone: phone, buyerEmail: email,
+    zip: zip, estimatedIncome: income, notes: notes,
+    requestedAt: new Date().toISOString(), status: 'pending'
+  };
+  try {
+    var ref = await db.collection('prequal').add(data);
+    realtorPrequals.unshift(Object.assign({ id: ref.id }, data));
+    // Email the MLO
+    if (realtorPortalMlo) {
+      var mloEmail = (realtorPortalMlo.profile && realtorPortalMlo.profile.email) ? realtorPortalMlo.profile.email : realtorPortalMlo.email;
+      if (mloEmail) {
+        try {
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            to_name: realtorPortalMlo.name || 'MLO',
+            to_email: mloEmail,
+            subject: '📋 Pre-Qual Request from ' + (currentUser.name || 'Your Realtor'),
+            message: 'Pre-Qual Request\n\nFrom Realtor: ' + (currentUser.name||'') + ' (' + (currentUser.email||'') + ')\n\nBuyer: ' + buyerName + (phone?'\nPhone: '+phone:'') + (email?'\nEmail: '+email:'') + (zip?'\nZIP: '+zip:'') + (income?'\nEst. Income: '+income:'') + (notes?'\n\nNotes: '+notes:'')
+          });
+        } catch(e) {}
+      }
+    }
+    btn.textContent = '📤 Send Pre-Qual Request'; btn.disabled = false;
+    closePrequalModal();
+    showToast('✅ Pre-qual request sent to your MLO!');
+    var statP = document.getElementById('rp-stat-prequals');
+    if (statP) statP.textContent = realtorPrequals.length;
+  } catch(e) {
+    btn.textContent = '📤 Send Pre-Qual Request'; btn.disabled = false;
+    errEl.textContent = 'Failed to send request. Please try again.'; errEl.style.display = 'block';
+  }
+}
+
+async function inviteRealtorToPortal(docId) {
+  var r = cachedRealtors.find(function(r) { return r.docId === docId; });
+  if (!r) { showToast('⚠️ Realtor not found'); return; }
+  if (!r.email) { showToast('⚠️ This realtor has no email address. Add one first.'); return; }
+  if (!confirm('Send a Realtor Portal invite to ' + r.name + ' (' + r.email + ')?')) return;
+  var token = generateToken();
+  var expiresAt = Date.now() + (72 * 60 * 60 * 1000);
+  var inviteLink = APP_URL + '/?invite=' + token;
+  var inviteData = {
+    token: token, name: r.name, email: r.email.toLowerCase(),
+    role: 'realtor', type: 'N/A', region: 'N/A',
+    linkedMloId: currentUser.id, realtorDocId: docId,
+    expiresAt: expiresAt, used: false, createdAt: new Date().toISOString()
+  };
+  try {
+    await db.collection('invites').doc(token).set(inviteData);
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_name: r.name, to_email: r.email, invite_link: inviteLink
+    });
+    showToast('✅ Portal invite sent to ' + r.name + '!');
+  } catch(e) {
+    showToast('⚠️ Failed to send invite. Check your EmailJS config.');
+  }
+}
+
+function openShareFlyerModal() {
+  var select = document.getElementById('share-flyer-realtor-select');
+  select.innerHTML = '<option value="">— select realtor —</option>'
+    + cachedRealtors.filter(function(r) { return r.email; }).map(function(r) {
+        return '<option value="' + r.docId + '">' + r.name + ' (' + r.email + ')</option>';
+      }).join('');
+  if (!cachedRealtors.filter(function(r) { return r.email; }).length) {
+    select.innerHTML = '<option value="">No realtors with email addresses</option>';
+  }
+  document.getElementById('share-flyer-error').style.display = 'none';
+  document.getElementById('share-flyer-modal').classList.add('open');
+}
+
+function closeShareFlyerModal() {
+  document.getElementById('share-flyer-modal').classList.remove('open');
+}
+
+async function doShareFlyer() {
+  var select = document.getElementById('share-flyer-realtor-select');
+  var docId = select.value;
+  var errEl = document.getElementById('share-flyer-error');
+  errEl.style.display = 'none';
+  if (!docId) { errEl.textContent = 'Please select a realtor.'; errEl.style.display = 'block'; return; }
+  var r = cachedRealtors.find(function(r) { return r.docId === docId; });
+  if (!r || !r.email) { errEl.textContent = 'Realtor email not found.'; errEl.style.display = 'block'; return; }
+  var flyerUrl = APP_URL + '/?flyer=' + currentFlyerToken;
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_name: r.name, to_email: r.email,
+      subject: 'Marketing Flyer from ' + (currentUser.name || 'Your MLO'),
+      message: 'Hi ' + r.name + ',\n\nI wanted to share this LMI marketing flyer with you.\n\nView it here: ' + flyerUrl + '\n\nBest,\n' + (currentUser.name || 'Your MLO')
+    });
+    closeShareFlyerModal();
+    showToast('✅ Flyer sent to ' + r.name + '!');
+  } catch(e) {
+    errEl.textContent = 'Failed to send. Please try again.'; errEl.style.display = 'block';
+  }
+}
+
+async function pullIntoPipeline(searchId, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  var snap = await db.collection('realtor_searches').doc(searchId).get();
+  if (!snap.exists) { showToast('Search not found'); return; }
+  var s = snap.data();
+  var prospectData = {
+    userId: currentUser.id,
+    borrowerName: s.buyerName || 'Unnamed Buyer',
+    zip: s.zip || '',
+    lmiCategory: s.lmiCategory || '',
+    notes: 'From realtor portal — ' + (s.realtorName || 'Realtor') + (s.notes ? ': ' + s.notes : ''),
+    status: 'active',
+    savedAt: new Date().toISOString(),
+    fromRealtorSearch: true, realtorSearchId: searchId
+  };
+  try {
+    await db.collection('prospects').add(prospectData);
+    await db.collection('realtor_searches').doc(searchId).update({ mloConverted: true });
+    showToast('✅ Added to pipeline from ' + (s.realtorName || 'realtor') + '\'s search');
+    // Refresh shared searches in the profile overlay
+    var bodyEl = document.getElementById('rp-shared-searches-body');
+    if (bodyEl) {
+      var item = bodyEl.querySelector('[data-search-id="' + searchId + '"]');
+      if (!item) {
+        // Re-render the whole section
+        var docIdEl = document.getElementById('rp-name');
+        if (docIdEl) {
+          var realtorName = docIdEl.textContent;
+          var found = cachedRealtors.find(function(r) { return (r.name||'') === realtorName; });
+          if (found) openRealtorProfile(found.docId);
+        }
+      }
+    }
+  } catch(e) {
+    showToast('⚠️ Failed to add to pipeline');
+  }
+}
+
+function toggleRealtorLinkField() {
+  var role = document.getElementById('new-role').value;
+  var field = document.getElementById('realtor-link-field');
+  if (!field) return;
+  field.style.display = role === 'realtor' ? '' : 'none';
+  if (role === 'realtor') {
+    // Populate realtor dropdown from cachedRealtors (admin is in admin screen, so need to fetch)
+    var sel = document.getElementById('new-realtor-docid');
+    sel.innerHTML = '<option value="">— select realtor record —</option>';
+    if (typeof cachedRealtors !== 'undefined' && cachedRealtors.length) {
+      cachedRealtors.sort(function(a,b) { return (a.name||'').localeCompare(b.name||''); }).forEach(function(r) {
+        var opt = document.createElement('option');
+        opt.value = r.docId; opt.textContent = r.name + (r.brokerage ? ' · ' + r.brokerage : '');
+        sel.appendChild(opt);
+      });
+    } else if (db) {
+      db.collection('realtors').get().then(function(snap) {
+        snap.forEach(function(d) {
+          var r = d.data();
+          var opt = document.createElement('option');
+          opt.value = d.id; opt.textContent = (r.name||d.id) + (r.brokerage ? ' · ' + r.brokerage : '');
+          sel.appendChild(opt);
+        });
+      });
+    }
+  }
 }
 </script>
 
