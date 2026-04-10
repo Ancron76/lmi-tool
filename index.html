@@ -614,8 +614,17 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .oyz-submit-row { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
 .oyz-submit-btn { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; border-radius: 9px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .oyz-clear-btn { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.oyz-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.oyz-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
 .oyz-list-title { font-size: 16px; font-weight: 700; color: #1f2937; }
+.oyz-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.oyz-filter-btn { border: 2px solid #e2e8f0; background: white; color: #64748b; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.oyz-filter-btn:hover { border-color: #7c3aed; color: #7c3aed; }
+.oyz-filter-btn.active { background: #7c3aed; border-color: #7c3aed; color: white; }
+.oyz-weekend-section { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; border: 1px solid #ddd6fe; }
+.oyz-weekend-title { font-size: 13px; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.oyz-weekend-card { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; border-left: 3px solid #0ed2c8; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: box-shadow 0.15s; }
+.oyz-weekend-card:last-child { margin-bottom: 0; }
+.oyz-weekend-card:hover { box-shadow: 0 3px 12px rgba(14,210,200,0.2); }
 .oyz-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border-left: 4px solid #7c3aed; }
 .oyz-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
 .oyz-card-address { font-size: 15px; font-weight: 800; color: #1f2937; }
@@ -1814,6 +1823,18 @@ async function fetchAllActivities() {
 let currentUser = null, branchTargetId = null;
 let cachedUsers = [], cachedProspects = [], cachedActivities = [], cachedRealtors = [];
 let allTeamActivities = [];
+let cachedOyzEntries = [];
+
+async function fetchOyzEntries(isAdmin) {
+  try {
+    var query = db.collection('oyz').orderBy('openHouseDate', 'asc');
+    if (!isAdmin) query = query.where('userId', '==', currentUser.id);
+    var snap = await query.get();
+    var docs = [];
+    snap.forEach(function(doc) { docs.push(Object.assign({ id: doc.id }, doc.data())); });
+    return docs;
+  } catch(e) { console.error('fetchOyzEntries error', e); return []; }
+}
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function tryLogin() {
@@ -1837,6 +1858,8 @@ async function tryLogin() {
     cachedRealtors = await fetchMyRealtors();
     cachedActivities = await fetchMyActivities();
     if (user.role === 'admin') allTeamActivities = await fetchAllActivities();
+    cachedOyzEntries = await fetchOyzEntries(user.role === 'admin');
+    cachedOYZ = cachedOyzEntries;
     setDefaultDate();
     loadProfileToSettings();
     if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
@@ -1891,6 +1914,8 @@ window.onload = async function() {
     cachedRealtors = await fetchMyRealtors();
     cachedActivities = await fetchMyActivities();
     if (currentUser.role === 'admin') allTeamActivities = await fetchAllActivities();
+    cachedOyzEntries = await fetchOyzEntries(currentUser.role === 'admin');
+    cachedOYZ = cachedOyzEntries;
     setDefaultDate();
     loadProfileToSettings();
     if (currentUser.tosAccepted) { showTab('home'); } else { showTOSModal(); }
@@ -2006,6 +2031,8 @@ function oyzStatusLabel(s) {
   return { text: 'Complete', cls: 'oyz-status-complete' };
 }
 
+var oyzActiveFilter = 'all';
+
 function loadOYZ() {
   if (!db || !currentUser) return;
   populateOYZRealtorSelect();
@@ -2019,6 +2046,7 @@ function loadOYZ() {
   query.get().then(function(snap) {
     cachedOYZ = [];
     snap.forEach(function(doc) { cachedOYZ.push(Object.assign({ id: doc.id }, doc.data())); });
+    cachedOyzEntries = cachedOYZ;
     if (isAdmin) populateOYZMLOFilter();
     renderOYZList();
     renderOYZStats();
@@ -2028,19 +2056,29 @@ function loadOYZ() {
 function populateOYZRealtorSelect() {
   var sel = document.getElementById('oyz-realtor-select');
   if (!sel) return;
-  sel.innerHTML = '<option value="">Pick from list or type below...</option>';
+  sel.innerHTML = '<option value="">Select existing realtor...</option>';
   (cachedRealtors || []).forEach(function(r) {
-    sel.innerHTML += '<option value="' + r.id + '" data-name="' + (r.name || '') + '">' + (r.name || '') + (r.brokerage ? ' — ' + r.brokerage : '') + '</option>';
+    sel.innerHTML += '<option value="' + (r.docId || r.id || '') + '" data-name="' + (r.name || '') + '">' + (r.name || '') + (r.brokerage ? ' — ' + r.brokerage : '') + '</option>';
   });
 }
 
 function oyzRealtorSelectChange() {
   var sel = document.getElementById('oyz-realtor-select');
-  var nameInput = document.getElementById('oyz-realtor-name');
-  if (!sel || !nameInput) return;
+  if (!sel) return;
   var opt = sel.options[sel.selectedIndex];
-  if (opt && opt.dataset.name) nameInput.value = opt.dataset.name;
-  else nameInput.value = '';
+  if (opt && opt.dataset.name) {
+    // hide inline form if they pick from list
+    var inlineForm = document.getElementById('oyz-inline-realtor-form');
+    if (inlineForm) inlineForm.classList.remove('open');
+  }
+}
+
+function setOYZFilter(f) {
+  oyzActiveFilter = f;
+  document.querySelectorAll('.oyz-filter-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.filter === f);
+  });
+  renderOYZList();
 }
 
 function populateOYZMLOFilter() {
@@ -2069,44 +2107,96 @@ function renderOYZStats() {
   document.getElementById('oyz-stat-complete').textContent = complete;
 }
 
+function oyzCardHtml(e, isAdmin) {
+  var status = oyzGetStatus(e);
+  var sl = oyzStatusLabel(status);
+  var outcomeColor = e.dealOutcome === 'Captured' ? '#059669' : e.dealOutcome === 'Lost' ? '#dc2626' : '#d97706';
+  var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + (e.dealOutcome==='Captured'?'#f0fdf4':e.dealOutcome==='Lost'?'#fef2f2':'#fffbeb') + ';color:' + outcomeColor + '">' + e.dealOutcome + '</span>' : '';
+  var mloLine = isAdmin && e.userName ? '<span class="oyz-mlo-badge">· ' + e.userName + '</span>' : '';
+  var realtorId = e.realtorId || '';
+  var realtorLink = realtorId
+    ? '<span class="realtor-name-link" onclick="event.stopPropagation();openRealtorProfileById(\'' + realtorId + '\',\'' + (e.realtorName || '').replace(/'/g,"&#39;") + '\')">' + (e.realtorName || '—') + '</span>'
+    : (e.realtorName || '—');
+  return '<div class="oyz-card" onclick="openPropDetail(\'' + e.id + '\')" style="cursor:pointer">'
+    + '<div class="oyz-card-top">'
+    + '<div><div class="oyz-card-address">' + (e.propertyAddress || '—') + '</div>'
+    + '<div class="oyz-card-realtor">Realtor: ' + realtorLink + ' ' + mloLine + '</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + outcomeBadge + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
+    + '</div>'
+    + '<div class="oyz-card-dates">'
+    + '<div class="oyz-date-item"><div class="oyz-date-label">Open House</div><div class="oyz-date-value">' + fmtOYZDate(e.openHouseDate) + '</div></div>'
+    + '<div class="oyz-date-item"><div class="oyz-date-label">First Contact</div><div class="oyz-date-value">' + fmtOYZDate(e.firstContactDate) + '</div></div>'
+    + '<div class="oyz-date-item"><div class="oyz-date-label">Next Connection</div><div class="oyz-date-value">' + fmtOYZDate(e.nextConnectionDate) + '</div></div>'
+    + '</div>'
+    + (e.notes ? '<div class="oyz-card-notes">' + e.notes + '</div>' : '')
+    + '<div class="oyz-card-actions" onclick="event.stopPropagation()">'
+    + (status !== 'complete' ? '<button class="oyz-complete-btn" onclick="markOYZComplete(\'' + e.id + '\')">✓ Mark Complete</button>' : '<span style="font-size:12px;color:#059669;font-weight:700">✓ Completed</span>')
+    + '<button class="oyz-delete-btn" onclick="deleteOYZ(\'' + e.id + '\')">🗑 Delete</button>'
+    + '</div>'
+    + '</div>';
+}
+
 function renderOYZList() {
   var list = document.getElementById('oyz-list');
   if (!list) return;
   var isAdmin = currentUser && currentUser.role === 'admin';
   var filterMlo = isAdmin ? (document.getElementById('oyz-filter-mlo') ? document.getElementById('oyz-filter-mlo').value : 'all') : 'all';
-  var entries = cachedOYZ.filter(function(e) {
+
+  // All entries sorted by openHouseDate ascending (already sorted from Firestore)
+  var all = cachedOYZ.filter(function(e) {
     if (filterMlo !== 'all' && e.userId !== filterMlo) return false;
     return true;
   });
-  if (!entries.length) { list.innerHTML = '<div class="empty-oyz">No entries yet. Add your first open house above.</div>'; return; }
 
-  list.innerHTML = entries.map(function(e) {
-    var status = oyzGetStatus(e);
-    var sl = oyzStatusLabel(status);
-    var outcomeColor = e.dealOutcome === 'Captured' ? '#059669' : e.dealOutcome === 'Lost' ? '#dc2626' : '#d97706';
-    var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + (e.dealOutcome==='Captured'?'#f0fdf4':e.dealOutcome==='Lost'?'#fef2f2':'#fffbeb') + ';color:' + outcomeColor + '">' + e.dealOutcome + '</span>' : '';
-    var mloLine = isAdmin && e.userName ? '<span class="oyz-mlo-badge">· ' + e.userName + '</span>' : '';
-    var realtorLink = e.realtorId
-      ? '<span class="realtor-name-link" onclick="event.stopPropagation();openRealtorProfile(\'' + e.realtorId + '\')">' + (e.realtorName || '—') + '</span>'
-      : (e.realtorName || '—');
-    return '<div class="oyz-card" onclick="openPropDetail(\'' + e.id + '\')" style="cursor:pointer">'
-      + '<div class="oyz-card-top">'
-      + '<div><div class="oyz-card-address">' + (e.propertyAddress || '—') + '</div>'
-      + '<div class="oyz-card-realtor">Realtor: ' + realtorLink + ' ' + mloLine + '</div></div>'
-      + '<div style="display:flex;gap:8px;align-items:center">' + outcomeBadge + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
-      + '</div>'
-      + '<div class="oyz-card-dates">'
-      + '<div class="oyz-date-item"><div class="oyz-date-label">Open House</div><div class="oyz-date-value">' + fmtOYZDate(e.openHouseDate) + '</div></div>'
-      + '<div class="oyz-date-item"><div class="oyz-date-label">First Contact</div><div class="oyz-date-value">' + fmtOYZDate(e.firstContactDate) + '</div></div>'
-      + '<div class="oyz-date-item"><div class="oyz-date-label">Next Connection</div><div class="oyz-date-value">' + fmtOYZDate(e.nextConnectionDate) + '</div></div>'
-      + '</div>'
-      + (e.notes ? '<div class="oyz-card-notes">' + e.notes + '</div>' : '')
-      + '<div class="oyz-card-actions" onclick="event.stopPropagation()">'
-      + (status !== 'complete' ? '<button class="oyz-complete-btn" onclick="markOYZComplete(\'' + e.id + '\')">✓ Mark Complete</button>' : '<span style="font-size:12px;color:#059669;font-weight:700">✓ Completed</span>')
-      + '<button class="oyz-delete-btn" onclick="deleteOYZ(\'' + e.id + '\')">🗑 Delete</button>'
-      + '</div>'
+  // "This Weekend" section — open houses within next 7 days
+  var now = new Date(); now.setHours(0,0,0,0);
+  var in7 = new Date(now); in7.setDate(now.getDate() + 7);
+  var upcoming7 = all.filter(function(e) {
+    if (e.status === 'complete') return false;
+    if (!e.openHouseDate) return false;
+    var d = new Date(e.openHouseDate + 'T00:00:00');
+    return d >= now && d <= in7;
+  });
+
+  var weekendHtml = '';
+  if (upcoming7.length) {
+    weekendHtml = '<div class="oyz-weekend-section">'
+      + '<div class="oyz-weekend-title">📅 Coming Up — Next 7 Days (' + upcoming7.length + ')</div>'
+      + upcoming7.map(function(e) {
+          var realtorId = e.realtorId || '';
+          var realtorLink = realtorId
+            ? '<span class="realtor-name-link" onclick="event.stopPropagation();openRealtorProfileById(\'' + realtorId + '\',\'' + (e.realtorName || '').replace(/'/g,"&#39;") + '\')" style="font-size:12px">' + (e.realtorName || '—') + '</span>'
+            : '<span style="font-size:12px;color:#64748b">' + (e.realtorName || '—') + '</span>';
+          return '<div class="oyz-weekend-card" onclick="openPropDetail(\'' + e.id + '\')">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center">'
+            + '<div style="font-size:14px;font-weight:800;color:#1f2937">' + (e.propertyAddress || '—') + '</div>'
+            + '<div style="font-size:12px;font-weight:700;color:#0ed2c8">' + fmtOYZDate(e.openHouseDate) + '</div>'
+            + '</div>'
+            + '<div style="margin-top:4px">Realtor: ' + realtorLink + '</div>'
+            + '</div>';
+        }).join('')
       + '</div>';
-  }).join('');
+  }
+
+  // Filter bar
+  var filterBarHtml = '<div class="oyz-filter-bar">'
+    + ['all','weekend','followup','complete'].map(function(f) {
+        var label = f === 'all' ? 'All' : f === 'weekend' ? 'This Weekend' : f === 'followup' ? 'Needs Follow-up' : 'Completed';
+        return '<button class="oyz-filter-btn' + (oyzActiveFilter === f ? ' active' : '') + '" data-filter="' + f + '" onclick="setOYZFilter(\'' + f + '\')">' + label + '</button>';
+      }).join('')
+    + '</div>';
+
+  // Apply active filter
+  var filtered = all.filter(function(e) {
+    if (oyzActiveFilter === 'all') return true;
+    return oyzGetStatus(e) === oyzActiveFilter;
+  });
+
+  var cardsHtml = filtered.length
+    ? filtered.map(function(e) { return oyzCardHtml(e, isAdmin); }).join('')
+    : '<div class="empty-oyz">No entries match this filter.</div>';
+
+  list.innerHTML = weekendHtml + filterBarHtml + cardsHtml;
 }
 
 function fmtOYZDate(d) {
@@ -2206,8 +2296,10 @@ function clearOYZForm() {
 function markOYZComplete(id) {
   if (!db) return;
   db.collection('oyz').doc(id).update({ status: 'complete' }).then(function() {
-    var entry = cachedOYZ.find(function(e) { return e.id === id; });
-    if (entry) entry.status = 'complete';
+    [cachedOYZ, cachedOyzEntries].forEach(function(arr) {
+      var entry = arr.find(function(e) { return e.id === id; });
+      if (entry) entry.status = 'complete';
+    });
     renderOYZList();
     renderOYZStats();
     showToast('✓ Marked as complete');
@@ -2219,6 +2311,7 @@ function deleteOYZ(id) {
   if (!confirm('Delete this OYZ entry?')) return;
   db.collection('oyz').doc(id).delete().then(function() {
     cachedOYZ = cachedOYZ.filter(function(e) { return e.id !== id; });
+    cachedOyzEntries = cachedOyzEntries.filter(function(e) { return e.id !== id; });
     renderOYZList();
     renderOYZStats();
     showToast('Deleted');
@@ -2246,9 +2339,9 @@ function openPropDetail(id) {
   if (entry.notes) timeline.push({ date: entry.savedAt || '', title: 'OYZ Note: ' + entry.notes, source: 'oyz', color: '#7c3aed' });
   timeline.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
 
-  var realtorLinkHtml = entry.realtorId
-    ? '<button style="background:none;border:none;color:#4f46e5;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;padding:0" onclick="closePropDetail();openRealtorProfile(\'' + entry.realtorId + '\')">View ' + (entry.realtorName || 'Realtor') + ' Profile →</button>'
-    : (entry.realtorName ? '<span style="font-size:13px;color:#64748b">' + entry.realtorName + '</span>' : '—');
+  var realtorLinkHtml = (entry.realtorId || entry.realtorName)
+    ? '<button style="background:none;border:none;color:#4f46e5;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;padding:0" onclick="closePropDetail();openRealtorProfileById(\'' + (entry.realtorId||'') + '\',\'' + (entry.realtorName||'').replace(/'/g,"&#39;") + '\')">View ' + (entry.realtorName || 'Realtor') + ' Profile →</button>'
+    : '—';
 
   var timelineHtml = timeline.length
     ? timeline.map(function(t) {
@@ -2309,8 +2402,10 @@ function savePropOutcome(id) {
   if (!sel || !db) return;
   var outcome = sel.value;
   db.collection('oyz').doc(id).update({ dealOutcome: outcome }).then(function() {
-    var entry = cachedOYZ.find(function(e) { return e.id === id; });
-    if (entry) entry.dealOutcome = outcome;
+    [cachedOYZ, cachedOyzEntries].forEach(function(arr) {
+      var entry = arr.find(function(e) { return e.id === id; });
+      if (entry) entry.dealOutcome = outcome;
+    });
     renderOYZList();
     renderOYZStats();
     showToast('Deal outcome saved: ' + (outcome || 'cleared'));
@@ -2338,14 +2433,40 @@ function saveOYZNote(id) {
 }
 
 // ── REALTOR PROFILE ───────────────────────────────────────────
+function openRealtorProfileById(docId, fallbackName) {
+  // Try ID match first (works for both docId and id fields)
+  var r = cachedRealtors.find(function(r) { return r.docId === docId || r.id === docId; });
+  if (!r && fallbackName) {
+    // Fall back to name match
+    var nameLower = fallbackName.toLowerCase();
+    r = cachedRealtors.find(function(r) { return (r.name || '').toLowerCase() === nameLower; });
+  }
+  if (r) { openRealtorProfile(r.docId || r.id); return; }
+  // Realtor not in cache — fetch from Firebase
+  if (docId && db) {
+    db.collection('realtors').doc(docId).get().then(function(doc) {
+      if (doc.exists) {
+        var fetched = Object.assign({ docId: doc.id }, doc.data());
+        cachedRealtors.push(fetched);
+        openRealtorProfile(doc.id);
+      } else {
+        showToast('Realtor profile not found.');
+      }
+    }).catch(function() { showToast('Could not load realtor profile.'); });
+  } else {
+    showToast('Realtor profile not found.');
+  }
+}
+
 function openRealtorProfile(docId) {
   var r = cachedRealtors.find(function(r) { return r.docId === docId; });
   if (!r) return;
   document.getElementById('rp-name').textContent = r.name || '—';
   document.getElementById('rp-brokerage').textContent = (r.brokerage || '') + (r.license ? ' · Lic: ' + r.license : '');
 
-  // OYZ entries for this realtor
-  var oyzEntries = cachedOYZ.filter(function(e) { return e.realtorId === docId; });
+  // OYZ entries for this realtor — search both cachedOyzEntries (full set) and cachedOYZ
+  var allOyz = cachedOyzEntries.length ? cachedOyzEntries : cachedOYZ;
+  var oyzEntries = allOyz.filter(function(e) { return e.realtorId === docId; });
   var captured = oyzEntries.filter(function(e) { return e.dealOutcome === 'Captured'; }).length;
   var lost     = oyzEntries.filter(function(e) { return e.dealOutcome === 'Lost'; }).length;
   var pending  = oyzEntries.filter(function(e) { return e.dealOutcome === 'Pending'; }).length;
@@ -2996,8 +3117,9 @@ function renderRealtorList() {
   cachedProspects.forEach(function(p) { (p.assignedRealtors || []).forEach(function(r) { if (!clientMap[r.docId]) clientMap[r.docId] = []; if (p.borrowerName) clientMap[r.docId].push(p.borrowerName); }); });
   el.innerHTML = realtors.map(function(r) {
     const clients = clientMap[r.docId] || [];
-    // OYZ summary
-    const oyzForRealtor = cachedOYZ.filter(function(e) { return e.realtorId === r.docId; });
+    // OYZ summary — use cachedOyzEntries (always loaded) or fall back to cachedOYZ
+    const allOyz = cachedOyzEntries.length ? cachedOyzEntries : cachedOYZ;
+    const oyzForRealtor = allOyz.filter(function(e) { return e.realtorId === r.docId; });
     const captured = oyzForRealtor.filter(function(e) { return e.dealOutcome === 'Captured'; }).length;
     const lost     = oyzForRealtor.filter(function(e) { return e.dealOutcome === 'Lost'; }).length;
     const capRate  = oyzForRealtor.length > 0 ? Math.round((captured / oyzForRealtor.length) * 100) : 0;
@@ -3011,7 +3133,7 @@ function renderRealtorList() {
       : '';
     return '<div class="realtor-card">'
       + '<div class="realtor-card-top"><div>'
-      + '<div class="realtor-card-name realtor-name-link" onclick="openRealtorProfile(\'' + r.docId + '\')">' + r.name + '</div>'
+      + '<div class="realtor-card-name realtor-name-link" onclick="openRealtorProfileById(\'' + r.docId + '\',\'' + (r.name||'').replace(/'/g,"&#39;") + '\')">' + r.name + '</div>'
       + '<div class="realtor-card-brokerage">' + r.brokerage + (r.license ? ' · Lic: ' + r.license : '') + '</div>'
       + oyzSummary
       + '</div>'
