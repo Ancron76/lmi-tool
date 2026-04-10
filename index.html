@@ -591,7 +591,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .hamburger-menu { position: relative; margin-left: 24px; }
 .hamburger-btn { color: white; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1); padding: 8px 16px; font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 6px; white-space: nowrap; min-height: 44px; }
 .hamburger-btn:hover { background: rgba(255,255,255,0.2); }
-.hamburger-dropdown { display: none; position: absolute; top: calc(100% + 8px); left: 0; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); min-width: 210px; z-index: 500; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+.hamburger-dropdown { display: none; position: absolute; top: calc(100% + 8px); left: 0; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); min-width: 210px; z-index: 1100; border: 1px solid rgba(255,255,255,0.1); }
 .hamburger-dropdown.open { display: block; }
 .hamburger-item { display: block; width: 100%; text-align: left; padding: 13px 18px; color: rgba(255,255,255,0.75); background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .hamburger-item:last-child { border-bottom: none; }
@@ -697,7 +697,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 
 /* MOBILE POLISH */
 @media (max-width: 480px) {
-  .hamburger-dropdown { left: auto; right: 0; width: 100vw; border-radius: 0 0 10px 10px; }
+  .hamburger-dropdown { position: fixed; top: 70px; left: 0; right: 0; width: 100%; border-radius: 0 0 10px 10px; }
   .farm-adjustments .adj-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
