@@ -681,9 +681,11 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
     height: 60px; background: white; border-top: 1px solid #e2e8f0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.08); z-index: 800;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
+  .bottom-nav::-webkit-scrollbar { display: none; }
   .bottom-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
+    flex: 0 0 20%; min-width: 64px; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 3px; background: none; border: none;
     color: #94a3b8; font-size: 10px; font-weight: 600; cursor: pointer;
     font-family: inherit; transition: color 0.15s; padding: 0;
@@ -776,6 +778,76 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .realtor-name-link { cursor: pointer; color: #4f46e5; text-decoration: underline; font-weight: 800; }
 .realtor-oyz-summary { font-size: 12px; color: #64748b; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
 .realtor-oyz-pill { background: #f5f3ff; color: #7c3aed; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 2px 8px; }
+
+/* ANALYTICS TAB */
+.analytics-main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+.analytics-section-title { font-size: 15px; font-weight: 800; color: #1f2937; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.analytics-section-sub { font-size: 12px; color: #94a3b8; margin-bottom: 18px; }
+.goals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
+.goal-card { background: #f8fafc; border-radius: 12px; padding: 16px 18px; border: 1px solid #e2e8f0; }
+.goal-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+.goal-numbers { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+.goal-current { font-size: 26px; font-weight: 900; color: #1f2937; }
+.goal-sep { font-size: 13px; color: #94a3b8; }
+.goal-target-display { font-size: 13px; color: #94a3b8; }
+.goal-target-input { width: 70px; padding: 5px 8px; border: 2px solid #2563eb; border-radius: 7px; font-size: 16px; font-weight: 700; outline: none; display: none; }
+.goal-target-input.editing { display: inline-block; }
+.goal-bar-track { background: #e2e8f0; border-radius: 99px; height: 10px; overflow: hidden; margin-bottom: 5px; }
+.goal-bar-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.goal-pct-label { font-size: 11px; color: #94a3b8; font-weight: 600; }
+.chart-card { background: white; border-radius: 14px; padding: 22px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; }
+.chart-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 14px; }
+.bar-month-group { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-month-label { font-size: 11px; font-weight: 600; color: #64748b; width: 38px; flex-shrink: 0; text-align: right; }
+.stacked-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+.stacked-bar-track { flex: 1; display: flex; border-radius: 4px; overflow: hidden; height: 18px; background: #f1f5f9; }
+.stacked-seg { height: 100%; }
+.realtor-rank-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f1f5f9; }
+.realtor-rank-row:last-child { border-bottom: none; }
+.realtor-rank-num { font-size: 13px; font-weight: 900; color: #94a3b8; width: 22px; flex-shrink: 0; }
+.realtor-rank-name { font-size: 13px; font-weight: 700; color: #1f2937; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.realtor-rank-bar-wrap { width: 100px; background: #f1f5f9; border-radius: 99px; height: 7px; overflow: hidden; flex-shrink: 0; }
+.realtor-rank-bar { height: 100%; border-radius: 99px; background: #2563eb; }
+.realtor-rank-pct { font-size: 12px; font-weight: 700; color: #1f2937; min-width: 34px; text-align: right; }
+.cra-range-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.cra-range-btn { border: 2px solid #e2e8f0; background: white; color: #64748b; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.cra-range-btn:hover { border-color: #2563eb; color: #2563eb; }
+.cra-range-btn.active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+.cra-gen-btn { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 9px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.cra-report-output { display: none; margin-top: 24px; }
+.cra-report-output.show { display: block; }
+.cra-doc { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+.cra-doc-header { background: #1f2937; color: white; padding: 22px 28px; }
+.cra-doc-title { font-size: 18px; font-weight: 800; margin-bottom: 3px; }
+.cra-doc-org { font-size: 13px; color: rgba(255,255,255,0.65); }
+.cra-doc-meta { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; }
+.cra-doc-body { padding: 24px 28px; }
+.cra-summary-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+.cra-sum-card { background: #f8fafc; border-radius: 9px; padding: 12px 14px; text-align: center; border: 1px solid #e2e8f0; }
+.cra-sum-num { font-size: 20px; font-weight: 900; color: #1f2937; }
+.cra-sum-label { font-size: 9px; color: #94a3b8; margin-top: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+.cra-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+.cra-table th { text-align: left; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 9px 12px; border-bottom: 2px solid #e2e8f0; background: #f8fafc; }
+.cra-table td { padding: 9px 12px; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
+.cra-table tr:last-child td { border-bottom: none; }
+.cra-section-head { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
+.cra-disclaimer { font-size: 11px; color: #94a3b8; line-height: 1.5; padding-top: 14px; border-top: 1px solid #e2e8f0; margin-top: 12px; font-style: italic; }
+.cra-download-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.team-goal-row { background: #f8fafc; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+.team-goal-name { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 2px; }
+.team-goal-region { font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
+.team-goal-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.team-goal-bar-label { font-size: 11px; color: #64748b; width: 130px; flex-shrink: 0; }
+.team-goal-bar-track { flex: 1; background: #e2e8f0; border-radius: 99px; height: 7px; overflow: hidden; }
+.team-goal-bar-fill { height: 100%; border-radius: 99px; }
+.team-goal-pct { font-size: 11px; font-weight: 700; color: #475569; min-width: 44px; text-align: right; }
+@media (max-width: 640px) {
+  .goals-grid { grid-template-columns: 1fr; }
+  .cra-summary-cards { grid-template-columns: 1fr 1fr; }
+  .chart-card { padding: 16px; }
+  .analytics-main { padding: 16px; }
+  .team-goal-bar-label { width: 90px; }
+}
 
 /* NOTIFICATION BELL */
 .notif-bell-btn { position: relative; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-size: 18px; cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; line-height: 1; }
@@ -1014,6 +1086,7 @@ asimonson@golden1.com</div>
           <button class="hamburger-item" id="tab-activity" onclick="showTab('activity');closeHamburger()">📋 Activity Log</button>
           <button class="hamburger-item" id="tab-marketing" onclick="showTab('marketing');closeHamburger()">🖨 Marketing</button>
           <button class="hamburger-item" id="tab-oyz" onclick="showTab('oyz');closeHamburger()">🏡 OYZ</button>
+          <button class="hamburger-item" id="tab-analytics" onclick="showTab('analytics');closeHamburger()">📈 Analytics</button>
         </div>
       </div>
     </div>
@@ -1060,6 +1133,11 @@ asimonson@golden1.com</div>
           <div class="home-card-icon">🏡</div>
           <div class="home-card-title">OYZ</div>
           <div class="home-card-desc">Plan open house prospecting and realtor outreach</div>
+        </div>
+        <div class="home-card" onclick="showTab('analytics')">
+          <div class="home-card-icon">📈</div>
+          <div class="home-card-title">Analytics</div>
+          <div class="home-card-desc">Track goals, trends and generate CRA compliance reports</div>
         </div>
       </div>
     </div>
@@ -1379,6 +1457,96 @@ asimonson@golden1.com</div>
     </div>
   </div>
 
+  <!-- ANALYTICS TAB -->
+  <div id="tab-analytics-content" style="display:none">
+    <div class="analytics-main">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#1f2937">📈 Analytics &amp; Insights</div>
+          <div style="font-size:13px;color:#94a3b8;margin-top:2px">Goals, trends, and CRA compliance reporting</div>
+        </div>
+      </div>
+
+      <!-- MY GOALS THIS MONTH -->
+      <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;border-top:4px solid #2563eb">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="analytics-section-title">🎯 My Goals This Month</div>
+            <div class="analytics-section-sub" id="goals-month-label" style="margin-bottom:0">—</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="cra-gen-btn" id="goals-edit-btn" onclick="toggleGoalsEdit()" style="padding:9px 18px;font-size:13px">✏️ Set Goals</button>
+            <button class="cra-gen-btn" id="goals-save-btn" onclick="saveGoals()" style="display:none;padding:9px 18px;font-size:13px;background:linear-gradient(135deg,#059669,#047857)">✅ Save Goals</button>
+          </div>
+        </div>
+        <div class="goals-grid" id="goals-grid"><div style="text-align:center;color:#94a3b8;padding:20px">Loading...</div></div>
+      </div>
+
+      <!-- TEAM GOALS (admin only) -->
+      <div id="team-goals-section" style="display:none;background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px">
+        <div class="analytics-section-title" style="margin-bottom:18px">👥 Team Goal Progress</div>
+        <div id="team-goals-list"></div>
+      </div>
+
+      <!-- TREND CHARTS -->
+      <div style="margin-bottom:8px">
+        <div class="analytics-section-title">📊 Activity Trends — Last 6 Months</div>
+        <div class="analytics-section-sub">Your CRA activity patterns over time</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Monthly Activity Volume</div>
+        <div id="chart-volume"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">LMI Category Mix</div>
+        <div id="chart-lmi-mix"></div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px">
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:11px;height:11px;border-radius:2px;background:#dc2626;flex-shrink:0"></div><span style="font-size:11px;color:#64748b">Low Income</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:11px;height:11px;border-radius:2px;background:#d97706;flex-shrink:0"></div><span style="font-size:11px;color:#64748b">Moderate Income</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:11px;height:11px;border-radius:2px;background:#059669;flex-shrink:0"></div><span style="font-size:11px;color:#64748b">Middle Income</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:11px;height:11px;border-radius:2px;background:#6b7280;flex-shrink:0"></div><span style="font-size:11px;color:#64748b">Upper Income</span></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">OYZ Capture Rate — Monthly Trend</div>
+        <div id="chart-capture-rate"></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:24px">
+        <div class="chart-title">Top Realtors by Capture Rate</div>
+        <div id="chart-top-realtors"></div>
+      </div>
+
+      <!-- CRA COMPLIANCE REPORT -->
+      <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;border-top:4px solid #2563eb">
+        <div class="analytics-section-title">📋 CRA Compliance Report</div>
+        <div class="analytics-section-sub">Generate a printable CRA activity report for any date range</div>
+        <div class="cra-range-btns">
+          <button class="cra-range-btn active" onclick="setCraRange('month',this)">This Month</button>
+          <button class="cra-range-btn" onclick="setCraRange('lastmonth',this)">Last Month</button>
+          <button class="cra-range-btn" onclick="setCraRange('quarter',this)">This Quarter</button>
+          <button class="cra-range-btn" onclick="setCraRange('lastquarter',this)">Last Quarter</button>
+          <button class="cra-range-btn" onclick="setCraRange('custom',this)">Custom</button>
+        </div>
+        <div id="cra-custom-dates" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:6px"><label style="font-size:12px;font-weight:700;color:#64748b">From</label><input type="date" class="date-input" id="cra-from" /></div>
+          <div style="display:flex;align-items:center;gap:6px"><label style="font-size:12px;font-weight:700;color:#64748b">To</label><input type="date" class="date-input" id="cra-to" /></div>
+        </div>
+        <button class="cra-gen-btn" onclick="generateCraReport()">Generate Report</button>
+        <div class="cra-report-output" id="cra-report-output">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+            <button class="cra-download-btn" onclick="downloadCraReport()">⬇ Download PDF</button>
+          </div>
+          <div class="cra-doc" id="cra-doc"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- PROPERTY DETAIL OVERLAY -->
   <div class="prop-detail-overlay" id="prop-detail-overlay">
     <div class="prop-detail-box">
@@ -1457,6 +1625,7 @@ asimonson@golden1.com</div>
           <button class="hamburger-item" onclick="navigateToTab('activity')">📋 Activity Log</button>
           <button class="hamburger-item" onclick="navigateToTab('marketing')">🖨 Marketing</button>
           <button class="hamburger-item" onclick="navigateToTab('oyz')">🏡 OYZ</button>
+          <button class="hamburger-item" onclick="navigateToTab('analytics')">📈 Analytics</button>
         </div>
       </div>
     </div>
@@ -2061,7 +2230,7 @@ window.onload = async function() {
 
 // ── TAB NAV ───────────────────────────────────────────────────
 function showTab(tab) {
-  ['home','search','dashboard','realtors','activity','marketing','oyz'].forEach(function(t) {
+  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -2072,6 +2241,7 @@ function showTab(tab) {
   if (tab === 'activity') { renderActivityLog(); renderActivityStats(); }
   if (tab === 'marketing') renderMarketingTab();
   if (tab === 'oyz') loadOYZ();
+  if (tab === 'analytics') renderAnalytics();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
     if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋'; }
@@ -4287,6 +4457,400 @@ function loadNotifPrefsToSettings() {
   setChk('pref-weekly', p.weekly);
 }
 
+// ── ANALYTICS & INSIGHTS ─────────────────────────────────────────
+
+var craDateRange = { type: 'month', from: '', to: '' };
+var goalsEditing = false;
+var GOAL_LABELS = [
+  { key: 'activities',  label: 'CRA Activities' },
+  { key: 'applications', label: 'Applications Taken' },
+  { key: 'loans',       label: 'Loans Closed' },
+  { key: 'lmiContacts', label: 'LMI Eligible Contacts' },
+  { key: 'openHouses',  label: 'Open Houses Attended' }
+];
+
+function renderAnalytics() {
+  var now = new Date();
+  var monthLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  var el = document.getElementById('goals-month-label');
+  if (el) el.textContent = monthLabel;
+  renderGoals();
+  renderCharts();
+  if (currentUser && currentUser.role === 'admin') {
+    var sec = document.getElementById('team-goals-section');
+    if (sec) sec.style.display = 'block';
+    renderTeamGoals();
+  }
+  // Init CRA range
+  var firstBtn = document.querySelector('.cra-range-btn');
+  setCraRange('month', firstBtn);
+}
+
+function getGoalActuals() {
+  var now = new Date();
+  var monthStr = now.toISOString().slice(0, 7);
+  var monthActs = cachedActivities.filter(function(a) { return a.date && a.date.startsWith(monthStr); });
+  var monthOYZ  = cachedOyzEntries.filter(function(e) { return e.openHouseDate && e.openHouseDate.startsWith(monthStr); });
+  return {
+    activities:   monthActs.length,
+    applications: monthActs.filter(function(a) { return a.type && a.type.toLowerCase().includes('application'); }).length,
+    loans:        monthActs.filter(function(a) { return a.type && a.type.toLowerCase().includes('loan'); }).length,
+    lmiContacts:  monthActs.filter(function(a) { return a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income'; }).length,
+    openHouses:   monthActs.filter(function(a) { return a.type && a.type.toLowerCase().includes('open house'); }).length + monthOYZ.length
+  };
+}
+
+function renderGoals() {
+  var grid = document.getElementById('goals-grid');
+  if (!grid) return;
+  var monthStr = new Date().toISOString().slice(0, 7);
+  var goals   = (currentUser.monthlyGoals && currentUser.monthlyGoals[monthStr]) || {};
+  var actuals = getGoalActuals();
+  grid.innerHTML = GOAL_LABELS.map(function(g) {
+    var target = parseInt(goals[g.key] || 0);
+    var actual = actuals[g.key] || 0;
+    var pct = target > 0 ? Math.min(100, Math.round((actual / target) * 100)) : 0;
+    var barColor = target === 0 ? '#cbd5e1' : pct >= 80 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
+    return '<div class="goal-card">'
+      + '<div class="goal-label">' + g.label + '</div>'
+      + '<div class="goal-numbers">'
+      + '<span class="goal-current">' + actual + '</span>'
+      + '<span class="goal-sep">/</span>'
+      + '<span class="goal-target-display" id="goal-display-' + g.key + '">' + (target || '—') + '</span>'
+      + '<input type="number" class="goal-target-input' + (goalsEditing ? ' editing' : '') + '" id="goal-input-' + g.key + '" value="' + (target || '') + '" placeholder="Target" min="0" />'
+      + '</div>'
+      + '<div class="goal-bar-track"><div class="goal-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>'
+      + '<div class="goal-pct-label">' + (target > 0 ? pct + '% of goal' : 'No target set') + '</div>'
+      + '</div>';
+  }).join('');
+  if (goalsEditing) {
+    document.querySelectorAll('.goal-target-display').forEach(function(el) { el.style.display = 'none'; });
+  }
+}
+
+function toggleGoalsEdit() {
+  goalsEditing = true;
+  renderGoals();
+  var editBtn = document.getElementById('goals-edit-btn');
+  var saveBtn = document.getElementById('goals-save-btn');
+  if (editBtn) editBtn.style.display = 'none';
+  if (saveBtn) saveBtn.style.display = 'inline-block';
+}
+
+async function saveGoals() {
+  var monthStr = new Date().toISOString().slice(0, 7);
+  var goals = {};
+  GOAL_LABELS.forEach(function(g) {
+    var inp = document.getElementById('goal-input-' + g.key);
+    goals[g.key] = inp ? (parseInt(inp.value) || 0) : 0;
+  });
+  if (!currentUser.monthlyGoals) currentUser.monthlyGoals = {};
+  currentUser.monthlyGoals[monthStr] = goals;
+  await saveUser(currentUser);
+  sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
+  goalsEditing = false;
+  renderGoals();
+  var editBtn = document.getElementById('goals-edit-btn');
+  var saveBtn = document.getElementById('goals-save-btn');
+  if (editBtn) editBtn.style.display = '';
+  if (saveBtn) saveBtn.style.display = 'none';
+  showToast('✅ Goals saved!');
+}
+
+function renderTeamGoals() {
+  var list = document.getElementById('team-goals-list');
+  if (!list) return;
+  var monthStr = new Date().toISOString().slice(0, 7);
+  var mlos = cachedUsers.filter(function(u) { return u.active && u.role !== 'admin'; });
+  var rows = mlos.map(function(u) {
+    var goals = (u.monthlyGoals && u.monthlyGoals[monthStr]) || {};
+    var userActs = (allTeamActivities.length ? allTeamActivities : cachedActivities)
+      .filter(function(a) { return a.userId === u.id && a.date && a.date.startsWith(monthStr); });
+    var userOYZ  = cachedOyzEntries.filter(function(e) { return e.userId === u.id && e.openHouseDate && e.openHouseDate.startsWith(monthStr); });
+    var actuals = {
+      activities:   userActs.length,
+      applications: userActs.filter(function(a) { return a.type && a.type.toLowerCase().includes('application'); }).length,
+      loans:        userActs.filter(function(a) { return a.type && a.type.toLowerCase().includes('loan'); }).length,
+      lmiContacts:  userActs.filter(function(a) { return a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income'; }).length,
+      openHouses:   userActs.filter(function(a) { return a.type && a.type.toLowerCase().includes('open house'); }).length + userOYZ.length
+    };
+    var totalPct = 0, goalCount = 0;
+    GOAL_LABELS.forEach(function(g) {
+      var t = parseInt(goals[g.key] || 0);
+      if (t > 0) { totalPct += Math.min(100, Math.round((actuals[g.key] / t) * 100)); goalCount++; }
+    });
+    var overallPct = goalCount > 0 ? Math.round(totalPct / goalCount) : 0;
+    return { u: u, goals: goals, actuals: actuals, overallPct: overallPct };
+  });
+  rows.sort(function(a, b) { return b.overallPct - a.overallPct; });
+  list.innerHTML = rows.map(function(row) {
+    var bars = GOAL_LABELS.map(function(g) {
+      var t = parseInt(row.goals[g.key] || 0);
+      var a = row.actuals[g.key] || 0;
+      var pct = t > 0 ? Math.min(100, Math.round((a / t) * 100)) : 0;
+      var col = t === 0 ? '#cbd5e1' : pct >= 80 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
+      return '<div class="team-goal-bar-row">'
+        + '<span class="team-goal-bar-label">' + g.label + '</span>'
+        + '<div class="team-goal-bar-track"><div class="team-goal-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div>'
+        + '<span class="team-goal-pct">' + a + (t > 0 ? '/' + t : '') + '</span>'
+        + '</div>';
+    }).join('');
+    return '<div class="team-goal-row">'
+      + '<div class="team-goal-name">' + row.u.name
+      + ' <span style="color:#94a3b8;font-weight:400;font-size:12px">— ' + row.overallPct + '% overall</span></div>'
+      + '<div class="team-goal-region">' + (row.u.region || '—') + '</div>'
+      + '<div class="team-goal-bars">' + bars + '</div>'
+      + '</div>';
+  }).join('') || '<div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px">No team members found</div>';
+}
+
+function getLast6Months() {
+  var months = [], now = new Date();
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: d.toISOString().slice(0, 7), label: d.toLocaleDateString('en-US', { month: 'short' }) });
+  }
+  return months;
+}
+
+function renderCharts() {
+  renderChartVolume();
+  renderChartLmiMix();
+  renderChartCaptureRate();
+  renderChartTopRealtors();
+}
+
+function renderChartVolume() {
+  var el = document.getElementById('chart-volume');
+  if (!el) return;
+  var months = getLast6Months();
+  var counts = months.map(function(m) {
+    return cachedActivities.filter(function(a) { return a.date && a.date.startsWith(m.key); }).length;
+  });
+  var maxCount = Math.max.apply(null, counts.concat([1]));
+  el.innerHTML = months.map(function(m, i) {
+    var cnt = counts[i];
+    var pct = Math.round((cnt / maxCount) * 100);
+    return '<div class="bar-month-group">'
+      + '<span class="bar-month-label">' + m.label + '</span>'
+      + '<div style="flex:1;background:#f1f5f9;border-radius:4px;height:26px;overflow:hidden">'
+      + '<div style="width:' + (pct || 0) + '%;background:linear-gradient(90deg,#2563eb,#60a5fa);height:100%;border-radius:4px;display:flex;align-items:center;padding-left:' + (cnt > 0 ? '8' : '0') + 'px;min-width:' + (cnt > 0 ? '28' : '0') + 'px;transition:width 0.4s">'
+      + (cnt > 0 ? '<span style="font-size:11px;color:white;font-weight:700">' + cnt + '</span>' : '')
+      + '</div></div>'
+      + (cnt === 0 ? '<span style="font-size:11px;color:#94a3b8;padding-left:8px">0</span>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function renderChartLmiMix() {
+  var el = document.getElementById('chart-lmi-mix');
+  if (!el) return;
+  var months = getLast6Months();
+  var cats = [
+    { key: 'Low Income',      color: '#dc2626' },
+    { key: 'Moderate Income', color: '#d97706' },
+    { key: 'Middle Income',   color: '#059669' },
+    { key: 'Upper Income',    color: '#6b7280' }
+  ];
+  el.innerHTML = months.map(function(m) {
+    var acts  = cachedActivities.filter(function(a) { return a.date && a.date.startsWith(m.key); });
+    var total = acts.length || 1;
+    var segs  = cats.map(function(c) {
+      var cnt = acts.filter(function(a) { return a.lmiCategory === c.key; }).length;
+      var pct = Math.round((cnt / total) * 100);
+      return pct > 0 ? '<div class="stacked-seg" style="width:' + pct + '%;background:' + c.color + '" title="' + c.key + ': ' + pct + '%"></div>' : '';
+    }).join('');
+    return '<div class="stacked-bar-row">'
+      + '<span class="bar-month-label">' + m.label + '</span>'
+      + '<div class="stacked-bar-track">' + (segs || '<div style="width:100%;background:#e2e8f0"></div>') + '</div>'
+      + '<span style="font-size:11px;color:#94a3b8;padding-left:8px;min-width:24px">' + acts.length + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function isCaptured(e) {
+  var d = (e.dealOutcome || '').toLowerCase().trim();
+  return e.status === 'complete' || (d !== '' && d !== 'lost' && d !== 'pending');
+}
+
+function renderChartCaptureRate() {
+  var el = document.getElementById('chart-capture-rate');
+  if (!el) return;
+  var months = getLast6Months();
+  var data = months.map(function(m) {
+    var mo = cachedOyzEntries.filter(function(e) { return e.openHouseDate && e.openHouseDate.startsWith(m.key); });
+    if (!mo.length) return { label: m.label, rate: null };
+    var cap = mo.filter(isCaptured).length;
+    return { label: m.label, rate: Math.round((cap / mo.length) * 100), total: mo.length };
+  });
+  if (!data.some(function(d) { return d.rate !== null; })) {
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px;font-size:13px">No open house data yet</div>';
+    return;
+  }
+  el.innerHTML = '<div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding-bottom:4px">'
+    + data.map(function(d) {
+      var h   = d.rate !== null ? Math.max(4, d.rate) : 4;
+      var col = d.rate === null ? '#e2e8f0' : d.rate >= 50 ? '#059669' : '#d97706';
+      var lbl = d.rate !== null ? d.rate + '%' : '—';
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">'
+        + '<span style="font-size:10px;font-weight:700;color:' + col + '">' + lbl + '</span>'
+        + '<div style="width:100%;background:' + col + ';border-radius:3px 3px 0 0;height:' + h + 'px;opacity:' + (d.rate === null ? '0.25' : '1') + ';transition:height 0.4s"></div>'
+        + '<span style="font-size:10px;color:#94a3b8">' + d.label + '</span>'
+        + '</div>';
+    }).join('')
+    + '</div>';
+}
+
+function renderChartTopRealtors() {
+  var el = document.getElementById('chart-top-realtors');
+  if (!el) return;
+  var rMap = {};
+  cachedOyzEntries.forEach(function(e) {
+    var key = e.realtorId || e.realtorName || 'Unknown';
+    if (!rMap[key]) rMap[key] = { name: e.realtorName || 'Unknown', total: 0, captured: 0 };
+    rMap[key].total++;
+    if (isCaptured(e)) rMap[key].captured++;
+  });
+  var sorted = Object.values(rMap)
+    .map(function(r) { return Object.assign({}, r, { rate: Math.round((r.captured / r.total) * 100) }); })
+    .sort(function(a, b) { return b.rate - a.rate || b.total - a.total; })
+    .slice(0, 5);
+  if (!sorted.length) {
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px;font-size:13px">No OYZ data yet</div>';
+    return;
+  }
+  el.innerHTML = sorted.map(function(r, i) {
+    return '<div class="realtor-rank-row">'
+      + '<span class="realtor-rank-num">#' + (i + 1) + '</span>'
+      + '<span class="realtor-rank-name">' + r.name + '</span>'
+      + '<span style="font-size:11px;color:#94a3b8;white-space:nowrap;flex-shrink:0">' + r.total + ' OH · ' + r.captured + ' cap</span>'
+      + '<div class="realtor-rank-bar-wrap"><div class="realtor-rank-bar" style="width:' + r.rate + '%"></div></div>'
+      + '<span class="realtor-rank-pct">' + r.rate + '%</span>'
+      + '</div>';
+  }).join('');
+}
+
+function setCraRange(type, btn) {
+  document.querySelectorAll('.cra-range-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var now = new Date(), from, to;
+  if (type === 'month') {
+    from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    to   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  } else if (type === 'lastmonth') {
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+    to   = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+  } else if (type === 'quarter') {
+    var q = Math.floor(now.getMonth() / 3);
+    from = new Date(now.getFullYear(), q * 3, 1).toISOString().split('T')[0];
+    to   = new Date(now.getFullYear(), q * 3 + 3, 0).toISOString().split('T')[0];
+  } else if (type === 'lastquarter') {
+    var lq = Math.floor(now.getMonth() / 3) - 1;
+    var ly = now.getFullYear();
+    if (lq < 0) { lq = 3; ly--; }
+    from = new Date(ly, lq * 3, 1).toISOString().split('T')[0];
+    to   = new Date(ly, lq * 3 + 3, 0).toISOString().split('T')[0];
+  }
+  var customEl = document.getElementById('cra-custom-dates');
+  if (type === 'custom') {
+    if (customEl) customEl.style.display = 'flex';
+    craDateRange = { type: 'custom', from: '', to: '' };
+    return;
+  }
+  if (customEl) customEl.style.display = 'none';
+  craDateRange = { type: type, from: from, to: to };
+}
+
+function generateCraReport() {
+  var from = craDateRange.from, to = craDateRange.to;
+  if (craDateRange.type === 'custom') {
+    from = document.getElementById('cra-from').value;
+    to   = document.getElementById('cra-to').value;
+    if (!from || !to) { showToast('⚠️ Please select both From and To dates'); return; }
+  }
+  var srcActs = (currentUser.role === 'admin' && allTeamActivities.length) ? allTeamActivities : cachedActivities;
+  var acts = srcActs.filter(function(a) { return a.date && a.date >= from && a.date <= to; });
+  var total = acts.length;
+  var applications = acts.filter(function(a) { return a.type && a.type.toLowerCase().includes('application'); }).length;
+  var loans        = acts.filter(function(a) { return a.type && a.type.toLowerCase().includes('loan'); }).length;
+  var lmiEligible  = acts.filter(function(a) { return a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income'; }).length;
+  var totalLoan    = acts.reduce(function(s, a) { return s + (parseInt(a.loanAmount) || 0); }, 0);
+  function fmtAmt(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? Math.round(n/1000)+'K' : String(n); }
+  var typeMap = {}, lmiMap = {}, zipMap = {};
+  acts.forEach(function(a) {
+    var t = a.type || 'Other'; typeMap[t] = (typeMap[t] || 0) + 1;
+    var c = a.lmiCategory || 'Unknown'; lmiMap[c] = (lmiMap[c] || 0) + 1;
+    if (a.zip) zipMap[a.zip] = (zipMap[a.zip] || 0) + 1;
+  });
+  var topZips = Object.entries(zipMap).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  function tableRows(map) {
+    return Object.entries(map).sort(function(a,b){return b[1]-a[1];}).map(function(e) {
+      return '<tr><td>' + e[0] + '</td><td><strong>' + e[1] + '</strong></td><td>' + (total ? Math.round((e[1]/total)*100) : 0) + '%</td></tr>';
+    }).join('');
+  }
+  var mloHtml = '';
+  if (currentUser.role === 'admin') {
+    var mloMap = {};
+    acts.forEach(function(a) {
+      var n = a.userName || 'Unknown';
+      if (!mloMap[n]) mloMap[n] = { total:0, apps:0, loans:0, lmi:0 };
+      mloMap[n].total++;
+      if (a.type && a.type.toLowerCase().includes('application')) mloMap[n].apps++;
+      if (a.type && a.type.toLowerCase().includes('loan')) mloMap[n].loans++;
+      if (a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income') mloMap[n].lmi++;
+    });
+    mloHtml = '<div class="cra-section-head">MLO Activity Breakdown</div>'
+      + '<table class="cra-table"><thead><tr><th>MLO Name</th><th>Total</th><th>Applications</th><th>Loans</th><th>LMI Eligible</th></tr></thead><tbody>'
+      + Object.entries(mloMap).sort(function(a,b){return b[1].total-a[1].total;}).map(function(e){
+          return '<tr><td>'+e[0]+'</td><td><strong>'+e[1].total+'</strong></td><td>'+e[1].apps+'</td><td>'+e[1].loans+'</td><td>'+e[1].lmi+'</td></tr>';
+        }).join('')
+      + '</tbody></table>';
+  }
+  var genDate  = new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+  var fromLbl  = new Date(from+'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  var toLbl    = new Date(to+'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  document.getElementById('cra-doc').innerHTML =
+    '<div class="cra-doc-header">'
+    + '<div class="cra-doc-title">LMI Prospect Finder — CRA Activity Report</div>'
+    + '<div class="cra-doc-org">Golden 1 Credit Union</div>'
+    + '<div class="cra-doc-meta">Date Range: '+fromLbl+' – '+toLbl+' &nbsp;|&nbsp; Generated: '+genDate+'</div>'
+    + '</div><div class="cra-doc-body">'
+    + '<div class="cra-summary-cards">'
+    + '<div class="cra-sum-card"><div class="cra-sum-num">'+total+'</div><div class="cra-sum-label">Total Activities</div></div>'
+    + '<div class="cra-sum-card"><div class="cra-sum-num">'+applications+'</div><div class="cra-sum-label">Applications</div></div>'
+    + '<div class="cra-sum-card"><div class="cra-sum-num">'+loans+'</div><div class="cra-sum-label">Loans Closed</div></div>'
+    + '<div class="cra-sum-card"><div class="cra-sum-num">'+lmiEligible+'</div><div class="cra-sum-label">LMI Eligible</div></div>'
+    + '<div class="cra-sum-card"><div class="cra-sum-num">'+(totalLoan > 0 ? '$'+fmtAmt(totalLoan) : '—')+'</div><div class="cra-sum-label">Loan Amount</div></div>'
+    + '</div>'
+    + '<div class="cra-section-head">Activity Type Breakdown</div>'
+    + '<table class="cra-table"><thead><tr><th>Activity Type</th><th>Count</th><th>% of Total</th></tr></thead><tbody>'+tableRows(typeMap)+'</tbody></table>'
+    + '<div class="cra-section-head">LMI Category Breakdown</div>'
+    + '<table class="cra-table"><thead><tr><th>LMI Category</th><th>Count</th><th>% of Total</th></tr></thead><tbody>'+tableRows(lmiMap)+'</tbody></table>'
+    + (topZips.length ? '<div class="cra-section-head">Top ZIP Codes by Activity</div>'
+      + '<table class="cra-table"><thead><tr><th>ZIP Code</th><th>Count</th><th>% of Total</th></tr></thead><tbody>'
+      + topZips.map(function(e){return '<tr><td>'+e[0]+'</td><td><strong>'+e[1]+'</strong></td><td>'+(total?Math.round((e[1]/total)*100):0)+'%</td></tr>';}).join('')
+      + '</tbody></table>' : '')
+    + mloHtml
+    + '<div class="cra-disclaimer">This report is generated for internal CRA tracking purposes only. Data accuracy is the responsibility of the submitting MLO.</div>'
+    + '</div>';
+  var out = document.getElementById('cra-report-output');
+  if (out) out.classList.add('show');
+  window._craReportMeta = { from: from, to: to };
+}
+
+function downloadCraReport() {
+  var doc = document.getElementById('cra-doc');
+  if (!doc) return;
+  var meta = window._craReportMeta || {};
+  var filename = 'CRA-Report-' + (meta.from || '') + '-to-' + (meta.to || '') + '-' + new Date().toISOString().split('T')[0] + '.pdf';
+  html2pdf().set({
+    margin: 0.5, filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  }).from(doc).save();
+}
+
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
 
 async function doSearch() {
@@ -4373,11 +4937,14 @@ function renderResults(zip, tracts) {
   <button class="bottom-nav-item" id="bn-dashboard" onclick="showTab('dashboard');updateBottomNav('dashboard')">
     <span class="bn-icon">📊</span>Dashboard
   </button>
+  <button class="bottom-nav-item" id="bn-analytics" onclick="showTab('analytics');updateBottomNav('analytics')">
+    <span class="bn-icon">📈</span>Analytics
+  </button>
 </nav>
 
 <script>
 function updateBottomNav(tab) {
-  const map = { search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard' };
+  const map = { search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics' };
   document.querySelectorAll('.bottom-nav-item').forEach(function(el) { el.classList.remove('active'); });
   if (map[tab]) { var el = document.getElementById(map[tab]); if (el) el.classList.add('active'); }
 }
