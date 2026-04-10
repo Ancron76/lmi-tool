@@ -1160,6 +1160,7 @@ admin@lmitool.com</div>
       <div class="hamburger-menu" id="hamburger-menu">
         <button class="hamburger-btn" onclick="toggleHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="hamburger-dropdown">
+          <button class="hamburger-item" id="tab-home" onclick="showTab('home');closeHamburger()">🏠 Home</button>
           <button class="hamburger-item" id="tab-search" onclick="showTab('search');closeHamburger()">🔍 LMI Search</button>
           <button class="hamburger-item" id="tab-dashboard" onclick="showTab('dashboard');closeHamburger()">📊 Dashboard</button>
           <button class="hamburger-item" id="tab-realtors" onclick="showTab('realtors');closeHamburger()">🏠 Realtors</button>
@@ -1699,6 +1700,7 @@ admin@lmitool.com</div>
       <div class="hamburger-menu" id="admin-hamburger-menu">
         <button class="hamburger-btn" onclick="toggleAdminHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="admin-hamburger-dropdown">
+          <button class="hamburger-item" onclick="navigateToTab('home')">🏠 Home</button>
           <button class="hamburger-item" onclick="navigateToTab('search')">🔍 LMI Search</button>
           <button class="hamburger-item" onclick="navigateToTab('dashboard')">📊 Dashboard</button>
           <button class="hamburger-item" onclick="navigateToTab('realtors')">🏠 Realtors</button>
@@ -6064,6 +6066,9 @@ function rpMarkPushViewed(id) {
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
 <nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-item" id="bn-home" onclick="showTab('home');updateBottomNav('home')">
+    <span class="bn-icon">🏠</span>Home
+  </button>
   <button class="bottom-nav-item active" id="bn-search" onclick="showTab('search');updateBottomNav('search')">
     <span class="bn-icon">🔍</span>LMI Search
   </button>
@@ -6083,7 +6088,7 @@ function rpMarkPushViewed(id) {
 
 <script>
 function updateBottomNav(tab) {
-  const map = { search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics' };
+  const map = { home:'bn-home', search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics' };
   document.querySelectorAll('.bottom-nav-item').forEach(function(el) { el.classList.remove('active'); });
   if (map[tab]) { var el = document.getElementById(map[tab]); if (el) el.classList.add('active'); }
 }
