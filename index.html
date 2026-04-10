@@ -1832,6 +1832,10 @@ admin@lmitool.com</div>
         <div class="rp-quick-btn-label">Open Houses</div>
       </div>
     </div>
+    <div id="rp-buyer-profiles-section" style="display:none">
+      <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px" id="rp-buyer-profiles-title">📬 Buyer Profiles</div>
+      <div id="rp-buyer-profiles-list"></div>
+    </div>
   </div>
   <!-- LMI Search Tab -->
   <div id="rp-tab-search" class="rportal-content" style="display:none">
@@ -1839,11 +1843,12 @@ admin@lmitool.com</div>
       <div class="card-title">🔍 LMI Zone Lookup</div>
       <div class="card-sub">Enter a ZIP code to check LMI status and income limits</div>
       <div class="search-row">
-        <input type="text" id="rp-zip-input" placeholder="Enter ZIP code" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter')rpSearch()" />
-        <button class="search-btn" onclick="rpSearch()">Search</button>
+        <input type="text" id="rp-zip-input" placeholder="Enter ZIP code" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter')rpDoSearch()" />
+        <button class="search-btn" onclick="rpDoSearch()">Search</button>
       </div>
     </div>
     <div id="rp-search-status" style="font-size:13px;color:#64748b;margin:0 0 12px;display:none"></div>
+    <div id="rp-farm-card-container"></div>
     <div id="rp-search-result" style="display:none">
       <div id="rp-result-card"></div>
       <div class="rp-save-form" id="rp-save-form">
@@ -1916,6 +1921,29 @@ admin@lmitool.com</div>
   <div id="rp-tab-openhouses" class="rportal-content" style="display:none">
     <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">📅 My Open Houses</div>
     <div id="rp-openhouses-list"><div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div></div>
+  </div>
+</div>
+
+<!-- SEND TO REALTOR MODAL -->
+<div class="prequal-modal-overlay" id="send-realtor-modal">
+  <div class="prequal-modal-box">
+    <div class="prequal-modal-header">
+      <div class="prequal-modal-title">📤 Send Borrower Profile to Realtor</div>
+      <button class="prequal-modal-close" onclick="closeSendToRealtorModal()">✕</button>
+    </div>
+    <div class="prequal-modal-body">
+      <div class="rp-form-group" style="margin-bottom:14px">
+        <label>Select Realtor *</label>
+        <select id="str-realtor-select" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;font-family:inherit"></select>
+      </div>
+      <div id="str-preview" style="background:#f8fafc;border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid #e2e8f0;font-size:13px;color:#374151;line-height:1.7;display:none"></div>
+      <div class="rp-form-group" style="margin-bottom:4px">
+        <label>Message to Realtor (optional)</label>
+        <textarea id="str-notes" rows="2" placeholder="e.g. This buyer is pre-approved and ready to move fast!" style="resize:vertical"></textarea>
+      </div>
+      <div style="color:#dc2626;font-size:12px;margin-top:8px;display:none" id="str-error"></div>
+      <button class="prequal-submit-btn" id="str-send-btn" onclick="doSendToRealtor()">📤 Send Profile</button>
+    </div>
   </div>
 </div>
 
@@ -2465,7 +2493,7 @@ async function tryLogin() {
 function logout() {
   currentUser = null;
   cachedProspects = []; cachedActivities = []; cachedRealtors = []; allTeamActivities = [];
-  realtorPortalMlo = null; realtorSearches = []; realtorPrequals = [];
+  realtorPortalMlo = null; realtorSearches = []; realtorPrequals = []; realtorPushes = []; currentQualData = null;
   editingProspectDocId = null;
   sessionStorage.removeItem('g1_session');
   document.getElementById('app-screen').style.display = 'none';
@@ -3923,6 +3951,7 @@ function calcQualifier() {
   const barWidth = Math.min(pctAmi, 150);
   const nameLabel = borrowerName ? borrowerName + ' — ' : '';
   const isEditing = !!editingProspectDocId;
+  currentQualData = { borrowerName, income, pctAmi, cat, maxPrice, zip: currentZip, city: currentCity };
 
   document.getElementById('qualifier-result').className = 'qualifier-result show';
   document.getElementById('qualifier-result').innerHTML =
@@ -3943,6 +3972,7 @@ function calcQualifier() {
     + '<div class="qual-action-row">'
     + '<button id="qual-save-btn-el" class="' + (isEditing ? 'qual-save-btn update' : 'qual-save-btn') + '" onclick="saveBorrowerProspect(' + income + ',\'' + cat.label + '\',\'' + borrowerName.replace(/'/g,"\\'") + '\',' + maxPrice + ',' + pctAmi + ')">' + (isEditing ? '💾 Update Borrower Record' : '+ Save to Prospect List') + '</button>'
     + '<button class="qual-realtor-btn" onclick="openRealtorPicker()">🏠 Assign Realtors' + (currentBorrowerRealtors.length ? ' (' + currentBorrowerRealtors.length + ')' : '') + '</button>'
+    + '<button style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer" onclick="openSendToRealtorModal()">📤 Send to Realtor</button>'
     + '</div>'
     + '<div id="qual-assigned-realtors-container"></div>'
     + '<div class="qual-note">⚠️ Estimates use ' + farmParams.frontEnd + '% front-end ratio at ' + farmParams.rate + '% rate, ' + farmParams.term + '-year fixed. AMI: $' + currentAmi.toLocaleString() + ' for ' + currentCity + ', ' + currentZip + '.</div>';
@@ -5297,6 +5327,7 @@ async function showRealtorPortal() {
     } catch(e) {}
   }
 
+  await loadRealtorPushes();
   rpShowTab('home');
 }
 
@@ -5324,8 +5355,8 @@ function renderRPHome() {
 
   // MLO business card
   var wrap = document.getElementById('rp-biz-card-wrap');
-  if (!wrap) return;
-  if (!realtorPortalMlo) { wrap.innerHTML = ''; return; }
+  if (!wrap) { renderRPBuyerProfiles(); return; }
+  if (!realtorPortalMlo) { wrap.innerHTML = ''; renderRPBuyerProfiles(); return; }
   var mlo = realtorPortalMlo;
   var profile = mlo.profile || {};
   var photoHtml = profile.photo
@@ -5345,6 +5376,7 @@ function renderRPHome() {
     + '</div>'
     + '</div>'
     + '</div>';
+  renderRPBuyerProfiles();
 }
 
 function renderRPSearches() {
@@ -5414,45 +5446,160 @@ function renderRPOpenHouses() {
     .catch(function() { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">Could not load open houses.</div>'; });
 }
 
-async function rpSearch() {
+var rpFarmParams = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
+var rpCurrentAmi = 0, rpCurrentZip = '', rpCurrentCity = '';
+var currentQualData = null;
+var realtorPushes = [];
+
+async function rpDoSearch() {
   var zip = (document.getElementById('rp-zip-input').value || '').trim();
-  if (!/^\d{5}$/.test(zip)) { showToast('⚠️ Please enter a 5-digit ZIP code'); return; }
+  if (zip.length !== 5 || !/^\d+$/.test(zip)) { showToast('⚠️ Please enter a 5-digit ZIP code'); return; }
   var statusEl = document.getElementById('rp-search-status');
   var resultEl = document.getElementById('rp-search-result');
-  statusEl.textContent = 'Searching...'; statusEl.style.display = 'block';
+  var farmEl   = document.getElementById('rp-farm-card-container');
+  statusEl.innerHTML = '🔍 Looking up live census tract data...'; statusEl.style.display = 'block';
   resultEl.style.display = 'none';
+  farmEl.innerHTML = '';
   document.getElementById('rp-save-form').classList.remove('open');
   document.getElementById('rp-show-save-btn').style.display = '';
   currentRPSearchResult = null;
   try {
-    var resp = await fetch(PROXY_URL + '?zip=' + zip);
-    var data = await resp.json();
+    var response = await fetch(PROXY_URL + '?zip=' + zip);
+    if (!response.ok) throw new Error('API error');
+    var data = await response.json();
     statusEl.style.display = 'none';
-    if (!data || data.error || !data.tracts || !data.tracts.length) {
-      resultEl.innerHTML = '<div class="card" style="text-align:center;color:#94a3b8;padding:32px">No LMI data found for ZIP ' + zip + '.</div>';
+    if (!data || !data.length || data.error) {
+      resultEl.innerHTML = '<div class="not-found" style="text-align:center;padding:32px;background:white;border-radius:14px"><div style="font-size:36px;margin-bottom:10px">📍</div><h3 style="color:#1f2937;margin-bottom:8px">No LMI data found for ZIP ' + zip + '</h3><p style="color:#64748b">Try checking at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank" style="color:#0d9488">FFIEC.gov →</a></p></div>';
       resultEl.style.display = 'block'; return;
     }
-    var tracts = data.tracts;
-    var lmi = tracts.filter(function(t) { return t.lmi_category === 'Low Income' || t.lmi_category === 'Moderate Income'; });
-    var lmiPct = tracts.length ? Math.round((lmi.length / tracts.length) * 100) : 0;
-    var topCat = tracts[0] ? tracts[0].lmi_category : 'Unknown';
-    var catColors = { 'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#059669','Upper Income':'#6b7280' };
-    var catBg     = { 'Low Income':'#fef2f2','Moderate Income':'#fffbeb','Middle Income':'#f0fdf4','Upper Income':'#f8fafc' };
-    currentRPSearchResult = { zip: zip, lmiCategory: topCat, tracts: tracts, lmiPct: lmiPct };
-    document.getElementById('rp-result-card').innerHTML = '<div class="card">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">'
-      + '<div><div style="font-size:18px;font-weight:900;color:#1f2937">ZIP ' + zip + '</div>'
-      + '<div style="font-size:13px;color:#64748b;margin-top:2px">' + (data.city || '') + ', ' + (data.state || '') + '</div></div>'
-      + '<span style="font-size:13px;font-weight:800;border-radius:8px;padding:6px 14px;background:' + (catBg[topCat]||'#f1f5f9') + ';color:' + (catColors[topCat]||'#64748b') + '">' + topCat + '</span>'
-      + '</div>'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-      + '<div style="background:#f8fafc;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#0d9488">' + lmiPct + '%</div><div style="font-size:11px;color:#64748b">LMI Tracts</div></div>'
-      + '<div style="background:#f8fafc;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#1f2937">' + tracts.length + '</div><div style="font-size:11px;color:#64748b">Census Tracts</div></div>'
-      + '</div></div>';
-    resultEl.style.display = 'block';
-  } catch(e) {
-    statusEl.textContent = 'Search failed. Please try again.'; statusEl.style.display = 'block';
+    var city = data[0].city || zip;
+    var ami  = data[0].area_md_fam_income || 0;
+    rpCurrentZip = zip; rpCurrentCity = city; rpCurrentAmi = ami;
+    var topCat = getCategory(data[0].tract_md_fam_income, ami);
+    currentRPSearchResult = { zip: zip, lmiCategory: topCat.label, ami: ami, city: city };
+    rpRenderFarmCard(zip, city, ami);
+    rpRenderResults(zip, data);
+  } catch(err) {
+    statusEl.innerHTML = '⚠️ Could not reach census data. Check your connection or try again.';
+    statusEl.style.display = 'block';
   }
+}
+
+function rpRenderResults(zip, tracts) {
+  var city = tracts[0].city || zip;
+  var ami  = tracts[0].area_md_fam_income || 0;
+  var low      = tracts.filter(function(t) { return (t.tract_md_fam_income / t.area_md_fam_income) < 0.50; }).length;
+  var moderate = tracts.filter(function(t) { var r = t.tract_md_fam_income / t.area_md_fam_income; return r >= 0.50 && r < 0.80; }).length;
+  var tractHTML = tracts.map(function(t) {
+    var cat = getCategory(t.tract_md_fam_income, t.area_md_fam_income);
+    var pct = Math.round((t.tract_md_fam_income / t.area_md_fam_income) * 100);
+    var tractNum = t.county_name ? t.county_name.split(';')[0].replace('Census Tract ','') : t.tract_id;
+    return '<tr>'
+      + '<td><span style="font-size:12px;color:#64748b">Tract ' + tractNum + '</span></td>'
+      + '<td><span class="lmi-badge" style="background:' + cat.bg + ';color:' + cat.color + '">' + cat.label + '</span></td>'
+      + '<td><strong>$' + t.tract_md_fam_income.toLocaleString() + '</strong></td>'
+      + '<td class="bar-cell"><span class="pct-label" style="color:' + cat.color + '">' + pct + '%</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(pct,100) + '%;background:' + cat.color + '"></div></div></td>'
+      + '<td style="font-size:11px;color:#94a3b8">' + t.tract_id + '</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('rp-result-card').innerHTML =
+    '<div class="result-header"><div><span class="result-city">' + city + '</span><span class="result-zip">ZIP ' + zip + '</span></div></div>'
+    + '<div class="result-meta">Area Median Income (AMI): <strong>$' + ami.toLocaleString() + '</strong> · Source: US Census Bureau ACS 2022</div>'
+    + '<div class="summary-grid">'
+    + '<div class="summary-card"><div class="summary-num">' + tracts.length + '</div><div class="summary-label">Total LMI Tracts</div></div>'
+    + '<div class="summary-card"><div class="summary-num" style="color:#dc2626">' + low + '</div><div class="summary-label">Low Income (&lt;50% AMI)</div></div>'
+    + '<div class="summary-card"><div class="summary-num" style="color:#d97706">' + moderate + '</div><div class="summary-label">Moderate (50–80% AMI)</div></div>'
+    + '</div>'
+    + '<div class="tract-table-wrap"><table class="tract-table"><thead><tr><th>Census Tract</th><th>LMI Category</th><th>Tract Median Income</th><th>% of AMI</th><th>Tract ID</th></tr></thead><tbody>' + tractHTML + '</tbody></table></div>'
+    + '<div class="card"><div class="links-title">Verify Individual Properties</div><div class="links-row">'
+    + '<a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">📋 FFIEC Tract Lookup</a>'
+    + '<a class="link-btn hud" href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>'
+    + '</div></div>';
+  document.getElementById('rp-search-result').style.display = 'block';
+}
+
+function rpRenderFarmCard(zip, city, ami) {
+  var prices = calcFarmPrices(ami, rpFarmParams);
+  var lmiIncome = prices.lmiIncome, maxLow = prices.maxLow, maxMod = prices.maxMod;
+  document.getElementById('rp-farm-card-container').innerHTML =
+    '<div class="farm-card">'
+    + '<div class="farm-card-title">🌾 Farm This Area — ' + city + ', ' + zip + '</div>'
+    + '<div class="farm-card-sub">Pre-filtered listing links based on LMI income limits · AMI $' + ami.toLocaleString() + '</div>'
+    + '<div class="farm-stats">'
+    + '<div class="farm-stat"><div class="farm-stat-num" id="rp-fs-income">$' + lmiIncome.toLocaleString() + '</div><div class="farm-stat-label">LMI Income Threshold (' + rpFarmParams.amiPct + '% of AMI)</div></div>'
+    + '<div class="farm-stat"><div class="farm-stat-num" id="rp-fs-low">$' + maxLow.toLocaleString() + '</div><div class="farm-stat-label">Est. Max Price — Low Income (&lt;50% AMI)</div></div>'
+    + '<div class="farm-stat"><div class="farm-stat-num" id="rp-fs-mod">$' + maxMod.toLocaleString() + '</div><div class="farm-stat-label">Est. Max Price — Moderate Income (50–80% AMI)</div></div>'
+    + '</div>'
+    + '<div class="farm-links">'
+    + '<a class="farm-link farm-zillow" id="rp-fl-zillow-low" href="' + buildZillowUrl(zip, maxLow) + '" target="_blank">🏠 Zillow — Low Income (under $' + maxLow.toLocaleString() + ')</a>'
+    + '<a class="farm-link farm-zillow-mod" id="rp-fl-zillow-mod" href="' + buildZillowUrl(zip, maxMod) + '" target="_blank">🏠 Zillow — Moderate (under $' + maxMod.toLocaleString() + ')</a>'
+    + '<a class="farm-link farm-redfin" id="rp-fl-redfin" href="' + buildRedfinUrl(zip, maxLow) + '" target="_blank">🔴 Redfin — under $' + maxLow.toLocaleString() + '</a>'
+    + '<a class="farm-link farm-realtor-link" id="rp-fl-realtor" href="' + buildRealtorUrl(zip, maxLow) + '" target="_blank">🏡 Realtor.com — under $' + maxLow.toLocaleString() + '</a>'
+    + '</div>'
+    + '<div class="farm-adjustments">'
+    + '<div class="farm-adj-header"><div class="farm-adj-title">⚙️ Adjust Assumptions</div><button class="reset-btn" onclick="rpResetFarmParams()">↺ Reset to Defaults</button></div>'
+    + '<div class="adj-grid">'
+    + '<div class="adj-row"><div class="adj-label">Interest Rate</div><div class="adj-controls"><input type="range" class="adj-slider" id="rp-sl-rate" min="3" max="12" step="0.1" value="' + rpFarmParams.rate + '" oninput="rpSyncInput(\'rate\',this.value)"/><input type="text" class="adj-input" id="rp-in-rate" value="' + rpFarmParams.rate + '" onchange="rpSyncSlider(\'rate\',this.value)"/><span class="adj-unit">%</span></div></div>'
+    + '<div class="adj-row"><div class="adj-label">Front-End Ratio</div><div class="adj-controls"><input type="range" class="adj-slider" id="rp-sl-fe" min="20" max="45" step="1" value="' + rpFarmParams.frontEnd + '" oninput="rpSyncInput(\'frontEnd\',this.value)"/><input type="text" class="adj-input" id="rp-in-fe" value="' + rpFarmParams.frontEnd + '" onchange="rpSyncSlider(\'frontEnd\',this.value)"/><span class="adj-unit">%</span></div></div>'
+    + '<div class="adj-row"><div class="adj-label">LMI Threshold (% of AMI)</div><div class="adj-controls"><input type="range" class="adj-slider" id="rp-sl-ami" min="50" max="200" step="1" value="' + rpFarmParams.amiPct + '" oninput="rpSyncInput(\'amiPct\',this.value)"/><input type="text" class="adj-input" id="rp-in-ami" value="' + rpFarmParams.amiPct + '" onchange="rpSyncSlider(\'amiPct\',this.value)"/><span class="adj-unit">%</span></div></div>'
+    + '<div class="adj-row"><div class="adj-label">Loan Term</div><div class="adj-controls"><select class="adj-select" id="rp-sel-term" onchange="rpSyncTerm(this.value)"><option value="15" ' + (rpFarmParams.term===15?'selected':'') + '>15 Years</option><option value="20" ' + (rpFarmParams.term===20?'selected':'') + '>20 Years</option><option value="30" ' + (rpFarmParams.term===30?'selected':'') + '>30 Years</option></select></div></div>'
+    + '</div></div>'
+    + '<div class="farm-note" id="rp-farm-note">⚠️ Price estimates use ' + rpFarmParams.frontEnd + '% front-end ratio at ' + rpFarmParams.rate + '% rate, ' + rpFarmParams.term + '-year fixed. Actual qualifying prices will vary by borrower.</div>'
+    + '</div>';
+}
+
+function rpUpdateFarmStats() {
+  if (!rpCurrentAmi) return;
+  var prices = calcFarmPrices(rpCurrentAmi, rpFarmParams);
+  var lmiIncome = prices.lmiIncome, maxLow = prices.maxLow, maxMod = prices.maxMod;
+  var setEl = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('rp-fs-income', '$' + lmiIncome.toLocaleString());
+  setEl('rp-fs-low',    '$' + maxLow.toLocaleString());
+  setEl('rp-fs-mod',    '$' + maxMod.toLocaleString());
+  var flzl = document.getElementById('rp-fl-zillow-low');
+  var flzm = document.getElementById('rp-fl-zillow-mod');
+  var flrf = document.getElementById('rp-fl-redfin');
+  var flrt = document.getElementById('rp-fl-realtor');
+  if (flzl) { flzl.href = buildZillowUrl(rpCurrentZip, maxLow);  flzl.textContent = '🏠 Zillow — Low Income (under $' + maxLow.toLocaleString() + ')'; }
+  if (flzm) { flzm.href = buildZillowUrl(rpCurrentZip, maxMod);  flzm.textContent = '🏠 Zillow — Moderate (under $' + maxMod.toLocaleString() + ')'; }
+  if (flrf) { flrf.href = buildRedfinUrl(rpCurrentZip, maxLow);  flrf.textContent = '🔴 Redfin — under $' + maxLow.toLocaleString(); }
+  if (flrt) { flrt.href = buildRealtorUrl(rpCurrentZip, maxLow); flrt.textContent = '🏡 Realtor.com — under $' + maxLow.toLocaleString(); }
+  var note = document.getElementById('rp-farm-note');
+  if (note) note.textContent = '⚠️ Price estimates use ' + rpFarmParams.frontEnd + '% front-end ratio at ' + rpFarmParams.rate + '% rate, ' + rpFarmParams.term + '-year fixed. Actual qualifying prices will vary by borrower.';
+}
+
+function rpSyncInput(param, val) {
+  rpFarmParams[param] = parseFloat(val);
+  var map = { rate:'rp-in-rate', frontEnd:'rp-in-fe', amiPct:'rp-in-ami' };
+  if (map[param]) document.getElementById(map[param]).value = parseFloat(val).toFixed(param === 'rate' ? 1 : 0);
+  rpUpdateFarmStats();
+}
+
+function rpSyncSlider(param, val) {
+  var parsed = parseFloat(val);
+  if (isNaN(parsed)) return;
+  var mins = { rate:3, frontEnd:20, amiPct:50 };
+  var maxs = { rate:12, frontEnd:45, amiPct:200 };
+  var clamped = Math.min(maxs[param], Math.max(mins[param], parsed));
+  rpFarmParams[param] = clamped;
+  var sm = { rate:'rp-sl-rate', frontEnd:'rp-sl-fe', amiPct:'rp-sl-ami' };
+  var im = { rate:'rp-in-rate',  frontEnd:'rp-in-fe',  amiPct:'rp-in-ami' };
+  if (sm[param]) document.getElementById(sm[param]).value = clamped;
+  if (im[param]) document.getElementById(im[param]).value = clamped.toFixed(param === 'rate' ? 1 : 0);
+  rpUpdateFarmStats();
+}
+
+function rpSyncTerm(val) { rpFarmParams.term = parseInt(val); rpUpdateFarmStats(); }
+
+function rpResetFarmParams() {
+  rpFarmParams = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
+  var setVal = function(id, v) { var el = document.getElementById(id); if (el) el.value = v; };
+  setVal('rp-sl-rate', rpFarmParams.rate); setVal('rp-in-rate', rpFarmParams.rate.toFixed(1));
+  setVal('rp-sl-fe', rpFarmParams.frontEnd); setVal('rp-in-fe', rpFarmParams.frontEnd);
+  setVal('rp-sl-ami', rpFarmParams.amiPct); setVal('rp-in-ami', rpFarmParams.amiPct);
+  setVal('rp-sel-term', rpFarmParams.term);
+  rpUpdateFarmStats();
+  showToast('↺ Reset to default assumptions');
 }
 
 async function rpSaveSearch() {
@@ -5664,7 +5811,6 @@ function toggleRealtorLinkField() {
   if (!field) return;
   field.style.display = role === 'realtor' ? '' : 'none';
   if (role === 'realtor') {
-    // Populate realtor dropdown from cachedRealtors (admin is in admin screen, so need to fetch)
     var sel = document.getElementById('new-realtor-docid');
     sel.innerHTML = '<option value="">— select realtor record —</option>';
     if (typeof cachedRealtors !== 'undefined' && cachedRealtors.length) {
@@ -5683,6 +5829,197 @@ function toggleRealtorLinkField() {
         });
       });
     }
+  }
+}
+
+// ── SEND TO REALTOR ───────────────────────────────────────────
+function openSendToRealtorModal() {
+  if (!currentQualData) { showToast('⚠️ Calculate a borrower first'); return; }
+  var sel = document.getElementById('str-realtor-select');
+  var realtorsWithEmail = cachedRealtors.filter(function(r) { return r.email; });
+  sel.innerHTML = '<option value="">— select realtor —</option>'
+    + realtorsWithEmail.map(function(r) {
+        return '<option value="' + r.docId + '">' + r.name + ' (' + r.email + ')</option>';
+      }).join('');
+  if (!realtorsWithEmail.length) sel.innerHTML = '<option value="">No realtors with email addresses</option>';
+  // Preview
+  var d = currentQualData;
+  var preview = document.getElementById('str-preview');
+  preview.style.display = 'block';
+  preview.innerHTML = '<strong>' + (d.borrowerName || 'Unnamed Borrower') + '</strong><br>'
+    + '💰 Income: $' + d.income.toLocaleString() + ' (' + d.pctAmi + '% of AMI)<br>'
+    + '🏷 Category: <span style="font-weight:700;color:' + d.cat.color + '">' + d.cat.label + '</span><br>'
+    + '🏠 Est. Max Price: <strong>$' + d.maxPrice.toLocaleString() + '</strong><br>'
+    + '📍 ZIP: ' + (d.zip || '—') + (d.city ? ' · ' + d.city : '');
+  document.getElementById('str-notes').value = '';
+  document.getElementById('str-error').style.display = 'none';
+  document.getElementById('str-send-btn').textContent = '📤 Send Profile';
+  document.getElementById('str-send-btn').disabled = false;
+  document.getElementById('send-realtor-modal').classList.add('open');
+}
+
+function closeSendToRealtorModal() {
+  document.getElementById('send-realtor-modal').classList.remove('open');
+}
+
+async function doSendToRealtor() {
+  var sel = document.getElementById('str-realtor-select');
+  var docId = sel.value;
+  var errEl = document.getElementById('str-error');
+  errEl.style.display = 'none';
+  if (!docId) { errEl.textContent = 'Please select a realtor.'; errEl.style.display = 'block'; return; }
+  var r = cachedRealtors.find(function(r) { return r.docId === docId; });
+  if (!r) { errEl.textContent = 'Realtor not found.'; errEl.style.display = 'block'; return; }
+  var d = currentQualData;
+  var notes = document.getElementById('str-notes').value.trim();
+  var btn = document.getElementById('str-send-btn');
+  btn.textContent = '⏳ Sending...'; btn.disabled = true;
+
+  // Look up if this realtor has a portal account
+  var realtorUserId = '';
+  try {
+    var uSnap = await db.collection('users').where('realtorDocId', '==', docId).where('role', '==', 'realtor').limit(1).get();
+    if (!uSnap.empty) realtorUserId = uSnap.docs[0].id;
+  } catch(e) {}
+
+  var pushData = {
+    realtorDocId: docId,
+    realtorName: r.name || '',
+    realtorEmail: r.email || '',
+    realtorUserId: realtorUserId,
+    mloId: currentUser.id,
+    mloName: currentUser.name || '',
+    borrowerName: d.borrowerName || 'Unnamed Borrower',
+    borrowerIncome: d.income,
+    borrowerCategory: d.cat.label,
+    borrowerPctAmi: d.pctAmi,
+    borrowerMaxPrice: d.maxPrice,
+    zip: d.zip || '',
+    city: d.city || '',
+    mloNotes: notes,
+    zillowUrl: buildZillowUrl(d.zip, d.maxPrice),
+    redfinUrl: buildRedfinUrl(d.zip, d.maxPrice),
+    realtorUrl: buildRealtorUrl(d.zip, d.maxPrice),
+    sentAt: new Date().toISOString(),
+    viewed: false
+  };
+
+  try {
+    await db.collection('realtor_pushes').add(pushData);
+  } catch(e) {
+    btn.textContent = '📤 Send Profile'; btn.disabled = false;
+    errEl.textContent = 'Failed to save. Please try again.'; errEl.style.display = 'block'; return;
+  }
+
+  // Email the realtor
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_name: r.name,
+      to_email: r.email,
+      subject: 'New Buyer Profile from ' + (currentUser.name || 'Your MLO'),
+      message: 'Hi ' + r.name + ',\n\nYour MLO partner ' + (currentUser.name||'') + ' has sent you a new buyer profile.\n\n'
+        + 'Buyer: ' + (d.borrowerName || 'Unnamed') + '\n'
+        + 'Income: $' + d.income.toLocaleString() + ' (' + d.pctAmi + '% of AMI)\n'
+        + 'Category: ' + d.cat.label + '\n'
+        + 'Est. Max Home Price: $' + d.maxPrice.toLocaleString() + '\n'
+        + 'ZIP / City: ' + (d.zip||'') + (d.city ? ' · ' + d.city : '') + '\n\n'
+        + 'Listing Links:\n'
+        + '🏠 Zillow: ' + buildZillowUrl(d.zip, d.maxPrice) + '\n'
+        + '🔴 Redfin: ' + buildRedfinUrl(d.zip, d.maxPrice) + '\n'
+        + '🏡 Realtor.com: ' + buildRealtorUrl(d.zip, d.maxPrice) + '\n\n'
+        + (notes ? 'MLO Notes: ' + notes + '\n\n' : '')
+        + 'Log in to your Realtor Portal to view full details.'
+    });
+  } catch(e) { /* email failed, but Firebase write succeeded — that's OK */ }
+
+  btn.textContent = '📤 Send Profile'; btn.disabled = false;
+  closeSendToRealtorModal();
+  showToast('✅ Borrower profile sent to ' + r.name + '!');
+}
+
+// ── REALTOR PORTAL — BUYER PROFILES ──────────────────────────
+async function loadRealtorPushes() {
+  realtorPushes = [];
+  if (!db || !currentUser.realtorDocId) return;
+  try {
+    var snap = await db.collection('realtor_pushes')
+      .where('realtorDocId', '==', currentUser.realtorDocId)
+      .orderBy('sentAt', 'desc').limit(30).get();
+    snap.forEach(function(d) { realtorPushes.push(Object.assign({ id: d.id }, d.data())); });
+  } catch(e) {}
+}
+
+function renderRPBuyerProfiles() {
+  var section = document.getElementById('rp-buyer-profiles-section');
+  var list    = document.getElementById('rp-buyer-profiles-list');
+  var title   = document.getElementById('rp-buyer-profiles-title');
+  if (!section || !list) return;
+  if (!realtorPushes.length) { section.style.display = 'none'; return; }
+  var mloLabel = realtorPortalMlo ? realtorPortalMlo.name : 'Your MLO';
+  if (title) title.textContent = '📬 Buyer Profiles from ' + mloLabel;
+  section.style.display = 'block';
+  var catColors = { 'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#059669','Upper Income':'#6b7280' };
+  var catBg     = { 'Low Income':'#fef2f2','Moderate Income':'#fffbeb','Middle Income':'#f0fdf4','Upper Income':'#f8fafc' };
+  list.innerHTML = realtorPushes.map(function(p) {
+    var newBadge = !p.viewed ? '<span class="rp-badge rp-badge-teal" style="vertical-align:middle">New</span> ' : '';
+    var cat = p.borrowerCategory || '';
+    var catBadgeHtml = cat
+      ? '<span class="rp-badge" style="background:' + (catBg[cat]||'#f1f5f9') + ';color:' + (catColors[cat]||'#64748b') + '">' + cat + '</span>'
+      : '';
+    var dateStr = p.sentAt ? new Date(p.sentAt).toLocaleDateString() : '—';
+    return '<div class="rp-search-card" id="rp-push-' + p.id + '">'
+      + '<div class="rp-search-card-top" onclick="rpTogglePush(\'' + p.id + '\')" style="cursor:pointer">'
+      + '<div>'
+      + '<div class="rp-search-buyer">' + newBadge + (p.borrowerName || 'Unnamed Buyer') + '</div>'
+      + '<div class="rp-search-meta">' + dateStr + ' · $' + (p.borrowerMaxPrice||0).toLocaleString() + ' max · ZIP ' + (p.zip||'—') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + catBadgeHtml + '<span style="font-size:18px;color:#94a3b8">›</span></div>'
+      + '</div>'
+      + '<div id="rp-push-detail-' + p.id + '" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9">'
+      + '<div style="font-size:13px;color:#374151;line-height:1.8;margin-bottom:10px">'
+      + '💰 Income: $' + (p.borrowerIncome||0).toLocaleString() + ' (' + (p.borrowerPctAmi||0) + '% of AMI)<br>'
+      + '🏠 Est. Max Price: <strong>$' + (p.borrowerMaxPrice||0).toLocaleString() + '</strong><br>'
+      + '📍 ' + (p.zip||'') + (p.city ? ' · ' + p.city : '')
+      + (p.mloNotes ? '<br>💬 <em>' + p.mloNotes + '</em>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+      + (p.zillowUrl ? '<a href="' + p.zillowUrl + '" target="_blank" style="background:#006aff;color:white;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;text-decoration:none">🏠 Zillow</a>' : '')
+      + (p.redfinUrl ? '<a href="' + p.redfinUrl + '" target="_blank" style="background:#cc0000;color:white;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;text-decoration:none">🔴 Redfin</a>' : '')
+      + (p.realtorUrl ? '<a href="' + p.realtorUrl + '" target="_blank" style="background:#c0392b;color:white;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;text-decoration:none">🏡 Realtor.com</a>' : '')
+      + '</div>'
+      + (!p.viewed ? '<button onclick="rpMarkPushViewed(\'' + p.id + '\')" style="background:#f1f5f9;color:#64748b;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">✓ Mark as Reviewed</button>' : '<span style="font-size:12px;color:#94a3b8">✓ Reviewed</span>')
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function rpTogglePush(id) {
+  var det = document.getElementById('rp-push-detail-' + id);
+  if (!det) return;
+  var isHidden = det.style.display === 'none';
+  det.style.display = isHidden ? 'block' : 'none';
+  // Mark viewed when first opened
+  if (isHidden) {
+    var p = realtorPushes.find(function(x) { return x.id === id; });
+    if (p && !p.viewed) rpMarkPushViewed(id);
+  }
+}
+
+function rpMarkPushViewed(id) {
+  var p = realtorPushes.find(function(x) { return x.id === id; });
+  if (!p || p.viewed) return;
+  p.viewed = true;
+  try { db.collection('realtor_pushes').doc(id).update({ viewed: true }); } catch(e) {}
+  // Remove "New" badge from this card
+  var card = document.getElementById('rp-push-' + id);
+  if (card) {
+    var buyerDiv = card.querySelector('.rp-search-buyer');
+    if (buyerDiv) {
+      var badge = buyerDiv.querySelector('.rp-badge-teal');
+      if (badge) badge.remove();
+    }
+    var btn = card.querySelector('button[onclick*="rpMarkPushViewed"]');
+    if (btn) btn.outerHTML = '<span style="font-size:12px;color:#94a3b8">✓ Reviewed</span>';
   }
 }
 </script>
