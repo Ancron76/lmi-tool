@@ -548,6 +548,23 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 
 .toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
 
+/* TOS MODAL */
+.tos-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.tos-overlay.open { display: flex; }
+.tos-box { background: white; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 80px rgba(0,0,0,0.4); overflow: hidden; }
+.tos-header { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 24px 32px; text-align: center; flex-shrink: 0; }
+.tos-logo { display: flex; justify-content: center; margin-bottom: 12px; }
+.tos-title { color: white; font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+.tos-subtitle { color: rgba(255,255,255,0.6); font-size: 12px; }
+.tos-scroll-area { flex: 1; overflow-y: auto; padding: 28px 32px; min-height: 400px; }
+.tos-text { font-size: 13px; color: #374151; line-height: 1.7; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
+.tos-footer { flex-shrink: 0; padding: 20px 32px; border-top: 1px solid #f1f5f9; background: white; }
+.tos-scroll-hint { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 12px; transition: opacity 0.3s; }
+.tos-scroll-hint.hidden { opacity: 0; pointer-events: none; }
+.tos-agree-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: not-allowed; background: #e2e8f0; color: #94a3b8; transition: all 0.3s; }
+.tos-agree-btn.enabled { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; cursor: pointer; }
+.tos-agree-btn.enabled:hover { opacity: 0.9; }
+
 @media (max-width: 768px) {
   .dash-stats-grid { grid-template-columns: repeat(3, 1fr); }
   .dash-two-col { grid-template-columns: 1fr; }
@@ -750,6 +767,96 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <div class="invite-success-title">Account Created!</div>
       <div class="invite-success-sub">Your password has been set. You're ready to start prospecting.</div>
       <button class="invite-success-btn" onclick="closeInviteAndLogin()">Go to LMI Prospect Finder →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOS MODAL -->
+<div class="tos-overlay" id="tos-modal">
+  <div class="tos-box">
+    <div class="tos-header">
+      <div class="tos-logo">
+        <svg width="48" height="48" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <rect width="180" height="180" rx="40" fill="#0ed2c8"/>
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+        </svg>
+      </div>
+      <div class="tos-title">Terms of Service &amp; End User License Agreement</div>
+      <div class="tos-subtitle">LMI Prospect Finder · Please read and accept to continue</div>
+    </div>
+    <div class="tos-scroll-area" id="tos-scroll-area">
+      <div class="tos-text">LMI PROSPECT FINDER — TERMS OF SERVICE &amp; END USER LICENSE AGREEMENT
+
+Last Updated: April 10, 2026
+
+PLEASE READ THESE TERMS CAREFULLY BEFORE USING THIS APPLICATION. BY CLICKING "I AGREE" OR ACCESSING THIS APPLICATION, YOU AGREE TO BE BOUND BY THESE TERMS.
+
+1. ACCEPTANCE OF TERMS
+These Terms of Service constitute a legally binding agreement between you ("User") and Aaron Simonson ("Owner") governing your use of the LMI Prospect Finder application ("Application"). If you do not agree to these Terms, you may not access or use the Application.
+
+2. INTELLECTUAL PROPERTY OWNERSHIP
+2.1 The Application, including but not limited to its source code, design, user interface, features, functionality, data structures, workflows, algorithms, marketing materials, and all content contained therein, is the exclusive intellectual property of Aaron Simonson.
+2.2 The name "LMI Prospect Finder," "LMI Tool," "lmitool.com," and all associated logos, branding, and trade dress are the exclusive property of Aaron Simonson.
+2.3 All rights, title, and interest in and to the Application not expressly granted in these Terms are reserved by the Owner.
+2.4 Nothing in these Terms shall be construed as transferring any intellectual property rights to any User.
+
+3. LICENSE GRANT AND RESTRICTIONS
+3.1 Subject to these Terms, Owner grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Application solely for your authorized internal business purposes as an employee or contractor of Golden 1 Credit Union.
+3.2 You may NOT:
+- Copy, reproduce, distribute, or create derivative works of the Application
+- Reverse engineer, decompile, or disassemble any part of the Application
+- Sell, sublicense, rent, lease, or transfer the Application or your access to it
+- Use the Application for any purpose outside your authorized role
+- Share your login credentials with any unauthorized person
+- Remove or alter any proprietary notices or labels on the Application
+- Use the Application to develop a competing product or service
+- Disclose the Application's features, design, or functionality to any third party without written consent from the Owner
+
+4. CONFIDENTIALITY
+4.1 The Application and all information related to its design, functionality, and operation constitute confidential and proprietary information of the Owner.
+4.2 You agree to maintain the confidentiality of the Application and not to disclose any information about it to any third party without the prior written consent of the Owner.
+
+5. DATA AND PRIVACY
+5.1 Data entered into the Application, including borrower information, realtor contacts, and CRA activity logs, remains the property of the entering User and Golden 1 Credit Union.
+5.2 The Owner does not sell, rent, or share user data with third parties except as required by law.
+5.3 Users are responsible for ensuring that any borrower or client data entered into the Application complies with applicable privacy laws including but not limited to GLBA, CCPA, and applicable CFPB regulations.
+
+6. PROHIBITED USES
+You agree not to use the Application:
+- In any way that violates applicable federal, state, or local law
+- To transmit any unauthorized advertising or promotional material
+- To impersonate any person or entity
+- To engage in any conduct that restricts or inhibits anyone's use of the Application
+- In any manner that could disable, overburden, or impair the Application
+
+7. TERMINATION
+7.1 The Owner reserves the right to terminate or suspend your access to the Application immediately, without prior notice, for any violation of these Terms.
+7.2 Upon termination, your right to use the Application ceases immediately.
+7.3 All provisions of these Terms that by their nature should survive termination shall survive, including intellectual property provisions, disclaimers, and limitations of liability.
+
+8. DISCLAIMER OF WARRANTIES
+THE APPLICATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. THE OWNER EXPRESSLY DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+9. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE OWNER SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATED TO YOUR USE OF THE APPLICATION.
+
+10. GOVERNING LAW
+These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in Sacramento County, California.
+
+11. ENTIRE AGREEMENT
+These Terms constitute the entire agreement between you and the Owner regarding the Application and supersede all prior agreements and understandings.
+
+12. AMENDMENTS
+The Owner reserves the right to modify these Terms at any time. Users will be notified of material changes and continued use of the Application constitutes acceptance of the modified Terms.
+
+13. CONTACT
+For questions regarding these Terms, contact:
+Aaron Simonson
+asimonson@golden1.com</div>
+    </div>
+    <div class="tos-footer">
+      <div class="tos-scroll-hint" id="tos-scroll-hint">↓ Scroll to bottom to enable agreement</div>
+      <button class="tos-agree-btn" id="tos-agree-btn" disabled onclick="acceptTOS()">I Agree</button>
     </div>
   </div>
 </div>
@@ -1732,7 +1839,7 @@ async function tryLogin() {
     if (user.role === 'admin') allTeamActivities = await fetchAllActivities();
     setDefaultDate();
     loadProfileToSettings();
-    showTab('home');
+    if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -1786,7 +1893,7 @@ window.onload = async function() {
     if (currentUser.role === 'admin') allTeamActivities = await fetchAllActivities();
     setDefaultDate();
     loadProfileToSettings();
-    showTab('home');
+    if (currentUser.tosAccepted) { showTab('home'); } else { showTOSModal(); }
   }
 };
 
@@ -1835,6 +1942,44 @@ document.addEventListener('click', function() {
   closeHamburger();
   closeAdminHamburger();
 });
+
+// ── TERMS OF SERVICE ──────────────────────────────────────────
+function showTOSModal() {
+  document.getElementById('tos-modal').classList.add('open');
+  // Set up scroll listener
+  var area = document.getElementById('tos-scroll-area');
+  area.scrollTop = 0;
+  area.addEventListener('scroll', onTOSScroll);
+}
+
+function onTOSScroll() {
+  var area = document.getElementById('tos-scroll-area');
+  var btn  = document.getElementById('tos-agree-btn');
+  var hint = document.getElementById('tos-scroll-hint');
+  // Consider "at bottom" when within 40px of the bottom
+  var atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 40;
+  if (atBottom) {
+    btn.disabled = false;
+    btn.classList.add('enabled');
+    hint.classList.add('hidden');
+    area.removeEventListener('scroll', onTOSScroll);
+  }
+}
+
+async function acceptTOS() {
+  if (!currentUser || !db) return;
+  var btn = document.getElementById('tos-agree-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    var tosData = { tosAccepted: true, tosAcceptedAt: new Date().toISOString(), tosVersion: '1.0' };
+    await db.collection('users').doc(currentUser.id).update(tosData);
+    Object.assign(currentUser, tosData);
+    sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
+  } catch(e) { console.error('TOS save error', e); }
+  document.getElementById('tos-modal').classList.remove('open');
+  showTab('home');
+}
 
 // ── OYZ ───────────────────────────────────────────────────────
 var cachedOYZ = [];
