@@ -2440,7 +2440,7 @@ async function tryLogin() {
     sessionStorage.setItem('g1_session', JSON.stringify(user));
     document.getElementById('login-screen').style.display = 'none';
     if (user.role === 'realtor') {
-      await showRealtorPortal();
+      if (user.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
     document.getElementById('app-screen').style.display = 'block';
@@ -2504,7 +2504,7 @@ window.onload = async function() {
     currentUser = cachedUsers.find(function(u) { return u.id === saved.id; }) || saved;
     document.getElementById('login-screen').style.display = 'none';
     if (currentUser.role === 'realtor') {
-      await showRealtorPortal();
+      if (currentUser.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
     document.getElementById('app-screen').style.display = 'block';
@@ -2606,7 +2606,7 @@ async function acceptTOS() {
     sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
   } catch(e) { console.error('TOS save error', e); }
   document.getElementById('tos-modal').classList.remove('open');
-  showTab('home');
+  if (currentUser && currentUser.role === 'realtor') { showRealtorPortal(); } else { showTab('home'); }
 }
 
 // ── OYZ ───────────────────────────────────────────────────────
