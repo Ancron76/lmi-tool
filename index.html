@@ -856,11 +856,6 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .rportal-icon { width: 38px; height: 38px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .rportal-title { color: white; font-size: 16px; font-weight: 800; }
 .rportal-subtitle { color: rgba(255,255,255,0.7); font-size: 11px; }
-.rportal-tab-bar { background: white; display: flex; overflow-x: auto; border-bottom: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; scrollbar-width: none; position: sticky; top: 0; z-index: 10; }
-.rportal-tab-bar::-webkit-scrollbar { display: none; }
-.rportal-tab-btn { flex: 0 0 auto; padding: 14px 18px; font-size: 13px; font-weight: 600; color: #64748b; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
-.rportal-tab-btn.active { color: #0d9488; border-bottom-color: #0d9488; }
-.rportal-tab-btn:hover { color: #1f2937; background: #f8fafc; }
 .rportal-content { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
 .rp-welcome-card { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); border-radius: 16px; padding: 24px; color: white; margin-bottom: 20px; }
 .rp-welcome-greeting { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
@@ -1798,15 +1793,18 @@ admin@lmitool.com</div>
     </div>
     <div style="display:flex;gap:10px;align-items:center">
       <span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600" id="rportal-user-name"></span>
-      <button style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600" onclick="logout()">Sign Out</button>
+      <div class="hamburger-menu" id="rp-hamburger-menu">
+        <button class="hamburger-btn" onclick="toggleRPHamburger(event)">☰ Menu</button>
+        <div class="hamburger-dropdown" id="rp-hamburger-dropdown">
+          <button class="hamburger-item" onclick="rpShowTab('home');closeRPHamburger()">🏠 Home</button>
+          <button class="hamburger-item" onclick="rpShowTab('search');closeRPHamburger()">🔍 LMI Search</button>
+          <button class="hamburger-item" onclick="rpShowTab('searches');closeRPHamburger()">📊 My Searches</button>
+          <button class="hamburger-item" onclick="rpShowTab('resources');closeRPHamburger()">📄 Resources</button>
+          <button class="hamburger-item" onclick="rpShowTab('openhouses');closeRPHamburger()">📅 Open Houses</button>
+          <button class="hamburger-item" onclick="logout()">🚪 Sign Out</button>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="rportal-tab-bar">
-    <button class="rportal-tab-btn active" id="rptab-home" onclick="rpShowTab('home')">🏠 Home</button>
-    <button class="rportal-tab-btn" id="rptab-search" onclick="rpShowTab('search')">🔍 LMI Search</button>
-    <button class="rportal-tab-btn" id="rptab-searches" onclick="rpShowTab('searches')">📊 My Searches</button>
-    <button class="rportal-tab-btn" id="rptab-resources" onclick="rpShowTab('resources')">📄 Resources</button>
-    <button class="rportal-tab-btn" id="rptab-openhouses" onclick="rpShowTab('openhouses')">📅 Open Houses</button>
   </div>
   <!-- Home Tab -->
   <div id="rp-tab-home" class="rportal-content">
@@ -2591,6 +2589,14 @@ function closeAdminHamburger() {
   var d = document.getElementById('admin-hamburger-dropdown');
   if (d) d.classList.remove('open');
 }
+function toggleRPHamburger(e) {
+  e.stopPropagation();
+  document.getElementById('rp-hamburger-dropdown').classList.toggle('open');
+}
+function closeRPHamburger() {
+  var d = document.getElementById('rp-hamburger-dropdown');
+  if (d) d.classList.remove('open');
+}
 function navigateToTab(tab) {
   closeAdminHamburger();
   goApp();
@@ -2599,6 +2605,7 @@ function navigateToTab(tab) {
 document.addEventListener('click', function() {
   closeHamburger();
   closeAdminHamburger();
+  closeRPHamburger();
 });
 
 // ── TERMS OF SERVICE ──────────────────────────────────────────
