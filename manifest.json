@@ -1,0 +1,22 @@
+{
+  "name": "LMI Prospect Finder",
+  "short_name": "LMI Tool",
+  "description": "CRA/HMDA Mortgage Prospecting Tool",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#0ed2c8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231f2937'/%3E%3Cpath d='M96 26C68 26 44 50 44 78c0 40 52 98 52 98s52-58 52-98c0-28-24-52-52-52zm0 70a24 24 0 1 1 0-48 24 24 0 0 1 0 48z' fill='%230ed2c8'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%231f2937'/%3E%3Cpath d='M256 70C184 70 118 136 118 208c0 108 138 264 138 264s138-156 138-264c0-72-62-138-138-138zm0 186a66 66 0 1 1 0-132 66 66 0 0 1 0 132z' fill='%230ed2c8'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
