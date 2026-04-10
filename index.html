@@ -2530,6 +2530,7 @@ function logout() {
   currentUser = null;
   cachedProspects = []; cachedActivities = []; cachedRealtors = []; allTeamActivities = [];
   realtorPortalMlo = null; realtorSearches = []; realtorPrequals = []; realtorPushes = []; currentQualData = null;
+  restoreMloBottomNav();
   editingProspectDocId = null;
   sessionStorage.removeItem('g1_session');
   document.getElementById('app-screen').style.display = 'none';
@@ -5448,14 +5449,18 @@ async function showRealtorPortal() {
   document.getElementById('realtor-portal-screen').style.display = 'block';
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'none';
+  setRealtorBottomNav();
 
   var nameEl = document.getElementById('rportal-user-name');
   if (nameEl) nameEl.textContent = currentUser.name || '';
 
   var hr = new Date().getHours();
   var greeting = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening');
+  var rawName = currentUser.name ? currentUser.name.split(' ')[0] : '';
+  // Guard: don't show role words as a name
+  var greetName = (rawName && rawName.toLowerCase() !== 'realtor' && rawName.toLowerCase() !== 'user') ? rawName : (currentUser.email ? currentUser.email.split('@')[0] : 'there');
   var greetEl = document.getElementById('rp-welcome-greeting');
-  if (greetEl) greetEl.textContent = greeting + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋';
+  if (greetEl) greetEl.textContent = greeting + ', ' + greetName + '! 👋';
 
   // Load linked MLO
   realtorPortalMlo = null;
@@ -5495,6 +5500,7 @@ function rpShowTab(tab) {
     var btn = document.getElementById('rptab-' + t);
     if (btn) btn.classList.toggle('active', t === tab);
   });
+  updateBottomNav('rp-' + tab);
   if (tab === 'home') renderRPHome();
   if (tab === 'searches') renderRPSearches();
   if (tab === 'openhouses') renderRPOpenHouses();
@@ -5504,7 +5510,8 @@ function renderRPHome() {
   // Greeting (set here so it's always correct when tab is re-visited)
   var hr = new Date().getHours();
   var greetWord = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-  var firstName = (currentUser && currentUser.name) ? currentUser.name.split(' ')[0] : 'there';
+  var rawFirst = (currentUser && currentUser.name) ? currentUser.name.split(' ')[0] : '';
+  var firstName = (rawFirst && rawFirst.toLowerCase() !== 'realtor' && rawFirst.toLowerCase() !== 'user') ? rawFirst : (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'there');
   var greetEl = document.getElementById('rp-welcome-greeting');
   if (greetEl) greetEl.textContent = greetWord + ', ' + firstName + '! 👋';
 
@@ -6078,19 +6085,55 @@ async function doSendToRealtor() {
   btn.textContent = '⏳ Sending...'; btn.disabled = true;
 
   // Look up the realtor's portal user account.
-  // IMPORTANT: use a SINGLE where() clause — two where() clauses on different fields
-  // require a Firestore composite index which may not exist, causing silent failure.
+  // Strategy: check cachedUsers first (already loaded, no extra query needed),
+  // then fall back to Firestore queries using single-field filters only.
   var realtorUserId = '';
-  try {
-    var uSnap = await db.collection('users').where('realtorDocId', '==', docId).limit(1).get();
-    if (!uSnap.empty) {
-      realtorUserId = uSnap.docs[0].id;
-      console.log('[doSendToRealtor] Found realtor user account — realtorUserId:', realtorUserId);
-    } else {
-      console.warn('[doSendToRealtor] No user account found with realtorDocId:', docId, '— push will still be written, but realtorUserId will be empty');
+  var realtorUserAccount = null;
+
+  // 1. Match by realtorDocId in cachedUsers
+  realtorUserAccount = (cachedUsers || []).find(function(u) {
+    return u.role === 'realtor' && u.realtorDocId === docId;
+  });
+  if (realtorUserAccount) {
+    realtorUserId = realtorUserAccount.id;
+    console.log('[doSendToRealtor] Match via cachedUsers.realtorDocId — realtorUserId:', realtorUserId);
+  }
+
+  // 2. Match by name in cachedUsers (if realtorDocId not set on user account)
+  if (!realtorUserId) {
+    realtorUserAccount = (cachedUsers || []).find(function(u) {
+      return u.role === 'realtor' && u.name && u.name.toLowerCase() === (r.name || '').toLowerCase();
+    });
+    if (realtorUserAccount) {
+      realtorUserId = realtorUserAccount.id;
+      console.log('[doSendToRealtor] Match via cachedUsers.name — realtorUserId:', realtorUserId);
     }
-  } catch(e) {
-    console.error('[doSendToRealtor] User lookup error:', e);
+  }
+
+  // 3. Firestore fallback by realtorDocId (single-field, no composite index needed)
+  if (!realtorUserId) {
+    try {
+      var uSnap = await db.collection('users').where('realtorDocId', '==', docId).limit(1).get();
+      if (!uSnap.empty) {
+        realtorUserId = uSnap.docs[0].id;
+        console.log('[doSendToRealtor] Match via Firestore realtorDocId query — realtorUserId:', realtorUserId);
+      }
+    } catch(e) { console.error('[doSendToRealtor] Firestore realtorDocId query error:', e); }
+  }
+
+  // 4. Firestore fallback by name (single-field)
+  if (!realtorUserId) {
+    try {
+      var nSnap = await db.collection('users').where('name', '==', r.name || '').limit(5).get();
+      nSnap.forEach(function(ndoc) {
+        if (!realtorUserId && ndoc.data().role === 'realtor') realtorUserId = ndoc.id;
+      });
+      if (realtorUserId) console.log('[doSendToRealtor] Match via Firestore name query — realtorUserId:', realtorUserId);
+    } catch(e) { console.error('[doSendToRealtor] Firestore name query error:', e); }
+  }
+
+  if (!realtorUserId) {
+    console.warn('[doSendToRealtor] Could not find any user account for realtorDocId:', docId, 'name:', r.name, '— realtorUserId will be empty in push doc');
   }
 
   var pushData = {
@@ -6398,7 +6441,7 @@ function rpMarkPushViewed(id) {
     <span class="bn-icon">🏡</span>OYZ
   </button>
   <button class="bottom-nav-item" id="bn-realtors" onclick="showTab('realtors');updateBottomNav('realtors')">
-    <span class="bn-icon">🏠</span>Realtors
+    <span class="bn-icon">👥</span>Realtors
   </button>
   <button class="bottom-nav-item" id="bn-dashboard" onclick="showTab('dashboard');updateBottomNav('dashboard')">
     <span class="bn-icon">📊</span>Dashboard
@@ -6409,10 +6452,36 @@ function rpMarkPushViewed(id) {
 </nav>
 
 <script>
+var _mloBottomNavHTML = null; // stored so we can restore after realtor session
+
+function setRealtorBottomNav() {
+  var nav = document.getElementById('bottom-nav');
+  if (!nav) return;
+  if (!_mloBottomNavHTML) _mloBottomNavHTML = nav.innerHTML; // save MLO nav once
+  nav.innerHTML =
+    '<button class="bottom-nav-item active" id="rbn-home" onclick="rpShowTab(\'home\');updateBottomNav(\'rp-home\')">'
+    + '<span class="bn-icon">🏠</span>Home</button>'
+    + '<button class="bottom-nav-item" id="rbn-search" onclick="rpShowTab(\'search\');updateBottomNav(\'rp-search\')">'
+    + '<span class="bn-icon">🔍</span>LMI Search</button>'
+    + '<button class="bottom-nav-item" id="rbn-searches" onclick="rpShowTab(\'searches\');updateBottomNav(\'rp-searches\')">'
+    + '<span class="bn-icon">📊</span>My Searches</button>'
+    + '<button class="bottom-nav-item" id="rbn-openhouses" onclick="rpShowTab(\'openhouses\');updateBottomNav(\'rp-openhouses\')">'
+    + '<span class="bn-icon">📅</span>Open Houses</button>';
+}
+
+function restoreMloBottomNav() {
+  var nav = document.getElementById('bottom-nav');
+  if (nav && _mloBottomNavHTML) nav.innerHTML = _mloBottomNavHTML;
+}
+
 function updateBottomNav(tab) {
-  const map = { home:'bn-home', search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics' };
   document.querySelectorAll('.bottom-nav-item').forEach(function(el) { el.classList.remove('active'); });
-  if (map[tab]) { var el = document.getElementById(map[tab]); if (el) el.classList.add('active'); }
+  // Realtor portal tabs
+  var rpMap = { 'rp-home':'rbn-home', 'rp-search':'rbn-search', 'rp-searches':'rbn-searches', 'rp-openhouses':'rbn-openhouses' };
+  // MLO tabs
+  var mloMap = { home:'bn-home', search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics' };
+  var id = rpMap[tab] || mloMap[tab];
+  if (id) { var el = document.getElementById(id); if (el) el.classList.add('active'); }
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
