@@ -692,7 +692,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
   .bottom-nav-item.active { color: #0ed2c8; }
   /* Pad main content so bottom nav doesn't overlap */
   .main, .oyz-main, .dashboard-main, .marketing-main, .activity-main,
-  .admin-main, .home-main, .realtor-main { padding-bottom: 76px; }
+  .admin-main, .home-main, .realtors-main { padding-bottom: 76px; }
 }
 
 /* MOBILE POLISH */
@@ -776,6 +776,52 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .realtor-name-link { cursor: pointer; color: #4f46e5; text-decoration: underline; font-weight: 800; }
 .realtor-oyz-summary { font-size: 12px; color: #64748b; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
 .realtor-oyz-pill { background: #f5f3ff; color: #7c3aed; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 2px 8px; }
+
+/* NOTIFICATION BELL */
+.notif-bell-btn { position: relative; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 12px; font-size: 18px; cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.notif-bell-btn:hover { background: rgba(255,255,255,0.2); }
+.notif-badge { position: absolute; top: -6px; right: -6px; background: #dc2626; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; line-height: 1; }
+
+/* NOTIFICATION DRAWER */
+.notif-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 900; display: none; }
+.notif-overlay.open { display: block; }
+.notif-drawer { position: fixed; top: 0; right: -400px; width: 380px; max-width: 100vw; height: 100vh; background: #f0f4f8; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 901; transition: right 0.3s ease; display: flex; flex-direction: column; }
+.notif-drawer.open { right: 0; }
+.notif-drawer-header { background: linear-gradient(135deg, #1f2937, #374151); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.notif-drawer-title { color: white; font-size: 16px; font-weight: 700; }
+.notif-drawer-actions { display: flex; gap: 10px; align-items: center; }
+.notif-dismiss-all-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.notif-dismiss-all-btn:hover { background: rgba(255,255,255,0.25); }
+.notif-close-btn { background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 7px; padding: 6px 10px; font-size: 14px; cursor: pointer; }
+.notif-drawer-body { flex: 1; overflow-y: auto; padding: 16px; }
+.notif-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: #94a3b8; }
+.notif-empty-icon { font-size: 48px; margin-bottom: 12px; }
+.notif-empty-text { font-size: 15px; font-weight: 600; }
+.notif-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid #94a3b8; display: flex; gap: 12px; align-items: flex-start; }
+.notif-card.type-realtor { border-left-color: #d97706; }
+.notif-card.type-oyz-tomorrow { border-left-color: #0ed2c8; }
+.notif-card.type-followup { border-left-color: #7c3aed; }
+.notif-card.type-capture { border-left-color: #dc2626; }
+.notif-card.type-no-activity { border-left-color: #ca8a04; }
+.notif-card.type-weekly { border-left-color: #2563eb; }
+.notif-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.notif-content { flex: 1; min-width: 0; }
+.notif-title { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 3px; }
+.notif-msg { font-size: 12px; color: #64748b; line-height: 1.4; }
+.notif-time { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+.notif-dismiss-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; padding: 2px 4px; flex-shrink: 0; border-radius: 4px; }
+.notif-dismiss-btn:hover { background: #f1f5f9; color: #64748b; }
+
+/* NOTIFICATION PREF TOGGLES */
+.notif-pref-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+.notif-pref-row:last-child { border-bottom: none; }
+.notif-pref-label { font-size: 13px; color: #374151; font-weight: 500; }
+.notif-toggle { position: relative; width: 40px; height: 22px; cursor: pointer; display: inline-block; }
+.notif-toggle input { opacity: 0; width: 0; height: 0; }
+.notif-toggle-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #cbd5e1; border-radius: 22px; transition: background 0.2s; }
+.notif-toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
+.notif-toggle input:checked + .notif-toggle-slider { background: #0ed2c8; }
+.notif-toggle input:checked + .notif-toggle-slider:before { transform: translateX(18px); }
 </style>
 </head>
 <body>
@@ -973,6 +1019,7 @@ asimonson@golden1.com</div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
+      <button class="notif-bell-btn" id="notif-bell" onclick="openNotifications()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
       <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">🛡 Admin</span>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
     </div>
@@ -1530,6 +1577,42 @@ asimonson@golden1.com</div>
       </div>
     </div>
     <div class="settings-section"><div class="settings-section-title">🎨 Preferences</div><div class="settings-coming-soon">More customization options coming in future updates.</div></div>
+    <div class="settings-section">
+      <div class="settings-section-title">🔔 Notification Preferences</div>
+      <div class="settings-item">
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Realtor Inactivity Threshold</label>
+          <select class="settings-input" id="s-notif-threshold" style="font-size:16px">
+            <option value="7">7 days</option>
+            <option value="14">14 days</option>
+            <option value="21" selected>21 days</option>
+            <option value="30">30 days</option>
+          </select>
+        </div>
+        <div class="notif-pref-row"><span class="notif-pref-label">🏠 Realtor Inactive</span><label class="notif-toggle"><input type="checkbox" id="pref-realtor" checked /><span class="notif-toggle-slider"></span></label></div>
+        <div class="notif-pref-row"><span class="notif-pref-label">🏡 Open House Tomorrow</span><label class="notif-toggle"><input type="checkbox" id="pref-oyz-tomorrow" checked /><span class="notif-toggle-slider"></span></label></div>
+        <div class="notif-pref-row"><span class="notif-pref-label">📅 Follow-up Due</span><label class="notif-toggle"><input type="checkbox" id="pref-followup" checked /><span class="notif-toggle-slider"></span></label></div>
+        <div class="notif-pref-row"><span class="notif-pref-label">📉 Capture Rate Drop</span><label class="notif-toggle"><input type="checkbox" id="pref-capture" checked /><span class="notif-toggle-slider"></span></label></div>
+        <div class="notif-pref-row"><span class="notif-pref-label">⚠️ No Activity This Week</span><label class="notif-toggle"><input type="checkbox" id="pref-no-activity" checked /><span class="notif-toggle-slider"></span></label></div>
+        <div class="notif-pref-row"><span class="notif-pref-label">📊 Weekly Digest</span><label class="notif-toggle"><input type="checkbox" id="pref-weekly" checked /><span class="notif-toggle-slider"></span></label></div>
+        <div style="margin-top:14px"><button class="settings-save-btn" onclick="saveNotificationPrefs()">Save Preferences</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION DRAWER -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
+<div class="notif-drawer" id="notif-drawer">
+  <div class="notif-drawer-header">
+    <div class="notif-drawer-title">🔔 Notifications</div>
+    <div class="notif-drawer-actions">
+      <button class="notif-dismiss-all-btn" onclick="dismissAllNotifications()">Dismiss All</button>
+      <button class="notif-close-btn" onclick="closeNotifications()">✕</button>
+    </div>
+  </div>
+  <div class="notif-drawer-body" id="notif-drawer-body">
+    <div class="notif-empty"><div class="notif-empty-icon">✅</div><div class="notif-empty-text">You're all caught up! 🎉</div></div>
   </div>
 </div>
 
@@ -1875,6 +1958,7 @@ let currentUser = null, branchTargetId = null;
 let cachedUsers = [], cachedProspects = [], cachedActivities = [], cachedRealtors = [];
 let allTeamActivities = [];
 let cachedOyzEntries = [];
+let cachedNotifications = [];
 
 async function fetchOyzEntries(isAdmin) {
   try {
@@ -1913,6 +1997,7 @@ async function tryLogin() {
     cachedOYZ = cachedOyzEntries;
     setDefaultDate();
     loadProfileToSettings();
+    generateNotifications();
     if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
   } else {
     document.getElementById('login-error').style.display = 'block';
@@ -1969,6 +2054,7 @@ window.onload = async function() {
     cachedOYZ = cachedOyzEntries;
     setDefaultDate();
     loadProfileToSettings();
+    generateNotifications();
     if (currentUser.tosAccepted) { showTab('home'); } else { showTOSModal(); }
   }
 };
@@ -3646,6 +3732,7 @@ function openSettings() {
   document.getElementById('s-pw-error').style.display = 'none';
   document.getElementById('s-pw-success').style.display = 'none';
   loadProfileToSettings();
+  loadNotifPrefsToSettings();
   if (currentUser.role === 'admin') {
     document.getElementById('admin-reset-section').style.display = 'block';
     const select = document.getElementById('s-admin-user-select');
@@ -3963,6 +4050,241 @@ function resetFarmParams() {
   document.getElementById('sel-term').value = DEFAULTS.term;
   updateFarmStats();
   showToast('↺ Reset to default assumptions');
+}
+
+// ── SMART NOTIFICATIONS ──────────────────────────────────────────
+
+const NOTIF_DISMISSED_KEY = 'lmi_dismissed_notifs';
+const NOTIF_SENT_EMAILS_KEY = 'lmi_sent_notif_emails';
+
+function getDismissedIds() { try { return JSON.parse(localStorage.getItem(NOTIF_DISMISSED_KEY) || '[]'); } catch(e) { return []; } }
+function saveDismissedIds(ids) { localStorage.setItem(NOTIF_DISMISSED_KEY, JSON.stringify(ids)); }
+function getSentEmails() { try { return JSON.parse(localStorage.getItem(NOTIF_SENT_EMAILS_KEY) || '[]'); } catch(e) { return []; } }
+function saveSentEmails(arr) { localStorage.setItem(NOTIF_SENT_EMAILS_KEY, JSON.stringify(arr)); }
+
+function wasEmailSentToday(id) {
+  const today = new Date().toISOString().split('T')[0];
+  return getSentEmails().some(function(s) { return s.id === id && s.sentAt === today; });
+}
+function markEmailSent(id) {
+  const today = new Date().toISOString().split('T')[0];
+  const filtered = getSentEmails().filter(function(s) { return s.id !== id; });
+  filtered.push({ id: id, sentAt: today });
+  saveSentEmails(filtered);
+}
+
+function sendNotifEmail(notif) {
+  const emailId = 'email-' + notif.id;
+  if (wasEmailSentToday(emailId)) return;
+  const toEmail = (currentUser.profile && currentUser.profile.email) ? currentUser.profile.email : currentUser.email;
+  if (!toEmail) return;
+  emailjs.send('service_g1ghxq2', 'template_fksjm5e', {
+    to_email: toEmail, to_name: currentUser.name || 'Team Member',
+    subject: notif.title, realtor_name: '', property_address: notif.title,
+    open_house_date: '', notes: notif.message, next_connection: ''
+  }, 'uSiYFQtZ-GzxmJ53A').then(function() { markEmailSent(emailId); }).catch(function() {});
+}
+
+function getNotifPrefs() {
+  const p = (currentUser && currentUser.notificationPrefs) || {};
+  return {
+    threshold: parseInt(p.threshold || 21),
+    realtor: p.realtor !== false,
+    oyzTomorrow: p.oyzTomorrow !== false,
+    followup: p.followup !== false,
+    capture: p.capture !== false,
+    noActivity: p.noActivity !== false,
+    weekly: p.weekly !== false
+  };
+}
+
+function generateNotifications() {
+  const prefs = getNotifPrefs();
+  const dismissed = getDismissedIds();
+  const notifs = [];
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  function skip(id) { return dismissed.includes(id); }
+
+  // A. REALTOR INACTIVE
+  if (prefs.realtor) {
+    cachedRealtors.forEach(function(r) {
+      const rid = r.docId || r.id;
+      const id = 'realtor-inactive-' + rid;
+      if (skip(id)) return;
+      var dates = [];
+      cachedOyzEntries.forEach(function(e) {
+        if (e.realtorId === rid || e.realtorName === r.name) {
+          if (e.openHouseDate) dates.push(e.openHouseDate);
+          if (e.nextConnectionDate) dates.push(e.nextConnectionDate);
+        }
+      });
+      cachedActivities.forEach(function(a) {
+        if (a.realtorId === rid || a.realtorName === r.name) { if (a.date) dates.push(a.date); }
+      });
+      dates = dates.filter(Boolean).sort().reverse();
+      const lastDate = dates[0];
+      var msg;
+      if (!lastDate) {
+        msg = r.name + ' at ' + (r.brokerage || '—') + ' — no contact on record';
+      } else {
+        const diffDays = Math.floor((now - new Date(lastDate)) / 86400000);
+        if (diffDays < prefs.threshold) return;
+        msg = r.name + ' at ' + (r.brokerage || '—') + ' — last contact ' + diffDays + ' days ago';
+      }
+      notifs.push({ id: id, type: 'realtor', icon: '🏠', title: 'Realtor Check-in Due', message: msg, sendEmail: true, realtorId: rid, ts: now });
+    });
+  }
+
+  // B. OPEN HOUSE TOMORROW
+  if (prefs.oyzTomorrow) {
+    cachedOyzEntries.forEach(function(e) {
+      if (e.openHouseDate !== tomorrowStr) return;
+      const id = 'oyz-tomorrow-' + (e.docId || e.id);
+      if (skip(id)) return;
+      notifs.push({ id: id, type: 'oyz-tomorrow', icon: '🏡', title: 'Open House Tomorrow', message: (e.propertyAddress || '—') + ' with ' + (e.realtorName || '—') + ' — ' + tomorrowStr, sendEmail: true, ts: now });
+    });
+  }
+
+  // C. FOLLOW-UP DUE
+  if (prefs.followup) {
+    cachedOyzEntries.forEach(function(e) {
+      if (!e.nextConnectionDate || e.status === 'complete' || e.nextConnectionDate > todayStr) return;
+      const id = 'oyz-followup-' + (e.docId || e.id);
+      if (skip(id)) return;
+      notifs.push({ id: id, type: 'followup', icon: '📅', title: 'Follow-up Due', message: 'Time to reconnect — ' + (e.propertyAddress || '—') + ' with ' + (e.realtorName || '—'), sendEmail: true, ts: now });
+    });
+  }
+
+  // D. CAPTURE RATE DROP
+  if (prefs.capture) {
+    const monthStr = todayStr.slice(0, 7);
+    const monthOYZ = cachedOyzEntries.filter(function(e) { return e.openHouseDate && e.openHouseDate.startsWith(monthStr); });
+    if (monthOYZ.length >= 3) {
+      const captured = monthOYZ.filter(function(e) { return e.dealOutcome === 'application' || e.dealOutcome === 'referral' || e.dealOutcome === 'loan'; }).length;
+      const rate = Math.round((captured / monthOYZ.length) * 100);
+      if (rate < 50) {
+        const id = 'capture-rate-drop-' + monthStr;
+        if (!skip(id)) notifs.push({ id: id, type: 'capture', icon: '📉', title: 'Capture Rate Alert', message: 'Your capture rate this month is ' + rate + '% — ' + captured + ' captured out of ' + monthOYZ.length + ' open houses', sendEmail: false, ts: now });
+      }
+    }
+  }
+
+  // E. NO ACTIVITY THIS WEEK (Friday only)
+  if (prefs.noActivity && now.getDay() === 5) {
+    const monday = new Date(now); monday.setDate(now.getDate() - 4);
+    const mondayStr = monday.toISOString().split('T')[0];
+    const weekActs = cachedActivities.filter(function(a) { return a.date && a.date >= mondayStr && a.date <= todayStr; });
+    if (!weekActs.length) {
+      const id = 'no-activity-' + mondayStr;
+      if (!skip(id)) notifs.push({ id: id, type: 'no-activity', icon: '⚠️', title: 'No Activity Logged This Week', message: "You haven't logged any CRA activity this week. Log activity to stay on track.", sendEmail: false, ts: now });
+    }
+  }
+
+  // F. WEEKLY DIGEST (Monday only)
+  if (prefs.weekly && now.getDay() === 1) {
+    const id = 'weekly-digest-' + todayStr;
+    if (!skip(id)) {
+      const lastMon = new Date(now); lastMon.setDate(now.getDate() - 7);
+      const lastMonStr = lastMon.toISOString().split('T')[0];
+      const lastSunStr = new Date(now.getTime() - 86400000).toISOString().split('T')[0];
+      const wActs = cachedActivities.filter(function(a) { return a.date && a.date >= lastMonStr && a.date <= lastSunStr; });
+      const wOYZ = cachedOyzEntries.filter(function(e) { return e.openHouseDate && e.openHouseDate >= lastMonStr && e.openHouseDate <= lastSunStr; });
+      const wCap = wOYZ.filter(function(e) { return e.dealOutcome === 'application' || e.dealOutcome === 'referral' || e.dealOutcome === 'loan'; }).length;
+      const capRate = wOYZ.length ? Math.round((wCap / wOYZ.length) * 100) : 0;
+      notifs.push({ id: id, type: 'weekly', icon: '📊', title: 'Your Weekly Summary', message: 'Last week: ' + wActs.length + ' activities, ' + wOYZ.length + ' open houses, ' + capRate + '% capture rate', sendEmail: true, ts: now });
+    }
+  }
+
+  cachedNotifications = notifs;
+  updateNotifBadge();
+  notifs.forEach(function(n) { if (n.sendEmail) sendNotifEmail(n); });
+}
+
+function updateNotifBadge() {
+  var badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  var count = cachedNotifications.length;
+  badge.textContent = count > 9 ? '9+' : String(count);
+  badge.style.display = count > 0 ? 'flex' : 'none';
+}
+
+function openNotifications() {
+  document.getElementById('notif-drawer').classList.add('open');
+  document.getElementById('notif-overlay').classList.add('open');
+  renderNotifDrawer();
+}
+function closeNotifications() {
+  document.getElementById('notif-drawer').classList.remove('open');
+  document.getElementById('notif-overlay').classList.remove('open');
+}
+
+function renderNotifDrawer() {
+  var body = document.getElementById('notif-drawer-body');
+  if (!cachedNotifications.length) {
+    body.innerHTML = '<div class="notif-empty"><div class="notif-empty-icon">✅</div><div class="notif-empty-text">You\'re all caught up! 🎉</div></div>';
+    return;
+  }
+  body.innerHTML = cachedNotifications.map(function(n) {
+    return '<div class="notif-card type-' + n.type + '">'
+      + '<div class="notif-icon">' + n.icon + '</div>'
+      + '<div class="notif-content">'
+      + '<div class="notif-title">' + n.title + '</div>'
+      + '<div class="notif-msg">' + n.message + '</div>'
+      + '<div class="notif-time">Just now</div>'
+      + '</div>'
+      + '<button class="notif-dismiss-btn" onclick="dismissNotification(\'' + n.id.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function dismissNotification(id) {
+  var dismissed = getDismissedIds();
+  if (!dismissed.includes(id)) { dismissed.push(id); saveDismissedIds(dismissed); }
+  cachedNotifications = cachedNotifications.filter(function(n) { return n.id !== id; });
+  updateNotifBadge();
+  renderNotifDrawer();
+}
+
+function dismissAllNotifications() {
+  var dismissed = getDismissedIds();
+  cachedNotifications.forEach(function(n) { if (!dismissed.includes(n.id)) dismissed.push(n.id); });
+  saveDismissedIds(dismissed);
+  cachedNotifications = [];
+  updateNotifBadge();
+  renderNotifDrawer();
+}
+
+async function saveNotificationPrefs() {
+  var prefs = {
+    threshold: document.getElementById('s-notif-threshold').value,
+    realtor: document.getElementById('pref-realtor').checked,
+    oyzTomorrow: document.getElementById('pref-oyz-tomorrow').checked,
+    followup: document.getElementById('pref-followup').checked,
+    capture: document.getElementById('pref-capture').checked,
+    noActivity: document.getElementById('pref-no-activity').checked,
+    weekly: document.getElementById('pref-weekly').checked
+  };
+  currentUser.notificationPrefs = prefs;
+  await saveUser(currentUser);
+  sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
+  showToast('✅ Notification preferences saved');
+  generateNotifications();
+}
+
+function loadNotifPrefsToSettings() {
+  var p = (currentUser && currentUser.notificationPrefs) || {};
+  var th = document.getElementById('s-notif-threshold');
+  if (th) th.value = p.threshold || 21;
+  function setChk(id, val) { var el = document.getElementById(id); if (el) el.checked = val !== false; }
+  setChk('pref-realtor', p.realtor);
+  setChk('pref-oyz-tomorrow', p.oyzTomorrow);
+  setChk('pref-followup', p.followup);
+  setChk('pref-capture', p.capture);
+  setChk('pref-no-activity', p.noActivity);
+  setChk('pref-weekly', p.weekly);
 }
 
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
