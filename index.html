@@ -2503,6 +2503,7 @@ async function tryLogin() {
     sessionStorage.setItem('g1_session', JSON.stringify(user));
     document.getElementById('login-screen').style.display = 'none';
     if (user.role === 'realtor') {
+      console.log('[tryLogin] Realtor login — id:', user.id, '| realtorDocId:', user.realtorDocId || '(not set)', '| linkedMloId:', user.linkedMloId || '(not set)');
       if (user.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
@@ -6076,12 +6077,21 @@ async function doSendToRealtor() {
   var btn = document.getElementById('str-send-btn');
   btn.textContent = '⏳ Sending...'; btn.disabled = true;
 
-  // Look up if this realtor has a portal account
+  // Look up the realtor's portal user account.
+  // IMPORTANT: use a SINGLE where() clause — two where() clauses on different fields
+  // require a Firestore composite index which may not exist, causing silent failure.
   var realtorUserId = '';
   try {
-    var uSnap = await db.collection('users').where('realtorDocId', '==', docId).where('role', '==', 'realtor').limit(1).get();
-    if (!uSnap.empty) realtorUserId = uSnap.docs[0].id;
-  } catch(e) {}
+    var uSnap = await db.collection('users').where('realtorDocId', '==', docId).limit(1).get();
+    if (!uSnap.empty) {
+      realtorUserId = uSnap.docs[0].id;
+      console.log('[doSendToRealtor] Found realtor user account — realtorUserId:', realtorUserId);
+    } else {
+      console.warn('[doSendToRealtor] No user account found with realtorDocId:', docId, '— push will still be written, but realtorUserId will be empty');
+    }
+  } catch(e) {
+    console.error('[doSendToRealtor] User lookup error:', e);
+  }
 
   var pushData = {
     realtorDocId: docId,
@@ -6105,11 +6115,24 @@ async function doSendToRealtor() {
     viewed: false
   };
 
+  console.log('[doSendToRealtor] Writing to realtor_pushes:', {
+    realtorDocId:  pushData.realtorDocId,
+    realtorUserId: pushData.realtorUserId,
+    realtorName:   pushData.realtorName,
+    mloId:         pushData.mloId,
+    mloName:       pushData.mloName,
+    borrowerName:  pushData.borrowerName,
+    viewed:        pushData.viewed,
+    sentAt:        pushData.sentAt
+  });
+
   try {
     await db.collection('realtor_pushes').add(pushData);
+    console.log('[doSendToRealtor] Successfully written to realtor_pushes');
   } catch(e) {
+    console.error('[doSendToRealtor] Firestore write error:', e);
     btn.textContent = '📤 Send Profile'; btn.disabled = false;
-    errEl.textContent = 'Failed to save. Please try again.'; errEl.style.display = 'block'; return;
+    errEl.textContent = 'Failed to save: ' + (e.message || e); errEl.style.display = 'block'; return;
   }
 
   // Email the realtor
@@ -6141,23 +6164,61 @@ async function doSendToRealtor() {
 // ── REALTOR PORTAL — BUYER PROFILES ──────────────────────────
 async function loadRealtorPushes() {
   realtorPushes = [];
-  if (!db) return;
-  try {
-    var snap = null;
-    // Primary: query by realtorDocId (the realtor's doc ID in the realtors collection)
-    if (currentUser.realtorDocId) {
-      snap = await db.collection('realtor_pushes')
+  if (!db) { console.warn('[loadRealtorPushes] db not available'); return; }
+
+  console.log('[loadRealtorPushes] Starting — currentUser.id:', currentUser.id,
+    '| currentUser.realtorDocId:', currentUser.realtorDocId || '(not set)');
+
+  var seen = {};
+  var results = [];
+  var promises = [];
+
+  // Query 1: by realtorDocId (the doc ID from the realtors collection stored on the user account)
+  if (currentUser.realtorDocId) {
+    console.log('[loadRealtorPushes] Q1: querying realtor_pushes where realtorDocId ==', currentUser.realtorDocId);
+    promises.push(
+      db.collection('realtor_pushes')
         .where('realtorDocId', '==', currentUser.realtorDocId)
-        .orderBy('sentAt', 'desc').limit(30).get();
-    }
-    // Fallback: query by realtorUserId (the realtor's user account ID) in case realtorDocId isn't set
-    if (!snap || snap.empty) {
-      snap = await db.collection('realtor_pushes')
+        .orderBy('sentAt', 'desc').limit(30).get()
+        .then(function(snap) {
+          console.log('[loadRealtorPushes] Q1 returned', snap.size, 'doc(s)');
+          snap.forEach(function(d) {
+            var data = Object.assign({ id: d.id }, d.data());
+            console.log('[loadRealtorPushes] Q1 doc:', d.id, JSON.stringify(data));
+            if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
+          });
+        })
+        .catch(function(e) { console.error('[loadRealtorPushes] Q1 error:', e); })
+    );
+  } else {
+    console.warn('[loadRealtorPushes] Skipping Q1 — currentUser.realtorDocId is empty');
+  }
+
+  // Query 2: by realtorUserId (the user account id stored on the push doc when MLO sent it)
+  if (currentUser.id) {
+    console.log('[loadRealtorPushes] Q2: querying realtor_pushes where realtorUserId ==', currentUser.id);
+    promises.push(
+      db.collection('realtor_pushes')
         .where('realtorUserId', '==', currentUser.id)
-        .orderBy('sentAt', 'desc').limit(30).get();
-    }
-    snap.forEach(function(d) { realtorPushes.push(Object.assign({ id: d.id }, d.data())); });
-  } catch(e) { console.warn('loadRealtorPushes error:', e); }
+        .orderBy('sentAt', 'desc').limit(30).get()
+        .then(function(snap) {
+          console.log('[loadRealtorPushes] Q2 returned', snap.size, 'doc(s)');
+          snap.forEach(function(d) {
+            var data = Object.assign({ id: d.id }, d.data());
+            console.log('[loadRealtorPushes] Q2 doc:', d.id, JSON.stringify(data));
+            if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
+          });
+        })
+        .catch(function(e) { console.error('[loadRealtorPushes] Q2 error:', e); })
+    );
+  }
+
+  await Promise.all(promises);
+
+  // Sort merged results newest first
+  results.sort(function(a, b) { return (b.sentAt || '') > (a.sentAt || '') ? 1 : -1; });
+  realtorPushes = results;
+  console.log('[loadRealtorPushes] Done — total profiles loaded:', realtorPushes.length);
 }
 
 function rpScrollToBuyerProfiles() {
