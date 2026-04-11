@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lmi-tool-v5';
+const CACHE_NAME = 'lmi-tool-v6';
 const PRECACHE = ['/'];
 
 self.addEventListener('install', function(e) {

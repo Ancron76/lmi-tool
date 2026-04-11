@@ -1869,6 +1869,8 @@ admin@lmitool.com</div>
     </div>
     <div id="rp-buyer-profiles-section" style="display:none">
       <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px" id="rp-buyer-profiles-title">📬 Buyer Profiles</div>
+      <!-- TEMP DEBUG BOX — remove after fix confirmed -->
+      <div id="rp-push-debug" style="display:none;background:#fef9c3;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:12px;font-family:monospace;line-height:1.8;word-break:break-all"></div>
       <div id="rp-buyer-profiles-list"></div>
     </div>
   </div>
@@ -6296,12 +6298,66 @@ async function loadRealtorPushes() {
     );
   }
 
-  await Promise.all(promises);
+  // Track per-query counts for debug display
+  var q1Count = 0, q2Count = 0, q3Count = 0;
+
+  await Promise.all(promises).then(function() {
+    // Recount from seen keys per query is tricky — use sizes already logged above.
+    // Instead we re-derive by checking result fields after merge.
+    q1Count = results.filter(function(r) { return currentUser.realtorDocId && r.realtorDocId === currentUser.realtorDocId; }).length;
+    q2Count = results.filter(function(r) { return r.realtorUserId === currentUser.id; }).length;
+    q3Count = results.filter(function(r) { return r.realtorName === currentUser.name; }).length;
+  });
 
   // Sort merged results newest first
   results.sort(function(a, b) { return (b.sentAt || '') > (a.sentAt || '') ? 1 : -1; });
   realtorPushes = results;
   console.log('[loadRealtorPushes] Done — total profiles loaded:', realtorPushes.length);
+
+  // ── VISIBLE DEBUG OUTPUT ──────────────────────────────────────
+  var debugEl = document.getElementById('rp-push-debug');
+  if (!debugEl) return;
+
+  var debugLines = [
+    '🔍 BUYER PROFILE DEBUG',
+    '─────────────────────────────────',
+    'currentUser.id: ' + (currentUser.id || '(empty)'),
+    'currentUser.name: ' + (currentUser.name || '(empty)'),
+    'currentUser.realtorDocId: ' + (currentUser.realtorDocId || '(NOT SET)'),
+    '─────────────────────────────────',
+    'Q1 (by realtorDocId): ' + q1Count + ' match(es)',
+    'Q2 (by realtorUserId): ' + q2Count + ' match(es)',
+    'Q3 (by realtorName="' + (currentUser.name || '') + '"): ' + q3Count + ' match(es)',
+    'TOTAL merged: ' + realtorPushes.length,
+    '─────────────────────────────────'
+  ];
+
+  // Fetch the most recent doc from the ENTIRE realtor_pushes collection
+  // so we can see exactly what the MLO wrote, regardless of ownership.
+  try {
+    var latestSnap = await db.collection('realtor_pushes').orderBy('sentAt', 'desc').limit(1).get();
+    if (!latestSnap.empty) {
+      var ld = latestSnap.docs[0];
+      var ldata = ld.data();
+      debugLines.push('MOST RECENT DOC IN COLLECTION (id: ' + ld.id + ')');
+      Object.keys(ldata).forEach(function(k) {
+        debugLines.push('  ' + k + ': ' + JSON.stringify(ldata[k]));
+      });
+    } else {
+      debugLines.push('realtor_pushes collection appears EMPTY');
+    }
+  } catch(e) {
+    debugLines.push('Could not fetch latest doc: ' + e.message);
+  }
+
+  debugEl.style.display = 'block';
+  debugEl.innerHTML = debugLines.map(function(l) {
+    return '<div>' + l.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+  }).join('');
+
+  // Also force section visible so debug box shows even with 0 results
+  var sec = document.getElementById('rp-buyer-profiles-section');
+  if (sec) sec.style.display = 'block';
 }
 
 function rpScrollToBuyerProfiles() {
