@@ -1798,6 +1798,14 @@ admin@lmitool.com</div>
       </div>
       <div id="admin-activity-list"><div class="empty-activity">Loading...</div></div>
     </div>
+    <div class="admin-card" id="admin-billing-card">
+      <div class="admin-card-header">
+        <div class="admin-card-title">💳 Subscriptions &amp; Billing</div>
+        <button onclick="renderAdminBilling()" style="padding:7px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:white;color:#374151">↻ Refresh</button>
+      </div>
+      <div id="admin-billing-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px"></div>
+      <div id="admin-billing-table" style="overflow-x:auto"></div>
+    </div>
   </div>
 </div>
 
@@ -1952,7 +1960,50 @@ admin@lmitool.com</div>
   </div>
   <!-- Open Houses Tab -->
   <div id="rp-tab-openhouses" class="rportal-content" style="display:none">
-    <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">📅 My Open Houses</div>
+    <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+      <span>📅 My Open Houses</span>
+      <button onclick="rpToggleAddOpenHouseForm()" id="rp-add-oh-btn" style="background:#0d9488;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+ Add Open House</button>
+    </div>
+    <div id="rp-add-oh-form" style="display:none;background:white;border-radius:12px;border:1px solid #e2e8f0;padding:20px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:14px">📋 Submit Open House to Your MLO</div>
+      <div class="rp-form-row">
+        <div class="rp-form-group"><label>Street Address *</label><input type="text" id="oh-address" placeholder="123 Main St" /></div>
+        <div class="rp-form-group"><label>City *</label><input type="text" id="oh-city" placeholder="Fresno" /></div>
+      </div>
+      <div class="rp-form-row">
+        <div class="rp-form-group"><label>State</label><input type="text" id="oh-state" placeholder="CA" maxlength="2" /></div>
+        <div class="rp-form-group"><label>ZIP Code</label><input type="text" id="oh-zip" placeholder="93701" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" /></div>
+      </div>
+      <div class="rp-form-row">
+        <div class="rp-form-group"><label>Open House Date</label><input type="date" id="oh-date" /></div>
+        <div class="rp-form-group"><label>Listing Number</label><input type="text" id="oh-listing" placeholder="MLS #12345" /></div>
+      </div>
+      <div class="rp-form-group"><label>Contact Info</label><input type="text" id="oh-contact" placeholder="Phone or email for inquiries" /></div>
+      <div class="rp-form-group"><label>Comments / Notes</label><textarea id="oh-comments" rows="2" placeholder="Additional notes about this open house..." style="resize:vertical"></textarea></div>
+      <div class="rp-form-group" style="margin-top:4px">
+        <label>Assign to MLO *</label>
+        <select id="oh-mlo-select" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;font-family:inherit">
+          <option value="">Select an MLO...</option>
+        </select>
+      </div>
+      <div style="margin-top:8px">
+        <button type="button" onclick="rpToggleInviteMlo()" style="background:none;border:none;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;padding:0">My MLO isn't listed — Invite them ›</button>
+      </div>
+      <div id="rp-invite-mlo-form" style="display:none;background:#f0fdfa;border-radius:10px;padding:14px;margin-top:10px;border:1px solid #99f6e4">
+        <div style="font-size:13px;font-weight:700;color:#0d9488;margin-bottom:10px">✉️ Invite Your MLO</div>
+        <div class="rp-form-row">
+          <div class="rp-form-group"><label>First Name *</label><input type="text" id="oh-inv-fname" placeholder="Jane" /></div>
+          <div class="rp-form-group"><label>Last Name *</label><input type="text" id="oh-inv-lname" placeholder="Smith" /></div>
+        </div>
+        <div class="rp-form-row">
+          <div class="rp-form-group"><label>Email *</label><input type="email" id="oh-inv-email" placeholder="jane@bank.com" /></div>
+          <div class="rp-form-group"><label>Phone</label><input type="tel" id="oh-inv-phone" placeholder="(559) 555-0100" /></div>
+        </div>
+        <div class="rp-form-group"><label>Brokerage / Company</label><input type="text" id="oh-inv-brokerage" placeholder="First National Bank" /></div>
+      </div>
+      <div style="color:#dc2626;font-size:12px;margin-top:8px;display:none" id="oh-form-error"></div>
+      <button onclick="rpSubmitOpenHouse()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0d9488,#0891b2);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px" id="oh-submit-btn">📤 Submit Open House</button>
+    </div>
     <div id="rp-openhouses-list"><div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div></div>
   </div>
 </div>
@@ -2105,6 +2156,16 @@ admin@lmitool.com</div>
         <div class="notif-pref-row"><span class="notif-pref-label">⚠️ No Activity This Week</span><label class="notif-toggle"><input type="checkbox" id="pref-no-activity" checked /><span class="notif-toggle-slider"></span></label></div>
         <div class="notif-pref-row"><span class="notif-pref-label">📊 Weekly Digest</span><label class="notif-toggle"><input type="checkbox" id="pref-weekly" checked /><span class="notif-toggle-slider"></span></label></div>
         <div style="margin-top:14px"><button class="settings-save-btn" onclick="saveNotificationPrefs()">Save Preferences</button></div>
+      </div>
+    </div>
+    <div class="settings-section" id="billing-settings-section">
+      <div class="settings-section-title">💳 Account &amp; Billing</div>
+      <div class="settings-item">
+        <div id="billing-status-display" style="margin-bottom:12px"></div>
+        <div id="billing-upgrade-section" style="display:none">
+          <button class="settings-save-btn" onclick="showBillingComingSoon()" style="background:linear-gradient(135deg,#0d9488,#0891b2)">⬆️ Upgrade Account</button>
+          <div style="font-size:11px;color:#94a3b8;margin-top:6px;text-align:center">Billing portal coming soon</div>
+        </div>
       </div>
     </div>
   </div>
@@ -2333,6 +2394,8 @@ async function submitInviteSetup() {
   const btn = document.querySelector('.invite-submit-btn');
   btn.textContent = 'Creating account...';
   btn.disabled = true;
+  const _invNow = new Date();
+  const _invTrialEnd = new Date(_invNow.getTime() + 30 * 24 * 60 * 60 * 1000);
   const newUser = {
     id: 'u-' + Date.now(),
     name: inviteUserData.name,
@@ -2343,7 +2406,12 @@ async function submitInviteSetup() {
     region: inviteUserData.region,
     active: true,
     branches: [],
-    created: new Date().toLocaleDateString()
+    created: _invNow.toLocaleDateString(),
+    accountStatus: 'trial',
+    trialStartDate: _invNow.toISOString(),
+    trialEndDate: _invTrialEnd.toISOString(),
+    subscriptionTier: 'individual',
+    subscriptionStatus: 'trial'
   };
   if (inviteUserData.role === 'realtor') {
     newUser.linkedMloId = inviteUserData.linkedMloId || '';
@@ -2548,6 +2616,7 @@ async function goAdmin() {
   renderAdminStats(); renderUserTable();
   await renderAdminProspects(); populateProspectFilter();
   await renderAdminActivity(); populateAdminActivityFilter();
+  renderAdminBilling();
 }
 
 function goApp() {
@@ -4418,6 +4487,27 @@ function openSettings() {
   document.getElementById('s-pw-success').style.display = 'none';
   loadProfileToSettings();
   loadNotifPrefsToSettings();
+  // Load billing status
+  var _billingEl = document.getElementById('billing-status-display');
+  if (_billingEl) {
+    var _acctStatus = checkAccountStatus(currentUser);
+    var _statusLabels = { active: '✅ Active', trial: '🔔 Trial', trial_expired: '⚠️ Trial Expired', suspended: '🚫 Suspended' };
+    var _statusColors = { active: '#059669', trial: '#d97706', trial_expired: '#dc2626', suspended: '#7c3aed' };
+    var _statusBgs    = { active: '#f0fdf4', trial: '#fffbeb', trial_expired: '#fef2f2', suspended: '#faf5ff' };
+    var _billingHtml = '<span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;background:' + (_statusBgs[_acctStatus]||'#f1f5f9') + ';color:' + (_statusColors[_acctStatus]||'#64748b') + '">' + (_statusLabels[_acctStatus]||'—') + '</span>';
+    if (_acctStatus === 'trial' && currentUser.trialEndDate) {
+      var _dLeft = Math.max(0, Math.ceil((new Date(currentUser.trialEndDate) - Date.now()) / 86400000));
+      _billingHtml += '<div style="font-size:12px;color:#64748b;margin-top:6px">' + _dLeft + ' days remaining in your free trial</div>';
+    }
+    if (_acctStatus === 'trial_expired') _billingHtml += '<div style="font-size:12px;color:#dc2626;margin-top:6px">Your trial has expired. Please upgrade to continue.</div>';
+    if (_acctStatus === 'suspended') _billingHtml += '<div style="font-size:12px;color:#7c3aed;margin-top:6px">Your account is suspended. Contact your admin.</div>';
+    _billingEl.innerHTML = _billingHtml;
+  }
+  var _upgradeSection = document.getElementById('billing-upgrade-section');
+  if (_upgradeSection) {
+    var _as = checkAccountStatus(currentUser);
+    _upgradeSection.style.display = (_as === 'active') ? 'none' : 'block';
+  }
   if (currentUser.role === 'admin') {
     document.getElementById('admin-reset-section').style.display = 'block';
     const select = document.getElementById('s-admin-user-select');
@@ -4554,7 +4644,7 @@ async function addUser() {
   if (!email || !email.includes('@')) { showFormErr('Please enter a valid email.'); return; }
   if (!pass)  { showFormErr('Please enter or generate a password.'); return; }
   if (cachedUsers.find(function(u) { return u.email.toLowerCase() === email; })) { showFormErr('A user with this email already exists.'); return; }
-  const newUser = { id: 'u-' + Date.now(), name: name, email: email, password: pass, role: role, type: type, region: region, active: true, branches: [], created: new Date().toLocaleDateString() };
+  const newUser = { id: 'u-' + Date.now(), name: name, email: email, password: pass, role: role, type: type, region: region, active: true, branches: [], created: new Date().toLocaleDateString(), accountStatus: 'active', subscriptionTier: 'team', subscriptionStatus: 'active' };
   await saveUser(newUser);
   cachedUsers.push(newUser);
   ['new-name','new-email','new-password'].forEach(function(id) { document.getElementById(id).value = ''; });
@@ -4783,7 +4873,7 @@ function getNotifPrefs() {
   };
 }
 
-function generateNotifications() {
+async function generateNotifications() {
   const prefs = getNotifPrefs();
   const dismissed = getDismissedIds();
   const notifs = [];
@@ -4883,6 +4973,26 @@ function generateNotifications() {
     }
   }
 
+  // G. REALTOR SUBMISSIONS (from Firestore notifications collection)
+  if (db && currentUser) {
+    try {
+      var _snap = await db.collection('notifications').get();
+      _snap.forEach(function(d) {
+        var nd = Object.assign({ id: d.id }, d.data());
+        if (nd.userId !== currentUser.id) return;
+        if (nd.read) return;
+        var nid = 'fs-notif-' + d.id;
+        if (skip(nid)) return;
+        notifs.push({
+          id: nid, fsId: d.id, type: nd.type || 'realtor-submission',
+          icon: '🏡', title: nd.title || 'New Submission',
+          message: nd.message || '', sendEmail: false, ts: nd.createdAt ? new Date(nd.createdAt) : now,
+          firestoreNotif: true
+        });
+      });
+    } catch(e) { console.warn('[generateNotifications] Firestore notif error:', e); }
+  }
+
   cachedNotifications = notifs;
   updateNotifBadge();
   notifs.forEach(function(n) { if (n.sendEmail) sendNotifEmail(n); });
@@ -4928,6 +5038,11 @@ function renderNotifDrawer() {
 function dismissNotification(id) {
   var dismissed = getDismissedIds();
   if (!dismissed.includes(id)) { dismissed.push(id); saveDismissedIds(dismissed); }
+  // Mark Firestore notifications as read
+  var notif = cachedNotifications.find(function(n) { return n.id === id; });
+  if (notif && notif.firestoreNotif && notif.fsId && db) {
+    db.collection('notifications').doc(notif.fsId).update({ read: true }).catch(function(e) { console.warn('[dismiss notif]', e); });
+  }
   cachedNotifications = cachedNotifications.filter(function(n) { return n.id !== id; });
   updateNotifBadge();
   renderNotifDrawer();
@@ -4935,7 +5050,12 @@ function dismissNotification(id) {
 
 function dismissAllNotifications() {
   var dismissed = getDismissedIds();
-  cachedNotifications.forEach(function(n) { if (!dismissed.includes(n.id)) dismissed.push(n.id); });
+  cachedNotifications.forEach(function(n) {
+    if (!dismissed.includes(n.id)) dismissed.push(n.id);
+    if (n.firestoreNotif && n.fsId && db) {
+      db.collection('notifications').doc(n.fsId).update({ read: true }).catch(function(e) { console.warn('[dismiss all notif]', e); });
+    }
+  });
   saveDismissedIds(dismissed);
   cachedNotifications = [];
   updateNotifBadge();
@@ -5602,28 +5722,36 @@ function renderRPSearches() {
 function renderRPOpenHouses() {
   var el = document.getElementById('rp-openhouses-list');
   if (!el) return;
-  if (!currentUser.linkedMloId || !db) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">No linked MLO found.</div>'; return; }
+  if (!db) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">Not connected.</div>'; return; }
   el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">Loading...</div>';
-  db.collection('oyz')
-    .where('userId', '==', currentUser.linkedMloId)
-    .where('realtorId', '==', currentUser.realtorDocId || '')
-    .orderBy('openHouseDate', 'desc')
-    .limit(30)
-    .get()
+  var rdocId = currentUser.realtorDocId || '';
+  var rname  = currentUser.name || '';
+  var rid    = currentUser.id || '';
+  db.collection('oyz').get()
     .then(function(snap) {
       var entries = [];
-      snap.forEach(function(d) { entries.push(Object.assign({ id: d.id }, d.data())); });
+      snap.forEach(function(d) {
+        var data = Object.assign({ id: d.id }, d.data());
+        if ((rdocId && data.realtorId === rdocId)
+         || (rname  && data.realtorName === rname)
+         || (rid    && data.realtorId === rid)
+         || (rid    && data.realtorUserId === rid)) {
+          entries.push(data);
+        }
+      });
+      entries.sort(function(a, b) { return (a.openHouseDate || '') > (b.openHouseDate || '') ? 1 : -1; });
       if (!entries.length) { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div>'; return; }
       var statusColors = { 'Captured':'#f0fdf4', 'Lost':'#fef2f2', 'Pending':'#fffbeb', 'House Still For Sale':'#eff6ff' };
       var statusText   = { 'Captured':'#059669', 'Lost':'#dc2626', 'Pending':'#d97706', 'House Still For Sale':'#2563eb' };
       el.innerHTML = entries.map(function(e) {
         var outcome = e.dealOutcome || '';
         var outcomeBadge = outcome ? '<span style="font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;background:' + (statusColors[outcome]||'#f1f5f9') + ';color:' + (statusText[outcome]||'#64748b') + '">' + outcome + '</span>' : '';
+        var mloLabel = e.assignedMloName ? '<span style="font-size:11px;color:#94a3b8"> · MLO: ' + e.assignedMloName + '</span>' : '';
         return '<div class="rp-search-card">'
           + '<div class="rp-search-card-top">'
           + '<div>'
           + '<div class="rp-search-buyer">' + (e.propertyAddress || 'Open House') + '</div>'
-          + '<div class="rp-search-meta">' + (e.openHouseDate ? 'Date: ' + e.openHouseDate : '—') + (e.city ? ' · ' + e.city : '') + '</div>'
+          + '<div class="rp-search-meta">' + (e.openHouseDate ? 'Date: ' + e.openHouseDate : '—') + (e.city ? ' · ' + e.city : '') + mloLabel + '</div>'
           + '</div>'
           + outcomeBadge
           + '</div>'
@@ -5631,7 +5759,255 @@ function renderRPOpenHouses() {
           + '</div>';
       }).join('');
     })
-    .catch(function() { el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">Could not load open houses.</div>'; });
+    .catch(function(err) { console.error('[renderRPOpenHouses]', err); el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px">Could not load open houses.</div>'; });
+}
+
+// ── PART 2: REALTOR ADD OPEN HOUSE ────────────────────────────
+function rpToggleAddOpenHouseForm() {
+  var form = document.getElementById('rp-add-oh-form');
+  var btn  = document.getElementById('rp-add-oh-btn');
+  if (!form || !btn) return;
+  var isOpen = form.style.display !== 'none';
+  if (isOpen) {
+    form.style.display = 'none';
+    btn.textContent = '+ Add Open House';
+  } else {
+    form.style.display = 'block';
+    btn.textContent = '✕ Cancel';
+    rpLoadMlosForDropdown();
+  }
+}
+
+function rpToggleInviteMlo() {
+  var inv = document.getElementById('rp-invite-mlo-form');
+  var sel = document.getElementById('oh-mlo-select');
+  if (!inv) return;
+  var open = inv.style.display !== 'none';
+  inv.style.display = open ? 'none' : 'block';
+  if (sel) sel.disabled = !open ? true : false;
+}
+
+async function rpLoadMlosForDropdown() {
+  var sel = document.getElementById('oh-mlo-select');
+  if (!sel || !db) return;
+  sel.innerHTML = '<option value="">Loading...</option>';
+  try {
+    var snap = await db.collection('users').get();
+    var mlos = [];
+    snap.forEach(function(d) {
+      var u = Object.assign({ id: d.id }, d.data());
+      if ((u.role === 'mlo' || u.role === 'admin') && u.active !== false) mlos.push(u);
+    });
+    mlos.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    sel.innerHTML = '<option value="">Select an MLO...</option>'
+      + mlos.map(function(u) {
+          return '<option value="' + u.id + '">' + u.name + (u.type && u.type !== 'N/A' ? ' (' + u.type + ')' : '') + '</option>';
+        }).join('');
+    if (currentUser.linkedMloId) sel.value = currentUser.linkedMloId;
+  } catch(e) {
+    sel.innerHTML = '<option value="">Could not load MLOs</option>';
+  }
+}
+
+async function rpSubmitOpenHouse() {
+  var address  = (document.getElementById('oh-address').value || '').trim();
+  var city     = (document.getElementById('oh-city').value || '').trim();
+  var state    = (document.getElementById('oh-state').value || '').trim();
+  var zip      = (document.getElementById('oh-zip').value || '').trim();
+  var date     = document.getElementById('oh-date').value || '';
+  var listing  = (document.getElementById('oh-listing').value || '').trim();
+  var contact  = (document.getElementById('oh-contact').value || '').trim();
+  var comments = (document.getElementById('oh-comments').value || '').trim();
+  var mloId    = document.getElementById('oh-mlo-select').value;
+  var invForm  = document.getElementById('rp-invite-mlo-form');
+  var inviteOpen = invForm && invForm.style.display !== 'none';
+  var errEl    = document.getElementById('oh-form-error');
+  var btn      = document.getElementById('oh-submit-btn');
+  if (errEl) errEl.style.display = 'none';
+  if (!address) { if (errEl) { errEl.textContent = 'Street address is required.'; errEl.style.display = 'block'; } return; }
+  if (!city)    { if (errEl) { errEl.textContent = 'City is required.'; errEl.style.display = 'block'; } return; }
+
+  var assignedMloId = '';
+  var assignedMloName = '';
+
+  if (inviteOpen) {
+    var fname    = (document.getElementById('oh-inv-fname').value || '').trim();
+    var lname    = (document.getElementById('oh-inv-lname').value || '').trim();
+    var invEmail = (document.getElementById('oh-inv-email').value || '').trim().toLowerCase();
+    var invPhone = (document.getElementById('oh-inv-phone').value || '').trim();
+    var invBrok  = (document.getElementById('oh-inv-brokerage').value || '').trim();
+    if (!fname || !lname) { if (errEl) { errEl.textContent = "Please enter the MLO's first and last name."; errEl.style.display = 'block'; } return; }
+    if (!invEmail || !invEmail.includes('@')) { if (errEl) { errEl.textContent = 'Please enter a valid MLO email.'; errEl.style.display = 'block'; } return; }
+    var nowTs = new Date();
+    var trialEndTs = new Date(nowTs.getTime() + 30 * 24 * 60 * 60 * 1000);
+    var newMloId = 'u-' + Date.now();
+    var newMlo = {
+      id: newMloId, name: fname + ' ' + lname, email: invEmail, phone: invPhone,
+      role: 'mlo', type: 'External', region: 'Central Valley', active: true, branches: [],
+      created: nowTs.toLocaleDateString(),
+      accountStatus: 'trial', trialStartDate: nowTs.toISOString(), trialEndDate: trialEndTs.toISOString(),
+      subscriptionTier: 'individual', subscriptionStatus: 'trial', invitedByRealtor: true
+    };
+    if (invBrok) newMlo.brokerage = invBrok;
+    try {
+      await db.collection('users').doc(newMloId).set(newMlo);
+      var invLink = APP_URL + '/';
+      try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: fname + ' ' + lname, to_email: invEmail, invite_link: invLink }); } catch(mailErr) { console.warn('[OH invite email]', mailErr); }
+      assignedMloId = newMloId;
+      assignedMloName = fname + ' ' + lname;
+    } catch(e) {
+      if (errEl) { errEl.textContent = 'Failed to create MLO invite. Please try again.'; errEl.style.display = 'block'; }
+      return;
+    }
+  } else {
+    if (!mloId) { if (errEl) { errEl.textContent = 'Please select an MLO.'; errEl.style.display = 'block'; } return; }
+    assignedMloId = mloId;
+    try {
+      var mloDoc = await db.collection('users').doc(mloId).get();
+      if (mloDoc.exists) assignedMloName = (mloDoc.data().name || '');
+    } catch(e) {}
+  }
+
+  if (btn) { btn.textContent = '⏳ Submitting...'; btn.disabled = true; }
+  var fullAddress = address + (zip ? ', ' + zip : '');
+  var ohData = {
+    propertyAddress: fullAddress, city: city, state: state, zip: zip,
+    openHouseDate: date, listingNumber: listing, contactInfo: contact, notes: comments,
+    realtorId: currentUser.realtorDocId || currentUser.id,
+    realtorName: currentUser.name || '',
+    realtorUserId: currentUser.id || '',
+    userId: assignedMloId, assignedMloId: assignedMloId, assignedMloName: assignedMloName,
+    submittedByRealtor: true, mloApproved: false,
+    dealOutcome: 'Pending', status: 'pending',
+    createdAt: new Date().toISOString(), sentAt: new Date().toISOString()
+  };
+  try {
+    var docRef = await db.collection('oyz').add(ohData);
+    try {
+      await db.collection('notifications').add({
+        userId: assignedMloId, type: 'realtor-submission',
+        title: 'New Open House Submitted',
+        message: (currentUser.name || 'A realtor') + ' submitted an open house at ' + fullAddress,
+        realtorUserId: currentUser.id || '', realtorName: currentUser.name || '',
+        oyzId: docRef.id, read: false, createdAt: new Date().toISOString()
+      });
+    } catch(notifErr) { console.warn('[OH notif write]', notifErr); }
+    ['oh-address','oh-city','oh-state','oh-zip','oh-date','oh-listing','oh-contact','oh-comments'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    if (btn) { btn.textContent = '📤 Submit Open House'; btn.disabled = false; }
+    rpToggleAddOpenHouseForm();
+    showToast('✅ Open house submitted to ' + (assignedMloName || 'your MLO'));
+    renderRPOpenHouses();
+  } catch(e) {
+    if (btn) { btn.textContent = '📤 Submit Open House'; btn.disabled = false; }
+    if (errEl) { errEl.textContent = 'Failed to submit. Please try again.'; errEl.style.display = 'block'; }
+  }
+}
+
+// ── PART 3: BILLING INFRASTRUCTURE ────────────────────────────
+function checkAccountStatus(user) {
+  if (!user) return 'active';
+  var status = user.accountStatus;
+  if (!status || status === 'active') return 'active';
+  if (status === 'suspended') return 'suspended';
+  if (status === 'trial') {
+    if (!user.trialEndDate) return 'trial';
+    if (Date.now() > new Date(user.trialEndDate).getTime()) return 'trial_expired';
+    return 'trial';
+  }
+  return 'active';
+}
+
+function showBillingComingSoon() {
+  showToast('💳 Billing portal coming soon! Contact your admin to upgrade.');
+}
+
+// ── PART 5: ADMIN BILLING PANEL ────────────────────────────────
+function renderAdminBilling() {
+  var summaryEl = document.getElementById('admin-billing-summary');
+  var tableEl   = document.getElementById('admin-billing-table');
+  if (!summaryEl || !tableEl) return;
+  var users = cachedUsers;
+  var now = Date.now();
+  var active = 0, trial = 0, expired = 0, suspended = 0;
+  users.forEach(function(u) {
+    var s = checkAccountStatus(u);
+    if (s === 'active') active++;
+    else if (s === 'trial') trial++;
+    else if (s === 'trial_expired') expired++;
+    else if (s === 'suspended') suspended++;
+  });
+  var activeRevenue = active * 79;
+  summaryEl.innerHTML = [
+    { label: 'Active', val: active, color: '#059669', bg: '#f0fdf4' },
+    { label: 'On Trial', val: trial, color: '#d97706', bg: '#fffbeb' },
+    { label: 'Trial Expired', val: expired, color: '#dc2626', bg: '#fef2f2' },
+    { label: 'Suspended', val: suspended, color: '#7c3aed', bg: '#faf5ff' }
+  ].map(function(s) {
+    return '<div style="background:' + s.bg + ';border-radius:10px;padding:14px 10px;text-align:center">'
+      + '<div style="font-size:24px;font-weight:800;color:' + s.color + '">' + s.val + '</div>'
+      + '<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px">' + s.label + '</div>'
+      + '</div>';
+  }).join('')
+  + '<div style="background:#eff6ff;border-radius:10px;padding:14px 10px;text-align:center">'
+  + '<div style="font-size:24px;font-weight:800;color:#2563eb">$' + activeRevenue.toLocaleString() + '</div>'
+  + '<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px">Est. MRR</div>'
+  + '</div>';
+
+  if (!users.length) { tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No users found.</div>'; return; }
+  var rows = users.map(function(u) {
+    var acctStatus = checkAccountStatus(u);
+    var statusBadge = {
+      active:       '<span style="background:#f0fdf4;color:#059669;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Active</span>',
+      trial:        '<span style="background:#fffbeb;color:#d97706;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Trial</span>',
+      trial_expired:'<span style="background:#fef2f2;color:#dc2626;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Expired</span>',
+      suspended:    '<span style="background:#faf5ff;color:#7c3aed;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Suspended</span>'
+    }[acctStatus] || '<span style="background:#f1f5f9;color:#64748b;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">—</span>';
+    var tier = u.subscriptionTier || (acctStatus === 'active' ? 'team' : 'individual');
+    var daysLeft = '—';
+    if (acctStatus === 'trial' && u.trialEndDate) {
+      daysLeft = Math.max(0, Math.ceil((new Date(u.trialEndDate) - now) / 86400000)) + 'd';
+    } else if (acctStatus === 'trial_expired') { daysLeft = '0d'; }
+    var rowBg = acctStatus === 'trial_expired' ? '#fff5f5' : acctStatus === 'suspended' ? '#faf5ff' : '';
+    return '<tr style="' + (rowBg ? 'background:' + rowBg + ';' : '') + 'border-bottom:1px solid #f1f5f9">'
+      + '<td style="padding:10px 12px;font-size:13px;font-weight:600">' + (u.name || '—') + '</td>'
+      + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (u.email || '—') + '</td>'
+      + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + (u.role || '—') + '</td>'
+      + '<td style="padding:10px 12px">' + statusBadge + '</td>'
+      + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + tier + '</td>'
+      + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + daysLeft + '</td>'
+      + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + (u.created || '—') + '</td>'
+      + '<td style="padding:10px 12px">'
+      +   '<button onclick="adminSetBillingStatus(\'' + u.id + '\',\'active\')" style="font-size:11px;padding:4px 8px;border:1px solid #d1fae5;border-radius:5px;background:#f0fdf4;color:#059669;cursor:pointer;margin-right:4px">Activate</button>'
+      +   '<button onclick="adminSetBillingStatus(\'' + u.id + '\',\'trial\')" style="font-size:11px;padding:4px 8px;border:1px solid #fde68a;border-radius:5px;background:#fffbeb;color:#d97706;cursor:pointer;margin-right:4px">Reset Trial</button>'
+      +   '<button onclick="adminSetBillingStatus(\'' + u.id + '\',\'suspended\')" style="font-size:11px;padding:4px 8px;border:1px solid #e9d5ff;border-radius:5px;background:#faf5ff;color:#7c3aed;cursor:pointer">Suspend</button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+  tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse">'
+    + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">'
+    + ['Name','Email','Role','Status','Tier','Trial Days','Joined','Actions'].map(function(h) {
+        return '<th style="padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;text-align:left">' + h + '</th>';
+      }).join('')
+    + '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+async function adminSetBillingStatus(userId, newStatus) {
+  var user = cachedUsers.find(function(u) { return u.id === userId; });
+  if (!user) return;
+  var now = new Date();
+  if (newStatus === 'active') {
+    user.accountStatus = 'active'; user.subscriptionStatus = 'active'; user.subscriptionTier = user.subscriptionTier || 'team';
+  } else if (newStatus === 'trial') {
+    var trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    user.accountStatus = 'trial'; user.trialStartDate = now.toISOString(); user.trialEndDate = trialEnd.toISOString(); user.subscriptionStatus = 'trial';
+  } else if (newStatus === 'suspended') {
+    user.accountStatus = 'suspended'; user.subscriptionStatus = 'suspended';
+  }
+  await saveUser(user);
+  showToast('✅ ' + user.name + ' status updated to ' + newStatus);
+  renderAdminBilling();
 }
 
 var rpFarmParams = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
