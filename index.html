@@ -17,51 +17,82 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+:root {
+  --brand-primary: #1f2937;
+  --brand-accent: #0ed2c8;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
 
 #login-screen {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  min-height: 100vh; background: linear-gradient(135deg, var(--brand-primary) 0%, #374151 100%);
 }
 .login-box {
   background: white; border-radius: 18px; padding: 48px 40px; width: 100%; max-width: 400px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
 }
 .login-logo { margin-bottom: 12px; display: flex; justify-content: center; }
-.login-title { font-size: 22px; font-weight: 800; color: #1f2937; margin-bottom: 4px; }
+.login-title { font-size: 22px; font-weight: 800; color: var(--brand-primary); margin-bottom: 4px; }
 .login-sub { font-size: 13px; color: #7a8fa6; margin-bottom: 32px; }
 .login-box input {
   width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px;
   font-size: 16px; margin-bottom: 14px; outline: none; transition: border 0.2s;
 }
-.login-box input:focus { border-color: #0ed2c8; }
+.login-box input:focus { border-color: var(--brand-accent); }
 .login-btn {
-  width: 100%; padding: 14px; background: linear-gradient(135deg, #1f2937, #374151);
+  width: 100%; padding: 14px; background: linear-gradient(135deg, var(--brand-primary), #374151);
   color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
 }
-.login-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.login-btn:hover { background: linear-gradient(135deg, var(--brand-accent), #06b6aa); color: var(--brand-primary); }
 .login-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
 
-#app-screen, #admin-screen { display: none; }
+#app-screen, #admin-screen, #superadmin-screen { display: none; }
 
 .header {
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #374151 100%);
   padding: 0 32px; display: flex; align-items: stretch; justify-content: space-between;
   box-shadow: 0 2px 12px rgba(0,0,0,0.2); min-height: 70px;
 }
 .header-left { display: flex; align-items: center; gap: 14px; }
-.header-icon { width: 44px; height: 44px; background: #0ed2c8; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-icon { width: 44px; height: 44px; background: var(--brand-accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .header-title { color: white; font-size: 20px; font-weight: 800; }
 .header-sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
 .header-nav { display: flex; align-items: stretch; gap: 0; margin-left: 24px; }
 .nav-tab { color: rgba(255,255,255,0.6); border: none; background: none; padding: 0 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
-.nav-tab.active { color: #0ed2c8; border-bottom-color: #0ed2c8; }
+.nav-tab.active { color: var(--brand-accent); border-bottom-color: var(--brand-accent); }
 .header-actions { display: flex; gap: 10px; align-items: center; }
 .hdr-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-weight: 600; min-height: 44px; }
 .hdr-btn:hover { background: rgba(255,255,255,0.2); }
-.hdr-btn.teal { background: #0ed2c8; color: #1f2937; border-color: #0ed2c8; font-weight: 700; }
+.hdr-btn.teal { background: var(--brand-accent); color: var(--brand-primary); border-color: var(--brand-accent); font-weight: 700; }
+/* Super Admin header style */
+.header-superadmin { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%) !important; }
+/* Signup screen */
+#signup-screen { display: none; min-height: 100vh; background: linear-gradient(135deg, var(--brand-primary) 0%, #374151 100%); align-items: center; justify-content: center; }
+.signup-box { background: white; border-radius: 18px; padding: 40px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.signup-step { display: none; }
+.signup-step.active { display: block; }
+.signup-step-indicator { display: flex; gap: 8px; margin-bottom: 24px; justify-content: center; }
+.signup-step-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; transition: background 0.2s; }
+.signup-step-dot.active { background: var(--brand-accent); }
+.signup-field { margin-bottom: 14px; }
+.signup-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.signup-field input, .signup-field select { width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; font-family: inherit; }
+.signup-field input:focus, .signup-field select:focus { border-color: var(--brand-accent); }
+.signup-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--brand-primary), #374151); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+.signup-btn:hover { opacity: 0.9; }
+/* SA panel styles */
+.sa-header { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); padding: 0 32px; display: flex; align-items: stretch; justify-content: space-between; box-shadow: 0 2px 12px rgba(0,0,0,0.3); min-height: 70px; }
+.sa-tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; }
+.sa-tab { padding: 12px 20px; font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; background: none; border-top: none; border-left: none; border-right: none; }
+.sa-tab.active { color: #7f1d1d; border-bottom-color: #7f1d1d; }
+.sa-tab-content { display: none; }
+.sa-tab-content.active { display: block; }
+.sa-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 14px; margin-bottom: 24px; }
+.sa-stat-card { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; }
+.sa-stat-num { font-size: 28px; font-weight: 900; color: #7f1d1d; }
+.sa-stat-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
 
 .main { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
 .card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
@@ -1195,6 +1226,7 @@ admin@lmitool.com</div>
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
       <button class="notif-bell-btn" id="notif-bell" onclick="openNotifications()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
       <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">🛡 Admin</span>
+      <span id="superadmin-nav-btn" class="hdr-btn" onclick="goSuperAdmin()" style="display:none;background:#7f1d1d;border-color:#7f1d1d;color:white">⚡ Super Admin</span>
       <button class="hdr-btn" onclick="logout()">Sign Out</button>
     </div>
   </div>
@@ -1804,6 +1836,33 @@ admin@lmitool.com</div>
       </div>
       <div id="admin-activity-list"><div class="empty-activity">Loading...</div></div>
     </div>
+    <div class="admin-card" id="admin-org-settings-card" style="display:none">
+      <div class="admin-card-header"><div class="admin-card-title">🎨 Organization Settings</div></div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px">Customize your organization's branding. Changes apply immediately for all users.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:480px;margin-bottom:16px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Organization Name</label>
+          <input type="text" id="org-name-input" placeholder="Your Organization" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Tagline</label>
+          <input type="text" id="org-tagline-input" placeholder="CRA/HMDA · Mortgage" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Primary Color (header)</label>
+          <input type="color" id="org-primary-color" value="#1f2937" style="width:100%;height:42px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Accent Color (teal)</label>
+          <input type="color" id="org-accent-color" value="#0ed2c8" style="width:100%;height:42px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer" />
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="previewOrgBranding()" style="padding:10px 18px;background:white;color:#374151;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👁 Preview</button>
+        <button onclick="saveOrgSettings()" style="padding:10px 18px;background:linear-gradient(135deg,#1f2937,#374151);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Branding</button>
+      </div>
+      <div id="org-settings-status" style="font-size:12px;color:#059669;margin-top:8px;display:none"></div>
+    </div>
     <div class="admin-card" id="admin-billing-card">
       <div class="admin-card-header">
         <div class="admin-card-title">💳 Subscriptions &amp; Billing</div>
@@ -1811,6 +1870,195 @@ admin@lmitool.com</div>
       </div>
       <div id="admin-billing-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px"></div>
       <div id="admin-billing-table" style="overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPER ADMIN SCREEN -->
+<div id="superadmin-screen">
+  <div class="sa-header header">
+    <div class="header-left">
+      <div class="header-icon" style="background:#c53030">⚡</div>
+      <div><div class="header-title">Super Admin</div><div class="header-sub">LMI Tool — Platform Management</div></div>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn" onclick="goApp()">← Back to Tool</button>
+      <button class="hdr-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  <div style="max-width:1100px;margin:0 auto;padding:28px 20px">
+    <div class="sa-tabs">
+      <button class="sa-tab active" id="sa-tab-orgs" onclick="saShowTab('orgs')">🏢 Organizations</button>
+      <button class="sa-tab" id="sa-tab-users" onclick="saShowTab('users')">👥 All Users</button>
+      <button class="sa-tab" id="sa-tab-billing" onclick="saShowTab('billing')">💳 Billing Overview</button>
+      <button class="sa-tab" id="sa-tab-settings" onclick="saShowTab('settings')">⚙️ Platform Settings</button>
+    </div>
+    <!-- ORGS TAB -->
+    <div class="sa-tab-content active" id="sa-content-orgs">
+      <div class="sa-stat-grid" id="sa-org-stats"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:15px;font-weight:800;color:#1f2937">🏢 All Organizations</div>
+        <button onclick="openCreateOrgModal()" style="background:#7f1d1d;color:white;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">+ Create Organization</button>
+      </div>
+      <div id="sa-org-table" style="overflow-x:auto"></div>
+    </div>
+    <!-- USERS TAB -->
+    <div class="sa-tab-content" id="sa-content-users">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <select id="sa-filter-org" onchange="renderSAUsers()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none"><option value="all">All Organizations</option></select>
+        <select id="sa-filter-role" onchange="renderSAUsers()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none">
+          <option value="all">All Roles</option>
+          <option value="superadmin">Super Admin</option>
+          <option value="admin">Admin</option>
+          <option value="mlo">MLO</option>
+          <option value="realtor">Realtor</option>
+        </select>
+        <select id="sa-filter-status" onchange="renderSAUsers()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none">
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div id="sa-users-table" style="overflow-x:auto"></div>
+    </div>
+    <!-- BILLING TAB -->
+    <div class="sa-tab-content" id="sa-content-billing">
+      <div class="sa-stat-grid" id="sa-billing-stats"></div>
+      <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:16px">💳 Organization Billing</div>
+      <div id="sa-billing-table" style="overflow-x:auto"></div>
+    </div>
+    <!-- SETTINGS TAB -->
+    <div class="sa-tab-content" id="sa-content-settings">
+      <div style="background:white;border-radius:14px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);max-width:520px">
+        <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:20px">⚙️ Platform Settings</div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Default Trial Length (days)</label>
+          <input type="number" id="sa-trial-days" value="30" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" />
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Individual Plan Price ($/mo)</label>
+          <input type="number" id="sa-price-individual" value="49" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" />
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Team Plan Price ($/mo)</label>
+          <input type="number" id="sa-price-team" value="199" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" />
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Platform Announcement (shown to all users)</label>
+          <textarea id="sa-announcement" rows="2" placeholder="Leave blank for no announcement..." style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;font-family:inherit;resize:vertical"></textarea>
+        </div>
+        <button onclick="savePlatformSettings()" style="background:#7f1d1d;color:white;border:none;border-radius:9px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:10px">Save Platform Settings</button>
+        <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:8px">
+          <div style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:8px">🔧 Data Migration</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px">Backfill orgId: "golden1-org" onto all existing users, OYZ entries, activities, and realtors that don't have an orgId yet.</div>
+          <button onclick="runDataMigration()" style="background:#374151;color:white;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">▶ Run Migration</button>
+          <div id="sa-migration-status" style="font-size:12px;color:#64748b;margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE ORG MODAL -->
+<div class="prequal-modal-overlay" id="create-org-modal">
+  <div class="prequal-modal-box" style="max-width:520px">
+    <div class="prequal-modal-header" style="background:linear-gradient(135deg,#7f1d1d,#991b1b)">
+      <div class="prequal-modal-title">🏢 Create New Organization</div>
+      <button class="prequal-modal-close" onclick="closeCreateOrgModal()">✕</button>
+    </div>
+    <div class="prequal-modal-body">
+      <div class="rp-form-group"><label>Organization Name *</label><input type="text" id="co-org-name" placeholder="Golden 1 Credit Union" /></div>
+      <div class="rp-form-row">
+        <div class="rp-form-group"><label>Admin First Name *</label><input type="text" id="co-admin-fname" placeholder="Jane" /></div>
+        <div class="rp-form-group"><label>Admin Last Name *</label><input type="text" id="co-admin-lname" placeholder="Smith" /></div>
+      </div>
+      <div class="rp-form-group"><label>Admin Email *</label><input type="email" id="co-admin-email" placeholder="jane@company.com" /></div>
+      <div class="rp-form-group"><label>Admin Password *</label><input type="text" id="co-admin-password" placeholder="Min 8 characters" /></div>
+      <div class="rp-form-row">
+        <div class="rp-form-group"><label>Primary Color</label><input type="color" id="co-primary-color" value="#1f2937" style="height:42px" /></div>
+        <div class="rp-form-group"><label>Accent Color</label><input type="color" id="co-accent-color" value="#0ed2c8" style="height:42px" /></div>
+      </div>
+      <div class="rp-form-group">
+        <label>Subscription Tier</label>
+        <select id="co-tier" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;font-family:inherit">
+          <option value="trial">Trial (30 days)</option>
+          <option value="individual">Individual ($49/mo)</option>
+          <option value="team">Team ($199/mo)</option>
+        </select>
+      </div>
+      <div style="color:#dc2626;font-size:12px;margin-top:4px;display:none" id="co-error"></div>
+      <button onclick="createOrganization()" style="width:100%;padding:12px;background:linear-gradient(135deg,#7f1d1d,#991b1b);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px" id="co-submit-btn">🏢 Create Organization</button>
+    </div>
+  </div>
+</div>
+
+<!-- SELF-SIGNUP SCREEN -->
+<div id="signup-screen" style="display:none;min-height:100vh;background:linear-gradient(135deg,#1f2937 0%,#374151 100%);align-items:center;justify-content:center;padding:20px">
+  <div class="signup-box">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:26px;font-weight:900;color:#1f2937">LMI Prospect Finder</div>
+      <div style="font-size:13px;color:#64748b;margin-top:4px">Start your free 30-day trial</div>
+    </div>
+    <div class="signup-step-indicator">
+      <div class="signup-step-dot active" id="sdot-1"></div>
+      <div class="signup-step-dot" id="sdot-2"></div>
+      <div class="signup-step-dot" id="sdot-3"></div>
+    </div>
+    <!-- Step 1: Company Info -->
+    <div class="signup-step active" id="signup-step-1">
+      <div style="font-size:18px;font-weight:800;color:#1f2937;margin-bottom:4px">Tell us about your company</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:20px">Step 1 of 3</div>
+      <div class="signup-field"><label>Company / Organization Name *</label><input type="text" id="su-org-name" placeholder="Golden 1 Credit Union" /></div>
+      <div class="signup-field">
+        <label>Industry</label>
+        <select id="su-industry">
+          <option value="Mortgage">Mortgage</option>
+          <option value="Real Estate">Real Estate</option>
+          <option value="Banking">Banking</option>
+          <option value="Credit Union">Credit Union</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="signup-field">
+        <label>Estimated Team Size</label>
+        <select id="su-team-size">
+          <option value="1-5">1–5 people</option>
+          <option value="6-20">6–20 people</option>
+          <option value="21-50">21–50 people</option>
+          <option value="50+">50+ people</option>
+        </select>
+      </div>
+      <div style="color:#dc2626;font-size:12px;margin-top:4px;display:none" id="su-err-1"></div>
+      <button class="signup-btn" onclick="signupStep1Next()">Continue →</button>
+    </div>
+    <!-- Step 2: Admin Account -->
+    <div class="signup-step" id="signup-step-2">
+      <div style="font-size:18px;font-weight:800;color:#1f2937;margin-bottom:4px">Create your admin account</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:20px">Step 2 of 3</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="signup-field"><label>First Name *</label><input type="text" id="su-fname" placeholder="Jane" /></div>
+        <div class="signup-field"><label>Last Name *</label><input type="text" id="su-lname" placeholder="Smith" /></div>
+      </div>
+      <div class="signup-field"><label>Email *</label><input type="email" id="su-email" placeholder="jane@company.com" /></div>
+      <div class="signup-field"><label>Password * (min 8 characters)</label><input type="password" id="su-password" placeholder="••••••••" /></div>
+      <div class="signup-field"><label>Confirm Password *</label><input type="password" id="su-confirm" placeholder="••••••••" /></div>
+      <div style="color:#dc2626;font-size:12px;margin-top:4px;display:none" id="su-err-2"></div>
+      <button class="signup-btn" onclick="signupStep2Next()">Continue →</button>
+      <button onclick="signupGoBack(1)" style="width:100%;padding:10px;background:none;color:#64748b;border:none;font-size:13px;cursor:pointer;margin-top:8px">← Back</button>
+    </div>
+    <!-- Step 3: Confirm -->
+    <div class="signup-step" id="signup-step-3">
+      <div style="font-size:18px;font-weight:800;color:#1f2937;margin-bottom:4px">Confirm &amp; start your trial</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:20px">Step 3 of 3</div>
+      <div id="su-summary" style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:#374151"></div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px">
+        <input type="checkbox" id="su-tos" style="width:16px;height:16px;margin-top:2px;flex-shrink:0" />
+        <label for="su-tos" style="font-size:12px;color:#64748b">I agree to the Terms of Service and Privacy Policy</label>
+      </div>
+      <div style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none" id="su-err-3"></div>
+      <button class="signup-btn" id="su-submit-btn" onclick="submitSignup()" style="background:linear-gradient(135deg,#059669,#0d9488)">🚀 Start Free 30-Day Trial</button>
+      <button onclick="signupGoBack(2)" style="width:100%;padding:10px;background:none;color:#64748b;border:none;font-size:13px;cursor:pointer;margin-top:8px">← Back</button>
+      <div style="text-align:center;margin-top:12px"><a href="/" style="font-size:12px;color:#94a3b8">Already have an account? Sign in</a></div>
     </div>
   </div>
 </div>
@@ -2342,9 +2590,35 @@ const ACTIVITY_BAR_COLORS = {
 };
 const DEFAULT_ADMIN = {
   id:'admin-aaron', name:'Aaron Simonson', email:'asimonson@golden1.com',
-  password:'G1Admin2024!', role:'admin', type:'N/A', region:'Both',
-  active:true, branches:[], created:new Date().toLocaleDateString()
+  password:'G1Admin2024!', role:'superadmin', type:'N/A', region:'Both',
+  active:true, branches:[], created:new Date().toLocaleDateString(),
+  orgId:'golden1-org', accountStatus:'active', subscriptionTier:'team', subscriptionStatus:'active'
 };
+
+// ── ROLE HELPERS ──────────────────────────────────────────────
+function isSuperAdmin() { return !!(currentUser && currentUser.role === 'superadmin'); }
+function isTenantAdmin() { return !!(currentUser && currentUser.role === 'admin'); }
+function isAnyAdmin() { return isSuperAdmin() || isTenantAdmin(); }
+function isMLO() { return !!(currentUser && currentUser.role === 'mlo'); }
+function isRealtor() { return !!(currentUser && currentUser.role === 'realtor'); }
+
+// ── ORG BRANDING ──────────────────────────────────────────────
+let currentOrg = null;
+let cachedAllOrgs = [];
+
+async function loadCurrentOrg() {
+  if (!currentUser || !currentUser.orgId || !db) return;
+  try {
+    const doc = await db.collection('organizations').doc(currentUser.orgId).get();
+    if (doc.exists) { currentOrg = Object.assign({ id: doc.id }, doc.data()); applyOrgBranding(currentOrg); }
+  } catch(e) { console.warn('[loadCurrentOrg]', e); }
+}
+
+function applyOrgBranding(org) {
+  if (!org) return;
+  if (org.primaryColor) document.documentElement.style.setProperty('--brand-primary', org.primaryColor);
+  if (org.accentColor) document.documentElement.style.setProperty('--brand-accent', org.accentColor);
+}
 
 // ── TOKEN GENERATOR ───────────────────────────────────────────
 function generateToken() {
@@ -2372,7 +2646,7 @@ async function sendInvite() {
   const expiresAt = Date.now() + (72 * 60 * 60 * 1000);
   const inviteLink = APP_URL + '/?invite=' + token;
   const realtorDocId = role === 'realtor' ? (document.getElementById('new-realtor-docid').value || '') : '';
-  const inviteData = { token, name, email, role, type, region, linkedMloId: role === 'realtor' ? currentUser.id : '', realtorDocId, expiresAt, used: false, createdAt: new Date().toISOString() };
+  const inviteData = { token, name, email, role, type, region, linkedMloId: role === 'realtor' ? currentUser.id : '', realtorDocId, orgId: currentUser.orgId || '', expiresAt, used: false, createdAt: new Date().toISOString() };
   try {
     await db.collection('invites').doc(token).set(inviteData);
   } catch(e) {
@@ -2450,7 +2724,8 @@ async function submitInviteSetup() {
     trialStartDate: _invNow.toISOString(),
     trialEndDate: _invTrialEnd.toISOString(),
     subscriptionTier: 'individual',
-    subscriptionStatus: 'trial'
+    subscriptionStatus: 'trial',
+    orgId: inviteUserData.orgId || ''
   };
   if (inviteUserData.role === 'realtor') {
     newUser.linkedMloId = inviteUserData.linkedMloId || '';
@@ -2519,6 +2794,11 @@ async function getUsers() {
       users = [DEFAULT_ADMIN].concat(users);
     }
     users.forEach(function(u) { if (!u.branches) u.branches = []; });
+    // Tenant admin: filter to own org only; superadmin sees all
+    if (currentUser && isTenantAdmin() && currentUser.orgId) {
+      const orgId = currentUser.orgId;
+      users = users.filter(function(u) { return u.orgId === orgId || (!u.orgId && orgId === 'golden1-org'); });
+    }
     return users;
   } catch(e) { return [DEFAULT_ADMIN]; }
 }
@@ -2594,6 +2874,29 @@ async function fetchOyzEntries(isAdmin) {
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
+async function _postLoginSetup(user) {
+  // Shared post-login initialization for MLO/Admin/SuperAdmin
+  await loadCurrentOrg();
+  document.getElementById('app-screen').style.display = 'block';
+  if (isAnyAdmin()) {
+    document.getElementById('admin-nav-btn').style.display = 'inline-block';
+  }
+  if (isSuperAdmin()) {
+    document.getElementById('superadmin-nav-btn').style.display = 'inline-block';
+  }
+  renderBranchShortcuts();
+  cachedProspects = await fetchMyProspects(); renderSaved();
+  cachedRealtors = await fetchMyRealtors();
+  cachedActivities = await fetchMyActivities();
+  if (isAnyAdmin()) allTeamActivities = await fetchAllActivities();
+  cachedOyzEntries = await fetchOyzEntries(isAnyAdmin());
+  cachedOYZ = cachedOyzEntries;
+  setDefaultDate();
+  loadProfileToSettings();
+  generateNotifications();
+  if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
+}
+
 async function tryLogin() {
   const emailInput = document.getElementById('login-email').value.trim().toLowerCase();
   const pass = document.getElementById('login-password').value;
@@ -2608,38 +2911,29 @@ async function tryLogin() {
     sessionStorage.setItem('g1_session', JSON.stringify(user));
     document.getElementById('login-screen').style.display = 'none';
     if (user.role === 'realtor') {
-      console.log('[tryLogin] Realtor login — id:', user.id, '| realtorDocId:', user.realtorDocId || '(not set)', '| linkedMloId:', user.linkedMloId || '(not set)');
+      console.log('[tryLogin] Realtor login — id:', user.id, '| realtorDocId:', user.realtorDocId || '(not set)');
       if (user.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
-    document.getElementById('app-screen').style.display = 'block';
-    if (user.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
-    renderBranchShortcuts();
-    cachedProspects = await fetchMyProspects();
-    renderSaved();
-    cachedRealtors = await fetchMyRealtors();
-    cachedActivities = await fetchMyActivities();
-    if (user.role === 'admin') allTeamActivities = await fetchAllActivities();
-    cachedOyzEntries = await fetchOyzEntries(user.role === 'admin');
-    cachedOYZ = cachedOyzEntries;
-    setDefaultDate();
-    loadProfileToSettings();
-    generateNotifications();
-    if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
+    await _postLoginSetup(user);
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
 }
 
 function logout() {
-  currentUser = null;
+  currentUser = null; currentOrg = null;
   cachedProspects = []; cachedActivities = []; cachedRealtors = []; allTeamActivities = [];
   realtorPortalMlo = null; realtorSearches = []; realtorPrequals = []; realtorPushes = []; currentQualData = null;
   restoreMloBottomNav();
   editingProspectDocId = null;
   sessionStorage.removeItem('g1_session');
+  // Reset branding to defaults
+  document.documentElement.style.setProperty('--brand-primary', '#1f2937');
+  document.documentElement.style.setProperty('--brand-accent', '#0ed2c8');
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('superadmin-screen').style.display = 'none';
   document.getElementById('realtor-portal-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-email').value = '';
@@ -2648,28 +2942,50 @@ function logout() {
 }
 
 async function goAdmin() {
-  if (!currentUser || currentUser.role !== 'admin') return;
+  if (!currentUser || !isAnyAdmin()) return;
   document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('superadmin-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'block';
   cachedUsers = await getUsers();
   renderAdminStats(); renderUserTable();
   await renderAdminProspects(); populateProspectFilter();
   await renderAdminActivity(); populateAdminActivityFilter();
   renderAdminBilling();
+  // Show org settings for tenant admins
+  var orgCard = document.getElementById('admin-org-settings-card');
+  if (orgCard) orgCard.style.display = isTenantAdmin() ? 'block' : 'none';
+  if (isTenantAdmin() && currentOrg) {
+    var nameEl = document.getElementById('org-name-input');
+    var tagEl  = document.getElementById('org-tagline-input');
+    var priEl  = document.getElementById('org-primary-color');
+    var accEl  = document.getElementById('org-accent-color');
+    if (nameEl) nameEl.value = currentOrg.name || '';
+    if (tagEl)  tagEl.value  = currentOrg.tagline || '';
+    if (priEl)  priEl.value  = currentOrg.primaryColor || '#1f2937';
+    if (accEl)  accEl.value  = currentOrg.accentColor || '#0ed2c8';
+  }
 }
 
 function goApp() {
   document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('superadmin-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
   renderBranchShortcuts(); renderSaved();
 }
 
 window.onload = async function() {
+  // Check for self-signup URL param
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('signup') === 'true') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('signup-screen').style.display = 'flex';
+    return;
+  }
   const isFlyerPage = await checkFlyerParam();
   if (isFlyerPage) return;
   await checkInviteParam();
   const s = sessionStorage.getItem('g1_session');
-  if (s && !new URLSearchParams(window.location.search).get('invite')) {
+  if (s && !params.get('invite')) {
     const saved = JSON.parse(s);
     cachedUsers = await getUsers();
     currentUser = cachedUsers.find(function(u) { return u.id === saved.id; }) || saved;
@@ -2678,19 +2994,7 @@ window.onload = async function() {
       if (currentUser.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
-    document.getElementById('app-screen').style.display = 'block';
-    if (currentUser.role === 'admin') document.getElementById('admin-nav-btn').style.display = 'inline-block';
-    renderBranchShortcuts();
-    cachedProspects = await fetchMyProspects(); renderSaved();
-    cachedRealtors = await fetchMyRealtors();
-    cachedActivities = await fetchMyActivities();
-    if (currentUser.role === 'admin') allTeamActivities = await fetchAllActivities();
-    cachedOyzEntries = await fetchOyzEntries(currentUser.role === 'admin');
-    cachedOYZ = cachedOyzEntries;
-    setDefaultDate();
-    loadProfileToSettings();
-    generateNotifications();
-    if (currentUser.tosAccepted) { showTab('home'); } else { showTOSModal(); }
+    await _postLoginSetup(currentUser);
   }
 };
 
@@ -2929,7 +3233,7 @@ function oyzCardHtml(e, isAdmin) {
 function renderOYZList() {
   var list = document.getElementById('oyz-list');
   if (!list) return;
-  var isAdmin = currentUser && currentUser.role === 'admin';
+  var isAdmin = currentUser && isAnyAdmin();
   var filterMlo = isAdmin ? (document.getElementById('oyz-filter-mlo') ? document.getElementById('oyz-filter-mlo').value : 'all') : 'all';
 
   // All entries sorted by openHouseDate ascending (already sorted from Firestore)
@@ -3061,6 +3365,7 @@ async function submitOYZ() {
     userId: currentUser.id,
     userName: currentUser.name,
     userRegion: currentUser.region || '',
+    orgId: currentUser.orgId || '',
     savedAt: new Date().toISOString()
   };
 
@@ -4035,7 +4340,7 @@ async function renderDashboard() {
   }
 
   const adminSection = document.getElementById('dash-admin-section');
-  if (currentUser.role === 'admin') {
+  if (isAnyAdmin()) {
     adminSection.style.display = 'block';
     const filteredTeam = allTeamActivities.filter(function(a) { return inDateRange(a.loggedAt, from, to); });
     renderTeamStats(filteredTeam);
@@ -4534,6 +4839,7 @@ async function submitActivity() {
   if (!lmi)     { showToast('⚠️ Please select an LMI category'); return; }
   const entry = {
     userId: currentUser.id, userName: currentUser.name, userRegion: currentUser.region,
+    orgId: currentUser.orgId || '',
     type: type, borrower: borrower, date: date, zip: zip, city: city,
     lmiCategory: lmi, loanAmount: amount ? parseInt(amount) : null, notes: notes,
     loggedAt: new Date().toISOString()
@@ -4546,13 +4852,13 @@ async function submitActivity() {
     entry.openHouseClients  = document.getElementById('log-clients').value.trim();
   }
   cachedActivities.unshift(Object.assign({ docId: 'pending-' + Date.now() }, entry));
-  if (currentUser.role === 'admin') allTeamActivities.unshift(Object.assign({ docId: 'pending-' + Date.now() }, entry));
+  if (isAnyAdmin()) allTeamActivities.unshift(Object.assign({ docId: 'pending-' + Date.now() }, entry));
   renderActivityLog(); renderActivityStats(); clearLogForm();
   showToast('✅ Activity logged: ' + type);
   try {
     await db.collection('activity').add(entry);
     cachedActivities = await fetchMyActivities();
-    if (currentUser.role === 'admin') allTeamActivities = await fetchAllActivities();
+    if (isAnyAdmin()) allTeamActivities = await fetchAllActivities();
     renderActivityLog(); renderActivityStats();
   } catch(e) {}
 }
@@ -4669,7 +4975,8 @@ function openSettings() {
   document.getElementById('settings-panel').classList.add('open');
   document.getElementById('settings-backdrop').classList.add('open');
   document.getElementById('settings-user-name').textContent = currentUser.name;
-  document.getElementById('settings-user-meta').textContent = currentUser.email + ' · ' + (currentUser.role === 'admin' ? 'Admin' : 'MLO') + ' · ' + currentUser.region;
+  var _roleLabel = isSuperAdmin() ? 'Super Admin' : isTenantAdmin() ? 'Admin' : isMLO() ? 'MLO' : 'User';
+  document.getElementById('settings-user-meta').textContent = currentUser.email + ' · ' + _roleLabel + ' · ' + (currentUser.region || '');
   ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('s-pw-error').style.display = 'none';
   document.getElementById('s-pw-success').style.display = 'none';
@@ -4696,7 +5003,7 @@ function openSettings() {
     var _as = checkAccountStatus(currentUser);
     _upgradeSection.style.display = (_as === 'active') ? 'none' : 'block';
   }
-  if (currentUser.role === 'admin') {
+  if (isAnyAdmin()) {
     document.getElementById('admin-reset-section').style.display = 'block';
     const select = document.getElementById('s-admin-user-select');
     select.innerHTML = '<option value="">Select a user...</option>';
@@ -4748,7 +5055,7 @@ async function saveAdminPasswordFromSettings() {
 // ── BRANCHES ──────────────────────────────────────────────────
 function getBranchesForCurrentUser() {
   if (!currentUser) return [];
-  if (currentUser.role === 'admin') {
+  if (isAnyAdmin()) {
     const all = [];
     cachedUsers.forEach(function(u) { (u.branches || []).forEach(function(b) { all.push(Object.assign({}, b, { mloName: u.name })); }); });
     return all;
@@ -4760,7 +5067,7 @@ function renderBranchShortcuts() {
   const container = document.getElementById('branch-shortcuts-container');
   const branches  = getBranchesForCurrentUser();
   if (!branches.length) { container.innerHTML = ''; return; }
-  const isAdmin = currentUser.role === 'admin';
+  const isAdmin = isAnyAdmin();
   container.innerHTML = '<div class="branch-shortcuts"><div class="branch-shortcuts-label">🏢 My Branch Locations <span>' + (isAdmin ? 'Admin — All Branches' : 'Quick Search') + '</span></div>'
     + branches.map(function(b) { return '<button class="branch-btn" onclick="quickSearch(\'' + b.zip + '\')">' + b.zip + (isAdmin && b.mloName ? ' · ' + b.mloName : '') + '<span style="font-size:11px;opacity:0.75;margin-left:4px">— ' + b.name + ', ' + b.city + '</span></button>'; }).join('')
     + '</div>';
@@ -4832,7 +5139,7 @@ async function addUser() {
   if (!email || !email.includes('@')) { showFormErr('Please enter a valid email.'); return; }
   if (!pass)  { showFormErr('Please enter or generate a password.'); return; }
   if (cachedUsers.find(function(u) { return u.email.toLowerCase() === email; })) { showFormErr('A user with this email already exists.'); return; }
-  const newUser = { id: 'u-' + Date.now(), name: name, email: email, password: pass, role: role, type: type, region: region, active: true, branches: [], created: new Date().toLocaleDateString(), accountStatus: 'active', subscriptionTier: 'team', subscriptionStatus: 'active' };
+  const newUser = { id: 'u-' + Date.now(), name: name, email: email, password: pass, role: role, type: type, region: region, active: true, branches: [], created: new Date().toLocaleDateString(), accountStatus: 'active', subscriptionTier: 'team', subscriptionStatus: 'active', orgId: currentUser.orgId || '' };
   await saveUser(newUser);
   cachedUsers.push(newUser);
   ['new-name','new-email','new-password'].forEach(function(id) { document.getElementById(id).value = ''; });
@@ -4870,7 +5177,7 @@ function copyPassword(id) {
 function renderAdminStats() {
   document.getElementById('stat-total').textContent  = cachedUsers.length;
   document.getElementById('stat-active').textContent = cachedUsers.filter(function(u) { return u.active; }).length;
-  document.getElementById('stat-admins').textContent = cachedUsers.filter(function(u) { return u.role === 'admin'; }).length;
+  document.getElementById('stat-admins').textContent = cachedUsers.filter(function(u) { return u.role === 'admin' || u.role === 'superadmin'; }).length;
 }
 
 function renderUserTable() {
@@ -4884,7 +5191,7 @@ function renderUserTable() {
         return '<tr>'
           + '<td><strong>' + u.name + '</strong><br/><span style="font-size:11px;color:#94a3b8">' + (u.created || '') + '</span></td>'
           + '<td style="color:#64748b">' + u.email + '</td>'
-          + '<td><span class="role-badge ' + (u.role === 'admin' ? 'role-admin' : 'role-mlo') + '">' + (u.role === 'admin' ? 'Admin' : 'MLO') + '</span></td>'
+          + '<td><span class="role-badge ' + (u.role === 'admin' || u.role === 'superadmin' ? 'role-admin' : 'role-mlo') + '">' + (u.role === 'superadmin' ? 'Super Admin' : u.role === 'admin' ? 'Admin' : u.role === 'realtor' ? 'Realtor' : 'MLO') + '</span></td>'
           + '<td><span class="type-badge">' + (u.type || '—') + '</span></td>'
           + '<td style="color:#64748b">' + (u.region || '—') + '</td>'
           + '<td>' + (u.type === 'Internal'
@@ -5591,7 +5898,7 @@ function generateCraReport() {
     to   = document.getElementById('cra-to').value;
     if (!from || !to) { showToast('⚠️ Please select both From and To dates'); return; }
   }
-  var srcActs = (currentUser.role === 'admin' && allTeamActivities.length) ? allTeamActivities : cachedActivities;
+  var srcActs = (isAnyAdmin() && allTeamActivities.length) ? allTeamActivities : cachedActivities;
   var acts = srcActs.filter(function(a) { return a.date && a.date >= from && a.date <= to; });
   var total = acts.length;
   var applications = acts.filter(function(a) { return a.type && a.type.toLowerCase().includes('application'); }).length;
@@ -6196,6 +6503,415 @@ async function adminSetBillingStatus(userId, newStatus) {
   await saveUser(user);
   showToast('✅ ' + user.name + ' status updated to ' + newStatus);
   renderAdminBilling();
+}
+
+// ── SUPER ADMIN FUNCTIONS ─────────────────────────────────────
+async function goSuperAdmin() {
+  if (!isSuperAdmin()) return;
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('superadmin-screen').style.display = 'block';
+  saShowTab('orgs');
+}
+
+function saShowTab(tab) {
+  ['orgs','users','billing','settings'].forEach(function(t) {
+    var content = document.getElementById('sa-content-' + t);
+    var btn = document.getElementById('sa-tab-' + t);
+    if (content) content.classList.toggle('active', t === tab);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'orgs') renderSAOrgs();
+  if (tab === 'users') renderSAUsers();
+  if (tab === 'billing') renderSABilling();
+}
+
+async function renderSAOrgs() {
+  var statsEl = document.getElementById('sa-org-stats');
+  var tableEl = document.getElementById('sa-org-table');
+  if (!statsEl || !tableEl || !db) return;
+  statsEl.innerHTML = '<div class="sa-stat-card"><div class="sa-stat-num">⏳</div><div class="sa-stat-label">Loading...</div></div>';
+  try {
+    var snap = await db.collection('organizations').get();
+    cachedAllOrgs = [];
+    snap.forEach(function(d) { cachedAllOrgs.push(Object.assign({ id: d.id }, d.data())); });
+    // Also get all users for member counts
+    var userSnap = await db.collection('users').get();
+    var allUsers = []; userSnap.forEach(function(d) { allUsers.push(Object.assign({ id: d.id }, d.data())); });
+    var totalUsers = allUsers.length;
+    var activeOrgs = cachedAllOrgs.filter(function(o) { return o.subscriptionStatus === 'active'; }).length;
+    var trialOrgs  = cachedAllOrgs.filter(function(o) { return o.subscriptionStatus === 'trial' || o.subscriptionTier === 'trial'; }).length;
+    statsEl.innerHTML = [
+      { label: 'Total Orgs',     val: cachedAllOrgs.length, color: '#7f1d1d' },
+      { label: 'Active Subs',    val: activeOrgs,           color: '#059669' },
+      { label: 'On Trial',       val: trialOrgs,            color: '#d97706' },
+      { label: 'Platform Users', val: totalUsers,           color: '#2563eb' }
+    ].map(function(s) {
+      return '<div class="sa-stat-card"><div class="sa-stat-num" style="color:' + s.color + '">' + s.val + '</div><div class="sa-stat-label">' + s.label + '</div></div>';
+    }).join('');
+    if (!cachedAllOrgs.length) { tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No organizations yet.</div>'; return; }
+    // Populate org filter in Users tab
+    var orgFilter = document.getElementById('sa-filter-org');
+    if (orgFilter) {
+      orgFilter.innerHTML = '<option value="all">All Organizations</option>' + cachedAllOrgs.map(function(o) { return '<option value="' + o.id + '">' + o.name + '</option>'; }).join('');
+    }
+    var rows = cachedAllOrgs.map(function(org) {
+      var memberCount = allUsers.filter(function(u) { return u.orgId === org.id || (!u.orgId && org.id === 'golden1-org'); }).length;
+      var tier = org.subscriptionTier || 'trial';
+      var status = org.subscriptionStatus || 'trial';
+      var statusBadge = status === 'active' ? '<span style="background:#f0fdf4;color:#059669;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Active</span>'
+        : status === 'suspended' ? '<span style="background:#faf5ff;color:#7c3aed;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Suspended</span>'
+        : '<span style="background:#fffbeb;color:#d97706;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Trial</span>';
+      var daysLeft = '';
+      if (org.trialEndDate) { var d = Math.max(0, Math.ceil((new Date(org.trialEndDate) - Date.now()) / 86400000)); daysLeft = d + 'd'; }
+      return '<tr style="border-bottom:1px solid #f1f5f9">'
+        + '<td style="padding:10px 12px;font-size:13px;font-weight:700"><div style="display:flex;align-items:center;gap:8px">'
+        + (org.primaryColor ? '<div style="width:14px;height:14px;border-radius:3px;background:' + org.primaryColor + ';border:1px solid #e2e8f0"></div>' : '')
+        + org.name + '</div></td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (org.adminEmail || '—') + '</td>'
+        + '<td style="padding:10px 12px;font-size:13px;text-align:center">' + memberCount + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + tier + '</td>'
+        + '<td style="padding:10px 12px">' + statusBadge + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (daysLeft || '—') + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + (org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '—') + '</td>'
+        + '<td style="padding:10px 12px">'
+        + '<button onclick="saActivateOrg(\'' + org.id + '\')" style="font-size:11px;padding:4px 8px;border:1px solid #d1fae5;border-radius:5px;background:#f0fdf4;color:#059669;cursor:pointer;margin-right:4px">Activate</button>'
+        + '<button onclick="saSuspendOrg(\'' + org.id + '\')" style="font-size:11px;padding:4px 8px;border:1px solid #e9d5ff;border-radius:5px;background:#faf5ff;color:#7c3aed;cursor:pointer;margin-right:4px">Suspend</button>'
+        + '<button onclick="saDeleteOrg(\'' + org.id + '\')" style="font-size:11px;padding:4px 8px;border:1px solid #fecaca;border-radius:5px;background:#fef2f2;color:#dc2626;cursor:pointer">Delete</button>'
+        + '</td></tr>';
+    }).join('');
+    tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse">'
+      + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">'
+      + ['Organization','Admin Email','Members','Tier','Status','Trial Days','Created','Actions'].map(function(h) {
+          return '<th style="padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;text-align:left">' + h + '</th>';
+        }).join('')
+      + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  } catch(e) { console.error('[renderSAOrgs]', e); statsEl.innerHTML = '<div style="color:#dc2626">Error loading organizations.</div>'; }
+}
+
+async function renderSAUsers() {
+  var tableEl = document.getElementById('sa-users-table');
+  if (!tableEl || !db) return;
+  tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">Loading...</div>';
+  try {
+    var snap = await db.collection('users').get();
+    var users = []; snap.forEach(function(d) { users.push(Object.assign({ id: d.id }, d.data())); });
+    var orgFilter  = (document.getElementById('sa-filter-org')    || {}).value || 'all';
+    var roleFilter = (document.getElementById('sa-filter-role')   || {}).value || 'all';
+    var statFilter = (document.getElementById('sa-filter-status') || {}).value || 'all';
+    if (orgFilter  !== 'all') users = users.filter(function(u) { return u.orgId === orgFilter || (!u.orgId && orgFilter === 'golden1-org'); });
+    if (roleFilter !== 'all') users = users.filter(function(u) { return u.role === roleFilter; });
+    if (statFilter !== 'all') users = users.filter(function(u) { return statFilter === 'active' ? u.active !== false : u.active === false; });
+    if (!users.length) { tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No users found.</div>'; return; }
+    var orgMap = {};
+    cachedAllOrgs.forEach(function(o) { orgMap[o.id] = o.name; });
+    var rows = users.map(function(u) {
+      var orgName = orgMap[u.orgId] || (u.orgId === 'golden1-org' ? 'Golden 1 CU' : u.orgId || '—');
+      var roleBadge = '<span style="font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;background:#f1f5f9;color:#374151">' + (u.role || '—') + '</span>';
+      return '<tr style="border-bottom:1px solid #f1f5f9">'
+        + '<td style="padding:10px 12px;font-size:13px;font-weight:600">' + (u.name || '—') + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (u.email || '—') + '</td>'
+        + '<td style="padding:10px 12px">' + roleBadge + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + orgName + '</td>'
+        + '<td style="padding:10px 12px"><span style="font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;background:' + (u.active !== false ? '#f0fdf4' : '#fef2f2') + ';color:' + (u.active !== false ? '#059669' : '#dc2626') + '">' + (u.active !== false ? 'Active' : 'Inactive') + '</span></td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + (u.created || '—') + '</td>'
+        + '</tr>';
+    }).join('');
+    tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse">'
+      + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">'
+      + ['Name','Email','Role','Organization','Status','Joined'].map(function(h) {
+          return '<th style="padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;text-align:left">' + h + '</th>';
+        }).join('')
+      + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  } catch(e) { tableEl.innerHTML = '<div style="color:#dc2626">Error loading users.</div>'; }
+}
+
+async function renderSABilling() {
+  var statsEl = document.getElementById('sa-billing-stats');
+  var tableEl = document.getElementById('sa-billing-table');
+  if (!statsEl || !tableEl || !db) return;
+  try {
+    var snap = await db.collection('organizations').get();
+    var orgs = []; snap.forEach(function(d) { orgs.push(Object.assign({ id: d.id }, d.data())); });
+    var active = orgs.filter(function(o) { return o.subscriptionStatus === 'active' && o.subscriptionTier !== 'trial'; });
+    var trial  = orgs.filter(function(o) { return o.subscriptionStatus === 'trial' || o.subscriptionTier === 'trial'; });
+    var indMrr  = active.filter(function(o) { return o.subscriptionTier === 'individual'; }).length * 49;
+    var teamMrr = active.filter(function(o) { return o.subscriptionTier === 'team'; }).length * 199;
+    statsEl.innerHTML = [
+      { label: 'Total MRR',      val: '$' + (indMrr + teamMrr).toLocaleString(), color: '#2563eb' },
+      { label: 'Individual ($49)', val: active.filter(function(o){ return o.subscriptionTier==='individual'; }).length, color: '#0d9488' },
+      { label: 'Team ($199)',    val: active.filter(function(o){ return o.subscriptionTier==='team'; }).length, color: '#7c3aed' },
+      { label: 'On Trial',       val: trial.length, color: '#d97706' }
+    ].map(function(s) {
+      return '<div class="sa-stat-card"><div class="sa-stat-num" style="color:' + s.color + '">' + s.val + '</div><div class="sa-stat-label">' + s.label + '</div></div>';
+    }).join('');
+    if (!orgs.length) { tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No organizations.</div>'; return; }
+    var rows = orgs.map(function(org) {
+      var tier = org.subscriptionTier || 'trial';
+      var status = org.subscriptionStatus || 'trial';
+      var price = tier === 'team' ? '$199/mo' : tier === 'individual' ? '$49/mo' : 'Free';
+      var statusBadge = status === 'active' ? '<span style="background:#f0fdf4;color:#059669;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Active</span>'
+        : '<span style="background:#fffbeb;color:#d97706;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Trial</span>';
+      return '<tr style="border-bottom:1px solid #f1f5f9">'
+        + '<td style="padding:10px 12px;font-size:13px;font-weight:600">' + org.name + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + tier + '</td>'
+        + '<td style="padding:10px 12px">' + statusBadge + '</td>'
+        + '<td style="padding:10px 12px;font-size:13px;font-weight:700;color:#1f2937">' + price + '</td>'
+        + '<td style="padding:10px 12px">'
+        + '<button onclick="saActivateOrg(\'' + org.id + '\')" style="font-size:11px;padding:4px 8px;border:1px solid #d1fae5;border-radius:5px;background:#f0fdf4;color:#059669;cursor:pointer;margin-right:4px">Activate</button>'
+        + '<button onclick="saResetOrgTrial(\'' + org.id + '\')" style="font-size:11px;padding:4px 8px;border:1px solid #fde68a;border-radius:5px;background:#fffbeb;color:#d97706;cursor:pointer">Reset Trial</button>'
+        + '</td></tr>';
+    }).join('');
+    tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse">'
+      + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">'
+      + ['Organization','Tier','Status','Price','Actions'].map(function(h) {
+          return '<th style="padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;text-align:left">' + h + '</th>';
+        }).join('')
+      + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  } catch(e) { tableEl.innerHTML = '<div style="color:#dc2626">Error loading billing data.</div>'; }
+}
+
+async function saActivateOrg(orgId) {
+  if (!db) return;
+  await db.collection('organizations').doc(orgId).update({ subscriptionStatus: 'active' });
+  showToast('✅ Organization activated');
+  renderSAOrgs();
+}
+async function saSuspendOrg(orgId) {
+  if (!confirm('Suspend this organization?')) return;
+  await db.collection('organizations').doc(orgId).update({ subscriptionStatus: 'suspended' });
+  showToast('⏸ Organization suspended');
+  renderSAOrgs();
+}
+async function saDeleteOrg(orgId) {
+  if (!confirm('PERMANENTLY delete this organization? This cannot be undone.')) return;
+  await db.collection('organizations').doc(orgId).delete();
+  showToast('🗑 Organization deleted');
+  renderSAOrgs();
+}
+async function saResetOrgTrial(orgId) {
+  var trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await db.collection('organizations').doc(orgId).update({ subscriptionStatus: 'trial', subscriptionTier: 'trial', trialEndDate: trialEnd.toISOString() });
+  showToast('🔄 Trial reset (30 days)');
+  renderSABilling();
+}
+
+function openCreateOrgModal() {
+  ['co-org-name','co-admin-fname','co-admin-lname','co-admin-email','co-admin-password'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('co-error').style.display = 'none';
+  document.getElementById('co-submit-btn').textContent = '🏢 Create Organization';
+  document.getElementById('co-submit-btn').disabled = false;
+  document.getElementById('create-org-modal').classList.add('open');
+}
+function closeCreateOrgModal() { document.getElementById('create-org-modal').classList.remove('open'); }
+
+async function createOrganization() {
+  var orgName   = (document.getElementById('co-org-name').value || '').trim();
+  var fname     = (document.getElementById('co-admin-fname').value || '').trim();
+  var lname     = (document.getElementById('co-admin-lname').value || '').trim();
+  var adminEmail= (document.getElementById('co-admin-email').value || '').trim().toLowerCase();
+  var adminPass = (document.getElementById('co-admin-password').value || '').trim();
+  var primary   = document.getElementById('co-primary-color').value || '#1f2937';
+  var accent    = document.getElementById('co-accent-color').value || '#0ed2c8';
+  var tier      = document.getElementById('co-tier').value || 'trial';
+  var errEl     = document.getElementById('co-error');
+  var btn       = document.getElementById('co-submit-btn');
+  errEl.style.display = 'none';
+  if (!orgName)   { errEl.textContent = 'Organization name is required.'; errEl.style.display = 'block'; return; }
+  if (!fname || !lname) { errEl.textContent = 'Admin first and last name are required.'; errEl.style.display = 'block'; return; }
+  if (!adminEmail || !adminEmail.includes('@')) { errEl.textContent = 'Valid admin email is required.'; errEl.style.display = 'block'; return; }
+  if (adminPass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  btn.textContent = '⏳ Creating...'; btn.disabled = true;
+  try {
+    var now = new Date();
+    var orgId = 'org-' + Date.now();
+    var trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    var isActive = (tier === 'individual' || tier === 'team');
+    var orgData = {
+      name: orgName, adminEmail: adminEmail,
+      primaryColor: primary, accentColor: accent,
+      subscriptionTier: tier, subscriptionStatus: isActive ? 'active' : 'trial',
+      trialEndDate: isActive ? null : trialEnd.toISOString(),
+      createdAt: now.toISOString(), memberCount: 1
+    };
+    await db.collection('organizations').doc(orgId).set(orgData);
+    var adminUser = {
+      id: 'u-' + Date.now(), name: fname + ' ' + lname, email: adminEmail, password: adminPass,
+      role: 'admin', type: 'N/A', region: 'Central Valley', active: true, branches: [],
+      created: now.toLocaleDateString(), orgId: orgId,
+      accountStatus: isActive ? 'active' : 'trial',
+      subscriptionTier: tier, subscriptionStatus: isActive ? 'active' : 'trial',
+      trialStartDate: now.toISOString(), trialEndDate: trialEnd.toISOString()
+    };
+    await db.collection('users').doc(adminUser.id).set(adminUser);
+    closeCreateOrgModal();
+    showToast('✅ Organization "' + orgName + '" created!');
+    renderSAOrgs();
+  } catch(e) {
+    btn.textContent = '🏢 Create Organization'; btn.disabled = false;
+    errEl.textContent = 'Error creating organization: ' + e.message; errEl.style.display = 'block';
+  }
+}
+
+async function savePlatformSettings() {
+  showToast('✅ Platform settings saved (local only — billing backend coming soon)');
+}
+
+// ── ORG SETTINGS (tenant admin) ───────────────────────────────
+function previewOrgBranding() {
+  var primary = document.getElementById('org-primary-color').value;
+  var accent  = document.getElementById('org-accent-color').value;
+  document.documentElement.style.setProperty('--brand-primary', primary);
+  document.documentElement.style.setProperty('--brand-accent', accent);
+  showToast('👁 Preview applied — save to make permanent');
+}
+
+async function saveOrgSettings() {
+  if (!currentUser || !currentUser.orgId || !db) return;
+  var name    = (document.getElementById('org-name-input').value || '').trim();
+  var tagline = (document.getElementById('org-tagline-input').value || '').trim();
+  var primary = document.getElementById('org-primary-color').value;
+  var accent  = document.getElementById('org-accent-color').value;
+  var statusEl = document.getElementById('org-settings-status');
+  try {
+    await db.collection('organizations').doc(currentUser.orgId).set({
+      name: name, tagline: tagline, primaryColor: primary, accentColor: accent,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    if (currentOrg) { currentOrg.name = name; currentOrg.tagline = tagline; currentOrg.primaryColor = primary; currentOrg.accentColor = accent; }
+    applyOrgBranding({ primaryColor: primary, accentColor: accent });
+    statusEl.textContent = '✅ Branding saved!'; statusEl.style.display = 'block';
+    setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+    showToast('✅ Organization branding updated');
+  } catch(e) {
+    statusEl.textContent = '❌ Error saving: ' + e.message; statusEl.style.display = 'block'; statusEl.style.color = '#dc2626';
+  }
+}
+
+// ── SELF-SIGNUP ───────────────────────────────────────────────
+var _signupData = {};
+
+function signupStep1Next() {
+  var orgName  = (document.getElementById('su-org-name').value || '').trim();
+  var industry = document.getElementById('su-industry').value;
+  var size     = document.getElementById('su-team-size').value;
+  var err = document.getElementById('su-err-1');
+  if (!orgName) { err.textContent = 'Organization name is required.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  _signupData.orgName = orgName; _signupData.industry = industry; _signupData.teamSize = size;
+  signupGoToStep(2);
+}
+
+function signupStep2Next() {
+  var fname   = (document.getElementById('su-fname').value || '').trim();
+  var lname   = (document.getElementById('su-lname').value || '').trim();
+  var email   = (document.getElementById('su-email').value || '').trim().toLowerCase();
+  var pass    = document.getElementById('su-password').value;
+  var confirm = document.getElementById('su-confirm').value;
+  var err = document.getElementById('su-err-2');
+  if (!fname || !lname) { err.textContent = 'First and last name are required.'; err.style.display = 'block'; return; }
+  if (!email || !email.includes('@')) { err.textContent = 'Valid email is required.'; err.style.display = 'block'; return; }
+  if (pass.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return; }
+  if (pass !== confirm) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  _signupData.fname = fname; _signupData.lname = lname; _signupData.email = email; _signupData.password = pass;
+  // Build summary
+  var sumEl = document.getElementById('su-summary');
+  if (sumEl) sumEl.innerHTML = '🏢 <strong>' + _signupData.orgName + '</strong><br>👤 ' + fname + ' ' + lname + '<br>📧 ' + email + '<br>🏭 ' + _signupData.industry + ' · ' + _signupData.teamSize + ' people<br>🎉 30-day free trial';
+  signupGoToStep(3);
+}
+
+function signupGoToStep(n) {
+  [1,2,3].forEach(function(i) {
+    document.getElementById('signup-step-' + i).classList.toggle('active', i === n);
+    document.getElementById('sdot-' + i).classList.toggle('active', i <= n);
+  });
+}
+
+function signupGoBack(n) { signupGoToStep(n); }
+
+async function submitSignup() {
+  var tos = document.getElementById('su-tos').checked;
+  var err = document.getElementById('su-err-3');
+  var btn = document.getElementById('su-submit-btn');
+  if (!tos) { err.textContent = 'Please accept the Terms of Service.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  btn.textContent = '⏳ Creating your account...'; btn.disabled = true;
+  try {
+    var now = new Date();
+    var trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    var orgId = 'org-' + Date.now();
+    var orgData = {
+      name: _signupData.orgName, adminEmail: _signupData.email,
+      industry: _signupData.industry, teamSize: _signupData.teamSize,
+      primaryColor: '#1f2937', accentColor: '#0ed2c8',
+      subscriptionTier: 'trial', subscriptionStatus: 'trial',
+      trialEndDate: trialEnd.toISOString(), createdAt: now.toISOString(), memberCount: 1
+    };
+    await db.collection('organizations').doc(orgId).set(orgData);
+    var adminId = 'u-' + Date.now();
+    var adminUser = {
+      id: adminId, name: _signupData.fname + ' ' + _signupData.lname,
+      email: _signupData.email, password: _signupData.password,
+      role: 'admin', type: 'N/A', region: 'Central Valley', active: true, branches: [],
+      created: now.toLocaleDateString(), orgId: orgId,
+      accountStatus: 'trial', trialStartDate: now.toISOString(), trialEndDate: trialEnd.toISOString(),
+      subscriptionTier: 'trial', subscriptionStatus: 'trial', tosAccepted: true
+    };
+    await db.collection('users').doc(adminId).set(adminUser);
+    // Send welcome email
+    try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: _signupData.fname, to_email: _signupData.email, invite_link: APP_URL }); } catch(e) {}
+    // Auto-login
+    currentUser = adminUser;
+    currentOrg = orgData;
+    sessionStorage.setItem('g1_session', JSON.stringify(adminUser));
+    document.getElementById('signup-screen').style.display = 'none';
+    cachedUsers = [adminUser];
+    await _postLoginSetup(adminUser);
+    showToast('🎉 Welcome to LMI Tool, ' + _signupData.fname + '!');
+  } catch(e) {
+    btn.textContent = '🚀 Start Free 30-Day Trial'; btn.disabled = false;
+    err.textContent = 'Error creating account: ' + e.message; err.style.display = 'block';
+  }
+}
+
+// ── DATA MIGRATION ────────────────────────────────────────────
+async function runDataMigration() {
+  if (!isSuperAdmin() || !db) return;
+  var statusEl = document.getElementById('sa-migration-status');
+  statusEl.textContent = '⏳ Running migration...';
+  var counts = { users: 0, oyz: 0, activity: 0, realtors: 0 };
+  try {
+    // Migrate users
+    var uSnap = await db.collection('users').get();
+    var batch1 = []; uSnap.forEach(function(d) { if (!d.data().orgId) batch1.push(d.ref); });
+    for (var i = 0; i < batch1.length; i++) { await batch1[i].update({ orgId: 'golden1-org' }); counts.users++; }
+    // Migrate oyz
+    var oSnap = await db.collection('oyz').get();
+    var batch2 = []; oSnap.forEach(function(d) { if (!d.data().orgId) batch2.push(d.ref); });
+    for (var j = 0; j < batch2.length; j++) { await batch2[j].update({ orgId: 'golden1-org' }); counts.oyz++; }
+    // Migrate activity
+    var aSnap = await db.collection('activity').get();
+    var batch3 = []; aSnap.forEach(function(d) { if (!d.data().orgId) batch3.push(d.ref); });
+    for (var k = 0; k < batch3.length; k++) { await batch3[k].update({ orgId: 'golden1-org' }); counts.activity++; }
+    // Migrate realtors
+    var rSnap = await db.collection('realtors').get();
+    var batch4 = []; rSnap.forEach(function(d) { if (!d.data().orgId) batch4.push(d.ref); });
+    for (var l = 0; l < batch4.length; l++) { await batch4[l].update({ orgId: 'golden1-org' }); counts.realtors++; }
+    statusEl.textContent = '✅ Migration complete! Updated: ' + counts.users + ' users, ' + counts.oyz + ' OYZ, ' + counts.activity + ' activities, ' + counts.realtors + ' realtors';
+    statusEl.style.color = '#059669';
+    // Ensure golden1-org document exists
+    await db.collection('organizations').doc('golden1-org').set({
+      name: 'Golden 1 Credit Union', adminEmail: 'asimonson@golden1.com',
+      primaryColor: '#1f2937', accentColor: '#0ed2c8',
+      subscriptionTier: 'team', subscriptionStatus: 'active',
+      trialEndDate: null, createdAt: new Date().toISOString(), memberCount: counts.users
+    }, { merge: true });
+  } catch(e) {
+    statusEl.textContent = '❌ Migration error: ' + e.message; statusEl.style.color = '#dc2626';
+  }
 }
 
 var rpFarmParams = { rate: 7.0, frontEnd: 28, amiPct: 80, term: 30 };
