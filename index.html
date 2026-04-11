@@ -1869,9 +1869,7 @@ admin@lmitool.com</div>
     </div>
     <div id="rp-buyer-profiles-section" style="display:none">
       <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px" id="rp-buyer-profiles-title">📬 Buyer Profiles</div>
-      <!-- TEMP DEBUG BOX -->
-      <div id="rp-push-debug" style="display:none;background:#fef9c3;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:12px;font-family:monospace;line-height:1.8;word-break:break-all"></div>
-      <div id="rp-buyer-profiles-list"></div>
+<div id="rp-buyer-profiles-list"></div>
     </div>
   </div>
   <!-- LMI Search Tab -->
@@ -6258,24 +6256,6 @@ async function loadRealtorPushes() {
   realtorPushes.sort(function(a, b) { return (b.sentAt || '') > (a.sentAt || '') ? 1 : -1; });
   console.log('[loadRealtorPushes] Done — matched:', realtorPushes.length);
 
-  // ── DEBUG BOX ────────────────────────────────────────────────
-  var debugEl = document.getElementById('rp-push-debug');
-  var sec     = document.getElementById('rp-buyer-profiles-section');
-  if (debugEl) {
-    var lines = [
-      '🔍 DEBUG',
-      'currentUser.id: '         + (uid   || '(empty)'),
-      'currentUser.name: '       + (rname || '(empty)'),
-      'currentUser.realtorDocId: '+ (rdocId|| '(NOT SET)'),
-      'Collection fetch error: ' + (queryError || 'none'),
-      'Matched profiles: '       + realtorPushes.length
-    ];
-    debugEl.style.display = 'block';
-    debugEl.innerHTML = lines.map(function(l) {
-      return '<div>' + l.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
-    }).join('');
-  }
-  if (sec) sec.style.display = 'block';
 }
 
 function rpScrollToBuyerProfiles() {
