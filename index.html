@@ -5445,6 +5445,30 @@ var realtorSearches = [];
 var realtorPrequals = [];
 var currentRPSearchResult = null;
 
+// Returns the best display first-name for the logged-in realtor.
+// Priority: non-role words from currentUser.name → cachedRealtors match → email prefix
+function getRealtorFirstName() {
+  var ROLE_WORDS = ['realtor', 'user', 'admin', 'mlo', 'agent'];
+  // 1. Strip role words from every word in the full name
+  var fullName = (currentUser && currentUser.name) ? currentUser.name : '';
+  var parts = fullName.split(/\s+/).filter(function(w) {
+    return w && ROLE_WORDS.indexOf(w.toLowerCase()) === -1;
+  });
+  if (parts.length) return parts[0];
+  // 2. Look up the realtor record in cachedRealtors by realtorDocId
+  if (currentUser && currentUser.realtorDocId && typeof cachedRealtors !== 'undefined') {
+    var rec = cachedRealtors.find(function(r) { return r.docId === currentUser.realtorDocId; });
+    if (rec && rec.name) {
+      var recParts = rec.name.split(/\s+/).filter(function(w) {
+        return w && ROLE_WORDS.indexOf(w.toLowerCase()) === -1;
+      });
+      if (recParts.length) return recParts[0];
+    }
+  }
+  // 3. Email prefix as absolute last resort
+  return (currentUser && currentUser.email) ? currentUser.email.split('@')[0] : 'there';
+}
+
 async function showRealtorPortal() {
   document.getElementById('realtor-portal-screen').style.display = 'block';
   document.getElementById('app-screen').style.display = 'none';
@@ -5456,11 +5480,8 @@ async function showRealtorPortal() {
 
   var hr = new Date().getHours();
   var greeting = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening');
-  var rawName = currentUser.name ? currentUser.name.split(' ')[0] : '';
-  // Guard: don't show role words as a name
-  var greetName = (rawName && rawName.toLowerCase() !== 'realtor' && rawName.toLowerCase() !== 'user') ? rawName : (currentUser.email ? currentUser.email.split('@')[0] : 'there');
   var greetEl = document.getElementById('rp-welcome-greeting');
-  if (greetEl) greetEl.textContent = greeting + ', ' + greetName + '! 👋';
+  if (greetEl) greetEl.textContent = greeting + ', ' + getRealtorFirstName() + '! 👋';
 
   // Load linked MLO
   realtorPortalMlo = null;
@@ -5510,10 +5531,8 @@ function renderRPHome() {
   // Greeting (set here so it's always correct when tab is re-visited)
   var hr = new Date().getHours();
   var greetWord = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-  var rawFirst = (currentUser && currentUser.name) ? currentUser.name.split(' ')[0] : '';
-  var firstName = (rawFirst && rawFirst.toLowerCase() !== 'realtor' && rawFirst.toLowerCase() !== 'user') ? rawFirst : (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'there');
   var greetEl = document.getElementById('rp-welcome-greeting');
-  if (greetEl) greetEl.textContent = greetWord + ', ' + firstName + '! 👋';
+  if (greetEl) greetEl.textContent = greetWord + ', ' + getRealtorFirstName() + '! 👋';
 
   // Stats
   var converted = realtorSearches.filter(function(s) { return s.mloConverted; }).length;
@@ -6253,6 +6272,27 @@ async function loadRealtorPushes() {
           });
         })
         .catch(function(e) { console.error('[loadRealtorPushes] Q2 error:', e); })
+    );
+  }
+
+  // Query 3: by realtorName — guaranteed fallback when IDs don't match.
+  // doSendToRealtor() always writes realtorName: selectedRealtor.name,
+  // so this will match even if realtorDocId and realtorUserId are both wrong.
+  if (currentUser.name) {
+    console.log('[loadRealtorPushes] Q3: querying realtor_pushes where realtorName ==', currentUser.name);
+    promises.push(
+      db.collection('realtor_pushes')
+        .where('realtorName', '==', currentUser.name)
+        .orderBy('sentAt', 'desc').limit(30).get()
+        .then(function(snap) {
+          console.log('[loadRealtorPushes] Q3 returned', snap.size, 'doc(s)');
+          snap.forEach(function(d) {
+            var data = Object.assign({ id: d.id }, d.data());
+            console.log('[loadRealtorPushes] Q3 doc:', d.id, JSON.stringify(data));
+            if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
+          });
+        })
+        .catch(function(e) { console.error('[loadRealtorPushes] Q3 error:', e); })
     );
   }
 
