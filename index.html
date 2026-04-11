@@ -15,6 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
@@ -1481,6 +1482,7 @@ admin@lmitool.com</div>
               <option value="Middle Income">Middle Income</option>
               <option value="Upper Income">Upper Income</option>
             </select>
+            <button onclick="exportActivityToExcel(false)" style="padding:8px 14px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export</button>
           </div>
         </div>
         <div id="activity-log-list"><div class="empty-activity">No activities logged yet.</div></div>
@@ -1546,10 +1548,13 @@ admin@lmitool.com</div>
       <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07)">
         <div class="oyz-list-header">
           <div class="oyz-list-title">🏡 Open House Entries</div>
-          <div id="oyz-admin-filter" style="display:none">
-            <select id="oyz-filter-mlo" onchange="renderOYZList()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;">
-              <option value="all">All MLOs</option>
-            </select>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div id="oyz-admin-filter" style="display:none">
+              <select id="oyz-filter-mlo" onchange="renderOYZList()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;">
+                <option value="all">All MLOs</option>
+              </select>
+            </div>
+            <button onclick="exportOYZToExcel(currentUser && currentUser.role === 'admin')" style="padding:8px 14px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export</button>
           </div>
         </div>
         <div id="oyz-list"><div class="empty-oyz">No entries yet. Add your first open house above.</div></div>
@@ -1794,6 +1799,7 @@ admin@lmitool.com</div>
             <option value="Referral Made">Referrals</option>
             <option value="Event Attended">Events</option>
           </select>
+          <button onclick="exportActivityToExcel(true)" style="padding:9px 14px;background:#0d9488;color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export All</button>
         </div>
       </div>
       <div id="admin-activity-list"><div class="empty-activity">Loading...</div></div>
@@ -2005,6 +2011,39 @@ admin@lmitool.com</div>
       <button onclick="rpSubmitOpenHouse()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0d9488,#0891b2);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px" id="oh-submit-btn">📤 Submit Open House</button>
     </div>
     <div id="rp-openhouses-list"><div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div></div>
+  </div>
+</div>
+
+<!-- OYZ WHAT'S NEXT MODAL -->
+<div class="prequal-modal-overlay" id="oyz-next-modal" style="z-index:10001">
+  <div class="prequal-modal-box">
+    <div class="prequal-modal-header">
+      <div class="prequal-modal-title" id="oyz-next-modal-title">Great work! What's your next move?</div>
+      <button class="prequal-modal-close" onclick="closeOYZNextModal()">✕</button>
+    </div>
+    <div class="prequal-modal-body">
+      <div id="oyz-next-actions" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+        <div onclick="oyzNextOptionA()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#0d9488';this.style.background='#f0fdfa'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+          <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:2px">📅 Schedule Next Contact</div>
+          <div style="font-size:12px;color:#64748b">Set a follow-up date so this realtor doesn't fall through the cracks</div>
+        </div>
+        <div onclick="oyzNextOptionB()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#0d9488';this.style.background='#f0fdfa'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+          <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:2px">📋 Log a CRA Activity</div>
+          <div style="font-size:12px;color:#64748b">Log this open house to your CRA Activity Log</div>
+        </div>
+        <div onclick="oyzNextOptionC()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#0d9488';this.style.background='#f0fdfa'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+          <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:2px">💰 Send Buyer Profile to This Realtor</div>
+          <div style="font-size:12px;color:#64748b">Share a qualified borrower profile while you have momentum</div>
+        </div>
+      </div>
+      <div id="oyz-next-date-section" style="display:none;background:#f0fdfa;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #99f6e4">
+        <div style="font-size:13px;font-weight:700;color:#0d9488;margin-bottom:10px">📅 When should you follow up?</div>
+        <input type="date" id="oyz-next-date-input" style="width:100%;padding:10px 12px;border:2px solid #99f6e4;border-radius:8px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
+        <button onclick="oyzNextConfirmDate()" style="width:100%;padding:10px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px">✓ Save Date &amp; Mark Complete</button>
+        <button onclick="document.getElementById('oyz-next-date-section').style.display='none';document.getElementById('oyz-next-actions').style.display='flex'" style="width:100%;padding:8px;background:white;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;cursor:pointer;margin-top:6px">← Back</button>
+      </div>
+      <button onclick="oyzNextSkip()" style="width:100%;padding:11px;background:white;color:#64748b;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer">Skip — just mark complete</button>
+    </div>
   </div>
 </div>
 
@@ -3044,17 +3083,166 @@ function clearOYZForm() {
   if (inlineForm) inlineForm.classList.remove('open');
 }
 
+// ── OYZ WHAT'S NEXT MODAL ─────────────────────────────────────
+var _oyzNextId = null;
+
 function markOYZComplete(id) {
+  // Show "What's Next?" modal instead of immediately marking complete
+  var entry = (cachedOYZ || []).find(function(e) { return e.id === id; });
+  if (!entry) return;
+  _oyzNextId = id;
+  var titleEl = document.getElementById('oyz-next-modal-title');
+  if (titleEl) titleEl.textContent = "Great work! What's your next move with " + (entry.realtorName || 'this realtor') + '?';
+  var dateSection = document.getElementById('oyz-next-date-section');
+  var actions = document.getElementById('oyz-next-actions');
+  if (dateSection) dateSection.style.display = 'none';
+  if (actions) actions.style.display = 'flex';
+  document.getElementById('oyz-next-modal').classList.add('open');
+}
+
+function closeOYZNextModal() {
+  document.getElementById('oyz-next-modal').classList.remove('open');
+  _oyzNextId = null;
+}
+
+function _doMarkOYZComplete(id, extraData) {
   if (!db) return;
-  db.collection('oyz').doc(id).update({ status: 'complete' }).then(function() {
+  var updateData = Object.assign({ status: 'complete' }, extraData || {});
+  db.collection('oyz').doc(id).update(updateData).then(function() {
     [cachedOYZ, cachedOyzEntries].forEach(function(arr) {
       var entry = arr.find(function(e) { return e.id === id; });
-      if (entry) entry.status = 'complete';
+      if (entry) { entry.status = 'complete'; if (extraData) Object.assign(entry, extraData); }
     });
     renderOYZList();
     renderOYZStats();
     showToast('✓ Marked as complete');
+  }).catch(function(err) { console.error('[markComplete]', err); showToast('Error saving — try again'); });
+}
+
+function oyzNextOptionA() {
+  var dateSection = document.getElementById('oyz-next-date-section');
+  var actions = document.getElementById('oyz-next-actions');
+  if (actions) actions.style.display = 'none';
+  if (dateSection) dateSection.style.display = 'block';
+  var inp = document.getElementById('oyz-next-date-input');
+  if (inp && !inp.value) {
+    var d = new Date(); d.setDate(d.getDate() + 7);
+    inp.value = d.toISOString().split('T')[0];
+  }
+}
+
+function oyzNextConfirmDate() {
+  var inp = document.getElementById('oyz-next-date-input');
+  var date = inp ? inp.value : '';
+  if (!date) { showToast('⚠️ Please select a date'); return; }
+  var id = _oyzNextId;
+  closeOYZNextModal();
+  _doMarkOYZComplete(id, { nextConnectionDate: date });
+  showToast('📅 Follow-up scheduled for ' + date);
+}
+
+function oyzNextOptionB() {
+  var id = _oyzNextId;
+  var entry = (cachedOYZ || []).find(function(e) { return e.id === id; });
+  closeOYZNextModal();
+  _doMarkOYZComplete(id, null);
+  setTimeout(function() {
+    showTab('activity');
+    var typeEl = document.getElementById('log-type');
+    var borrowerEl = document.getElementById('log-borrower');
+    var zipEl = document.getElementById('log-zip');
+    var dateEl = document.getElementById('log-date');
+    if (typeEl) { typeEl.value = 'Open House'; handleActivityTypeChange(); }
+    if (borrowerEl && entry) borrowerEl.value = entry.realtorName || '';
+    if (zipEl && entry) zipEl.value = entry.propertyZip || '';
+    if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+    showToast('📋 Activity Log pre-filled — review and submit');
+  }, 300);
+}
+
+function oyzNextOptionC() {
+  var id = _oyzNextId;
+  var entry = (cachedOYZ || []).find(function(e) { return e.id === id; });
+  closeOYZNextModal();
+  _doMarkOYZComplete(id, null);
+  // Open send modal and pre-select this realtor
+  openSendToRealtorModal();
+  if (entry && entry.realtorId) {
+    setTimeout(function() {
+      var sel = document.getElementById('str-realtor-select');
+      if (sel && entry.realtorId) { sel.value = entry.realtorId; }
+    }, 150);
+  }
+}
+
+function oyzNextSkip() {
+  var id = _oyzNextId;
+  closeOYZNextModal();
+  _doMarkOYZComplete(id, null);
+}
+
+// ── EXCEL EXPORT ──────────────────────────────────────────────
+function exportOYZToExcel(isAdmin) {
+  if (typeof XLSX === 'undefined') { showToast('⚠️ Export library not loaded yet — try again'); return; }
+  showToast('⏳ Preparing export...');
+  var data = isAdmin ? cachedOYZ : cachedOYZ.filter(function(e) { return e.userId === currentUser.id; });
+  if (!data.length) { showToast('⚠️ No data to export'); return; }
+  var today = new Date().toISOString().split('T')[0];
+  var rows = data.map(function(e) {
+    var row = {
+      'Property Address': e.propertyAddress || [e.streetAddress, e.propertyCity, e.propertyState, e.propertyZip].filter(Boolean).join(', ') || '',
+      'Realtor Name': e.realtorName || '',
+      'Realtor Brokerage': e.realtorBrokerage || '',
+      'Open House Date': e.openHouseDate || '',
+      'First Contact Date': e.firstContactDate || '',
+      'Next Connection Date': e.nextConnectionDate || '',
+      'Deal Outcome': e.dealOutcome || '',
+      'Status': e.status || '',
+      'Notes': e.notes || '',
+      'Date Added': e.createdAt ? new Date(e.createdAt).toLocaleDateString() : ''
+    };
+    if (isAdmin) row['MLO Name'] = e.userName || '';
+    return row;
   });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'OYZ');
+  var filename = isAdmin ? ('LMI-OYZ-ALL-MLOs-' + today + '.xlsx') : ('LMI-OYZ-Export-' + today + '.xlsx');
+  XLSX.writeFile(wb, filename);
+  setTimeout(function() { showToast('✅ Export downloaded!'); }, 400);
+}
+
+async function exportActivityToExcel(isAdmin) {
+  if (typeof XLSX === 'undefined') { showToast('⚠️ Export library not loaded yet — try again'); return; }
+  showToast('⏳ Preparing export...');
+  var data;
+  if (isAdmin) {
+    data = await fetchAllActivities();
+  } else {
+    data = cachedActivities;
+  }
+  if (!data.length) { showToast('⚠️ No data to export'); return; }
+  var today = new Date().toISOString().split('T')[0];
+  var rows = data.map(function(a) {
+    var row = {
+      'Activity Type': a.type || '',
+      'Borrower / Contact Name': a.borrower || '',
+      'Date': a.date || '',
+      'ZIP Code': a.zip || '',
+      'City': a.city || '',
+      'LMI Category': a.lmiCategory || '',
+      'Loan Amount': a.loanAmount || '',
+      'Notes': a.notes || '',
+      'Logged Date': a.loggedAt ? new Date(a.loggedAt).toLocaleDateString() : ''
+    };
+    if (isAdmin) row['MLO Name'] = a.userName || '';
+    return row;
+  });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Activity Log');
+  XLSX.writeFile(wb, 'LMI-Activity-Export-' + today + '.xlsx');
+  setTimeout(function() { showToast('✅ Export downloaded!'); }, 400);
 }
 
 function deleteOYZ(id) {
