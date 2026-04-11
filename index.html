@@ -1167,15 +1167,6 @@ admin@lmitool.com</div>
 <div id="app-screen">
   <div class="header">
     <div class="header-left">
-      <div class="header-icon">
-        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
-        </svg>
-      </div>
-      <div>
-        <div class="header-title">LMI Prospect Finder</div>
-        <div class="header-sub">CRA/HMDA · Mortgage Sales</div>
-      </div>
       <div class="hamburger-menu" id="hamburger-menu">
         <button class="hamburger-btn" onclick="toggleHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="hamburger-dropdown">
@@ -1188,6 +1179,15 @@ admin@lmitool.com</div>
           <button class="hamburger-item" id="tab-oyz" onclick="showTab('oyz');closeHamburger()">🏡 OYZ</button>
           <button class="hamburger-item" id="tab-analytics" onclick="showTab('analytics');closeHamburger()">📈 Analytics</button>
         </div>
+      </div>
+      <div class="header-icon">
+        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">LMI Prospect Finder</div>
+        <div class="header-sub">CRA/HMDA · Mortgage Sales</div>
       </div>
     </div>
     <div class="header-actions">
@@ -1710,12 +1710,6 @@ admin@lmitool.com</div>
 <div id="admin-screen">
   <div class="header">
     <div class="header-left">
-      <div class="header-icon">
-        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
-        </svg>
-      </div>
-      <div><div class="header-title">Admin Panel</div><div class="header-sub">LMI Prospect Finder · User Management</div></div>
       <div class="hamburger-menu" id="admin-hamburger-menu">
         <button class="hamburger-btn" onclick="toggleAdminHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="admin-hamburger-dropdown">
@@ -1729,6 +1723,12 @@ admin@lmitool.com</div>
           <button class="hamburger-item" onclick="navigateToTab('analytics')">📈 Analytics</button>
         </div>
       </div>
+      <div class="header-icon">
+        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+        </svg>
+      </div>
+      <div><div class="header-title">Admin Panel</div><div class="header-sub">LMI Prospect Finder · User Management</div></div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
@@ -1805,18 +1805,6 @@ admin@lmitool.com</div>
 <div id="realtor-portal-screen">
   <div class="rportal-header">
     <div class="rportal-header-left">
-      <div class="rportal-icon">
-        <svg width="22" height="22" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="white"/>
-        </svg>
-      </div>
-      <div>
-        <div class="rportal-title">LMI Realtor Portal</div>
-        <div class="rportal-subtitle" id="rportal-subtitle">Powered by your MLO partner</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600" id="rportal-user-name"></span>
       <div class="hamburger-menu" id="rp-hamburger-menu">
         <button class="hamburger-btn" onclick="toggleRPHamburger(event)">☰ Menu</button>
         <div class="hamburger-dropdown" id="rp-hamburger-dropdown">
@@ -1828,7 +1816,17 @@ admin@lmitool.com</div>
           <button class="hamburger-item" onclick="logout()">🚪 Sign Out</button>
         </div>
       </div>
+      <div class="rportal-icon">
+        <svg width="22" height="22" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="white"/>
+        </svg>
+      </div>
+      <div>
+        <div class="rportal-title">LMI Realtor Portal</div>
+        <div class="rportal-subtitle" id="rportal-subtitle">Powered by your MLO partner</div>
+      </div>
     </div>
+    <span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600" id="rportal-user-name"></span>
   </div>
   <!-- Home Tab -->
   <div id="rp-tab-home" class="rportal-content">
