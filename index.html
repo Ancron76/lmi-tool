@@ -6237,39 +6237,39 @@ async function loadRealtorPushes() {
   var results = [];
   var promises = [];
 
-  // Query 1: by realtorDocId (the doc ID from the realtors collection stored on the user account)
+  // NOTE: NO .orderBy() on any query — combining where() + orderBy() requires a
+  // Firestore composite index which doesn't exist, causing silent query failures.
+  // We sort by sentAt in JavaScript after merging instead.
+
+  // Query 1: by realtorDocId
   if (currentUser.realtorDocId) {
-    console.log('[loadRealtorPushes] Q1: querying realtor_pushes where realtorDocId ==', currentUser.realtorDocId);
+    console.log('[loadRealtorPushes] Q1: realtorDocId ==', currentUser.realtorDocId);
     promises.push(
       db.collection('realtor_pushes')
         .where('realtorDocId', '==', currentUser.realtorDocId)
-        .orderBy('sentAt', 'desc').limit(30).get()
+        .limit(50).get()
         .then(function(snap) {
           console.log('[loadRealtorPushes] Q1 returned', snap.size, 'doc(s)');
           snap.forEach(function(d) {
             var data = Object.assign({ id: d.id }, d.data());
-            console.log('[loadRealtorPushes] Q1 doc:', d.id, JSON.stringify(data));
             if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
           });
         })
         .catch(function(e) { console.error('[loadRealtorPushes] Q1 error:', e); })
     );
-  } else {
-    console.warn('[loadRealtorPushes] Skipping Q1 — currentUser.realtorDocId is empty');
   }
 
-  // Query 2: by realtorUserId (the user account id stored on the push doc when MLO sent it)
+  // Query 2: by realtorUserId
   if (currentUser.id) {
-    console.log('[loadRealtorPushes] Q2: querying realtor_pushes where realtorUserId ==', currentUser.id);
+    console.log('[loadRealtorPushes] Q2: realtorUserId ==', currentUser.id);
     promises.push(
       db.collection('realtor_pushes')
         .where('realtorUserId', '==', currentUser.id)
-        .orderBy('sentAt', 'desc').limit(30).get()
+        .limit(50).get()
         .then(function(snap) {
           console.log('[loadRealtorPushes] Q2 returned', snap.size, 'doc(s)');
           snap.forEach(function(d) {
             var data = Object.assign({ id: d.id }, d.data());
-            console.log('[loadRealtorPushes] Q2 doc:', d.id, JSON.stringify(data));
             if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
           });
         })
@@ -6277,20 +6277,17 @@ async function loadRealtorPushes() {
     );
   }
 
-  // Query 3: by realtorName — guaranteed fallback when IDs don't match.
-  // doSendToRealtor() always writes realtorName: selectedRealtor.name,
-  // so this will match even if realtorDocId and realtorUserId are both wrong.
+  // Query 3: by realtorName — works even when IDs are mismatched/missing
   if (currentUser.name) {
-    console.log('[loadRealtorPushes] Q3: querying realtor_pushes where realtorName ==', currentUser.name);
+    console.log('[loadRealtorPushes] Q3: realtorName ==', currentUser.name);
     promises.push(
       db.collection('realtor_pushes')
         .where('realtorName', '==', currentUser.name)
-        .orderBy('sentAt', 'desc').limit(30).get()
+        .limit(50).get()
         .then(function(snap) {
           console.log('[loadRealtorPushes] Q3 returned', snap.size, 'doc(s)');
           snap.forEach(function(d) {
             var data = Object.assign({ id: d.id }, d.data());
-            console.log('[loadRealtorPushes] Q3 doc:', d.id, JSON.stringify(data));
             if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
           });
         })
