@@ -1869,7 +1869,9 @@ admin@lmitool.com</div>
     </div>
     <div id="rp-buyer-profiles-section" style="display:none">
       <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px" id="rp-buyer-profiles-title">📬 Buyer Profiles</div>
-<div id="rp-buyer-profiles-list"></div>
+      <!-- TEMP DEBUG BOX -->
+      <div id="rp-push-debug" style="display:none;background:#fef9c3;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:12px;font-family:monospace;line-height:1.8;word-break:break-all"></div>
+      <div id="rp-buyer-profiles-list"></div>
     </div>
   </div>
   <!-- LMI Search Tab -->
@@ -6228,78 +6230,52 @@ async function loadRealtorPushes() {
   realtorPushes = [];
   if (!db) { console.warn('[loadRealtorPushes] db not available'); return; }
 
-  console.log('[loadRealtorPushes] Starting — currentUser.id:', currentUser.id,
-    '| currentUser.realtorDocId:', currentUser.realtorDocId || '(not set)');
+  var uid        = currentUser.id || '';
+  var rdocId     = currentUser.realtorDocId || '';
+  var rname      = currentUser.name || '';
+  var queryError = '';
 
-  var seen = {};
-  var results = [];
-  var promises = [];
+  console.log('[loadRealtorPushes] uid:', uid, '| realtorDocId:', rdocId || '(not set)', '| name:', rname);
 
-  // NOTE: NO .orderBy() on any query — combining where() + orderBy() requires a
-  // Firestore composite index which doesn't exist, causing silent query failures.
-  // We sort by sentAt in JavaScript after merging instead.
-
-  // Query 1: by realtorDocId
-  if (currentUser.realtorDocId) {
-    console.log('[loadRealtorPushes] Q1: realtorDocId ==', currentUser.realtorDocId);
-    promises.push(
-      db.collection('realtor_pushes')
-        .where('realtorDocId', '==', currentUser.realtorDocId)
-        .limit(50).get()
-        .then(function(snap) {
-          console.log('[loadRealtorPushes] Q1 returned', snap.size, 'doc(s)');
-          snap.forEach(function(d) {
-            var data = Object.assign({ id: d.id }, d.data());
-            if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
-          });
-        })
-        .catch(function(e) { console.error('[loadRealtorPushes] Q1 error:', e); })
-    );
+  // Single unfiltered fetch — bypasses all index and per-field security rule issues.
+  // Filter entirely in JavaScript so no composite index is ever needed.
+  try {
+    var snap = await db.collection('realtor_pushes').limit(200).get();
+    console.log('[loadRealtorPushes] Full collection fetch returned', snap.size, 'doc(s)');
+    snap.forEach(function(d) {
+      var data = Object.assign({ id: d.id }, d.data());
+      var match = (rdocId && data.realtorDocId === rdocId)
+               || (uid   && data.realtorUserId === uid)
+               || (rname && data.realtorName   === rname);
+      if (match) realtorPushes.push(data);
+    });
+  } catch(e) {
+    queryError = e.message || String(e);
+    console.error('[loadRealtorPushes] Fetch error:', e);
   }
 
-  // Query 2: by realtorUserId
-  if (currentUser.id) {
-    console.log('[loadRealtorPushes] Q2: realtorUserId ==', currentUser.id);
-    promises.push(
-      db.collection('realtor_pushes')
-        .where('realtorUserId', '==', currentUser.id)
-        .limit(50).get()
-        .then(function(snap) {
-          console.log('[loadRealtorPushes] Q2 returned', snap.size, 'doc(s)');
-          snap.forEach(function(d) {
-            var data = Object.assign({ id: d.id }, d.data());
-            if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
-          });
-        })
-        .catch(function(e) { console.error('[loadRealtorPushes] Q2 error:', e); })
-    );
+  // Sort newest first
+  realtorPushes.sort(function(a, b) { return (b.sentAt || '') > (a.sentAt || '') ? 1 : -1; });
+  console.log('[loadRealtorPushes] Done — matched:', realtorPushes.length);
+
+  // ── DEBUG BOX ────────────────────────────────────────────────
+  var debugEl = document.getElementById('rp-push-debug');
+  var sec     = document.getElementById('rp-buyer-profiles-section');
+  if (debugEl) {
+    var lines = [
+      '🔍 DEBUG',
+      'currentUser.id: '         + (uid   || '(empty)'),
+      'currentUser.name: '       + (rname || '(empty)'),
+      'currentUser.realtorDocId: '+ (rdocId|| '(NOT SET)'),
+      'Collection fetch error: ' + (queryError || 'none'),
+      'Matched profiles: '       + realtorPushes.length
+    ];
+    debugEl.style.display = 'block';
+    debugEl.innerHTML = lines.map(function(l) {
+      return '<div>' + l.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+    }).join('');
   }
-
-  // Query 3: by realtorName — works even when IDs are mismatched/missing
-  if (currentUser.name) {
-    console.log('[loadRealtorPushes] Q3: realtorName ==', currentUser.name);
-    promises.push(
-      db.collection('realtor_pushes')
-        .where('realtorName', '==', currentUser.name)
-        .limit(50).get()
-        .then(function(snap) {
-          console.log('[loadRealtorPushes] Q3 returned', snap.size, 'doc(s)');
-          snap.forEach(function(d) {
-            var data = Object.assign({ id: d.id }, d.data());
-            if (!seen[d.id]) { seen[d.id] = true; results.push(data); }
-          });
-        })
-        .catch(function(e) { console.error('[loadRealtorPushes] Q3 error:', e); })
-    );
-  }
-
-  await Promise.all(promises);
-
-  // Sort merged results newest first
-  results.sort(function(a, b) { return (b.sentAt || '') > (a.sentAt || '') ? 1 : -1; });
-  realtorPushes = results;
-  console.log('[loadRealtorPushes] Done — total profiles loaded:', realtorPushes.length);
-
+  if (sec) sec.style.display = 'block';
 }
 
 function rpScrollToBuyerProfiles() {
