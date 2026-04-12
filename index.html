@@ -2610,7 +2610,21 @@ async function loadCurrentOrg() {
   if (!currentUser || !currentUser.orgId || !db) return;
   try {
     const doc = await db.collection('organizations').doc(currentUser.orgId).get();
-    if (doc.exists) { currentOrg = Object.assign({ id: doc.id }, doc.data()); applyOrgBranding(currentOrg); }
+    if (doc.exists) {
+      currentOrg = Object.assign({ id: doc.id }, doc.data());
+      applyOrgBranding(currentOrg);
+    } else if (isSuperAdmin() && currentUser.orgId === 'golden1-org') {
+      // Auto-create the golden1-org document on first superadmin login
+      const orgData = {
+        name: 'Golden 1 Credit Union', adminEmail: currentUser.email || 'asimonson@golden1.com',
+        primaryColor: '#1f2937', accentColor: '#0ed2c8',
+        subscriptionTier: 'team', subscriptionStatus: 'active',
+        trialEndDate: null, createdAt: new Date().toISOString(), memberCount: 1
+      };
+      await db.collection('organizations').doc('golden1-org').set(orgData);
+      currentOrg = Object.assign({ id: 'golden1-org' }, orgData);
+      console.log('[loadCurrentOrg] Auto-created golden1-org document');
+    }
   } catch(e) { console.warn('[loadCurrentOrg]', e); }
 }
 
@@ -2789,9 +2803,22 @@ async function getUsers() {
   try {
     const snapshot = await db.collection('users').get();
     let users = snapshot.docs.map(function(doc) { return Object.assign({ id: doc.id }, doc.data()); });
-    if (!users.find(function(u) { return u.id === 'admin-aaron'; })) {
+    const aaronIdx = users.findIndex(function(u) { return u.id === 'admin-aaron'; });
+    if (aaronIdx === -1) {
+      // Doc doesn't exist yet — create it
       await db.collection('users').doc('admin-aaron').set(DEFAULT_ADMIN);
       users = [DEFAULT_ADMIN].concat(users);
+    } else {
+      // Doc exists — upgrade any stale fields (role, orgId) without overwriting everything
+      const existing = users[aaronIdx];
+      const needsUpgrade = existing.role !== 'superadmin' || !existing.orgId;
+      if (needsUpgrade) {
+        const upgrades = {};
+        if (existing.role !== 'superadmin') upgrades.role = 'superadmin';
+        if (!existing.orgId) upgrades.orgId = 'golden1-org';
+        await db.collection('users').doc('admin-aaron').update(upgrades);
+        users[aaronIdx] = Object.assign({}, existing, upgrades);
+      }
     }
     users.forEach(function(u) { if (!u.branches) u.branches = []; });
     // Tenant admin: filter to own org only; superadmin sees all
