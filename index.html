@@ -2566,6 +2566,21 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ── FORCE-PATCH superadmin doc on every page load ──────────────
+// Ensures admin-aaron always has the correct email/role/orgId
+// regardless of what's currently stored in Firebase.
+(function patchSuperAdmin() {
+  try {
+    db.collection('users').doc('admin-aaron').update({
+      email: 'aaronsimonson@gmail.com',
+      role: 'superadmin',
+      orgId: 'golden1-org'
+    }).catch(function() {
+      // Doc may not exist yet — silently ignore, getUsers() will create it
+    });
+  } catch(e) {}
+})();
+
 const PROXY_URL = 'https://lmi-proxy.aaronsimonson.workers.dev';
 const DEFAULTS = { rate:7.0, frontEnd:28, amiPct:80, term:30 };
 let farmParams = {...DEFAULTS};
@@ -2809,14 +2824,15 @@ async function getUsers() {
       await db.collection('users').doc('admin-aaron').set(DEFAULT_ADMIN);
       users = [DEFAULT_ADMIN].concat(users);
     } else {
-      // Doc exists — upgrade any stale fields (role, orgId) without overwriting everything
+      // Doc exists — upgrade any stale fields (role, orgId, email) without overwriting everything
       const existing = users[aaronIdx];
-      const needsUpgrade = existing.role !== 'superadmin' || !existing.orgId || existing.email === 'asimonson@golden1.com';
+      const emailStale = !existing.email || (existing.email || '').indexOf('golden1') !== -1;
+      const needsUpgrade = existing.role !== 'superadmin' || !existing.orgId || emailStale;
       if (needsUpgrade) {
         const upgrades = {};
         if (existing.role !== 'superadmin') upgrades.role = 'superadmin';
         if (!existing.orgId) upgrades.orgId = 'golden1-org';
-        if (existing.email === 'asimonson@golden1.com') upgrades.email = 'aaronsimonson@gmail.com';
+        if (emailStale) upgrades.email = 'aaronsimonson@gmail.com';
         await db.collection('users').doc('admin-aaron').update(upgrades);
         users[aaronIdx] = Object.assign({}, existing, upgrades);
       }
