@@ -1110,7 +1110,7 @@ These Terms of Service constitute a legally binding agreement between you ("User
 2.4 Nothing in these Terms shall be construed as transferring any intellectual property rights to any User.
 
 3. LICENSE GRANT AND RESTRICTIONS
-3.1 Subject to these Terms, Owner grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Application solely for your authorized internal business purposes as an employee or contractor of Golden 1 Credit Union.
+3.1 Subject to these Terms, Owner grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Application solely for your authorized internal business purposes as an employee or contractor of LMI Tool.
 3.2 You may NOT:
 - Copy, reproduce, distribute, or create derivative works of the Application
 - Reverse engineer, decompile, or disassemble any part of the Application
@@ -1126,7 +1126,7 @@ These Terms of Service constitute a legally binding agreement between you ("User
 4.2 You agree to maintain the confidentiality of the Application and not to disclose any information about it to any third party without the prior written consent of the Owner.
 
 5. DATA AND PRIVACY
-5.1 Data entered into the Application, including borrower information, realtor contacts, and CRA activity logs, remains the property of the entering User and Golden 1 Credit Union.
+5.1 Data entered into the Application, including borrower information, realtor contacts, and CRA activity logs, remains the property of the entering User and LMI Tool.
 5.2 The Owner does not sell, rent, or share user data with third parties except as required by law.
 5.3 Users are responsible for ensuring that any borrower or client data entered into the Application complies with applicable privacy laws including but not limited to GLBA, CCPA, and applicable CFPB regulations.
 
@@ -1219,7 +1219,7 @@ admin@lmitool.com</div>
       </div>
       <div>
         <div class="header-title">LMI Prospect Finder</div>
-        <div class="header-sub">CRA/HMDA · Mortgage Sales</div>
+        <div class="header-sub">Mortgage Prospecting Platform</div>
       </div>
     </div>
     <div class="header-actions">
@@ -1967,7 +1967,7 @@ admin@lmitool.com</div>
       <button class="prequal-modal-close" onclick="closeCreateOrgModal()">✕</button>
     </div>
     <div class="prequal-modal-body">
-      <div class="rp-form-group"><label>Organization Name *</label><input type="text" id="co-org-name" placeholder="Golden 1 Credit Union" /></div>
+      <div class="rp-form-group"><label>Organization Name *</label><input type="text" id="co-org-name" placeholder="Acme Mortgage" /></div>
       <div class="rp-form-row">
         <div class="rp-form-group"><label>Admin First Name *</label><input type="text" id="co-admin-fname" placeholder="Jane" /></div>
         <div class="rp-form-group"><label>Admin Last Name *</label><input type="text" id="co-admin-lname" placeholder="Smith" /></div>
@@ -2008,7 +2008,7 @@ admin@lmitool.com</div>
     <div class="signup-step active" id="signup-step-1">
       <div style="font-size:18px;font-weight:800;color:#1f2937;margin-bottom:4px">Tell us about your company</div>
       <div style="font-size:13px;color:#64748b;margin-bottom:20px">Step 1 of 3</div>
-      <div class="signup-field"><label>Company / Organization Name *</label><input type="text" id="su-org-name" placeholder="Golden 1 Credit Union" /></div>
+      <div class="signup-field"><label>Company / Organization Name *</label><input type="text" id="su-org-name" placeholder="Acme Mortgage" /></div>
       <div class="signup-field">
         <label>Industry</label>
         <select id="su-industry">
@@ -2589,7 +2589,7 @@ const ACTIVITY_BAR_COLORS = {
   'Pre-qualification':'#ea580c','Referral Made':'#0d9488','Event Attended':'#ca8a04','Open House':'#4f46e5'
 };
 const DEFAULT_ADMIN = {
-  id:'admin-aaron', name:'Aaron Simonson', email:'asimonson@golden1.com',
+  id:'admin-aaron', name:'Aaron Simonson', email:'aaronsimonson@gmail.com',
   password:'G1Admin2024!', role:'superadmin', type:'N/A', region:'Both',
   active:true, branches:[], created:new Date().toLocaleDateString(),
   orgId:'golden1-org', accountStatus:'active', subscriptionTier:'team', subscriptionStatus:'active'
@@ -2616,7 +2616,7 @@ async function loadCurrentOrg() {
     } else if (isSuperAdmin() && currentUser.orgId === 'golden1-org') {
       // Auto-create the golden1-org document on first superadmin login
       const orgData = {
-        name: 'Golden 1 Credit Union', adminEmail: currentUser.email || 'asimonson@golden1.com',
+        name: 'LMI Tool', adminEmail: currentUser.email || 'admin@lmitool.com',
         primaryColor: '#1f2937', accentColor: '#0ed2c8',
         subscriptionTier: 'team', subscriptionStatus: 'active',
         trialEndDate: null, createdAt: new Date().toISOString(), memberCount: 1
@@ -2811,11 +2811,12 @@ async function getUsers() {
     } else {
       // Doc exists — upgrade any stale fields (role, orgId) without overwriting everything
       const existing = users[aaronIdx];
-      const needsUpgrade = existing.role !== 'superadmin' || !existing.orgId;
+      const needsUpgrade = existing.role !== 'superadmin' || !existing.orgId || existing.email === 'asimonson@golden1.com';
       if (needsUpgrade) {
         const upgrades = {};
         if (existing.role !== 'superadmin') upgrades.role = 'superadmin';
         if (!existing.orgId) upgrades.orgId = 'golden1-org';
+        if (existing.email === 'asimonson@golden1.com') upgrades.email = 'aaronsimonson@gmail.com';
         await db.collection('users').doc('admin-aaron').update(upgrades);
         users[aaronIdx] = Object.assign({}, existing, upgrades);
       }
@@ -5969,7 +5970,7 @@ function generateCraReport() {
   document.getElementById('cra-doc').innerHTML =
     '<div class="cra-doc-header">'
     + '<div class="cra-doc-title">LMI Prospect Finder — CRA Activity Report</div>'
-    + '<div class="cra-doc-org">Golden 1 Credit Union</div>'
+    + '<div class="cra-doc-org">LMI Tool</div>'
     + '<div class="cra-doc-meta">Date Range: '+fromLbl+' – '+toLbl+' &nbsp;|&nbsp; Generated: '+genDate+'</div>'
     + '</div><div class="cra-doc-body">'
     + '<div class="cra-summary-cards">'
@@ -6633,7 +6634,7 @@ async function renderSAUsers() {
     var orgMap = {};
     cachedAllOrgs.forEach(function(o) { orgMap[o.id] = o.name; });
     var rows = users.map(function(u) {
-      var orgName = orgMap[u.orgId] || (u.orgId === 'golden1-org' ? 'Golden 1 CU' : u.orgId || '—');
+      var orgName = orgMap[u.orgId] || (u.orgId === 'golden1-org' ? 'LMI Tool' : u.orgId || '—');
       var roleBadge = '<span style="font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;background:#f1f5f9;color:#374151">' + (u.role || '—') + '</span>';
       return '<tr style="border-bottom:1px solid #f1f5f9">'
         + '<td style="padding:10px 12px;font-size:13px;font-weight:600">' + (u.name || '—') + '</td>'
@@ -6931,7 +6932,7 @@ async function runDataMigration() {
     statusEl.style.color = '#059669';
     // Ensure golden1-org document exists
     await db.collection('organizations').doc('golden1-org').set({
-      name: 'Golden 1 Credit Union', adminEmail: 'asimonson@golden1.com',
+      name: 'LMI Tool', adminEmail: 'admin@lmitool.com',
       primaryColor: '#1f2937', accentColor: '#0ed2c8',
       subscriptionTier: 'team', subscriptionStatus: 'active',
       trialEndDate: null, createdAt: new Date().toISOString(), memberCount: counts.users
