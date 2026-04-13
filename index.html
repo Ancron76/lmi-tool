@@ -16,6 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 :root {
   --brand-primary: #1f2937;
@@ -1025,6 +1026,63 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .notif-toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
 .notif-toggle input:checked + .notif-toggle-slider { background: #0ed2c8; }
 .notif-toggle input:checked + .notif-toggle-slider:before { transform: translateX(18px); }
+
+/* ── PHASE 13: CONTACT MANAGEMENT ── */
+.global-search-wrap{position:relative;flex:1;max-width:380px;margin:0 10px}
+.global-search-input{width:100%;padding:6px 14px;border:none;border-radius:20px;font-size:12px;background:rgba(255,255,255,0.15);color:white;outline:none;box-sizing:border-box}
+.global-search-input::placeholder{color:rgba(255,255,255,0.6)}
+.global-search-input:focus{background:rgba(255,255,255,0.25)}
+.search-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);z-index:5000;max-height:460px;overflow-y:auto}
+.search-group-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;padding:10px 14px 4px}
+.search-result-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid #f8fafc}
+.search-result-item:hover{background:#f0fdfa}
+.search-result-main{font-size:13px;font-weight:600;color:#1f2937;flex:1}
+.search-result-sub{font-size:11px;color:#6b7280;margin-top:1px}
+.search-result-arrow{color:#0ed2c8;font-size:14px;font-weight:700}
+.search-highlight{background:#ccfbf1;color:#0d9488;border-radius:2px;padding:0 1px}
+.search-see-all{font-size:12px;color:#0ed2c8;font-weight:700;padding:6px 14px;cursor:pointer;display:block;text-align:right;border-bottom:1px solid #f1f5f9}
+.search-no-results{font-size:13px;color:#94a3b8;text-align:center;padding:20px}
+.contacts-subtab-bar{display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:16px}
+.contacts-subtab{padding:10px 20px;border:none;background:transparent;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.contacts-subtab.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.contact-card{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s}
+.contact-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.09)}
+.contact-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.contact-card-name{font-size:14px;font-weight:700;color:#1f2937}
+.contact-card-sub{font-size:12px;color:#6b7280;margin-top:2px}
+.contacts-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cf-btn{padding:5px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:white;font-size:12px;font-weight:600;color:#64748b;cursor:pointer}
+.cf-btn.active{border-color:#0ed2c8;background:#f0fdfa;color:#0d9488}
+.contacts-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.contacts-search-inp{flex:1;min-width:160px;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px}
+.contacts-sort-sel{padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:white}
+.tag-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;margin:2px}
+.tag-pill-x{cursor:pointer;opacity:.7;font-size:12px;line-height:1}
+.tag-pill-x:hover{opacity:1}
+.timeline-item{display:flex;gap:10px;margin-bottom:12px}
+.timeline-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.timeline-content{flex:1}
+.timeline-desc{font-size:13px;color:#1f2937;font-weight:500}
+.timeline-meta{font-size:11px;color:#94a3b8;margin-top:2px}
+.custom-field-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f8fafc;font-size:13px}
+.custom-field-key{font-weight:600;color:#374151;min-width:120px}
+.custom-field-val{color:#6b7280;flex:1}
+.contact-detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.75);z-index:8000;overflow-y:auto;display:none}
+.contact-detail-panel{max-width:680px;margin:30px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.contact-detail-header{background:var(--brand-primary,#1f2937);padding:18px 22px;display:flex;align-items:center;justify-content:space-between}
+.contact-detail-tabs{display:flex;border-bottom:2px solid #f1f5f9;background:#f8fafc}
+.cdt-tab{flex:1;padding:10px 6px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent}
+.cdt-tab.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.contact-detail-body{padding:20px;min-height:280px}
+.import-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.75);z-index:8500;overflow-y:auto;display:none}
+.import-panel{max-width:660px;margin:40px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.3)}
+.import-header{background:#1f2937;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.import-body{padding:20px}
+.col-map-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px}
+.col-map-label{min-width:150px;font-weight:600;color:#374151}
+.merge-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:10px}
+.merge-side{font-size:12px}
+.merge-side-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:5px}
 </style>
 </head>
 <body>
@@ -1210,6 +1268,7 @@ admin@lmitool.com</div>
           <button class="hamburger-item" id="tab-marketing" onclick="showTab('marketing');closeHamburger()">🖨 Marketing</button>
           <button class="hamburger-item" id="tab-oyz" onclick="showTab('oyz');closeHamburger()">🏡 OYZ</button>
           <button class="hamburger-item" id="tab-analytics" onclick="showTab('analytics');closeHamburger()">📈 Analytics</button>
+          <button class="hamburger-item" id="tab-contacts" onclick="showTab('contacts');closeHamburger()">👥 Contacts</button>
         </div>
       </div>
       <div class="header-icon" id="header-icon">
@@ -1221,6 +1280,14 @@ admin@lmitool.com</div>
         <div class="header-title">LMI Prospect Finder</div>
         <div class="header-sub">Mortgage Prospecting Platform</div>
       </div>
+    </div>
+    <div class="global-search-wrap" id="global-search-wrap">
+      <input type="text" class="global-search-input" id="global-search-input"
+        placeholder="🔍 Search contacts, properties..."
+        oninput="globalSearchInput(this.value)"
+        onkeydown="if(event.key==='Escape')closeGlobalSearch()"
+        autocomplete="off" />
+      <div class="search-dropdown" id="search-dropdown" style="display:none"></div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
@@ -1271,6 +1338,11 @@ admin@lmitool.com</div>
           <div class="home-card-icon">📈</div>
           <div class="home-card-title">Analytics</div>
           <div class="home-card-desc">Track goals, trends and generate CRA compliance reports</div>
+        </div>
+        <div class="home-card" onclick="showTab('contacts')">
+          <div class="home-card-icon">👥</div>
+          <div class="home-card-title">Contacts</div>
+          <div class="home-card-desc">Manage all your borrower and realtor contacts in one place</div>
         </div>
       </div>
     </div>
@@ -1739,6 +1811,150 @@ admin@lmitool.com</div>
           <button class="mkt-generate-btn green" onclick="generateReferralOnePager()">Generate One-Pager</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACTS TAB -->
+<div id="tab-contacts-content" style="display:none">
+  <div style="max-width:900px;margin:0 auto;padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:20px;font-weight:800;color:#1f2937">👥 Contacts</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:2px">All your borrowers &amp; realtors in one place</div>
+      </div>
+    </div>
+    <div class="contacts-subtab-bar">
+      <button class="contacts-subtab active" id="ctab-borrowers" onclick="contactsShowTab('borrowers')">👤 Borrowers</button>
+      <button class="contacts-subtab" id="ctab-realtors" onclick="contactsShowTab('realtors')">🏠 Realtors</button>
+    </div>
+    <!-- Borrowers Panel -->
+    <div id="contacts-borrowers-panel">
+      <div class="contacts-toolbar">
+        <input type="text" class="contacts-search-inp" id="cb-search" placeholder="Search borrowers..." oninput="renderContactsBorrowers()" />
+        <select class="contacts-sort-sel" id="cb-sort" onchange="renderContactsBorrowers()">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="name">Name A-Z</option>
+          <option value="lmi">LMI Category</option>
+          <option value="price">Max Price</option>
+        </select>
+        <button onclick="openImportModal('borrowers')" style="padding:7px 12px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📥 Import</button>
+        <button onclick="exportContactsBorrowers()" style="padding:7px 12px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📤 Export</button>
+        <button onclick="checkMergeBorrowers()" style="padding:7px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:600;color:#dc2626;cursor:pointer">🔀 Merge Dupes</button>
+      </div>
+      <div class="contacts-filter-bar" id="cb-filters">
+        <button class="cf-btn active" onclick="cbSetFilter(this,'all')">All</button>
+        <button class="cf-btn" onclick="cbSetFilter(this,'low')">Low Income</button>
+        <button class="cf-btn" onclick="cbSetFilter(this,'moderate')">Moderate</button>
+        <button class="cf-btn" onclick="cbSetFilter(this,'middle')">Middle</button>
+        <button class="cf-btn" onclick="cbSetFilter(this,'upper')">Upper</button>
+        <button class="cf-btn" onclick="cbSetFilter(this,'lmi')">LMI Eligible</button>
+      </div>
+      <div id="contacts-borrowers-list"><div style="text-align:center;padding:40px;color:#94a3b8">Loading...</div></div>
+    </div>
+    <!-- Realtors Panel -->
+    <div id="contacts-realtors-panel" style="display:none">
+      <div class="contacts-toolbar">
+        <input type="text" class="contacts-search-inp" id="cr-search" placeholder="Search realtors..." oninput="renderContactsRealtors()" />
+        <select class="contacts-sort-sel" id="cr-sort" onchange="renderContactsRealtors()">
+          <option value="name">Name A-Z</option>
+          <option value="capture">Capture Rate</option>
+          <option value="active">Most Active</option>
+          <option value="recent">Recently Added</option>
+        </select>
+        <button onclick="openImportModal('realtors')" style="padding:7px 12px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📥 Import</button>
+        <button onclick="exportContactsRealtors()" style="padding:7px 12px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📤 Export</button>
+        <button onclick="checkMergeRealtors()" style="padding:7px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:600;color:#dc2626;cursor:pointer">🔀 Merge Dupes</button>
+      </div>
+      <div class="contacts-filter-bar" id="cr-filters">
+        <button class="cf-btn active" onclick="crSetFilter(this,'all')">All</button>
+        <button class="cf-btn" onclick="crSetFilter(this,'portal')">Has Portal</button>
+        <button class="cf-btn" onclick="crSetFilter(this,'noportal')">No Portal</button>
+        <button class="cf-btn" onclick="crSetFilter(this,'high')">High Capture (&gt;60%)</button>
+        <button class="cf-btn" onclick="crSetFilter(this,'low')">Needs Attention (&lt;30%)</button>
+      </div>
+      <div id="contacts-realtors-list"><div style="text-align:center;padding:40px;color:#94a3b8">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BORROWER DETAIL OVERLAY -->
+<div class="contact-detail-overlay" id="borrower-detail-overlay">
+  <div class="contact-detail-panel">
+    <div class="contact-detail-header">
+      <div>
+        <div id="bdo-name" style="font-size:17px;font-weight:800;color:white">Borrower</div>
+        <div id="bdo-sub" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px"></div>
+      </div>
+      <button onclick="closeBorrowerDetail()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div class="contact-detail-tabs">
+      <button class="cdt-tab active" id="bdt-info" onclick="bdShowTab('info')">📋 Info</button>
+      <button class="cdt-tab" id="bdt-tags" onclick="bdShowTab('tags')">🏷️ Tags</button>
+      <button class="cdt-tab" id="bdt-fields" onclick="bdShowTab('fields')">🔧 Fields</button>
+      <button class="cdt-tab" id="bdt-timeline" onclick="bdShowTab('timeline')">📅 Timeline</button>
+      <button class="cdt-tab" id="bdt-notes" onclick="bdShowTab('notes')">📝 Notes</button>
+    </div>
+    <div class="contact-detail-body" id="bdo-body">Loading...</div>
+  </div>
+</div>
+
+<!-- CSV IMPORT OVERLAY -->
+<div class="import-overlay" id="import-overlay">
+  <div class="import-panel">
+    <div class="import-header">
+      <div style="font-size:16px;font-weight:800;color:white">📥 Import Contacts</div>
+      <button onclick="closeImportModal()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div class="import-body">
+      <div id="import-step-1">
+        <p style="font-size:13px;color:#374151;margin-bottom:16px">Upload a CSV file. First row must be column headers.</p>
+        <div style="border:2px dashed #e5e7eb;border-radius:10px;padding:30px;text-align:center;cursor:pointer" onclick="document.getElementById('csv-file-input').click()">
+          <div style="font-size:32px;margin-bottom:8px">📄</div>
+          <div style="font-size:14px;font-weight:600;color:#374151">Click to choose CSV file</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:4px">or drag and drop here</div>
+        </div>
+        <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCsvFile(event)" />
+      </div>
+      <div id="import-step-2" style="display:none">
+        <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:12px">Map Columns</div>
+        <div id="import-col-mapper"></div>
+        <div style="font-size:14px;font-weight:700;color:#1f2937;margin:16px 0 8px">Preview (first 5 rows)</div>
+        <div id="import-preview" style="overflow-x:auto"></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button onclick="importStep1Back()" style="padding:9px 16px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer">← Back</button>
+          <button onclick="runImport()" id="import-run-btn" style="flex:1;padding:9px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Import</button>
+        </div>
+      </div>
+      <div id="import-step-3" style="display:none">
+        <div id="import-result" style="text-align:center;padding:30px"></div>
+        <button onclick="closeImportModal()" style="width:100%;padding:10px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MERGE MODAL -->
+<div id="merge-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.75);z-index:9000;overflow-y:auto">
+  <div style="max-width:680px;margin:40px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.3)">
+    <div style="background:#1f2937;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:800;color:white">🔀 Merge Duplicates</div>
+      <button onclick="closeMergeModal()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div style="padding:20px" id="merge-modal-body">Loading...</div>
+  </div>
+</div>
+
+<!-- DUPE WARNING MODAL -->
+<div id="dupe-warn-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.75);z-index:9500;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:14px;padding:24px;max-width:440px;width:90%;margin:auto;margin-top:15vh;box-shadow:0 20px 50px rgba(0,0,0,0.3)">
+    <div style="font-size:16px;font-weight:800;color:#dc2626;margin-bottom:8px">⚠️ Possible Duplicate</div>
+    <div id="dupe-warn-msg" style="font-size:13px;color:#374151;margin-bottom:20px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="dupeChoose('update')" style="flex:1;padding:9px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Update Existing</button>
+      <button onclick="dupeChoose('new')" style="flex:1;padding:9px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Save as New</button>
+      <button onclick="dupeChoose('cancel')" style="flex:1;padding:9px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Cancel</button>
     </div>
   </div>
 </div>
@@ -3190,7 +3406,7 @@ window.onload = async function() {
 
 // ── TAB NAV ───────────────────────────────────────────────────
 function showTab(tab) {
-  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics'].forEach(function(t) {
+  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -3202,6 +3418,7 @@ function showTab(tab) {
   if (tab === 'marketing') renderMarketingTab();
   if (tab === 'oyz') loadOYZ();
   if (tab === 'analytics') renderAnalytics();
+  if (tab === 'contacts') renderContactsBorrowers();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
     if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋'; }
@@ -8321,6 +8538,642 @@ function rpMarkPushViewed(id) {
   if (bannerText && unreviewedCount > 0) bannerText.textContent = 'You have ' + unreviewedCount + ' new buyer profile' + (unreviewedCount > 1 ? 's' : '') + ' from ' + mloLabel + ' — tap to view';
   if (quickBadge) { quickBadge.style.display = unreviewedCount > 0 ? 'block' : 'none'; quickBadge.textContent = unreviewedCount; }
 }
+
+// ════════════════════════════════════════════════════════════
+// PHASE 13 — CONTACT MANAGEMENT
+// ════════════════════════════════════════════════════════════
+
+// ── TAGS ────────────────────────────────────────────────────
+var PREDEFINED_TAGS = [
+  {name:'LMI Eligible',color:'#0ed2c8'},{name:'Hot Lead',color:'#dc2626'},
+  {name:'Warm Lead',color:'#d97706'},{name:'Cold Lead',color:'#3b82f6'},
+  {name:'Follow Up',color:'#7c3aed'},{name:'Past Client',color:'#059669'},
+  {name:'Active Buyer',color:'#10b981'},{name:'Lost',color:'#6b7280'},
+  {name:'Do Not Contact',color:'#991b1b'}
+];
+
+function getTagColor(name) {
+  var pre = PREDEFINED_TAGS.find(function(t){return t.name===name;});
+  if (pre) return pre.color;
+  var custom = (currentUser&&currentUser.customTags||[]).find(function(t){return t.name===name;});
+  return custom ? custom.color : '#6b7280';
+}
+
+function renderTagPills(tags, removeFn) {
+  return (tags||[]).map(function(tag) {
+    var c = getTagColor(tag);
+    return '<span class="tag-pill" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'
+      +tag+(removeFn?'<span class="tag-pill-x" onclick="'+removeFn+'(\''+tag.replace(/'/g,"\\'")+'\')">&times;</span>':'')+'</span>';
+  }).join('');
+}
+
+function getAllTags() {
+  return PREDEFINED_TAGS.concat(currentUser&&currentUser.customTags||[]);
+}
+
+function renderTagPickerInline(addFn) {
+  return '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+    +getAllTags().map(function(t){
+      var c=t.color||'#6b7280';
+      return '<span onclick="'+addFn+'(\''+t.name.replace(/'/g,"\\'")+'\') " style="cursor:pointer;background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700">'+t.name+'</span>';
+    }).join('')+'</div>';
+}
+
+// ── CONTACTS SUBTABS ─────────────────────────────────────────
+var _cbFilter='all', _crFilter='all';
+
+function contactsShowTab(tab) {
+  var isBorr = tab==='borrowers';
+  document.getElementById('ctab-borrowers').classList.toggle('active',isBorr);
+  document.getElementById('ctab-realtors').classList.toggle('active',!isBorr);
+  document.getElementById('contacts-borrowers-panel').style.display=isBorr?'':'none';
+  document.getElementById('contacts-realtors-panel').style.display=isBorr?'none':'';
+  if (isBorr) renderContactsBorrowers(); else renderContactsRealtors();
+}
+
+function cbSetFilter(btn,filter) {
+  _cbFilter=filter;
+  document.querySelectorAll('#cb-filters .cf-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderContactsBorrowers();
+}
+function crSetFilter(btn,filter) {
+  _crFilter=filter;
+  document.querySelectorAll('#cr-filters .cf-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderContactsRealtors();
+}
+
+function renderContactsBorrowers() {
+  var el=document.getElementById('contacts-borrowers-list'); if(!el)return;
+  var prospects=(cachedProspects||[]).filter(function(p){return p.borrowerName;});
+  var q=((document.getElementById('cb-search')||{}).value||'').toLowerCase();
+  var sort=(document.getElementById('cb-sort')||{}).value||'newest';
+  if(_cbFilter!=='all'){
+    prospects=prospects.filter(function(p){
+      var cat=(p.lmiCategory||'').toLowerCase();
+      if(_cbFilter==='lmi') return p.lmiEligible||cat.indexOf('low')!==-1||cat.indexOf('moderate')!==-1;
+      return cat.indexOf(_cbFilter)!==-1;
+    });
+  }
+  if(q) prospects=prospects.filter(function(p){
+    return (p.borrowerName||'').toLowerCase().indexOf(q)!==-1||(p.zip||'').indexOf(q)!==-1||(p.city||'').toLowerCase().indexOf(q)!==-1;
+  });
+  prospects=prospects.slice().sort(function(a,b){
+    if(sort==='newest') return new Date(b.date||b.created||0)-new Date(a.date||a.created||0);
+    if(sort==='oldest') return new Date(a.date||a.created||0)-new Date(b.date||b.created||0);
+    if(sort==='name') return (a.borrowerName||'').localeCompare(b.borrowerName||'');
+    if(sort==='lmi') return (a.lmiCategory||'').localeCompare(b.lmiCategory||'');
+    if(sort==='price') return parseFloat(b.maxPrice||0)-parseFloat(a.maxPrice||0);
+    return 0;
+  });
+  if(!prospects.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8">No borrowers found.</div>';return;}
+  var lmiColors={'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#3b82f6','Upper Income':'#6b7280'};
+  el.innerHTML=prospects.map(function(p){
+    var c=lmiColors[p.lmiCategory]||'#6b7280';
+    var maxP=p.maxPrice?'$'+Number(p.maxPrice).toLocaleString():'—';
+    var tags=renderTagPills(p.tags||[]);
+    return '<div class="contact-card" onclick="openBorrowerDetail(\''+p.id+'\')"><div class="contact-card-header">'
+      +'<div><div class="contact-card-name">'+(p.borrowerName||'Unknown')+'</div>'
+      +'<div class="contact-card-sub">'+(p.city||'')+(p.zip?' · ZIP '+p.zip:'')+'</div></div>'
+      +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(p.lmiCategory||'Unknown')+'</span></div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:6px">💰 '+maxP+(p.amiPct?' &nbsp;·&nbsp; 📊 '+p.amiPct+'% AMI':'')+'</div>'
+      +(tags?'<div>'+tags+'</div>':'')+'</div>';
+  }).join('');
+}
+
+function renderContactsRealtors() {
+  var el=document.getElementById('contacts-realtors-list'); if(!el)return;
+  var realtors=(cachedRealtors||[]).slice();
+  var q=((document.getElementById('cr-search')||{}).value||'').toLowerCase();
+  var sort=(document.getElementById('cr-sort')||{}).value||'name';
+  var oyzMap={};
+  (cachedOyzEntries||[]).forEach(function(o){
+    var k=(o.realtorName||'').toLowerCase();
+    if(!oyzMap[k]) oyzMap[k]={total:0,captured:0};
+    oyzMap[k].total++;
+    if(o.status==='Complete'||o.status==='Closed') oyzMap[k].captured++;
+  });
+  if(_crFilter!=='all') realtors=realtors.filter(function(r){
+    var k=(r.name||'').toLowerCase(); var s=oyzMap[k]||{total:0,captured:0};
+    var cap=s.total?Math.round(s.captured/s.total*100):0;
+    if(_crFilter==='portal') return r.hasPortal||r.userId;
+    if(_crFilter==='noportal') return !r.hasPortal&&!r.userId;
+    if(_crFilter==='high') return cap>60;
+    if(_crFilter==='low') return cap<30&&s.total>0;
+    return true;
+  });
+  if(q) realtors=realtors.filter(function(r){
+    return (r.name||'').toLowerCase().indexOf(q)!==-1||(r.brokerage||'').toLowerCase().indexOf(q)!==-1
+      ||(r.phone||'').indexOf(q)!==-1||(r.email||'').toLowerCase().indexOf(q)!==-1;
+  });
+  realtors=realtors.sort(function(a,b){
+    if(sort==='name') return (a.name||'').localeCompare(b.name||'');
+    if(sort==='capture'){var ka=(a.name||'').toLowerCase(),kb=(b.name||'').toLowerCase();var sa=oyzMap[ka]||{total:0,captured:0},sb=oyzMap[kb]||{total:0,captured:0};return(sb.total?sb.captured/sb.total:0)-(sa.total?sa.captured/sa.total:0);}
+    if(sort==='active'){var ka2=(a.name||'').toLowerCase(),kb2=(b.name||'').toLowerCase();return(oyzMap[kb2]||{total:0}).total-(oyzMap[ka2]||{total:0}).total;}
+    if(sort==='recent') return new Date(b.created||0)-new Date(a.created||0);
+    return 0;
+  });
+  if(!realtors.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8">No realtors found.</div>';return;}
+  el.innerHTML=realtors.map(function(r){
+    var k=(r.name||'').toLowerCase(); var s=oyzMap[k]||{total:0,captured:0};
+    var cap=s.total?Math.round(s.captured/s.total*100):0;
+    var capC=cap>60?'#16a34a':cap>30?'#d97706':'#ef4444';
+    var hasP=r.hasPortal||r.userId;
+    var tags=renderTagPills(r.tags||[]);
+    return '<div class="contact-card" onclick="openRealtorProfile(\''+(r.docId||r.id||r.name)+'\')">'
+      +'<div class="contact-card-header"><div><div class="contact-card-name">'+(r.name||'Unknown')+'</div>'
+      +'<div class="contact-card-sub">'+(r.brokerage||'')+(r.area?' · '+r.area:'')+'</div></div>'
+      +'<span style="background:'+(hasP?'#f0fdf4':'#f8fafc')+';color:'+(hasP?'#16a34a':'#94a3b8')+';border:1px solid '+(hasP?'#bbf7d0':'#e5e7eb')+';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(hasP?'Has Portal':'No Portal')+'</span></div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:6px">🎯 <span style="color:'+capC+';font-weight:700">'+cap+'%</span> capture &nbsp;·&nbsp; '+s.total+' open houses'+(r.phone?' &nbsp;·&nbsp; 📞 '+r.phone:'')+'</div>'
+      +(tags?'<div>'+tags+'</div>':'')+'</div>';
+  }).join('');
+}
+
+// ── BORROWER DETAIL ──────────────────────────────────────────
+var _bdProspect=null;
+
+function openBorrowerDetail(id) {
+  _bdProspect=(cachedProspects||[]).find(function(p){return p.id===id;});
+  if(!_bdProspect) return;
+  document.getElementById('bdo-name').textContent=_bdProspect.borrowerName||'Borrower';
+  document.getElementById('bdo-sub').textContent=(_bdProspect.lmiCategory||'')+' · '+(_bdProspect.city||_bdProspect.zip||'');
+  document.getElementById('borrower-detail-overlay').style.display='block';
+  bdShowTab('info');
+}
+
+function closeBorrowerDetail() {
+  document.getElementById('borrower-detail-overlay').style.display='none';
+  _bdProspect=null;
+}
+
+function bdShowTab(tab) {
+  ['info','tags','fields','timeline','notes'].forEach(function(t){
+    var b=document.getElementById('bdt-'+t); if(b) b.classList.toggle('active',t===tab);
+  });
+  var body=document.getElementById('bdo-body'); if(!body||!_bdProspect) return;
+  var p=_bdProspect;
+  if(tab==='info'){
+    var maxP=p.maxPrice?'$'+Number(p.maxPrice).toLocaleString():'—';
+    body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +[['Name',p.borrowerName],['Annual Income',p.annualIncome?'$'+Number(p.annualIncome).toLocaleString():'—'],
+        ['LMI Category',p.lmiCategory],['% AMI',p.amiPct?p.amiPct+'%':'—'],
+        ['Max Price',maxP],['ZIP',p.zip],['City',p.city],['MLO',p.mloName]
+      ].map(function(r){return '<div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">'+r[0]+'</div><div style="font-size:14px;font-weight:600;color:#1f2937">'+(r[1]||'—')+'</div></div>';}).join('')+'</div>';
+  }
+  else if(tab==='tags'){
+    var tags=p.tags||[];
+    body.innerHTML='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">Current Tags</div>'
+      +'<div id="bd-tags-disp">'+(tags.length?renderTagPills(tags,'_bdRemoveTag'):'<span style="color:#94a3b8;font-size:13px">No tags yet</span>')+'</div></div>'
+      +'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">Add Tag</div>'+renderTagPickerInline('_bdAddTag');
+  }
+  else if(tab==='fields'){
+    body.innerHTML=renderCustomFieldsSection(p,'borrower');
+  }
+  else if(tab==='timeline'){
+    body.innerHTML='<div id="bd-timeline-wrap"><div style="color:#94a3b8;text-align:center;padding:30px">Loading...</div></div>';
+    buildBorrowerTimeline(p);
+  }
+  else if(tab==='notes'){
+    var notes=p.notes||[];
+    body.innerHTML='<div id="bd-notes-list">'+renderNotesList(notes)+'</div>'
+      +'<div style="margin-top:12px"><textarea id="bd-new-note" placeholder="Add a note..." style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;resize:vertical;min-height:80px;box-sizing:border-box"></textarea>'
+      +'<button onclick="bdAddNote()" style="margin-top:8px;width:100%;padding:9px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Note</button></div>';
+  }
+}
+
+function renderNotesList(notes) {
+  if(!notes||!notes.length) return '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:20px">No notes yet.</div>';
+  return notes.slice().reverse().map(function(n){
+    return '<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:13px;color:#1f2937">'+(n.text||'')+'</div>'
+      +'<div style="font-size:11px;color:#94a3b8;margin-top:4px">'+(n.author||'')+' · '+(n.date||'')+'</div></div>';
+  }).join('');
+}
+
+async function bdAddNote() {
+  if(!_bdProspect||!db) return;
+  var txt=((document.getElementById('bd-new-note')||{}).value||'').trim();
+  if(!txt) return;
+  var note={text:txt,author:(currentUser&&currentUser.name)||'MLO',date:new Date().toLocaleDateString()};
+  var notes=(_bdProspect.notes||[]).concat([note]);
+  try {
+    await db.collection('prospects').doc(_bdProspect.id).update({notes:notes});
+    _bdProspect.notes=notes;
+    var idx=(cachedProspects||[]).findIndex(function(p){return p.id===_bdProspect.id;});
+    if(idx!==-1) cachedProspects[idx].notes=notes;
+    document.getElementById('bd-new-note').value='';
+    document.getElementById('bd-notes-list').innerHTML=renderNotesList(notes);
+  } catch(e){alert('Error: '+e.message);}
+}
+
+async function _bdAddTag(tagName) {
+  if(!_bdProspect||!db) return;
+  var tags=(_bdProspect.tags||[]).slice();
+  if(tags.indexOf(tagName)!==-1) return;
+  tags.push(tagName);
+  try {
+    await db.collection('prospects').doc(_bdProspect.id).update({tags:tags});
+    _bdProspect.tags=tags;
+    var idx=(cachedProspects||[]).findIndex(function(p){return p.id===_bdProspect.id;});
+    if(idx!==-1) cachedProspects[idx].tags=tags;
+    var d=document.getElementById('bd-tags-disp');
+    if(d) d.innerHTML=renderTagPills(tags,'_bdRemoveTag');
+  } catch(e){}
+}
+
+async function _bdRemoveTag(tagName) {
+  if(!_bdProspect||!db) return;
+  var tags=(_bdProspect.tags||[]).filter(function(t){return t!==tagName;});
+  try {
+    await db.collection('prospects').doc(_bdProspect.id).update({tags:tags});
+    _bdProspect.tags=tags;
+    var idx=(cachedProspects||[]).findIndex(function(p){return p.id===_bdProspect.id;});
+    if(idx!==-1) cachedProspects[idx].tags=tags;
+    var d=document.getElementById('bd-tags-disp');
+    if(d) d.innerHTML=tags.length?renderTagPills(tags,'_bdRemoveTag'):'<span style="color:#94a3b8;font-size:13px">No tags yet</span>';
+  } catch(e){}
+}
+
+function renderCustomFieldsSection(doc, type) {
+  var fields=doc.customFields||{};
+  var keys=Object.keys(fields);
+  var suggestions=['Preferred Language','Down Payment','Pre-approval Expiry','Referral Source','Best Time to Call'];
+  var html='<div id="cf-list">';
+  if(keys.length){
+    html+=keys.map(function(k){
+      return '<div class="custom-field-row"><span class="custom-field-key">'+k+'</span><span class="custom-field-val">'+fields[k]+'</span>'
+        +'<button onclick="_cfDelete(\''+type+'\',\''+k.replace(/'/g,"\\'")+'\') " style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px">🗑</button></div>';
+    }).join('');
+  } else html+='<div style="color:#94a3b8;font-size:13px;text-align:center;padding:16px">No custom fields yet.</div>';
+  html+='</div><div style="margin-top:12px">'
+    +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px">Suggestions:</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">'
+    +suggestions.map(function(s){return '<span onclick="cfFillKey(\''+s.replace(/'/g,"\\'")+'\') " style="cursor:pointer;background:#f1f5f9;color:#374151;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600">'+s+'</span>';}).join('')
+    +'</div><div style="display:flex;gap:6px">'
+    +'<input type="text" id="cf-new-key" placeholder="Field name" style="flex:1;padding:7px;border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px" />'
+    +'<input type="text" id="cf-new-val" placeholder="Value" style="flex:1;padding:7px;border:1.5px solid #e5e7eb;border-radius:7px;font-size:12px" />'
+    +'<button onclick="_cfSave(\''+type+'\') " style="padding:7px 12px;background:#1f2937;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">+</button>'
+    +'</div></div>';
+  return html;
+}
+
+function cfFillKey(name){var e=document.getElementById('cf-new-key');if(e)e.value=name;var v=document.getElementById('cf-new-val');if(v)v.focus();}
+
+async function _cfSave(type) {
+  var key=((document.getElementById('cf-new-key')||{}).value||'').trim();
+  var val=((document.getElementById('cf-new-val')||{}).value||'').trim();
+  if(!key||!val) return;
+  var doc=type==='borrower'?_bdProspect:null; if(!doc) return;
+  var fields=Object.assign({},doc.customFields||{}); fields[key]=val;
+  try {
+    await db.collection(type==='borrower'?'prospects':'realtors').doc(doc.id).update({customFields:fields});
+    doc.customFields=fields;
+    if(type==='borrower'){var idx=(cachedProspects||[]).findIndex(function(p){return p.id===doc.id;});if(idx!==-1)cachedProspects[idx].customFields=fields;}
+    document.getElementById('bdo-body').innerHTML=renderCustomFieldsSection(doc,type);
+  } catch(e){alert('Error: '+e.message);}
+}
+
+async function _cfDelete(type, key) {
+  var doc=type==='borrower'?_bdProspect:null; if(!doc) return;
+  var fields=Object.assign({},doc.customFields||{}); delete fields[key];
+  try {
+    await db.collection(type==='borrower'?'prospects':'realtors').doc(doc.id).update({customFields:fields});
+    doc.customFields=fields;
+    if(type==='borrower'){var idx=(cachedProspects||[]).findIndex(function(p){return p.id===doc.id;});if(idx!==-1)cachedProspects[idx].customFields=fields;}
+    document.getElementById('bdo-body').innerHTML=renderCustomFieldsSection(doc,type);
+  } catch(e){alert('Error: '+e.message);}
+}
+
+async function buildBorrowerTimeline(p) {
+  var wrap=document.getElementById('bd-timeline-wrap'); if(!wrap) return;
+  var items=[];
+  var allOyz=cachedOyzEntries||[];
+  (cachedActivities||[]).forEach(function(a){
+    if((a.borrowerName||'').toLowerCase()===(p.borrowerName||'').toLowerCase())
+      items.push({date:new Date(a.date||a.created||0),desc:(a.activityType||'Activity')+' — '+(a.notes||a.borrowerName||''),mlo:a.mloName||'',color:'#3b82f6'});
+  });
+  allOyz.forEach(function(o){
+    if((o.borrowerName||'').toLowerCase()===(p.borrowerName||'').toLowerCase())
+      items.push({date:new Date(o.openHouseDate||o.date||0),desc:'Open House: '+(o.address||o.realtorName||''),mlo:o.mloName||'',color:'#7c3aed'});
+  });
+  (p.notes||[]).forEach(function(n){
+    items.push({date:new Date(n.date||0),desc:n.text||'',mlo:n.author||'',color:'#059669'});
+  });
+  items.sort(function(a,b){return b.date-a.date;});
+  if(!items.length){wrap.innerHTML='<div style="color:#94a3b8;text-align:center;padding:30px">No activity yet.</div>';return;}
+  wrap.innerHTML=items.map(function(item){
+    return '<div class="timeline-item"><div class="timeline-dot" style="background:'+item.color+'"></div>'
+      +'<div class="timeline-content"><div class="timeline-desc">'+item.desc+'</div>'
+      +'<div class="timeline-meta">'+(item.mlo?item.mlo+' · ':'')+item.date.toLocaleDateString()+'</div></div></div>';
+  }).join('');
+}
+
+// ── GLOBAL SEARCH ────────────────────────────────────────────
+var _searchTO=null;
+
+function globalSearchInput(val) {
+  clearTimeout(_searchTO);
+  var dd=document.getElementById('search-dropdown'); if(!dd) return;
+  if(!val||val.length<2){dd.style.display='none';return;}
+  _searchTO=setTimeout(function(){runGlobalSearch(val);},220);
+}
+
+function runGlobalSearch(q) {
+  var dd=document.getElementById('search-dropdown'); if(!dd) return;
+  var ql=q.toLowerCase();
+  function hl(text){if(!text)return '';var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');return String(text).replace(re,'<span class="search-highlight">$1</span>');}
+  function m(s){return s&&s.toLowerCase().indexOf(ql)!==-1;}
+  var borr=(cachedProspects||[]).filter(function(p){return p.borrowerName&&(m(p.borrowerName)||m(p.zip)||m(p.city));});
+  var rlt=(cachedRealtors||[]).filter(function(r){return m(r.name)||m(r.brokerage)||m(r.phone)||m(r.email);});
+  var acts=(cachedActivities||[]).filter(function(a){return m(a.borrowerName)||m(a.zip)||m(a.notes)||m(a.activityType);});
+  var allOyz2=cachedOyzEntries||[];
+  var oyz=allOyz2.filter(function(o){return m(o.address)||m(o.realtorName)||m(o.city);});
+  if(!borr.length&&!rlt.length&&!acts.length&&!oyz.length){
+    dd.style.display='block';dd.innerHTML='<div class="search-no-results">No results for "'+q+'"</div>';return;
+  }
+  var html='';
+  if(borr.length){
+    html+='<div class="search-group-label">👤 Borrowers</div>';
+    borr.slice(0,5).forEach(function(p){
+      html+='<div class="search-result-item" onclick="closeGlobalSearch();showTab(\'contacts\');contactsShowTab(\'borrowers\');openBorrowerDetail(\''+p.id+'\')">'
+        +'<div style="flex:1"><div class="search-result-main">'+hl(p.borrowerName)+'</div>'
+        +'<div class="search-result-sub">'+(p.lmiCategory||'')+(p.zip?' · ZIP '+hl(p.zip):'')+'</div></div>'
+        +'<span class="search-result-arrow">→</span></div>';
+    });
+    if(borr.length>5) html+='<div class="search-see-all" onclick="closeGlobalSearch();showTab(\'contacts\')">See all '+borr.length+' borrowers →</div>';
+  }
+  if(rlt.length){
+    html+='<div class="search-group-label">🏠 Realtors</div>';
+    rlt.slice(0,5).forEach(function(r){
+      html+='<div class="search-result-item" onclick="closeGlobalSearch();showTab(\'contacts\');contactsShowTab(\'realtors\')">'
+        +'<div style="flex:1"><div class="search-result-main">'+hl(r.name)+'</div>'
+        +'<div class="search-result-sub">'+hl(r.brokerage||'')+'</div></div>'
+        +'<span class="search-result-arrow">→</span></div>';
+    });
+    if(rlt.length>5) html+='<div class="search-see-all" onclick="closeGlobalSearch();showTab(\'contacts\')">See all '+rlt.length+' realtors →</div>';
+  }
+  if(acts.length){
+    html+='<div class="search-group-label">📋 Activities</div>';
+    acts.slice(0,5).forEach(function(a){
+      html+='<div class="search-result-item" onclick="closeGlobalSearch();showTab(\'activity\')">'
+        +'<div style="flex:1"><div class="search-result-main">'+hl(a.borrowerName||a.activityType||'Activity')+'</div>'
+        +'<div class="search-result-sub">'+(a.activityType||'')+(a.date?' · '+a.date:'')+'</div></div>'
+        +'<span class="search-result-arrow">→</span></div>';
+    });
+  }
+  if(oyz.length){
+    html+='<div class="search-group-label">🏡 Open Houses</div>';
+    oyz.slice(0,5).forEach(function(o){
+      html+='<div class="search-result-item" onclick="closeGlobalSearch();showTab(\'oyz\')">'
+        +'<div style="flex:1"><div class="search-result-main">'+hl(o.address||o.realtorName||'Open House')+'</div>'
+        +'<div class="search-result-sub">'+(o.realtorName||'')+(o.openHouseDate?' · '+o.openHouseDate:'')+'</div></div>'
+        +'<span class="search-result-arrow">→</span></div>';
+    });
+  }
+  dd.style.display='block'; dd.innerHTML=html;
+}
+
+function closeGlobalSearch() {
+  var dd=document.getElementById('search-dropdown'); if(dd) dd.style.display='none';
+  var inp=document.getElementById('global-search-input'); if(inp) inp.value='';
+}
+
+document.addEventListener('click',function(e){
+  var w=document.getElementById('global-search-wrap');
+  if(w&&!w.contains(e.target)) closeGlobalSearch();
+});
+
+// ── DUPLICATE DETECTION ──────────────────────────────────────
+var _dupeResolve=null;
+
+function showDupeWarning(existing, type) {
+  return new Promise(function(resolve){
+    _dupeResolve=resolve;
+    var msg='We found a similar contact: <strong>'+(existing.borrowerName||existing.name||'')+'</strong>'
+      +(existing.zip?' — ZIP '+existing.zip:'')+(existing.phone?' — '+existing.phone:'')
+      +'<br><br>Would you like to update the existing record or save as a new contact?';
+    var el=document.getElementById('dupe-warn-msg'); if(el) el.innerHTML=msg;
+    var modal=document.getElementById('dupe-warn-modal'); if(modal) modal.style.display='flex';
+  });
+}
+
+function dupeChoose(choice) {
+  var modal=document.getElementById('dupe-warn-modal'); if(modal) modal.style.display='none';
+  if(_dupeResolve){_dupeResolve(choice);_dupeResolve=null;}
+}
+
+function findDuplicateBorrower(name,zip) {
+  var nl=(name||'').toLowerCase();
+  return (cachedProspects||[]).find(function(p){return p.borrowerName&&(p.borrowerName.toLowerCase()===nl||(zip&&p.zip===zip));});
+}
+
+function findDuplicateRealtor(name,phone) {
+  var nl=(name||'').toLowerCase();
+  return (cachedRealtors||[]).find(function(r){return r.name&&(r.name.toLowerCase()===nl||(phone&&r.phone===phone));});
+}
+
+// ── MERGE ────────────────────────────────────────────────────
+function closeMergeModal(){var m=document.getElementById('merge-modal');if(m)m.style.display='none';}
+
+function checkMergeRealtors() {
+  var modal=document.getElementById('merge-modal'); var body=document.getElementById('merge-modal-body');
+  if(!modal||!body) return; modal.style.display='block';
+  var realtors=cachedRealtors||[]; var pairs=[];
+  for(var i=0;i<realtors.length;i++) for(var j=i+1;j<realtors.length;j++){
+    var a=realtors[i],b=realtors[j];
+    if((a.name||'').toLowerCase()===(b.name||'').toLowerCase()||(a.phone&&b.phone&&a.phone===b.phone)) pairs.push([a,b]);
+  }
+  if(!pairs.length){body.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8">✅ No duplicate realtors found!</div>';return;}
+  body.innerHTML='<div style="font-size:13px;color:#374151;margin-bottom:16px">Found '+pairs.length+' potential duplicate pair(s):</div>'
+    +pairs.map(function(pair){
+      var a=pair[0],b=pair[1];
+      return '<div class="merge-pair"><div class="merge-side"><div class="merge-side-label">Record A</div><div style="font-weight:700">'+(a.name||'—')+'</div><div style="color:#6b7280;font-size:12px">'+(a.brokerage||'')+'</div><div style="color:#6b7280;font-size:12px">'+(a.phone||'')+'</div></div>'
+        +'<div class="merge-side"><div class="merge-side-label">Record B</div><div style="font-weight:700">'+(b.name||'—')+'</div><div style="color:#6b7280;font-size:12px">'+(b.brokerage||'')+'</div><div style="color:#6b7280;font-size:12px">'+(b.phone||'')+'</div></div></div>'
+        +'<div style="display:flex;gap:8px;margin-bottom:14px">'
+        +'<button onclick="executeMergeRealtors(\''+a.id+'\',\''+b.id+'\')" style="flex:1;padding:7px;background:#16a34a;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Keep A, delete B</button>'
+        +'<button onclick="executeMergeRealtors(\''+b.id+'\',\''+a.id+'\')" style="flex:1;padding:7px;background:#3b82f6;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Keep B, delete A</button>'
+        +'</div>';
+    }).join('');
+}
+
+function checkMergeBorrowers() {
+  var modal=document.getElementById('merge-modal'); var body=document.getElementById('merge-modal-body');
+  if(!modal||!body) return; modal.style.display='block';
+  var prospects=(cachedProspects||[]).filter(function(p){return p.borrowerName;}); var pairs=[];
+  for(var i=0;i<prospects.length;i++) for(var j=i+1;j<prospects.length;j++){
+    var a=prospects[i],b=prospects[j];
+    if((a.borrowerName||'').toLowerCase()===(b.borrowerName||'').toLowerCase()) pairs.push([a,b]);
+  }
+  if(!pairs.length){body.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8">✅ No duplicate borrowers found!</div>';return;}
+  body.innerHTML='<div style="font-size:13px;color:#374151;margin-bottom:16px">Found '+pairs.length+' potential duplicate pair(s):</div>'
+    +pairs.map(function(pair){
+      var a=pair[0],b=pair[1];
+      return '<div class="merge-pair"><div class="merge-side"><div class="merge-side-label">Record A</div><div style="font-weight:700">'+(a.borrowerName||'—')+'</div><div style="color:#6b7280;font-size:12px">ZIP: '+(a.zip||'')+' · '+(a.lmiCategory||'')+'</div></div>'
+        +'<div class="merge-side"><div class="merge-side-label">Record B</div><div style="font-weight:700">'+(b.borrowerName||'—')+'</div><div style="color:#6b7280;font-size:12px">ZIP: '+(b.zip||'')+' · '+(b.lmiCategory||'')+'</div></div></div>'
+        +'<div style="display:flex;gap:8px;margin-bottom:14px">'
+        +'<button onclick="executeMergeBorrowers(\''+a.id+'\',\''+b.id+'\')" style="flex:1;padding:7px;background:#16a34a;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Keep A, delete B</button>'
+        +'<button onclick="executeMergeBorrowers(\''+b.id+'\',\''+a.id+'\')" style="flex:1;padding:7px;background:#3b82f6;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Keep B, delete A</button>'
+        +'</div>';
+    }).join('');
+}
+
+async function executeMergeRealtors(keepId,deleteId) {
+  try {
+    var allOyzSnap=await db.collection('oyz').get(); var promises=[];
+    var keepR=(cachedRealtors||[]).find(function(r){return r.id===keepId||r.docId===keepId;});
+    allOyzSnap.docs.forEach(function(d){if(d.data().realtorId===deleteId) promises.push(db.collection('oyz').doc(d.id).update({realtorId:keepId,realtorName:keepR?keepR.name:d.data().realtorName}));});
+    await Promise.all(promises);
+    await db.collection('realtors').doc(deleteId).delete();
+    cachedRealtors=(cachedRealtors||[]).filter(function(r){return r.id!==deleteId&&r.docId!==deleteId;});
+    closeMergeModal(); renderContactsRealtors(); alert('✅ Merged successfully!');
+  } catch(e){alert('Error: '+e.message);}
+}
+
+async function executeMergeBorrowers(keepId,deleteId) {
+  try {
+    await db.collection('prospects').doc(deleteId).delete();
+    cachedProspects=(cachedProspects||[]).filter(function(p){return p.id!==deleteId;});
+    closeMergeModal(); renderContactsBorrowers(); alert('✅ Merged!');
+  } catch(e){alert('Error: '+e.message);}
+}
+
+// ── CSV IMPORT ───────────────────────────────────────────────
+var _importType=null,_importRows=[],_importHeaders=[],_importFieldMap={};
+var _borrowerFields=[
+  {key:'firstName',label:'First Name',required:true},{key:'lastName',label:'Last Name',required:true},
+  {key:'annualIncome',label:'Annual Income',required:true},{key:'zip',label:'ZIP Code',required:true},
+  {key:'city',label:'City',required:false},{key:'tags',label:'Tags (comma-sep)',required:false}
+];
+var _realtorFields=[
+  {key:'name',label:'Name',required:true},{key:'brokerage',label:'Brokerage',required:true},
+  {key:'licenseNum',label:'License #',required:false},{key:'phone',label:'Phone',required:false},
+  {key:'email',label:'Email',required:false},{key:'area',label:'Area',required:false},
+  {key:'tags',label:'Tags (comma-sep)',required:false}
+];
+
+function openImportModal(type) {
+  _importType=type; _importRows=[]; _importHeaders=[]; _importFieldMap={};
+  ['import-step-1','import-step-2','import-step-3'].forEach(function(id,i){
+    var el=document.getElementById(id); if(el) el.style.display=i===0?'':'none';
+  });
+  var fi=document.getElementById('csv-file-input'); if(fi) fi.value='';
+  var overlay=document.getElementById('import-overlay'); if(overlay) overlay.style.display='block';
+}
+
+function closeImportModal(){var o=document.getElementById('import-overlay');if(o)o.style.display='none';}
+function importStep1Back(){
+  document.getElementById('import-step-1').style.display='';
+  document.getElementById('import-step-2').style.display='none';
+}
+
+function handleCsvFile(event) {
+  var file=event.target.files[0]; if(!file) return;
+  if(typeof Papa==='undefined'){alert('PapaParse not loaded. Please refresh.');return;}
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:function(results){
+    _importRows=results.data; _importHeaders=results.meta.fields||[];
+    if(!_importRows.length){alert('No data in CSV.');return;}
+    buildImportMapper();
+    document.getElementById('import-step-1').style.display='none';
+    document.getElementById('import-step-2').style.display='';
+  },error:function(e){alert('Parse error: '+e.message);}});
+}
+
+function buildImportMapper() {
+  var fields=_importType==='borrowers'?_borrowerFields:_realtorFields;
+  var el=document.getElementById('import-col-mapper'); if(!el) return;
+  _importFieldMap={};
+  fields.forEach(function(f){
+    var match=_importHeaders.find(function(h){return h.toLowerCase().replace(/[^a-z]/g,'').indexOf(f.key.toLowerCase().replace(/[^a-z]/g,''))!==-1||f.label.toLowerCase().replace(/[^a-z]/g,'').indexOf(h.toLowerCase().replace(/[^a-z]/g,''))!==-1;});
+    _importFieldMap[f.key]=match||'';
+  });
+  el.innerHTML=fields.map(function(f){
+    var opts='<option value="">— skip —</option>'+_importHeaders.map(function(h){return '<option value="'+h+'" '+(_importFieldMap[f.key]===h?'selected':'')+'>'+h+'</option>';}).join('');
+    return '<div class="col-map-row"><span class="col-map-label">'+f.label+(f.required?' <span style="color:#ef4444">*</span>':'')+'</span>'
+      +'<select onchange="_importFieldMap[\''+f.key+'\']=this.value;updateImportPreview()" style="flex:1;padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px">'+opts+'</select></div>';
+  }).join('');
+  updateImportPreview();
+}
+
+function updateImportPreview() {
+  var el=document.getElementById('import-preview'); if(!el) return;
+  var fields=_importType==='borrowers'?_borrowerFields:_realtorFields;
+  var rows=_importRows.slice(0,5);
+  var html='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>'
+    +fields.map(function(f){return '<th style="padding:5px 8px;font-size:11px;font-weight:700;background:#f8fafc;border:1px solid #e5e7eb">'+f.label+'</th>';}).join('')
+    +'</tr></thead><tbody>'
+    +rows.map(function(row){
+      return '<tr>'+fields.map(function(f){
+        var col=_importFieldMap[f.key]; var val=col?(row[col]||''):'';
+        var miss=f.required&&!val;
+        return '<td style="padding:5px 8px;border:1px solid #e5e7eb;'+(miss?'background:#fef2f2;color:#ef4444':'')+'">'+( val||(miss?'⚠ Missing':'—'))+'</td>';
+      }).join('')+'</tr>';
+    }).join('')+'</tbody></table>';
+  el.innerHTML=html;
+  var btn=document.getElementById('import-run-btn'); if(btn) btn.textContent='Import '+_importRows.length+' contacts';
+}
+
+async function runImport() {
+  if(!db) return;
+  var fields=_importType==='borrowers'?_borrowerFields:_realtorFields;
+  var imported=0,skipped=0,errors=0;
+  var orgId=(currentUser&&currentUser.orgId)||'golden1-org';
+  for(var i=0;i<_importRows.length;i++){
+    var row=_importRows[i]; var mapped={};
+    fields.forEach(function(f){var col=_importFieldMap[f.key];if(col) mapped[f.key]=row[col]||'';});
+    var valid=fields.every(function(f){return !f.required||mapped[f.key];});
+    if(!valid){skipped++;continue;}
+    try {
+      if(_importType==='borrowers'){
+        var income=parseFloat((mapped.annualIncome||'').replace(/[$,]/g,''))||0;
+        var data={borrowerName:(mapped.firstName||'')+' '+(mapped.lastName||''),annualIncome:income,
+          zip:mapped.zip||'',city:mapped.city||'',
+          tags:mapped.tags?mapped.tags.split(',').map(function(t){return t.trim();}).filter(Boolean):[],
+          orgId:orgId,mloId:currentUser.id,mloName:currentUser.name,created:new Date().toISOString()};
+        if(findDuplicateBorrower(data.borrowerName,data.zip)){skipped++;continue;}
+        await db.collection('prospects').add(data);
+      } else {
+        var rdata={name:mapped.name||'',brokerage:mapped.brokerage||'',licenseNum:mapped.licenseNum||'',
+          phone:mapped.phone||'',email:mapped.email||'',area:mapped.area||'',
+          tags:mapped.tags?mapped.tags.split(',').map(function(t){return t.trim();}).filter(Boolean):[],
+          orgId:orgId,mloId:currentUser.id,created:new Date().toISOString()};
+        if(findDuplicateRealtor(rdata.name,rdata.phone)){skipped++;continue;}
+        await db.collection('realtors').add(rdata);
+      }
+      imported++;
+    } catch(e){errors++;}
+  }
+  document.getElementById('import-step-2').style.display='none';
+  document.getElementById('import-step-3').style.display='';
+  document.getElementById('import-result').innerHTML='<div style="font-size:40px;margin-bottom:12px">✅</div>'
+    +'<div style="font-size:16px;font-weight:700;color:#1f2937;margin-bottom:8px">Import Complete</div>'
+    +'<div style="font-size:14px;color:#374151"><strong style="color:#16a34a">'+imported+'</strong> imported &nbsp;·&nbsp; '
+    +'<strong style="color:#f59e0b">'+skipped+'</strong> skipped &nbsp;·&nbsp; '
+    +'<strong style="color:#ef4444">'+errors+'</strong> errors</div>';
+}
+
+// ── EXPORT ───────────────────────────────────────────────────
+function exportContactsBorrowers() {
+  if(!window.XLSX){alert('Excel library not loaded');return;}
+  var rows=[['Name','LMI Category','% AMI','Income','Max Price','ZIP','City','Tags']].concat(
+    (cachedProspects||[]).filter(function(p){return p.borrowerName;}).map(function(p){
+      return [p.borrowerName,p.lmiCategory,p.amiPct,p.annualIncome,p.maxPrice,p.zip,p.city,(p.tags||[]).join(', ')];
+    })
+  );
+  var ws=XLSX.utils.aoa_to_sheet(rows); var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Borrowers'); XLSX.writeFile(wb,'borrowers.xlsx');
+}
+
+function exportContactsRealtors() {
+  if(!window.XLSX){alert('Excel library not loaded');return;}
+  var rows=[['Name','Brokerage','License','Phone','Email','Area','Tags']].concat(
+    (cachedRealtors||[]).map(function(r){
+      return [r.name,r.brokerage,r.licenseNum,r.phone,r.email,r.area,(r.tags||[]).join(', ')];
+    })
+  );
+  var ws=XLSX.utils.aoa_to_sheet(rows); var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Realtors'); XLSX.writeFile(wb,'realtors.xlsx');
+}
+// ── END PHASE 13 ─────────────────────────────────────────────
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
