@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="LMI Prospect Finder"/>
-<meta name="theme-color" content="#1f2937"/>
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMWYyOTM3Ii8+PHBhdGggZD0iTTkwIDI0QzY0IDI0IDQyIDQ2IDQyIDcyYzAgMzggNDggOTIgNDggOTJzNDgtNTQgNDgtOTJjMC0yNi0yMi00OC00OC00OHptMCA2NmEyMiAyMiAwIDEgMSAwLTQ0IDIyIDIyIDAgMCAxIDAgNDR6IiBmaWxsPSIjMGVkMmM4Ii8+PC9zdmc+"/>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231f2937'/%3E%3Cpath d='M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z' fill='%230ed2c8'/%3E%3C/svg%3E"/>
+<meta name="apple-mobile-web-app-title" content="Loopenta"/>
+<meta name="theme-color" content="#0C1F3F"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230C1F3F'/%3E%3Cpath d='M55 45L55 132L126 132' stroke='%231B73E3' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='55' cy='45' r='15' fill='%234FA3F7'/%3E%3C/svg%3E"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230C1F3F'/%3E%3Cpath d='M55 45L55 132L126 132' stroke='%231B73E3' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='55' cy='45' r='15' fill='%234FA3F7'/%3E%3C/svg%3E"/>
 <link rel="manifest" href="/manifest.json"/>
-<title>LMI Prospect Finder</title>
+<title>Loopenta</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -19,70 +19,92 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 :root {
-  --brand-primary: #1f2937;
-  --brand-accent: #0ed2c8;
+  --brand-primary: #0C1F3F;
+  --brand-accent: #1B73E3;
+  --brand-accent-dark: #1558C0;
+  --brand-accent-light: #EEF4FF;
+  --body-bg: #F2F5F9;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg: 0 12px 32px rgba(15,23,42,0.12), 0 4px 8px rgba(15,23,42,0.06);
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; background: var(--body-bg); min-height: 100vh; color: var(--text-primary); }
 
 #login-screen {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; background: linear-gradient(135deg, var(--brand-primary) 0%, #374151 100%);
+  min-height: 100vh;
+  background: linear-gradient(160deg, #091830 0%, #0C1F3F 55%, #152D56 100%);
 }
 .login-box {
-  background: white; border-radius: 18px; padding: 48px 40px; width: 100%; max-width: 400px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+  background: white; border-radius: var(--radius-xl); padding: 52px 44px; width: 100%; max-width: 420px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.2); text-align: center;
 }
-.login-logo { margin-bottom: 12px; display: flex; justify-content: center; }
-.login-title { font-size: 22px; font-weight: 800; color: var(--brand-primary); margin-bottom: 4px; }
-.login-sub { font-size: 13px; color: #7a8fa6; margin-bottom: 32px; }
+.login-logo { margin-bottom: 18px; display: flex; justify-content: center; }
+.login-title { font-size: 30px; font-weight: 800; color: var(--brand-primary); margin-bottom: 6px; letter-spacing: -0.5px; }
+.login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 36px; letter-spacing: 0.1px; }
 .login-box input {
-  width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px;
-  font-size: 16px; margin-bottom: 14px; outline: none; transition: border 0.2s;
+  width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 15px; margin-bottom: 12px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  color: var(--text-primary); font-family: inherit; background: var(--body-bg);
 }
-.login-box input:focus { border-color: var(--brand-accent); }
+.login-box input:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(27,115,227,0.12); background: white; }
+.login-box input::placeholder { color: var(--text-muted); }
 .login-btn {
-  width: 100%; padding: 14px; background: linear-gradient(135deg, var(--brand-primary), #374151);
-  color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
+  width: 100%; padding: 14px; background: var(--brand-accent);
+  color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, transform 0.1s; letter-spacing: 0.2px; font-family: inherit;
 }
-.login-btn:hover { background: linear-gradient(135deg, var(--brand-accent), #06b6aa); color: var(--brand-primary); }
+.login-btn:hover { background: var(--brand-accent-dark); }
+.login-btn:active { transform: scale(0.99); }
 .login-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
 
 #app-screen, #admin-screen, #superadmin-screen { display: none; }
 
 .header {
-  background: linear-gradient(135deg, var(--brand-primary) 0%, #374151 100%);
-  padding: 0 32px; display: flex; align-items: stretch; justify-content: space-between;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2); min-height: 70px;
+  background: var(--brand-primary);
+  padding: 0 24px; display: flex; align-items: stretch; justify-content: space-between;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.2); min-height: 64px;
 }
-.header-left { display: flex; align-items: center; gap: 14px; }
-.header-icon { width: 44px; height: 44px; background: var(--brand-accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.header-title { color: white; font-size: 20px; font-weight: 800; }
-.header-sub { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 2px; }
-.header-nav { display: flex; align-items: stretch; gap: 0; margin-left: 24px; }
-.nav-tab { color: rgba(255,255,255,0.6); border: none; background: none; padding: 0 14px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
-.nav-tab.active { color: var(--brand-accent); border-bottom-color: var(--brand-accent); }
-.header-actions { display: flex; gap: 10px; align-items: center; }
-.hdr-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-weight: 600; min-height: 44px; }
-.hdr-btn:hover { background: rgba(255,255,255,0.2); }
-.hdr-btn.teal { background: var(--brand-accent); color: var(--brand-primary); border-color: var(--brand-accent); font-weight: 700; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-icon { width: 36px; height: 36px; background: var(--brand-accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-title { color: white; font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+.header-sub { color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 1px; }
+.header-nav { display: flex; align-items: stretch; gap: 0; margin-left: 20px; }
+.nav-tab { color: rgba(255,255,255,0.5); border: none; background: none; padding: 0 12px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.nav-tab:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.05); }
+.nav-tab.active { color: white; border-bottom-color: var(--brand-accent); }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.hdr-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 7px 14px; font-size: 13px; cursor: pointer; font-weight: 600; min-height: 34px; transition: background 0.15s; font-family: inherit; }
+.hdr-btn:hover { background: rgba(255,255,255,0.16); color: white; }
+.hdr-btn.teal { background: var(--brand-accent); color: white; border-color: var(--brand-accent); font-weight: 700; }
+.hdr-btn.teal:hover { background: var(--brand-accent-dark); border-color: var(--brand-accent-dark); }
 /* Super Admin header style */
 .header-superadmin { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%) !important; }
 /* Signup screen */
-#signup-screen { display: none; min-height: 100vh; background: linear-gradient(135deg, var(--brand-primary) 0%, #374151 100%); align-items: center; justify-content: center; }
-.signup-box { background: white; border-radius: 18px; padding: 40px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+#signup-screen { display: none; min-height: 100vh; background: linear-gradient(160deg, #091830 0%, #0C1F3F 55%, #152D56 100%); align-items: center; justify-content: center; }
+.signup-box { background: white; border-radius: var(--radius-xl); padding: 40px; width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); }
 .signup-step { display: none; }
 .signup-step.active { display: block; }
 .signup-step-indicator { display: flex; gap: 8px; margin-bottom: 24px; justify-content: center; }
-.signup-step-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; transition: background 0.2s; }
+.signup-step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; transition: background 0.2s; }
 .signup-step-dot.active { background: var(--brand-accent); }
 .signup-field { margin-bottom: 14px; }
-.signup-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
-.signup-field input, .signup-field select { width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; font-family: inherit; }
-.signup-field input:focus, .signup-field select:focus { border-color: var(--brand-accent); }
-.signup-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--brand-primary), #374151); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
-.signup-btn:hover { opacity: 0.9; }
+.signup-field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.signup-field input, .signup-field select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; background: var(--body-bg); }
+.signup-field input:focus, .signup-field select:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(27,115,227,0.1); background: white; }
+.signup-btn { width: 100%; padding: 13px; background: var(--brand-accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.15s; font-family: inherit; }
+.signup-btn:hover { background: var(--brand-accent-dark); }
 /* SA panel styles */
 .sa-header { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); padding: 0 32px; display: flex; align-items: stretch; justify-content: space-between; box-shadow: 0 2px 12px rgba(0,0,0,0.3); min-height: 70px; }
 .sa-tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px; }
@@ -102,41 +124,41 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 
 .search-row { display: flex; gap: 12px; }
 .search-row input { flex: 1; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; letter-spacing: 3px; outline: none; transition: border 0.2s; }
-.search-row input:focus { border-color: #0ed2c8; }
-.search-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; }
-.search-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.search-row input:focus { border-color: #1B73E3; }
+.search-btn { background: var(--brand-accent); color: white; border: none; border-radius: var(--radius-sm); padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.search-btn:hover { background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; }
 .examples { font-size: 12px; color: #94a3b8; margin-top: 10px; }
 .examples span { background: #f1f5f9; border-radius: 5px; padding: 3px 8px; margin-right: 6px; cursor: pointer; display: inline-block; margin-bottom: 4px; }
-.examples span:hover { background: #ccfbf1; color: #0f766e; }
+.examples span:hover { background: #DBEAFE; color: #1558C0; }
 .branch-shortcuts { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
 .branch-shortcuts-label { font-size: 11px; font-weight: 700; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-.branch-shortcuts-label span { background: #0ed2c8; color: #1f2937; font-size: 10px; border-radius: 4px; padding: 2px 6px; }
-.branch-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
-.branch-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.branch-shortcuts-label span { background: var(--brand-accent); color: white; font-size: 10px; border-radius: 4px; padding: 2px 6px; }
+.branch-btn { background: var(--brand-primary); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; transition: background 0.15s; }
+.branch-btn:hover { background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; }
 
 .farm-card { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 16px; padding: 24px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 24px; color: white; }
 .farm-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 3px; }
 .farm-card-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 18px; }
 .farm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
 .farm-stat { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(14,210,200,0.2); }
-.farm-stat-num { font-size: 20px; font-weight: 900; color: #0ed2c8; }
+.farm-stat-num { font-size: 20px; font-weight: 900; color: #1B73E3; }
 .farm-stat-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
 .farm-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .farm-link { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 11px 18px; font-size: 13px; font-weight: 700; text-decoration: none; transition: opacity 0.15s; }
 .farm-link:hover { opacity: 0.85; }
 .farm-zillow { background: #006aff; color: white; }
 .farm-redfin { background: #cc0000; color: white; }
-.farm-zillow-mod { background: #0ed2c8; color: #1f2937; }
+.farm-zillow-mod { background: var(--brand-accent); color: white; }
 .farm-realtor-link { background: #c0392b; color: white; }
 .farm-adjustments { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 18px 20px; border: 1px solid rgba(255,255,255,0.08); }
 .farm-adj-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .farm-adj-title { font-size: 13px; font-weight: 700; color: white; }
-.reset-btn { background: rgba(14,210,200,0.15); color: #0ed2c8; border: 1px solid rgba(14,210,200,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.reset-btn { background: rgba(14,210,200,0.15); color: #1B73E3; border: 1px solid rgba(14,210,200,0.3); border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
 .adj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .adj-row { display: flex; flex-direction: column; gap: 6px; }
 .adj-label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
 .adj-controls { display: flex; align-items: center; gap: 8px; }
-.adj-slider { flex: 1; accent-color: #0ed2c8; height: 4px; cursor: pointer; }
+.adj-slider { flex: 1; accent-color: #1B73E3; height: 4px; cursor: pointer; }
 .adj-input { width: 64px; padding: 6px 8px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 7px; background: rgba(255,255,255,0.08); color: white; font-size: 16px; font-weight: 700; text-align: center; outline: none; min-height: 44px; }
 .adj-unit { font-size: 12px; color: rgba(255,255,255,0.5); min-width: 20px; }
 .adj-select { flex: 1; padding: 7px 10px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 7px; background: rgba(255,255,255,0.08); color: white; font-size: 16px; font-weight: 700; outline: none; cursor: pointer; min-height: 44px; }
@@ -145,11 +167,11 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 
 .qualifier-trigger { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
 .qualifier-trigger-left { display: flex; align-items: center; gap: 12px; }
-.qualifier-trigger-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0ed2c8, #06b6aa); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.qualifier-trigger-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #1B73E3, #1558C0); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 .qualifier-trigger-title { font-size: 14px; font-weight: 700; color: #1f2937; }
 .qualifier-trigger-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 .qualifier-open-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
-.qualifier-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #0ed2c8; display: none; }
+.qualifier-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #1B73E3; display: none; }
 .qualifier-card.open { display: block; }
 .qualifier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .qualifier-title { font-size: 16px; font-weight: 800; color: #1f2937; }
@@ -160,7 +182,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .qualifier-input-wrap { flex: 1; min-width: 160px; }
 .qualifier-input-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
 .qualifier-input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; transition: border 0.2s; }
-.qualifier-input:focus { border-color: #0ed2c8; }
+.qualifier-input:focus { border-color: #1B73E3; }
 .qualifier-calc-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .qualifier-result { display: none; }
 .qualifier-result.show { display: block; }
@@ -187,25 +209,25 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .saved-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
 .saved-row:last-child { border-bottom: none; }
 .saved-row-clickable { cursor: pointer; flex: 1; padding: 4px 8px 4px 0; border-radius: 8px; transition: background 0.15s; }
-.saved-row-clickable:hover { background: #f0fdfa; }
+.saved-row-clickable:hover { background: #EEF4FF; }
 .saved-zip { font-weight: 700; color: #1f2937; }
 .saved-city { color: #64748b; font-size: 13px; margin-left: 8px; }
-.lmi-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+.lmi-tag { background: #DBEAFE; color: #1558C0; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
 .saved-borrower-tag { font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 8px; font-weight: 700; }
 .saved-realtor-tag { background: #f0f4ff; color: #4f46e5; font-size: 11px; border-radius: 4px; padding: 2px 7px; margin-left: 4px; font-weight: 600; }
-.saved-reopen { font-size: 11px; color: #0ed2c8; margin-left: 6px; }
+.saved-reopen { font-size: 11px; color: #1B73E3; margin-left: 6px; }
 .saved-mlo { color: #94a3b8; font-size: 11px; margin-left: 8px; font-style: italic; }
 .saved-date { font-size: 12px; color: #94a3b8; white-space: nowrap; }
 .remove-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 0 4px; flex-shrink: 0; }
-.mkt-btn { background: none; border: 1px solid #0ed2c8; color: #0ed2c8; cursor: pointer; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
-.mkt-btn:hover { background: #ccfbf1; }
+.mkt-btn { background: none; border: 1px solid #1B73E3; color: #1B73E3; cursor: pointer; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+.mkt-btn:hover { background: #DBEAFE; }
 .empty-saved { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
 
-.loader { text-align: center; padding: 30px; color: #0ed2c8; font-weight: 600; font-size: 15px; }
+.loader { text-align: center; padding: 30px; color: #1B73E3; font-weight: 600; font-size: 15px; }
 .not-found { background: white; border-radius: 16px; padding: 36px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
 .not-found h3 { color: #1f2937; font-size: 17px; margin-bottom: 6px; }
 .not-found p { color: #64748b; font-size: 13px; }
-.not-found a { color: #0ed2c8; font-weight: 600; }
+.not-found a { color: #1B73E3; font-weight: 600; }
 .api-error { background: #fef2f2; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px; border-left: 4px solid #dc2626; }
 .api-error h3 { color: #dc2626; font-size: 15px; margin-bottom: 6px; }
 .api-error p { color: #64748b; font-size: 13px; }
@@ -215,7 +237,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .result-meta { font-size: 12px; color: #94a3b8; margin-bottom: 16px; }
 .save-btn { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-.summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
+.summary-card { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #1B73E3; }
 .summary-num { font-size: 28px; font-weight: 900; color: #1f2937; }
 .summary-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
 .tract-table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 20px; }
@@ -223,7 +245,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .tract-table th { text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 14px 16px; border-bottom: 2px solid #f1f5f9; background: #f8fafc; }
 .tract-table td { padding: 11px 16px; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; }
 .tract-table tr:last-child td { border-bottom: none; }
-.tract-table tr:hover td { background: #f0fdfa; }
+.tract-table tr:hover td { background: #EEF4FF; }
 .lmi-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; display: inline-block; }
 .bar-cell { min-width: 120px; }
 .bar-track { background: #e2e8f0; border-radius: 99px; height: 7px; overflow: hidden; margin-top: 4px; }
@@ -234,7 +256,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .link-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-decoration: none; }
 .link-btn:hover { opacity: 0.85; }
 .ffiec { background: #1f2937; color: white; }
-.hud { background: #0ed2c8; color: #1f2937; }
+.hud { background: var(--brand-accent); color: white; }
 
 /* MARKETING TAB */
 .marketing-main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
@@ -242,7 +264,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .mkt-profile-warn { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #d97706; margin-bottom: 24px; display: none; }
 .mkt-profile-warn a { color: #d97706; font-weight: 700; cursor: pointer; text-decoration: underline; }
 .mkt-pieces-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
-.mkt-piece-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 4px solid #0ed2c8; }
+.mkt-piece-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 4px solid #1B73E3; }
 .mkt-piece-card.purple { border-top-color: #4f46e5; }
 .mkt-piece-card.green { border-top-color: #059669; }
 .mkt-piece-icon { font-size: 32px; margin-bottom: 12px; }
@@ -250,24 +272,24 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .mkt-piece-desc { font-size: 12px; color: #64748b; line-height: 1.5; margin-bottom: 16px; }
 .mkt-piece-select { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 13px; outline: none; margin-bottom: 12px; }
 .mkt-generate-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; }
-.mkt-generate-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.mkt-generate-btn:hover { background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; }
 .mkt-generate-btn.purple { background: linear-gradient(135deg, #4f46e5, #6366f1); }
 .mkt-generate-btn.green { background: linear-gradient(135deg, #059669, #047857); }
 
 /* FLYER MODAL */
 .flyer-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-start; justify-content: center; z-index: 400; overflow-y: auto; padding: 20px; }
 .flyer-modal-overlay.open { display: flex; }
-.flyer-modal-box { background: #f0f4f8; border-radius: 16px; width: 100%; max-width: 720px; margin: auto; }
+.flyer-modal-box { background: var(--body-bg); border-radius: 16px; width: 100%; max-width: 720px; margin: auto; }
 .flyer-modal-header { background: linear-gradient(135deg, #1f2937, #374151); border-radius: 16px 16px 0 0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
 .flyer-modal-title { color: white; font-size: 16px; font-weight: 700; }
 .flyer-modal-actions { display: flex; gap: 10px; align-items: center; }
 .flyer-action-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
-.flyer-action-btn.teal { background: #0ed2c8; color: #1f2937; border-color: #0ed2c8; }
+.flyer-action-btn.teal { background: var(--brand-accent); color: white; border-color: #1B73E3; }
 .flyer-close-btn { background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 16px; cursor: pointer; }
 .flyer-share-row { background: white; margin: 16px; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
 .flyer-share-url { flex: 1; font-size: 12px; color: #64748b; word-break: break-all; }
-.flyer-copy-btn { background: #f0f4f8; color: #1f2937; border: none; border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-.flyer-copy-btn:hover { background: #ccfbf1; color: #0f766e; }
+.flyer-copy-btn { background: var(--body-bg); color: #1f2937; border: none; border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.flyer-copy-btn:hover { background: #DBEAFE; color: #1558C0; }
 .flyer-preview-wrap { padding: 16px; }
 .flyer-preview { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
 
@@ -275,10 +297,10 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .flyer { font-family: 'Segoe UI', Arial, sans-serif; background: white; max-width: 680px; margin: 0 auto; }
 .flyer-top-bar { background: #1f2937; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; }
 .flyer-logo-area { display: flex; align-items: center; gap: 12px; }
-.flyer-logo-icon { width: 40px; height: 40px; background: #0ed2c8; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.flyer-logo-icon { width: 40px; height: 40px; background: #1B73E3; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .flyer-logo-text { color: white; font-size: 14px; font-weight: 800; }
 .flyer-logo-sub { color: rgba(255,255,255,0.6); font-size: 11px; }
-.flyer-type-badge { background: #0ed2c8; color: #1f2937; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 4px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.flyer-type-badge { background: var(--brand-accent); color: white; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 4px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
 .flyer-hero { padding: 28px 32px; border-bottom: 2px solid #f1f5f9; }
 .flyer-hero-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .flyer-hero-name { font-size: 26px; font-weight: 900; color: #1f2937; margin-bottom: 4px; }
@@ -286,28 +308,28 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .flyer-body { padding: 24px 32px; }
 .flyer-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; }
 .flyer-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-.flyer-stat { background: #f8fafc; border-radius: 10px; padding: 14px 16px; border-left: 3px solid #0ed2c8; }
+.flyer-stat { background: #f8fafc; border-radius: 10px; padding: 14px 16px; border-left: 3px solid #1B73E3; }
 .flyer-stat-num { font-size: 20px; font-weight: 900; color: #1f2937; }
 .flyer-stat-label { font-size: 10px; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
 .flyer-links-section { margin-bottom: 20px; }
 .flyer-link-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; text-decoration: none; }
 .flyer-link-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
 .flyer-link-label { font-size: 12px; font-weight: 700; color: #1f2937; }
-.flyer-link-url { font-size: 11px; color: #0ed2c8; word-break: break-all; }
+.flyer-link-url { font-size: 11px; color: #1B73E3; word-break: break-all; }
 .flyer-lmi-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
 .flyer-lmi-table th { text-align: left; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; padding: 8px 12px; background: #f8fafc; }
 .flyer-lmi-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; font-size: 13px; }
 .flyer-lmi-badge { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 8px; }
 .flyer-mlo-footer { background: #1f2937; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
-.flyer-mlo-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #0ed2c8; flex-shrink: 0; }
-.flyer-mlo-photo-placeholder { width: 56px; height: 56px; border-radius: 50%; background: #374151; border: 2px solid #0ed2c8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.flyer-mlo-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #1B73E3; flex-shrink: 0; }
+.flyer-mlo-photo-placeholder { width: 56px; height: 56px; border-radius: 50%; background: #374151; border: 2px solid #1B73E3; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 .flyer-mlo-name { color: white; font-size: 15px; font-weight: 800; }
 .flyer-mlo-details { color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 3px; line-height: 1.6; }
-.flyer-mlo-nmls { color: #0ed2c8; font-size: 11px; font-weight: 700; margin-top: 2px; }
+.flyer-mlo-nmls { color: #1B73E3; font-size: 11px; font-weight: 700; margin-top: 2px; }
 .flyer-disclaimer { padding: 12px 32px; font-size: 9px; color: #94a3b8; line-height: 1.5; background: #f8fafc; }
 .flyer-profile-hero { padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start; border-bottom: 2px solid #f1f5f9; }
-.flyer-profile-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #0ed2c8; flex-shrink: 0; }
-.flyer-profile-photo-placeholder { width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; border: 3px solid #0ed2c8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.flyer-profile-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #1B73E3; flex-shrink: 0; }
+.flyer-profile-photo-placeholder { width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; border: 3px solid #1B73E3; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
 .flyer-value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 .flyer-value-item { background: #f8fafc; border-radius: 10px; padding: 14px 16px; }
 .flyer-value-icon { font-size: 18px; margin-bottom: 6px; }
@@ -315,7 +337,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .flyer-value-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
 
 /* FLYER PUBLIC VIEW */
-#flyer-public-screen { display: none; min-height: 100vh; background: #f0f4f8; }
+#flyer-public-screen { display: none; min-height: 100vh; background: var(--body-bg); }
 .flyer-public-header { background: linear-gradient(135deg, #1f2937, #374151); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
 .flyer-public-logo { display: flex; align-items: center; gap: 10px; color: white; font-size: 14px; font-weight: 700; }
 .flyer-public-content { max-width: 720px; margin: 32px auto; padding: 0 20px; }
@@ -328,11 +350,11 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .date-range-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .date-range-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; }
 .date-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 16px; outline: none; min-height: 44px; }
-.date-input:focus { border-color: #0ed2c8; }
+.date-input:focus { border-color: #1B73E3; }
 .date-apply-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
 .date-clear-btn { background: #f1f5f9; color: #64748b; border: none; border-radius: 9px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .dash-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
-.dash-stat-card { background: white; border-radius: 14px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #0ed2c8; }
+.dash-stat-card { background: white; border-radius: 14px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); text-align: center; border-top: 3px solid #1B73E3; }
 .dash-stat-card.purple { border-top-color: #4f46e5; }
 .dash-stat-card.green { border-top-color: #059669; }
 .dash-stat-card.orange { border-top-color: #d97706; }
@@ -365,7 +387,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .recent-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 .recent-date { font-size: 11px; color: #94a3b8; white-space: nowrap; }
 .team-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-.team-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; text-align: center; }
+.team-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #1B73E3; text-align: center; }
 .team-stat-num { font-size: 28px; font-weight: 900; color: #1f2937; }
 .team-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
 .mlo-leaderboard { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
@@ -381,7 +403,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .mlo-region { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 .mlo-stats-row { display: flex; gap: 16px; }
 .mlo-stat-pill { background: #f1f5f9; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #64748b; }
-.mlo-stat-pill.teal { background: #ccfbf1; color: #0f766e; }
+.mlo-stat-pill.teal { background: #DBEAFE; color: #1558C0; }
 .mlo-stat-pill.blue { background: #eff6ff; color: #2563eb; }
 .mlo-stat-pill.green { background: #f0fdf4; color: #059669; }
 .empty-dash { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
@@ -447,16 +469,16 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 /* ACTIVITY */
 .activity-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
 .activity-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
-.activity-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; text-align: center; }
+.activity-stat-card { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #1B73E3; text-align: center; }
 .activity-stat-num { font-size: 28px; font-weight: 900; color: #1f2937; }
 .activity-stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-.log-form-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #0ed2c8; }
+.log-form-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; border-top: 4px solid #1B73E3; }
 .log-form-title { font-size: 16px; font-weight: 800; color: #1f2937; margin-bottom: 20px; }
 .log-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .log-form-grid-wide { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .log-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
 .log-field input, .log-field select, .log-field textarea { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 16px; outline: none; transition: border 0.2s; font-family: inherit; }
-.log-field input:focus, .log-field select:focus, .log-field textarea:focus { border-color: #0ed2c8; }
+.log-field input:focus, .log-field select:focus, .log-field textarea:focus { border-color: #1B73E3; }
 .log-field textarea { resize: vertical; min-height: 72px; }
 .log-submit-row { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
 .log-submit-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
@@ -467,7 +489,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .log-filters { display: flex; gap: 10px; flex-wrap: wrap; }
 .log-filter-select { padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; }
 .activity-entry { border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; transition: border 0.2s; }
-.activity-entry:hover { border-color: #0ed2c8; }
+.activity-entry:hover { border-color: #1B73E3; }
 .activity-entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
 .activity-type-badge { font-size: 12px; font-weight: 700; border-radius: 7px; padding: 4px 12px; }
 .activity-entry-meta { font-size: 12px; color: #94a3b8; }
@@ -482,7 +504,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 /* ADMIN */
 .admin-main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
 .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
-.stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #0ed2c8; }
+.stat-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border-top: 3px solid #1B73E3; }
 .stat-num { font-size: 32px; font-weight: 900; color: #1f2937; }
 .stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
 .admin-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 24px; }
@@ -491,10 +513,10 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .add-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; }
 .form-group input, .form-group select { width: 100%; padding: 11px 13px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 16px; outline: none; transition: border 0.2s; }
-.form-group input:focus, .form-group select:focus { border-color: #0ed2c8; }
+.form-group input:focus, .form-group select:focus { border-color: #1B73E3; }
 .add-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .invite-btn { background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
-.gen-btn { background: #f0fdfa; color: #0f766e; border: 2px solid #99f6e4; border-radius: 9px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.gen-btn { background: #EEF4FF; color: #1558C0; border: 2px solid #BFDBFE; border-radius: 9px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .form-error { color: #dc2626; font-size: 12px; margin-top: 10px; display: none; }
 .form-success { color: #059669; font-size: 12px; margin-top: 10px; display: none; }
 .user-table { width: 100%; border-collapse: collapse; }
@@ -502,20 +524,20 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .user-table td { padding: 12px 10px 12px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; color: #1e293b; vertical-align: top; }
 .user-table tr:last-child td { border-bottom: none; }
 .role-badge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; }
-.role-admin { background: #ccfbf1; color: #0f766e; }
+.role-admin { background: #DBEAFE; color: #1558C0; }
 .role-mlo { background: #e0f2fe; color: #0369a1; }
 .type-badge { font-size: 11px; font-weight: 600; border-radius: 5px; padding: 3px 9px; background: #f1f5f9; color: #64748b; }
 .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
-.status-active { background: #0ed2c8; }
+.status-active { background: #1B73E3; }
 .status-inactive { background: #94a3b8; }
 .action-btn { background: none; border: none; cursor: pointer; padding: 4px 7px; border-radius: 6px; font-size: 13px; }
 .action-btn:hover { background: #f1f5f9; }
 .del-btn { color: #dc2626; }
-.toggle-btn { color: #0ed2c8; }
+.toggle-btn { color: #1B73E3; }
 .copy-btn { color: #059669; }
 .empty-table { text-align: center; color: #94a3b8; font-size: 13px; padding: 30px 0; }
 .branch-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
-.branch-tag { background: #ccfbf1; color: #0f766e; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
+.branch-tag { background: #DBEAFE; color: #1558C0; font-size: 11px; border-radius: 5px; padding: 2px 8px; }
 
 /* SETTINGS */
 .settings-overlay { position: fixed; top: 0; right: -440px; width: 420px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 200; transition: right 0.3s ease; display: flex; flex-direction: column; }
@@ -526,20 +548,20 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .settings-title { color: white; font-size: 17px; font-weight: 800; }
 .settings-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
 .settings-body { flex: 1; overflow-y: auto; padding: 24px; }
-.settings-user-info { background: #f0fdfa; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; border: 1px solid #99f6e4; }
+.settings-user-info { background: #EEF4FF; border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; border: 1px solid #BFDBFE; }
 .settings-user-name { font-size: 15px; font-weight: 700; color: #1f2937; }
 .settings-user-meta { font-size: 12px; color: #64748b; margin-top: 3px; }
 .settings-section { margin-bottom: 28px; }
 .settings-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
 .settings-item { display: flex; flex-direction: column; gap: 10px; }
 .settings-input { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; outline: none; }
-.settings-input:focus { border-color: #0ed2c8; }
+.settings-input:focus { border-color: #1B73E3; }
 .settings-save-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
-.settings-save-btn:hover { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; }
+.settings-save-btn:hover { background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; }
 .settings-error { color: #dc2626; font-size: 12px; display: none; }
 .settings-success { color: #059669; font-size: 12px; display: none; }
 .settings-coming-soon { background: #f8fafc; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #94a3b8; border: 1px dashed #e2e8f0; text-align: center; }
-.profile-photo-preview { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #0ed2c8; display: none; }
+.profile-photo-preview { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #1B73E3; display: none; }
 
 /* MODALS */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
@@ -562,25 +584,25 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .invite-modal-logo { margin-bottom: 16px; display: flex; justify-content: center; }
 .invite-modal-title { font-size: 22px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
 .invite-modal-sub { font-size: 13px; color: #94a3b8; margin-bottom: 28px; line-height: 1.5; }
-.invite-modal-name { font-size: 18px; font-weight: 700; color: #0ed2c8; margin-bottom: 4px; }
+.invite-modal-name { font-size: 18px; font-weight: 700; color: #1B73E3; margin-bottom: 4px; }
 .invite-modal-email { font-size: 13px; color: #64748b; margin-bottom: 24px; }
 .invite-field { text-align: left; margin-bottom: 14px; }
 .invite-field label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 6px; }
 .invite-field input { width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.2s; }
-.invite-field input:focus { border-color: #0ed2c8; }
+.invite-field input:focus { border-color: #1B73E3; }
 .invite-submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
 .invite-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
 .invite-success-box { display: none; }
 .invite-success-icon { font-size: 48px; margin-bottom: 16px; }
 .invite-success-title { font-size: 20px; font-weight: 800; color: #1f2937; margin-bottom: 8px; }
 .invite-success-sub { font-size: 13px; color: #64748b; margin-bottom: 24px; }
-.invite-success-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.invite-success-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
 .invite-expired-box { display: none; text-align: center; padding: 20px 0; }
 .invite-expired-icon { font-size: 48px; margin-bottom: 16px; }
 .invite-expired-title { font-size: 18px; font-weight: 800; color: #dc2626; margin-bottom: 8px; }
 .invite-expired-sub { font-size: 13px; color: #64748b; }
 
-.toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #0ed2c8; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1f2937; color: white; padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; border-left: 4px solid #1B73E3; }
 
 /* TOS MODAL */
 .tos-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
@@ -596,7 +618,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .tos-scroll-hint { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 12px; transition: opacity 0.3s; }
 .tos-scroll-hint.hidden { opacity: 0; pointer-events: none; }
 .tos-agree-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: not-allowed; background: #e2e8f0; color: #94a3b8; transition: all 0.3s; }
-.tos-agree-btn.enabled { background: linear-gradient(135deg, #0ed2c8, #06b6aa); color: #1f2937; cursor: pointer; }
+.tos-agree-btn.enabled { background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; cursor: pointer; }
 .tos-agree-btn.enabled:hover { opacity: 0.9; }
 
 @media (max-width: 768px) {
@@ -629,7 +651,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .hamburger-item { display: block; width: 100%; text-align: left; padding: 13px 18px; color: rgba(255,255,255,0.75); background: none; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .hamburger-item:last-child { border-bottom: none; }
 .hamburger-item:hover { background: rgba(255,255,255,0.08); color: white; }
-.hamburger-item.active { color: #0ed2c8; background: rgba(14,210,200,0.08); }
+.hamburger-item.active { color: #1B73E3; background: rgba(14,210,200,0.08); }
 
 /* OYZ DASHBOARD */
 .oyz-main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
@@ -656,7 +678,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .oyz-filter-btn.active { background: #7c3aed; border-color: #7c3aed; color: white; }
 .oyz-weekend-section { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; border: 1px solid #ddd6fe; }
 .oyz-weekend-title { font-size: 13px; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-.oyz-weekend-card { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; border-left: 3px solid #0ed2c8; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: box-shadow 0.15s; }
+.oyz-weekend-card { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; border-left: 3px solid #1B73E3; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: box-shadow 0.15s; }
 .oyz-weekend-card:last-child { margin-bottom: 0; }
 .oyz-weekend-card:hover { box-shadow: 0 3px 12px rgba(14,210,200,0.2); }
 .oyz-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border-left: 4px solid #7c3aed; }
@@ -665,7 +687,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .oyz-card-realtor { font-size: 12px; color: #64748b; margin-top: 3px; }
 .oyz-status-badge { font-size: 12px; font-weight: 700; border-radius: 7px; padding: 4px 12px; white-space: nowrap; }
 .oyz-status-upcoming { background: #eff6ff; color: #2563eb; }
-.oyz-status-weekend { background: #ccfbf1; color: #0f766e; }
+.oyz-status-weekend { background: #DBEAFE; color: #1558C0; }
 .oyz-status-followup { background: #fff7ed; color: #d97706; }
 .oyz-status-complete { background: #f1f5f9; color: #64748b; }
 .oyz-card-dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -692,7 +714,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .home-sub { font-size: 14px; color: #94a3b8; margin-bottom: 36px; }
 .home-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .home-card { background: white; border-radius: 18px; padding: 28px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); cursor: pointer; transition: all 0.18s; border: 2px solid transparent; text-align: center; }
-.home-card:hover { border-color: #0ed2c8; box-shadow: 0 4px 20px rgba(14,210,200,0.15); transform: translateY(-2px); }
+.home-card:hover { border-color: #1B73E3; box-shadow: 0 4px 20px rgba(14,210,200,0.15); transform: translateY(-2px); }
 .home-card-icon { font-size: 36px; margin-bottom: 14px; }
 .home-card-title { font-size: 15px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
 .home-card-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
@@ -724,7 +746,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
     font-family: inherit; transition: color 0.15s; padding: 0;
   }
   .bottom-nav-item .bn-icon { font-size: 20px; line-height: 1; }
-  .bottom-nav-item.active { color: #0ed2c8; }
+  .bottom-nav-item.active { color: #1B73E3; }
   /* Pad main content so bottom nav doesn't overlap */
   .main, .oyz-main, .dashboard-main, .marketing-main, .activity-main,
   .admin-main, .home-main, .realtors-main { padding-bottom: 76px; }
@@ -753,7 +775,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 /* PROPERTY DETAIL OVERLAY */
 .prop-detail-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; z-index: 600; overflow-y: auto; padding: 24px 20px; }
 .prop-detail-overlay.open { display: flex; }
-.prop-detail-box { background: #f0f4f8; border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.prop-detail-box { background: var(--body-bg); border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .prop-detail-header { background: linear-gradient(135deg, #7c3aed, #6d28d9); border-radius: 18px 18px 0 0; padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; }
 .prop-detail-title { color: white; font-size: 17px; font-weight: 800; }
 .prop-detail-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
@@ -783,11 +805,11 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .sched-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #64748b; }
 .sched-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .sched-dot-upcoming { background: #94a3b8; }
-.sched-dot-today { background: #0ed2c8; animation: pulse-dot 1.2s infinite; }
+.sched-dot-today { background: #1B73E3; animation: pulse-dot 1.2s infinite; }
 .sched-dot-past { background: #059669; }
 @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.5); } }
 .sched-activity-notes { grid-column: 1 / -1; font-size: 13px; color: #374151; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 9px; min-height: 36px; outline: none; transition: border-color 0.2s; line-height: 1.5; }
-.sched-activity-notes:focus { border-color: #0ed2c8; }
+.sched-activity-notes:focus { border-color: #1B73E3; }
 .sched-activity-notes:empty:before { content: attr(data-placeholder); color: #94a3b8; }
 .sched-activity-log-btn { grid-column: 1 / -1; background: #f0f9ff; color: #0369a1; border: 1.5px solid #bae6fd; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; width: fit-content; }
 .sched-activity-log-btn:hover { background: #e0f2fe; }
@@ -803,7 +825,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 /* REALTOR PROFILE OVERLAY */
 .realtor-profile-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; z-index: 700; overflow-y: auto; padding: 24px 20px; }
 .realtor-profile-overlay.open { display: flex; }
-.realtor-profile-box { background: #f0f4f8; border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.realtor-profile-box { background: var(--body-bg); border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .realtor-profile-header { background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 18px 18px 0 0; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; }
 .realtor-profile-name { color: white; font-size: 20px; font-weight: 800; }
 .realtor-profile-brokerage { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 3px; }
@@ -908,30 +930,30 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 
 /* REALTOR PORTAL */
 #realtor-portal-screen { display: none; }
-.rportal-header { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; min-height: 64px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+.rportal-header { background: linear-gradient(135deg, #1558C0 0%, #1558C0 100%); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; min-height: 64px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
 .rportal-header-left { display: flex; align-items: center; gap: 12px; }
 .rportal-icon { width: 38px; height: 38px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .rportal-title { color: white; font-size: 16px; font-weight: 800; }
 .rportal-subtitle { color: rgba(255,255,255,0.7); font-size: 11px; }
 .rportal-content { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
-.rp-welcome-card { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); border-radius: 16px; padding: 24px; color: white; margin-bottom: 20px; }
+.rp-welcome-card { background: linear-gradient(135deg, #1558C0 0%, #1558C0 100%); border-radius: 16px; padding: 24px; color: white; margin-bottom: 20px; }
 .rp-welcome-greeting { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
 .rp-welcome-sub { font-size: 13px; color: rgba(255,255,255,0.8); }
 .rp-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
 .rp-stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.rp-stat-num { font-size: 24px; font-weight: 900; color: #0d9488; }
+.rp-stat-num { font-size: 24px; font-weight: 900; color: #1558C0; }
 .rp-stat-label { font-size: 11px; color: #64748b; margin-top: 2px; }
 .rp-biz-card { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); border-radius: 14px; padding: 20px 22px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
-.rp-biz-photo { width: 60px; height: 60px; border-radius: 50%; background: #0ed2c8; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #1f2937; }
+.rp-biz-photo { width: 60px; height: 60px; border-radius: 50%; background: #1B73E3; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #1f2937; }
 .rp-biz-photo img { width: 100%; height: 100%; object-fit: cover; }
 .rp-biz-name { font-size: 17px; font-weight: 800; margin-bottom: 2px; }
 .rp-biz-title { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
 .rp-biz-contacts { display: flex; flex-direction: column; gap: 4px; }
 .rp-biz-contact { font-size: 12px; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 6px; }
-.rp-biz-contact a { color: #0ed2c8; text-decoration: none; }
+.rp-biz-contact a { color: #1B73E3; text-decoration: none; }
 .rp-quick-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
 .rp-quick-btn { flex: 1; min-width: 130px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.rp-quick-btn:hover { border-color: #0d9488; background: #f0fdfa; }
+.rp-quick-btn:hover { border-color: #1558C0; background: #EEF4FF; }
 .rp-quick-btn-icon { font-size: 24px; margin-bottom: 6px; }
 .rp-quick-btn-label { font-size: 13px; font-weight: 700; color: #1f2937; }
 .rp-search-card { background: white; border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -940,7 +962,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .rp-search-meta { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
 .rp-search-badges { display: flex; gap: 6px; flex-wrap: wrap; }
 .rp-badge { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 8px; }
-.rp-badge-teal { background: #f0fdfa; color: #0d9488; }
+.rp-badge-teal { background: #EEF4FF; color: #1558C0; }
 .rp-badge-purple { background: #fdf4ff; color: #9333ea; }
 .rp-badge-green { background: #f0fdf4; color: #059669; }
 .rp-badge-blue { background: #eff6ff; color: #2563eb; }
@@ -952,7 +974,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .privacy-toggle input { opacity: 0; width: 0; height: 0; }
 .privacy-toggle-slider { position: absolute; inset: 0; background: #e2e8f0; border-radius: 13px; cursor: pointer; transition: background 0.2s; }
 .privacy-toggle-slider:before { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; }
-.privacy-toggle input:checked + .privacy-toggle-slider { background: #0d9488; }
+.privacy-toggle input:checked + .privacy-toggle-slider { background: #1558C0; }
 .privacy-toggle input:checked + .privacy-toggle-slider:before { transform: translateX(22px); }
 .rp-save-form { background: white; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: none; }
 .rp-save-form.open { display: block; }
@@ -960,21 +982,21 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .rp-form-group { flex: 1; min-width: 140px; }
 .rp-form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px; }
 .rp-form-group input, .rp-form-group textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: border 0.2s; font-family: inherit; }
-.rp-form-group input:focus, .rp-form-group textarea:focus { border-color: #0d9488; }
-.rp-save-btn { background: linear-gradient(135deg, #0f766e, #0d9488); color: white; border: none; border-radius: 9px; padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.rp-form-group input:focus, .rp-form-group textarea:focus { border-color: #1558C0; }
+.rp-save-btn { background: linear-gradient(135deg, #1558C0, #1558C0); color: white; border: none; border-radius: 9px; padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .rp-save-btn:hover { opacity: 0.9; }
 .prequal-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 900; padding: 20px; }
 .prequal-modal-overlay.open { display: flex; }
 .prequal-modal-box { background: white; border-radius: 18px; width: 100%; max-width: 480px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
-.prequal-modal-header { background: linear-gradient(135deg, #0f766e, #0d9488); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+.prequal-modal-header { background: linear-gradient(135deg, #1558C0, #1558C0); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
 .prequal-modal-title { color: white; font-size: 16px; font-weight: 800; }
 .prequal-modal-close { background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 7px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
 .prequal-modal-body { padding: 24px; }
-.prequal-submit-btn { width: 100%; background: linear-gradient(135deg, #0f766e, #0d9488); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px; }
+.prequal-submit-btn { width: 100%; background: linear-gradient(135deg, #1558C0, #1558C0); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px; }
 .rp-shared-search-item { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
 .rp-shared-search-buyer { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
 .rp-shared-search-meta { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
-.invite-portal-btn { background: linear-gradient(135deg, #0f766e, #0d9488); color: white; border: none; border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.invite-portal-btn { background: linear-gradient(135deg, #1558C0, #1558C0); color: white; border: none; border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; }
 .invite-portal-btn:hover { opacity: 0.85; }
 .share-flyer-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 900; padding: 20px; }
 .share-flyer-modal-overlay.open { display: flex; }
@@ -989,7 +1011,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 /* NOTIFICATION DRAWER */
 .notif-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 900; display: none; }
 .notif-overlay.open { display: block; }
-.notif-drawer { position: fixed; top: 0; right: -400px; width: 380px; max-width: 100vw; height: 100vh; background: #f0f4f8; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 901; transition: right 0.3s ease; display: flex; flex-direction: column; }
+.notif-drawer { position: fixed; top: 0; right: -400px; width: 380px; max-width: 100vw; height: 100vh; background: var(--body-bg); box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 901; transition: right 0.3s ease; display: flex; flex-direction: column; }
 .notif-drawer.open { right: 0; }
 .notif-drawer-header { background: linear-gradient(135deg, #1f2937, #374151); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 .notif-drawer-title { color: white; font-size: 16px; font-weight: 700; }
@@ -1003,7 +1025,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .notif-empty-text { font-size: 15px; font-weight: 600; }
 .notif-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid #94a3b8; display: flex; gap: 12px; align-items: flex-start; }
 .notif-card.type-realtor { border-left-color: #d97706; }
-.notif-card.type-oyz-tomorrow { border-left-color: #0ed2c8; }
+.notif-card.type-oyz-tomorrow { border-left-color: #1B73E3; }
 .notif-card.type-followup { border-left-color: #7c3aed; }
 .notif-card.type-capture { border-left-color: #dc2626; }
 .notif-card.type-no-activity { border-left-color: #ca8a04; }
@@ -1024,7 +1046,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .notif-toggle input { opacity: 0; width: 0; height: 0; }
 .notif-toggle-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #cbd5e1; border-radius: 22px; transition: background 0.2s; }
 .notif-toggle-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
-.notif-toggle input:checked + .notif-toggle-slider { background: #0ed2c8; }
+.notif-toggle input:checked + .notif-toggle-slider { background: #1B73E3; }
 .notif-toggle input:checked + .notif-toggle-slider:before { transform: translateX(18px); }
 
 /* ── PHASE 13: CONTACT MANAGEMENT ── */
@@ -1035,16 +1057,16 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .search-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);z-index:5000;max-height:460px;overflow-y:auto}
 .search-group-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;padding:10px 14px 4px}
 .search-result-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid #f8fafc}
-.search-result-item:hover{background:#f0fdfa}
+.search-result-item:hover{background:#EEF4FF}
 .search-result-main{font-size:13px;font-weight:600;color:#1f2937;flex:1}
 .search-result-sub{font-size:11px;color:#6b7280;margin-top:1px}
-.search-result-arrow{color:#0ed2c8;font-size:14px;font-weight:700}
-.search-highlight{background:#ccfbf1;color:#0d9488;border-radius:2px;padding:0 1px}
-.search-see-all{font-size:12px;color:#0ed2c8;font-weight:700;padding:6px 14px;cursor:pointer;display:block;text-align:right;border-bottom:1px solid #f1f5f9}
+.search-result-arrow{color:#1B73E3;font-size:14px;font-weight:700}
+.search-highlight{background:#DBEAFE;color:#1558C0;border-radius:2px;padding:0 1px}
+.search-see-all{font-size:12px;color:#1B73E3;font-weight:700;padding:6px 14px;cursor:pointer;display:block;text-align:right;border-bottom:1px solid #f1f5f9}
 .search-no-results{font-size:13px;color:#94a3b8;text-align:center;padding:20px}
 .contacts-subtab-bar{display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:16px}
 .contacts-subtab{padding:10px 20px;border:none;background:transparent;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
-.contacts-subtab.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.contacts-subtab.active{color:#1B73E3;border-bottom-color:#1B73E3}
 .contact-card{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s}
 .contact-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.09)}
 .contact-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -1052,7 +1074,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .contact-card-sub{font-size:12px;color:#6b7280;margin-top:2px}
 .contacts-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .cf-btn{padding:5px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:white;font-size:12px;font-weight:600;color:#64748b;cursor:pointer}
-.cf-btn.active{border-color:#0ed2c8;background:#f0fdfa;color:#0d9488}
+.cf-btn.active{border-color:#1B73E3;background:#EEF4FF;color:#1558C0}
 .contacts-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 .contacts-search-inp{flex:1;min-width:160px;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px}
 .contacts-sort-sel{padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;background:white}
@@ -1072,7 +1094,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .contact-detail-header{background:var(--brand-primary,#1f2937);padding:18px 22px;display:flex;align-items:center;justify-content:space-between}
 .contact-detail-tabs{display:flex;border-bottom:2px solid #f1f5f9;background:#f8fafc}
 .cdt-tab{flex:1;padding:10px 6px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent}
-.cdt-tab.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.cdt-tab.active{color:#1B73E3;border-bottom-color:#1B73E3}
 .contact-detail-body{padding:20px;min-height:280px}
 .import-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.75);z-index:8500;overflow-y:auto;display:none}
 .import-panel{max-width:660px;margin:40px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.3)}
@@ -1096,33 +1118,33 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .kanban-col-meta{font-size:11px;color:#64748b;margin-top:2px}
 .kanban-col-cards{flex:1;overflow-y:auto;padding:4px 8px}
 .kanban-add-btn{margin:6px 8px 8px;padding:7px;background:transparent;border:1.5px dashed #cbd5e1;border-radius:8px;font-size:12px;font-weight:600;color:#94a3b8;cursor:pointer;width:calc(100% - 16px);text-align:center}
-.kanban-add-btn:hover{border-color:#0ed2c8;color:#0ed2c8;background:#f0fdfa}
+.kanban-add-btn:hover{border-color:#1B73E3;color:#1B73E3;background:#EEF4FF}
 .deal-card{background:white;border-radius:9px;padding:10px 11px;margin-bottom:7px;box-shadow:0 1px 4px rgba(0,0,0,.07);cursor:pointer;border-left:3px solid #e5e7eb;position:relative;user-select:none;transition:box-shadow .15s}
 .deal-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.12)}
 .deal-card.dragging{opacity:.45;transform:scale(.97)}
-.kanban-col.drag-over .kanban-col-cards{background:#f0fdfa;border-radius:8px;outline:2px dashed #0ed2c8}
+.kanban-col.drag-over .kanban-col-cards{background:#EEF4FF;border-radius:8px;outline:2px dashed #1B73E3}
 .deal-card-name{font-size:13px;font-weight:700;color:#1f2937;margin-bottom:4px}
-.deal-card-amount{font-size:13px;font-weight:800;color:#0d9488}
+.deal-card-amount{font-size:13px;font-weight:800;color:#1558C0}
 .deal-card-meta{font-size:11px;color:#6b7280;margin-top:2px}
 .prob-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700}
 .pipeline-list-view{padding:12px}
 .pipeline-stage-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .psf-btn{padding:5px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:white;font-size:12px;font-weight:600;color:#64748b;cursor:pointer}
-.psf-btn.active{border-color:#0ed2c8;background:#f0fdfa;color:#0d9488}
+.psf-btn.active{border-color:#1B73E3;background:#EEF4FF;color:#1558C0}
 .deal-list-card{background:white;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;border-left:4px solid #e5e7eb}
 .deal-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:8800;overflow-y:auto;display:none}
 .deal-modal-panel{max-width:620px;margin:30px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .deal-modal-hdr{background:var(--brand-primary,#1f2937);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
 .deal-modal-tabs{display:flex;border-bottom:2px solid #f1f5f9;background:#f8fafc}
 .dmt{flex:1;padding:9px 4px;border:none;background:transparent;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent}
-.dmt.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.dmt.active{color:#1B73E3;border-bottom-color:#1B73E3}
 .deal-modal-body{padding:18px;min-height:260px}
 .deal-detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:8700;overflow-y:auto;display:none}
 .deal-detail-panel{max-width:680px;margin:30px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 /* ── PHASE 15: COMMUNICATION HUB ── */
 .comm-tab-nav{display:flex;gap:0;border-bottom:2px solid #e5e7eb;background:white;padding:0 16px;flex-wrap:wrap}
 .comm-tab-btn{padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s;white-space:nowrap}
-.comm-tab-btn.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.comm-tab-btn.active{color:#1B73E3;border-bottom-color:#1B73E3}
 .comm-layout{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 210px)}
 @media(max-width:768px){.comm-layout{grid-template-columns:1fr}}
 .comm-sidebar{border-right:1px solid #e5e7eb;background:#f8fafc;padding:12px;overflow-y:auto;max-height:calc(100vh - 210px)}
@@ -1131,7 +1153,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 @media(max-width:768px){.comm-main{max-height:none}}
 .tpl-card{background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:border .15s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .tpl-card:hover{border-color:#e2e8f0}
-.tpl-card.active{border-color:#0ed2c8}
+.tpl-card.active{border-color:#1B73E3}
 .tpl-card-name{font-size:13px;font-weight:700;color:#1f2937;margin-bottom:5px}
 .tpl-card-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .tpl-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px}
@@ -1140,12 +1162,12 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .tpl-badge.rejected{background:#fee2e2;color:#dc2626}
 .tpl-badge.system{background:#ede9fe;color:#7c3aed}
 .tpl-badge.cat{background:#f1f5f9;color:#64748b}
-.var-btn{display:inline-block;padding:3px 8px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;font-size:11px;font-weight:700;color:#0d9488;cursor:pointer;margin:2px;font-family:monospace}
-.var-btn:hover{background:#ccfbf1}
+.var-btn{display:inline-block;padding:3px 8px;background:#EEF4FF;border:1px solid #BFDBFE;border-radius:6px;font-size:11px;font-weight:700;color:#1558C0;cursor:pointer;margin:2px;font-family:monospace}
+.var-btn:hover{background:#DBEAFE}
 .step-card{background:white;border-radius:10px;padding:12px;margin-bottom:4px;border:1px solid #e2e8f0;position:relative}
 .step-connector{text-align:center;color:#94a3b8;font-size:20px;margin:2px 0;line-height:1}
 .campaign-card{background:white;border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid #e2e8f0;cursor:pointer;transition:border .15s}
-.campaign-card:hover{border-color:#0ed2c8}
+.campaign-card:hover{border-color:#1B73E3}
 .call-stats-bar{display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px;background:white;border-bottom:1px solid #e5e7eb;align-items:center}
 .call-stat{text-align:center;flex:1;min-width:80px}
 .call-stat-num{font-size:20px;font-weight:900;color:#1f2937}
@@ -1158,6 +1180,156 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .call-outcome-badge.busy{background:#fef3c7;color:#b45309}
 .comm-send-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:9100;overflow-y:auto;display:none}
 .call-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:9200;overflow-y:auto;display:none}
+
+/* ── LOOPENTA DESIGN SYSTEM OVERRIDES ─────────────────────── */
+
+/* Cards — unified, clean */
+.card,.admin-card,.stat-card,.analytics-card,.rp-stat-card,.sa-stat-card {
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--radius-lg) !important;
+}
+.card { border: 1px solid var(--border); }
+.admin-card { border: 1px solid var(--border); }
+
+/* Home cards — more polished */
+.home-card {
+  background: white !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s !important;
+  cursor: pointer;
+}
+.home-card:hover {
+  border-color: var(--brand-accent) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-2px) !important;
+}
+.home-card-icon { font-size: 28px !important; margin-bottom: 10px; }
+.home-card-title { font-size: 14px !important; font-weight: 700 !important; color: var(--text-primary) !important; }
+.home-card-desc { font-size: 12px !important; color: var(--text-muted) !important; margin-top: 4px; line-height: 1.45; }
+
+/* Global inputs */
+input[type=text], input[type=email], input[type=password], input[type=number],
+input[type=tel], input[type=date], input[type=datetime-local], textarea, select {
+  font-family: inherit !important;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* Pill/badge labels — consistent */
+.lmi-badge, .status-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.2px;
+}
+
+/* Activity / log entries */
+.activity-entry {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Kanban cards */
+.deal-card {
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+}
+.deal-card:hover { box-shadow: var(--shadow-md) !important; }
+
+/* Modals */
+.deal-modal-panel, .deal-detail-panel,
+.prop-detail-box, .realtor-profile-box,
+.borrower-detail-overlay .bdo-box {
+  border-radius: var(--radius-xl) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.35) !important;
+}
+
+/* Realtor + contact cards */
+.realtor-card, .contact-card {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-color: var(--border) !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.realtor-card:hover, .contact-card:hover {
+  border-color: var(--brand-accent) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Bottom nav active */
+.bottom-nav-item.active { color: var(--brand-accent) !important; }
+.bottom-nav { border-top: 1px solid var(--border) !important; background: var(--surface) !important; }
+
+/* Section titles */
+.analytics-section-title { color: var(--text-primary) !important; font-weight: 800 !important; }
+.admin-card-title { color: var(--text-primary) !important; letter-spacing: -0.2px; }
+
+/* Chart cards */
+.chart-card {
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+/* Realtor portal */
+.rportal-header { background: var(--brand-primary) !important; }
+.rportal-tab-btn.active { color: var(--brand-accent) !important; border-bottom-color: var(--brand-accent) !important; }
+
+/* Pipeline */
+.kanban-col { border-radius: var(--radius) !important; }
+.pipeline-summary-bar { border-bottom: 1px solid var(--border) !important; }
+
+/* Forms — clean focus ring */
+.log-form-input:focus, .date-input:focus, .log-select:focus {
+  border-color: var(--brand-accent) !important;
+  box-shadow: 0 0 0 3px rgba(27,115,227,0.1) !important;
+}
+
+/* Notification bell */
+.notif-bell-btn:hover { opacity: 0.85; }
+
+/* Global action buttons — consistent */
+.action-btn {
+  background: var(--body-bg) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 7px !important;
+  transition: background 0.15s !important;
+}
+.action-btn:hover { background: var(--brand-accent-light) !important; color: var(--brand-accent) !important; border-color: var(--brand-accent) !important; }
+
+/* Teal-named helper class — now brand blue */
+.teal { background: var(--brand-accent) !important; color: white !important; }
+
+/* Typography hierarchy */
+h1,h2,h3 { letter-spacing: -0.3px; }
+.stat-num { color: var(--text-primary) !important; }
+.stat-label { color: var(--text-muted) !important; }
+
+/* Smooth page transitions */
+#tab-home-content, #tab-search-content, #tab-dashboard-content,
+#tab-realtors-content, #tab-activity-content, #tab-analytics-content,
+#tab-pipeline-content, #tab-contacts-content, #tab-comms-content {
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Home screen welcome */
+.home-greeting { letter-spacing: -0.4px !important; }
+.home-sub { color: var(--text-muted) !important; }
+
+/* Search input refined */
+.search-row input {
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  background: white !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.search-row input:focus {
+  border-color: var(--brand-accent) !important;
+  box-shadow: 0 0 0 3px rgba(27,115,227,0.1) !important;
+}
+.search-btn:hover { background: var(--brand-accent-dark) !important; }
 </style>
 </head>
 <body>
@@ -1167,10 +1339,10 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
   <div class="flyer-public-header">
     <div class="flyer-public-logo">
       <svg width="28" height="28" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-        <rect width="180" height="180" rx="40" fill="#0ed2c8"/>
+        <rect width="180" height="180" rx="40" fill="#1B73E3"/>
         <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
       </svg>
-      LMI Prospect Finder
+      Loopenta
     </div>
     <button class="flyer-action-btn teal" onclick="downloadPublicFlyer()">⬇ Download PDF</button>
   </div>
@@ -1185,7 +1357,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
     <div class="invite-modal-logo">
       <svg width="56" height="56" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
         <rect width="180" height="180" rx="40" fill="#1f2937"/>
-        <path d="M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#0ed2c8"/>
+        <path d="M90 24C64 24 42 46 42 72c0 38 48 92 48 92s48-54 48-92c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1B73E3"/>
       </svg>
     </div>
     <div id="invite-loading"><div class="invite-modal-title">Checking your invite...</div><div class="invite-modal-sub">Just a moment.</div></div>
@@ -1195,7 +1367,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <div class="invite-expired-sub">This invite link has expired or already been used.<br/>Contact your admin for a new invite.</div>
     </div>
     <div id="invite-form" style="display:none">
-      <div class="invite-modal-title">Welcome to LMI Prospect Finder</div>
+      <div class="invite-modal-title">Welcome to Loopenta</div>
       <div class="invite-modal-sub">You've been invited to join your team's mortgage prospecting tool. Set your password to get started.</div>
       <div class="invite-modal-name" id="invite-display-name"></div>
       <div class="invite-modal-email" id="invite-display-email"></div>
@@ -1208,7 +1380,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
       <div class="invite-success-icon">✅</div>
       <div class="invite-success-title">Account Created!</div>
       <div class="invite-success-sub">Your password has been set. You're ready to start prospecting.</div>
-      <button class="invite-success-btn" onclick="closeInviteAndLogin()">Go to LMI Prospect Finder →</button>
+      <button class="invite-success-btn" onclick="closeInviteAndLogin()">Go to Loopenta →</button>
     </div>
   </div>
 </div>
@@ -1219,12 +1391,12 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
     <div class="tos-header">
       <div class="tos-logo">
         <svg width="48" height="48" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <rect width="180" height="180" rx="40" fill="#0ed2c8"/>
+          <rect width="180" height="180" rx="40" fill="#1B73E3"/>
           <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
         </svg>
       </div>
       <div class="tos-title">Terms of Service &amp; End User License Agreement</div>
-      <div class="tos-subtitle">LMI Prospect Finder · Please read and accept to continue</div>
+      <div class="tos-subtitle">Loopenta · Please read and accept to continue</div>
     </div>
     <div class="tos-scroll-area" id="tos-scroll-area">
       <div class="tos-text">LMI PROSPECT FINDER — TERMS OF SERVICE &amp; END USER LICENSE AGREEMENT
@@ -1234,16 +1406,16 @@ Last Updated: April 10, 2026
 PLEASE READ THESE TERMS CAREFULLY BEFORE USING THIS APPLICATION. BY CLICKING "I AGREE" OR ACCESSING THIS APPLICATION, YOU AGREE TO BE BOUND BY THESE TERMS.
 
 1. ACCEPTANCE OF TERMS
-These Terms of Service constitute a legally binding agreement between you ("User") and Aaron Simonson ("Owner") governing your use of the LMI Prospect Finder application ("Application"). If you do not agree to these Terms, you may not access or use the Application.
+These Terms of Service constitute a legally binding agreement between you ("User") and Aaron Simonson ("Owner") governing your use of the Loopenta application ("Application"). If you do not agree to these Terms, you may not access or use the Application.
 
 2. INTELLECTUAL PROPERTY OWNERSHIP
 2.1 The Application, including but not limited to its source code, design, user interface, features, functionality, data structures, workflows, algorithms, marketing materials, and all content contained therein, is the exclusive intellectual property of Aaron Simonson.
-2.2 The name "LMI Prospect Finder," "LMI Tool," "lmitool.com," and all associated logos, branding, and trade dress are the exclusive property of Aaron Simonson.
+2.2 The name "Loopenta," "Loopenta," "loopenta.com," and all associated logos, branding, and trade dress are the exclusive property of Aaron Simonson.
 2.3 All rights, title, and interest in and to the Application not expressly granted in these Terms are reserved by the Owner.
 2.4 Nothing in these Terms shall be construed as transferring any intellectual property rights to any User.
 
 3. LICENSE GRANT AND RESTRICTIONS
-3.1 Subject to these Terms, Owner grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Application solely for your authorized internal business purposes as an employee or contractor of LMI Tool.
+3.1 Subject to these Terms, Owner grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Application solely for your authorized internal business purposes as an employee or contractor of Loopenta.
 3.2 You may NOT:
 - Copy, reproduce, distribute, or create derivative works of the Application
 - Reverse engineer, decompile, or disassemble any part of the Application
@@ -1259,7 +1431,7 @@ These Terms of Service constitute a legally binding agreement between you ("User
 4.2 You agree to maintain the confidentiality of the Application and not to disclose any information about it to any third party without the prior written consent of the Owner.
 
 5. DATA AND PRIVACY
-5.1 Data entered into the Application, including borrower information, realtor contacts, and CRA activity logs, remains the property of the entering User and LMI Tool.
+5.1 Data entered into the Application, including borrower information, realtor contacts, and CRA activity logs, remains the property of the entering User and Loopenta.
 5.2 The Owner does not sell, rent, or share user data with third parties except as required by law.
 5.3 Users are responsible for ensuring that any borrower or client data entered into the Application complies with applicable privacy laws including but not limited to GLBA, CCPA, and applicable CFPB regulations.
 
@@ -1294,7 +1466,7 @@ The Owner reserves the right to modify these Terms at any time. Users will be no
 13. CONTACT
 For questions regarding these Terms, contact:
 Admin
-admin@lmitool.com</div>
+admin@loopenta.com</div>
     </div>
     <div class="tos-footer">
       <div class="tos-scroll-hint" id="tos-scroll-hint">↓ Scroll to bottom to enable agreement</div>
@@ -1307,24 +1479,28 @@ admin@lmitool.com</div>
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <svg width="64" height="64" viewBox="0 0 680 370" xmlns="http://www.w3.org/2000/svg">
-        <rect x="190" y="20" width="300" height="300" rx="60" fill="#1f2937"/>
-        <path d="M340 55 C306 55 275 83 275 118 C275 165 340 238 340 238 C340 238 405 165 405 118 C405 83 374 55 340 55 Z" fill="#0ed2c8"/>
-        <circle cx="340" cy="116" r="32" fill="#1f2937"/>
-        <text x="340" y="124" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="800" fill="#0ed2c8" letter-spacing="2">LMI</text>
-        <g opacity="0.5"><polygon points="271,279 282,268 293,279" fill="#0ed2c8"/><rect x="273" y="279" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="278" y="283" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
-        <g opacity="0.75"><polygon points="297,277 308,266 319,277" fill="#0ed2c8"/><rect x="299" y="277" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="304" y="281" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
-        <polygon points="329,266 340,255 351,266" fill="#0ed2c8"/><rect x="329" y="266" width="22" height="14" rx="1" fill="#0ed2c8"/><rect x="335" y="270" width="8" height="10" rx="0.5" fill="#1f2937"/>
-        <g opacity="0.75"><polygon points="361,277 372,266 383,277" fill="#0ed2c8"/><rect x="363" y="277" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="368" y="281" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
-        <g opacity="0.5"><polygon points="387,279 398,268 409,279" fill="#0ed2c8"/><rect x="389" y="279" width="18" height="12" rx="1" fill="#0ed2c8"/><rect x="394" y="283" width="6" height="8" rx="0.5" fill="#1f2937"/></g>
+      <svg width="52" height="52" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="180" height="180" rx="36" fill="#0C1F3F"/>
+        <path d="M55 45 L55 132 L126 132" stroke="#1B73E3" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="55" cy="45" r="15" fill="#4FA3F7"/>
       </svg>
     </div>
-    <div class="login-title">LMI Prospect Finder</div>
-    <div class="login-sub">Mortgage Sales Team · Internal Tool</div>
-    <input type="text" id="login-email" placeholder="Email address" autocomplete="email" />
-    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()" />
+    <div class="login-title">Loopenta</div>
+    <div class="login-sub">Mortgage CRM &nbsp;·&nbsp; Loan Officer Platform</div>
+    <div style="text-align:left;margin-bottom:4px">
+      <label style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Email</label>
+    </div>
+    <input type="text" id="login-email" placeholder="you@company.com" autocomplete="email" />
+    <div style="text-align:left;margin-bottom:4px;margin-top:2px">
+      <label style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Password</label>
+    </div>
+    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()" />
     <button class="login-btn" onclick="tryLogin()">Sign In</button>
     <div class="login-error" id="login-error">Incorrect email or password.</div>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--text-muted)">New to Loopenta? </span>
+      <a href="#" onclick="showSignup();return false;" style="font-size:12px;color:var(--brand-accent);font-weight:700;text-decoration:none">Request access →</a>
+    </div>
   </div>
 </div>
 
@@ -1348,14 +1524,15 @@ admin@lmitool.com</div>
           <button class="hamburger-item" id="tab-comms" onclick="showTab('comms');closeHamburger()">💬 Communications</button>
         </div>
       </div>
-      <div class="header-icon" id="header-icon">
-        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+      <div class="header-icon" id="header-icon" style="background:var(--brand-accent)">
+        <svg width="20" height="20" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M55 45L55 132L126 132" stroke="white" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="55" cy="45" r="16" fill="rgba(255,255,255,0.85)"/>
         </svg>
       </div>
       <div>
-        <div class="header-title">LMI Prospect Finder</div>
-        <div class="header-sub">Mortgage Prospecting Platform</div>
+        <div class="header-title">Loopenta</div>
+        <div class="header-sub">Mortgage CRM</div>
       </div>
     </div>
     <div class="global-search-wrap" id="global-search-wrap">
@@ -1378,58 +1555,61 @@ admin@lmitool.com</div>
   <!-- HOME TAB -->
   <div id="tab-home-content" style="display:none">
     <div class="home-main">
-      <div class="home-greeting" id="home-greeting">Welcome back! 👋</div>
-      <div class="home-sub">Where would you like to go?</div>
+      <div style="margin-bottom:28px">
+        <div class="home-greeting" id="home-greeting">Good morning! 👋</div>
+        <div class="home-sub">What would you like to work on today?</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:14px">Quick Access</div>
       <div class="home-cards-grid">
-        <div class="home-card" onclick="showTab('search')">
-          <div class="home-card-icon">🔍</div>
-          <div class="home-card-title">LMI Search</div>
-          <div class="home-card-desc">Search and analyze LMI census tract data by ZIP code</div>
-        </div>
-        <div class="home-card" onclick="showTab('dashboard')">
-          <div class="home-card-icon">📊</div>
-          <div class="home-card-title">Dashboard</div>
-          <div class="home-card-desc">View your activity stats and team performance overview</div>
-        </div>
-        <div class="home-card" onclick="showTab('realtors')">
-          <div class="home-card-icon">🏠</div>
-          <div class="home-card-title">Realtors</div>
-          <div class="home-card-desc">Manage your realtor contact list and track partnerships</div>
-        </div>
-        <div class="home-card" onclick="showTab('activity')">
-          <div class="home-card-icon">📋</div>
-          <div class="home-card-title">Activity Log</div>
-          <div class="home-card-desc">Log and track CRA-qualifying mortgage activities</div>
-        </div>
-        <div class="home-card" onclick="showTab('marketing')">
-          <div class="home-card-icon">🖨</div>
-          <div class="home-card-title">Marketing</div>
-          <div class="home-card-desc">Generate flyers, shopping lists, and marketing materials</div>
-        </div>
-        <div class="home-card" onclick="showTab('oyz')">
-          <div class="home-card-icon">🏡</div>
-          <div class="home-card-title">OYZ</div>
-          <div class="home-card-desc">Plan open house prospecting and realtor outreach</div>
-        </div>
-        <div class="home-card" onclick="showTab('analytics')">
-          <div class="home-card-icon">📈</div>
-          <div class="home-card-title">Analytics</div>
-          <div class="home-card-desc">Track goals, trends and generate CRA compliance reports</div>
+        <div class="home-card" onclick="showTab('pipeline')">
+          <div class="home-card-icon">🎯</div>
+          <div class="home-card-title">Deal Pipeline</div>
+          <div class="home-card-desc">Track deals from lead to close</div>
         </div>
         <div class="home-card" onclick="showTab('contacts')">
           <div class="home-card-icon">👥</div>
           <div class="home-card-title">Contacts</div>
-          <div class="home-card-desc">Manage all your borrower and realtor contacts in one place</div>
-        </div>
-        <div class="home-card" onclick="showTab('pipeline')">
-          <div class="home-card-icon">📊</div>
-          <div class="home-card-title">Pipeline</div>
-          <div class="home-card-desc">Track deals from lead to close with a visual pipeline</div>
+          <div class="home-card-desc">Borrowers and realtor relationships</div>
         </div>
         <div class="home-card" onclick="showTab('comms')">
           <div class="home-card-icon">💬</div>
           <div class="home-card-title">Communications</div>
-          <div class="home-card-desc">Email templates, drip campaigns, and call logging</div>
+          <div class="home-card-desc">Email templates, campaigns, call log</div>
+        </div>
+        <div class="home-card" onclick="showTab('search')">
+          <div class="home-card-icon">🗺️</div>
+          <div class="home-card-title">LMI Search</div>
+          <div class="home-card-desc">Census tract data by ZIP code</div>
+        </div>
+        <div class="home-card" onclick="showTab('dashboard')">
+          <div class="home-card-icon">📊</div>
+          <div class="home-card-title">Dashboard</div>
+          <div class="home-card-desc">Activity stats and team performance</div>
+        </div>
+        <div class="home-card" onclick="showTab('realtors')">
+          <div class="home-card-icon">🤝</div>
+          <div class="home-card-title">Realtors</div>
+          <div class="home-card-desc">Partner network and capture rates</div>
+        </div>
+        <div class="home-card" onclick="showTab('activity')">
+          <div class="home-card-icon">📋</div>
+          <div class="home-card-title">Activity Log</div>
+          <div class="home-card-desc">CRA-qualifying mortgage activities</div>
+        </div>
+        <div class="home-card" onclick="showTab('analytics')">
+          <div class="home-card-icon">📈</div>
+          <div class="home-card-title">Analytics</div>
+          <div class="home-card-desc">Goals, trends and CRA compliance</div>
+        </div>
+        <div class="home-card" onclick="showTab('oyz')">
+          <div class="home-card-icon">🏡</div>
+          <div class="home-card-title">Open House</div>
+          <div class="home-card-desc">OYZ prospecting and outreach</div>
+        </div>
+        <div class="home-card" onclick="showTab('marketing')">
+          <div class="home-card-icon">🖨️</div>
+          <div class="home-card-title">Marketing</div>
+          <div class="home-card-desc">Flyers, shopping lists, materials</div>
         </div>
       </div>
     </div>
@@ -1673,7 +1853,7 @@ admin@lmitool.com</div>
               <option value="Middle Income">Middle Income</option>
               <option value="Upper Income">Upper Income</option>
             </select>
-            <button onclick="exportActivityToExcel(false)" style="padding:8px 14px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export</button>
+            <button onclick="exportActivityToExcel(false)" style="padding:8px 14px;background:#1558C0;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export</button>
           </div>
         </div>
         <div id="activity-log-list"><div class="empty-activity">No activities logged yet.</div></div>
@@ -1745,7 +1925,7 @@ admin@lmitool.com</div>
                 <option value="all">All MLOs</option>
               </select>
             </div>
-            <button onclick="exportOYZToExcel(currentUser && currentUser.role === 'admin')" style="padding:8px 14px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export</button>
+            <button onclick="exportOYZToExcel(currentUser && currentUser.role === 'admin')" style="padding:8px 14px;background:#1558C0;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export</button>
           </div>
         </div>
         <div id="oyz-list"><div class="empty-oyz">No entries yet. Add your first open house above.</div></div>
@@ -1841,7 +2021,7 @@ admin@lmitool.com</div>
       </div>
 
       <!-- PIPELINE ANALYTICS -->
-      <div id="pipeline-analytics-section" style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;border-top:4px solid #0ed2c8">
+      <div id="pipeline-analytics-section" style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;border-top:4px solid #1B73E3">
         <div class="analytics-section-title" style="margin-bottom:6px">📊 Pipeline Analytics</div>
         <div class="analytics-section-sub" style="margin-bottom:20px">Deal funnel, win rate, and projected close value</div>
         <div id="pipeline-analytics-body"><div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div></div>
@@ -1919,7 +2099,7 @@ admin@lmitool.com</div>
     <div class="psb-stat"><div class="psb-val" id="psb-closed-mo">—</div><div class="psb-label">Closed This Month</div></div>
     <div class="psb-stat"><div class="psb-val" id="psb-win-rate">—</div><div class="psb-label">Win Rate</div></div>
     <div style="margin-left:auto;align-self:center;padding-right:4px">
-      <button onclick="openCreateDealModal(null,null)" style="padding:8px 14px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">+ Add Deal</button>
+      <button onclick="openCreateDealModal(null,null)" style="padding:8px 14px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">+ Add Deal</button>
     </div>
   </div>
   <!-- Kanban board (desktop) -->
@@ -2025,7 +2205,7 @@ admin@lmitool.com</div>
   <div id="comm-templates-pane" style="display:block">
     <div class="comm-layout">
       <div class="comm-sidebar">
-        <button onclick="openTemplateEditor('new')" style="width:100%;padding:9px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px">+ New Template</button>
+        <button onclick="openTemplateEditor('new')" style="width:100%;padding:9px;background:#1B73E3;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px">+ New Template</button>
         <div id="tpl-list"><div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px">Loading...</div></div>
       </div>
       <div class="comm-main" id="tpl-editor-pane">
@@ -2041,7 +2221,7 @@ admin@lmitool.com</div>
   <div id="comm-drip-pane" style="display:none;padding:16px;max-width:900px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-size:16px;font-weight:800;color:#1f2937">Drip Campaigns</div>
-      <button onclick="openCampaignBuilder('new')" style="padding:9px 18px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer">+ New Campaign</button>
+      <button onclick="openCampaignBuilder('new')" style="padding:9px 18px;background:#1B73E3;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer">+ New Campaign</button>
     </div>
     <div id="drip-list"><div style="color:#94a3b8;text-align:center;padding:40px;font-size:13px">Loading...</div></div>
     <div id="drip-builder" style="display:none"></div>
@@ -2053,7 +2233,7 @@ admin@lmitool.com</div>
       <div class="call-stat"><div class="call-stat-num" id="cs-connected">0%</div><div class="call-stat-lbl">Connected</div></div>
       <div class="call-stat"><div class="call-stat-num" id="cs-avgdur">0m</div><div class="call-stat-lbl">Avg Duration</div></div>
       <div class="call-stat"><div class="call-stat-num" id="cs-followups">0</div><div class="call-stat-lbl">Follow-ups Due</div></div>
-      <button onclick="openCallModal()" style="margin-left:auto;padding:9px 18px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">📞 Log a Call</button>
+      <button onclick="openCallModal()" style="margin-left:auto;padding:9px 18px;background:#1B73E3;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">📞 Log a Call</button>
     </div>
     <div style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <input type="text" id="call-search" placeholder="Search by name..." oninput="renderCallLog()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;width:200px" />
@@ -2096,7 +2276,7 @@ admin@lmitool.com</div>
         <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">PREVIEW</label>
         <div id="send-preview" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:13px;color:#374151;white-space:pre-wrap;max-height:200px;overflow-y:auto;border:1px solid #e2e8f0"></div>
       </div>
-      <button onclick="doSendEmail()" style="width:100%;padding:11px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer">Send Email</button>
+      <button onclick="doSendEmail()" style="width:100%;padding:11px;background:#1B73E3;color:#1f2937;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer">Send Email</button>
     </div>
   </div>
 </div>
@@ -2317,12 +2497,13 @@ admin@lmitool.com</div>
           <button class="hamburger-item" onclick="navigateToTab('analytics')">📈 Analytics</button>
         </div>
       </div>
-      <div class="header-icon">
-        <svg width="26" height="26" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
+      <div class="header-icon" style="background:var(--brand-accent)">
+        <svg width="20" height="20" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <path d="M55 45L55 132L126 132" stroke="white" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="55" cy="45" r="16" fill="rgba(255,255,255,0.85)"/>
         </svg>
       </div>
-      <div><div class="header-title">Admin Panel</div><div class="header-sub">LMI Prospect Finder · User Management</div></div>
+      <div><div class="header-title">Loopenta</div><div class="header-sub">Admin Panel</div></div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
@@ -2388,7 +2569,7 @@ admin@lmitool.com</div>
             <option value="Referral Made">Referrals</option>
             <option value="Event Attended">Events</option>
           </select>
-          <button onclick="exportActivityToExcel(true)" style="padding:9px 14px;background:#0d9488;color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export All</button>
+          <button onclick="exportActivityToExcel(true)" style="padding:9px 14px;background:#1558C0;color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">📥 Export All</button>
         </div>
       </div>
       <div id="admin-activity-list"><div class="empty-activity">Loading...</div></div>
@@ -2426,8 +2607,8 @@ admin@lmitool.com</div>
     <div class="rp-form-group">
       <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">Accent Color</label>
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="color" id="ob-accent-swatch" value="#0ed2c8" oninput="document.getElementById('ob-accent-hex').value=this.value;obUpdatePreview()" style="width:36px;height:36px;border:none;cursor:pointer;border-radius:6px;padding:2px" />
-        <input type="text" id="ob-accent-hex" value="#0ed2c8" maxlength="7" oninput="obSyncSwatch('accent')" style="flex:1;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:monospace" />
+        <input type="color" id="ob-accent-swatch" value="#1B73E3" oninput="document.getElementById('ob-accent-hex').value=this.value;obUpdatePreview()" style="width:36px;height:36px;border:none;cursor:pointer;border-radius:6px;padding:2px" />
+        <input type="text" id="ob-accent-hex" value="#1B73E3" maxlength="7" oninput="obSyncSwatch('accent')" style="flex:1;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:monospace" />
       </div>
     </div>
     <div class="rp-form-group">
@@ -2443,13 +2624,13 @@ admin@lmitool.com</div>
   <div style="margin-bottom:16px">
     <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Live Preview</label>
     <div id="ob-preview-header" style="border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;background:#1f2937">
-      <div id="ob-preview-logo-wrap" style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#0ed2c8;font-weight:800;font-size:16px;color:#1f2937;flex-shrink:0">L</div>
+      <div id="ob-preview-logo-wrap" style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#1B73E3;font-weight:800;font-size:16px;color:#1f2937;flex-shrink:0">L</div>
       <div>
-        <div id="ob-preview-company" style="font-size:14px;font-weight:700;color:white">LMI Prospect Finder</div>
+        <div id="ob-preview-company" style="font-size:14px;font-weight:700;color:white">Loopenta</div>
         <div id="ob-preview-tagline" style="font-size:11px;color:rgba(255,255,255,0.7)">Mortgage Prospecting Platform</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px">
-        <div id="ob-preview-btn" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:#1f2937;background:#0ed2c8">Action</div>
+        <div id="ob-preview-btn" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;color:#1f2937;background:#1B73E3">Action</div>
       </div>
     </div>
   </div>
@@ -2488,7 +2669,7 @@ admin@lmitool.com</div>
   </div>
   <div style="margin-bottom:16px">
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-      <input type="checkbox" id="ops-weekly-digest" checked style="width:16px;height:16px;accent-color:#0ed2c8" />
+      <input type="checkbox" id="ops-weekly-digest" checked style="width:16px;height:16px;accent-color:#1B73E3" />
       <span style="font-size:13px;color:#374151">Enable weekly digest emails for all MLOs in this org</span>
     </label>
   </div>
@@ -2514,7 +2695,7 @@ admin@lmitool.com</div>
   </div>
   <div style="margin-bottom:16px">
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-      <input type="checkbox" id="ops-require-tos" checked style="width:16px;height:16px;accent-color:#0ed2c8" />
+      <input type="checkbox" id="ops-require-tos" checked style="width:16px;height:16px;accent-color:#1B73E3" />
       <span style="font-size:13px;color:#374151">Require TOS acceptance for new users</span>
     </label>
   </div>
@@ -2552,7 +2733,7 @@ admin@lmitool.com</div>
   <div class="sa-header header">
     <div class="header-left">
       <div class="header-icon" style="background:#c53030">⚡</div>
-      <div><div class="header-title">Super Admin</div><div class="header-sub">LMI Tool — Platform Management</div></div>
+      <div><div class="header-title">Super Admin</div><div class="header-sub">Loopenta — Platform Management</div></div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" onclick="goApp()">← Back to Tool</button>
@@ -2649,7 +2830,7 @@ admin@lmitool.com</div>
       <div class="rp-form-group"><label>Admin Password *</label><input type="text" id="co-admin-password" placeholder="Min 8 characters" /></div>
       <div class="rp-form-row">
         <div class="rp-form-group"><label>Primary Color</label><input type="color" id="co-primary-color" value="#1f2937" style="height:42px" /></div>
-        <div class="rp-form-group"><label>Accent Color</label><input type="color" id="co-accent-color" value="#0ed2c8" style="height:42px" /></div>
+        <div class="rp-form-group"><label>Accent Color</label><input type="color" id="co-accent-color" value="#1B73E3" style="height:42px" /></div>
       </div>
       <div class="rp-form-group">
         <label>Subscription Tier</label>
@@ -2669,7 +2850,7 @@ admin@lmitool.com</div>
 <div id="signup-screen" style="display:none;min-height:100vh;background:linear-gradient(135deg,#1f2937 0%,#374151 100%);align-items:center;justify-content:center;padding:20px">
   <div class="signup-box">
     <div style="text-align:center;margin-bottom:24px">
-      <div style="font-size:26px;font-weight:900;color:#1f2937">LMI Prospect Finder</div>
+      <div style="font-size:26px;font-weight:900;color:#1f2937">Loopenta</div>
       <div style="font-size:13px;color:#64748b;margin-top:4px">Start your free 30-day trial</div>
     </div>
     <div class="signup-step-indicator">
@@ -2729,7 +2910,7 @@ admin@lmitool.com</div>
         <label for="su-tos" style="font-size:12px;color:#64748b">I agree to the Terms of Service and Privacy Policy</label>
       </div>
       <div style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none" id="su-err-3"></div>
-      <button class="signup-btn" id="su-submit-btn" onclick="submitSignup()" style="background:linear-gradient(135deg,#059669,#0d9488)">🚀 Start Free 30-Day Trial</button>
+      <button class="signup-btn" id="su-submit-btn" onclick="submitSignup()" style="background:linear-gradient(135deg,#059669,#1558C0)">🚀 Start Free 30-Day Trial</button>
       <button onclick="signupGoBack(2)" style="width:100%;padding:10px;background:none;color:#64748b;border:none;font-size:13px;cursor:pointer;margin-top:8px">← Back</button>
       <div style="text-align:center;margin-top:12px"><a href="/" style="font-size:12px;color:#94a3b8">Already have an account? Sign in</a></div>
     </div>
@@ -2766,7 +2947,7 @@ admin@lmitool.com</div>
   <!-- Home Tab -->
   <div id="rp-tab-home" class="rportal-content">
     <!-- Unreviewed buyer profiles notification banner -->
-    <div id="rp-new-buyer-banner" style="display:none;background:linear-gradient(135deg,#0ed2c8,#0891b2);color:white;border-radius:14px;padding:14px 18px;margin-bottom:16px;cursor:pointer;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(14,210,200,0.3)" onclick="rpScrollToBuyerProfiles()">
+    <div id="rp-new-buyer-banner" style="display:none;background:linear-gradient(135deg,#1B73E3,#0891b2);color:white;border-radius:14px;padding:14px 18px;margin-bottom:16px;cursor:pointer;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(14,210,200,0.3)" onclick="rpScrollToBuyerProfiles()">
       <span style="font-size:22px;flex-shrink:0">💰</span>
       <span id="rp-buyer-banner-text" style="font-size:14px;font-weight:700;flex:1"></span>
       <span style="font-size:18px;opacity:0.8">›</span>
@@ -2889,7 +3070,7 @@ admin@lmitool.com</div>
   <div id="rp-tab-openhouses" class="rportal-content" style="display:none">
     <div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
       <span>📅 My Open Houses</span>
-      <button onclick="rpToggleAddOpenHouseForm()" id="rp-add-oh-btn" style="background:#0d9488;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+ Add Open House</button>
+      <button onclick="rpToggleAddOpenHouseForm()" id="rp-add-oh-btn" style="background:#1558C0;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+ Add Open House</button>
     </div>
     <div id="rp-add-oh-form" style="display:none;background:white;border-radius:12px;border:1px solid #e2e8f0;padding:20px;margin-bottom:20px">
       <div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:14px">📋 Submit Open House to Your MLO</div>
@@ -2914,10 +3095,10 @@ admin@lmitool.com</div>
         </select>
       </div>
       <div style="margin-top:8px">
-        <button type="button" onclick="rpToggleInviteMlo()" style="background:none;border:none;color:#0d9488;font-size:13px;font-weight:700;cursor:pointer;padding:0">My MLO isn't listed — Invite them ›</button>
+        <button type="button" onclick="rpToggleInviteMlo()" style="background:none;border:none;color:#1558C0;font-size:13px;font-weight:700;cursor:pointer;padding:0">My MLO isn't listed — Invite them ›</button>
       </div>
-      <div id="rp-invite-mlo-form" style="display:none;background:#f0fdfa;border-radius:10px;padding:14px;margin-top:10px;border:1px solid #99f6e4">
-        <div style="font-size:13px;font-weight:700;color:#0d9488;margin-bottom:10px">✉️ Invite Your MLO</div>
+      <div id="rp-invite-mlo-form" style="display:none;background:#EEF4FF;border-radius:10px;padding:14px;margin-top:10px;border:1px solid #BFDBFE">
+        <div style="font-size:13px;font-weight:700;color:#1558C0;margin-bottom:10px">✉️ Invite Your MLO</div>
         <div class="rp-form-row">
           <div class="rp-form-group"><label>First Name *</label><input type="text" id="oh-inv-fname" placeholder="Jane" /></div>
           <div class="rp-form-group"><label>Last Name *</label><input type="text" id="oh-inv-lname" placeholder="Smith" /></div>
@@ -2929,7 +3110,7 @@ admin@lmitool.com</div>
         <div class="rp-form-group"><label>Brokerage / Company</label><input type="text" id="oh-inv-brokerage" placeholder="First National Bank" /></div>
       </div>
       <div style="color:#dc2626;font-size:12px;margin-top:8px;display:none" id="oh-form-error"></div>
-      <button onclick="rpSubmitOpenHouse()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0d9488,#0891b2);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px" id="oh-submit-btn">📤 Submit Open House</button>
+      <button onclick="rpSubmitOpenHouse()" style="width:100%;padding:12px;background:linear-gradient(135deg,#1558C0,#0891b2);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px" id="oh-submit-btn">📤 Submit Open House</button>
     </div>
     <div id="rp-openhouses-list"><div style="text-align:center;color:#94a3b8;padding:40px">No open houses shared yet.</div></div>
   </div>
@@ -2944,23 +3125,23 @@ admin@lmitool.com</div>
     </div>
     <div class="prequal-modal-body">
       <div id="oyz-next-actions" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-        <div onclick="oyzNextOptionA()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#0d9488';this.style.background='#f0fdfa'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+        <div onclick="oyzNextOptionA()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#1558C0';this.style.background='#EEF4FF'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
           <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:2px">📅 Schedule Next Contact</div>
           <div style="font-size:12px;color:#64748b">Set a follow-up date so this realtor doesn't fall through the cracks</div>
         </div>
-        <div onclick="oyzNextOptionB()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#0d9488';this.style.background='#f0fdfa'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+        <div onclick="oyzNextOptionB()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#1558C0';this.style.background='#EEF4FF'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
           <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:2px">📋 Log a CRA Activity</div>
           <div style="font-size:12px;color:#64748b">Log this open house to your CRA Activity Log</div>
         </div>
-        <div onclick="oyzNextOptionC()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#0d9488';this.style.background='#f0fdfa'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
+        <div onclick="oyzNextOptionC()" style="border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;cursor:pointer" onmouseover="this.style.borderColor='#1558C0';this.style.background='#EEF4FF'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
           <div style="font-size:14px;font-weight:700;color:#1f2937;margin-bottom:2px">💰 Send Buyer Profile to This Realtor</div>
           <div style="font-size:12px;color:#64748b">Share a qualified borrower profile while you have momentum</div>
         </div>
       </div>
-      <div id="oyz-next-date-section" style="display:none;background:#f0fdfa;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #99f6e4">
-        <div style="font-size:13px;font-weight:700;color:#0d9488;margin-bottom:10px">📅 When should you follow up?</div>
-        <input type="date" id="oyz-next-date-input" style="width:100%;padding:10px 12px;border:2px solid #99f6e4;border-radius:8px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
-        <button onclick="oyzNextConfirmDate()" style="width:100%;padding:10px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px">✓ Save Date &amp; Mark Complete</button>
+      <div id="oyz-next-date-section" style="display:none;background:#EEF4FF;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #BFDBFE">
+        <div style="font-size:13px;font-weight:700;color:#1558C0;margin-bottom:10px">📅 When should you follow up?</div>
+        <input type="date" id="oyz-next-date-input" style="width:100%;padding:10px 12px;border:2px solid #BFDBFE;border-radius:8px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box" />
+        <button onclick="oyzNextConfirmDate()" style="width:100%;padding:10px;background:#1558C0;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px">✓ Save Date &amp; Mark Complete</button>
         <button onclick="document.getElementById('oyz-next-date-section').style.display='none';document.getElementById('oyz-next-actions').style.display='flex'" style="width:100%;padding:8px;background:white;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;cursor:pointer;margin-top:6px">← Back</button>
       </div>
       <button onclick="oyzNextSkip()" style="width:100%;padding:11px;background:white;color:#64748b;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer">Skip — just mark complete</button>
@@ -3123,7 +3304,7 @@ admin@lmitool.com</div>
       <div class="settings-item">
         <div id="billing-status-display" style="margin-bottom:12px"></div>
         <div id="billing-upgrade-section" style="display:none">
-          <button class="settings-save-btn" onclick="showBillingComingSoon()" style="background:linear-gradient(135deg,#0d9488,#0891b2)">⬆️ Upgrade Account</button>
+          <button class="settings-save-btn" onclick="showBillingComingSoon()" style="background:linear-gradient(135deg,#1558C0,#0891b2)">⬆️ Upgrade Account</button>
           <div style="font-size:11px;color:#94a3b8;margin-top:6px;text-align:center">Billing portal coming soon</div>
         </div>
       </div>
@@ -3224,7 +3405,7 @@ admin@lmitool.com</div>
 const EMAILJS_PUBLIC_KEY  = 'uSiYFQtZ-GzxmJ53A';
 const EMAILJS_SERVICE_ID  = 'service_g1ghxq2';
 const EMAILJS_TEMPLATE_ID = 'template_fksjm5e';
-const APP_URL = 'https://lmitool.com';
+const APP_URL = 'https://loopenta.com';
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -3268,13 +3449,13 @@ const ACTIVITY_COLORS = {
   'Loan Closed':       {bg:'#f0fdf4',color:'#16a34a'},
   'Community Contact': {bg:'#fdf4ff',color:'#9333ea'},
   'Pre-qualification': {bg:'#fff7ed',color:'#ea580c'},
-  'Referral Made':     {bg:'#f0fdfa',color:'#0d9488'},
+  'Referral Made':     {bg:'#EEF4FF',color:'#1558C0'},
   'Event Attended':    {bg:'#fef9c3',color:'#ca8a04'},
   'Open House':        {bg:'#f0f4ff',color:'#4f46e5'}
 };
 const ACTIVITY_BAR_COLORS = {
   'Application Taken':'#2563eb','Loan Closed':'#16a34a','Community Contact':'#9333ea',
-  'Pre-qualification':'#ea580c','Referral Made':'#0d9488','Event Attended':'#ca8a04','Open House':'#4f46e5'
+  'Pre-qualification':'#ea580c','Referral Made':'#1558C0','Event Attended':'#ca8a04','Open House':'#4f46e5'
 };
 const DEFAULT_ADMIN = {
   id:'admin-aaron', name:'Aaron Simonson', email:'aaronsimonson@gmail.com',
@@ -3304,8 +3485,8 @@ async function loadCurrentOrg() {
     } else if (isSuperAdmin() && currentUser.orgId === 'golden1-org') {
       // Auto-create the golden1-org document on first superadmin login
       const orgData = {
-        name: 'LMI Tool', adminEmail: currentUser.email || 'admin@lmitool.com',
-        primaryColor: '#1f2937', accentColor: '#0ed2c8',
+        name: 'Loopenta', adminEmail: currentUser.email || 'admin@loopenta.com',
+        primaryColor: '#1f2937', accentColor: '#1B73E3',
         subscriptionTier: 'team', subscriptionStatus: 'active',
         trialEndDate: null, createdAt: new Date().toISOString(), memberCount: 1
       };
@@ -3319,7 +3500,7 @@ async function loadCurrentOrg() {
 function applyOrgBranding(org) {
   if (!org) return;
   var primary = org.primaryColor || '#1f2937';
-  var accent = org.accentColor || '#0ed2c8';
+  var accent = org.accentColor || '#1B73E3';
   var headerStyle = org.headerStyle || 'dark';
   var textColor = headerStyle === 'dark' ? 'white' : '#1f2937';
   var subTextColor = headerStyle === 'dark' ? 'rgba(255,255,255,0.75)' : 'rgba(31,41,55,0.65)';
@@ -3677,11 +3858,11 @@ async function tryLogin() {
 function logout() {
   // Reset branding to defaults
   document.documentElement.style.setProperty('--brand-primary', '#1f2937');
-  document.documentElement.style.setProperty('--brand-accent', '#0ed2c8');
+  document.documentElement.style.setProperty('--brand-accent', '#1B73E3');
   var hdr = document.querySelector('.header');
   if (hdr) hdr.style.background = '';
   var titleEl = document.querySelector('.header-title');
-  if (titleEl) { titleEl.textContent = 'LMI Prospect Finder'; titleEl.style.color = ''; }
+  if (titleEl) { titleEl.textContent = 'Loopenta'; titleEl.style.color = ''; }
   var subEl = document.querySelector('.header-sub');
   if (subEl) { subEl.textContent = 'Mortgage Prospecting Platform'; subEl.style.color = ''; }
   var iconEl = document.getElementById('header-icon');
@@ -4034,7 +4215,7 @@ function renderOYZList() {
           return '<div class="oyz-weekend-card" onclick="openPropDetail(\'' + e.id + '\')">'
             + '<div style="display:flex;justify-content:space-between;align-items:center">'
             + '<div style="font-size:14px;font-weight:800;color:#1f2937">' + (e.propertyAddress || '—') + '</div>'
-            + '<div style="font-size:12px;font-weight:700;color:#0ed2c8">' + fmtOYZDate(e.openHouseDate) + '</div>'
+            + '<div style="font-size:12px;font-weight:700;color:#1B73E3">' + fmtOYZDate(e.openHouseDate) + '</div>'
             + '</div>'
             + '<div style="margin-top:4px">Realtor: ' + realtorLink + '</div>'
             + '</div>';
@@ -4403,7 +4584,7 @@ function openPropDetail(id) {
   var timeline = [];
   (cachedActivities || []).forEach(function(a) {
     var match = (zip && a.zip === zip) || (addr && ((a.borrower || '').toLowerCase().includes(addr) || (a.notes || '').toLowerCase().includes(addr)));
-    if (match) timeline.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#0ed2c8' });
+    if (match) timeline.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#1B73E3' });
   });
   timeline.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
 
@@ -4600,7 +4781,7 @@ function openRealtorProfile(docId) {
   var timelineItems = [];
   (cachedActivities || []).forEach(function(a) {
     if ((a.borrower || '').toLowerCase().includes(rNameLower) || (a.notes || '').toLowerCase().includes(rNameLower) || (a.realtorName || '').toLowerCase() === rNameLower) {
-      timelineItems.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#0ed2c8' });
+      timelineItems.push({ date: a.loggedAt || a.date || '', title: (a.type || 'Activity') + (a.borrower ? ' — ' + a.borrower : ''), source: 'cra', color: '#1B73E3' });
     }
   });
   oyzEntries.forEach(function(e) {
@@ -4635,7 +4816,7 @@ function openRealtorProfile(docId) {
     + '<div class="rp-section-title">Contact Info</div>'
     + '<div class="rp-contact-grid">'
     + (r.phone ? '<div class="rp-contact-item"><label>Phone</label><span><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></span></div>' : '')
-    + (r.email ? '<div class="rp-contact-item"><label>Email</label><span><a href="mailto:' + r.email + '" style="color:#0ed2c8;text-decoration:none">' + r.email + '</a></span></div>' : '')
+    + (r.email ? '<div class="rp-contact-item"><label>Email</label><span><a href="mailto:' + r.email + '" style="color:#1B73E3;text-decoration:none">' + r.email + '</a></span></div>' : '')
     + (r.area  ? '<div class="rp-contact-item"><label>Area / ZIP</label><span>' + r.area + '</span></div>' : '')
     + (r.notes ? '<div class="rp-contact-item"><label>Notes</label><span style="font-style:italic;color:#64748b">' + r.notes + '</span></div>' : '')
     + (lastContact ? '<div class="rp-contact-item"><label>Last OYZ Contact</label><span>' + new Date(lastContact).toLocaleDateString() + '</span></div>' : '')
@@ -4693,7 +4874,7 @@ function openRealtorProfile(docId) {
         if (!bodyEl) return;
         if (!items.length) { bodyEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:8px 0">No shared searches yet.</div>'; return; }
         bodyEl.innerHTML = items.map(function(s) {
-          var convertedBadge = s.mloConverted ? '<span class="rp-badge rp-badge-green">✅ In Pipeline</span>' : '<button style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer" onclick="pullIntoPipeline(\'' + s.id + '\',event)">+ Pull into Pipeline</button>';
+          var convertedBadge = s.mloConverted ? '<span class="rp-badge rp-badge-green">✅ In Pipeline</span>' : '<button style="background:linear-gradient(135deg,#1558C0,#1558C0);color:white;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer" onclick="pullIntoPipeline(\'' + s.id + '\',event)">+ Pull into Pipeline</button>';
           return '<div class="rp-shared-search-item">'
             + '<div class="rp-shared-search-buyer">' + (s.buyerName || 'Unnamed Buyer') + '</div>'
             + '<div class="rp-shared-search-meta">ZIP: ' + (s.zip || '—') + ' · ' + (s.lmiCategory || '—') + (s.savedAt ? ' · ' + new Date(s.savedAt).toLocaleDateString() : '') + '</div>'
@@ -4823,7 +5004,7 @@ function getMloFooterHtml() {
     + '<div class="flyer-mlo-details">' + (p.title || 'Mortgage Loan Officer') + '<br/>' + (p.phone || '') + (p.phone && p.email ? ' · ' : '') + (p.email || '') + '</div>'
     + (p.nmls ? '<div class="flyer-mlo-nmls">NMLS # ' + p.nmls + '</div>' : '')
     + '</div>'
-    + '<div style="text-align:right"><div style="color:#0ed2c8;font-size:11px;font-weight:700">LMI SPECIALIST</div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:4px">lmitool.com</div></div>'
+    + '<div style="text-align:right"><div style="color:#1B73E3;font-size:11px;font-weight:700">LMI SPECIALIST</div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:4px">loopenta.com</div></div>'
     + '</div>';
 }
 
@@ -4831,7 +5012,7 @@ function getFlyerTopBar(badgeLabel) {
   return '<div class="flyer-top-bar">'
     + '<div class="flyer-logo-area">'
     + '<div class="flyer-logo-icon"><svg width="22" height="22" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg"><path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/></svg></div>'
-    + '<div><div class="flyer-logo-text">LMI Prospect Finder</div><div class="flyer-logo-sub">CRA/HMDA Mortgage Prospecting Tool</div></div>'
+    + '<div><div class="flyer-logo-text">Loopenta</div><div class="flyer-logo-sub">CRA/HMDA Mortgage Prospecting Tool</div></div>'
     + '</div>'
     + '<div class="flyer-type-badge">' + badgeLabel + '</div>'
     + '</div>';
@@ -4942,7 +5123,7 @@ async function generateAreaFlyer() {
     + '</tbody></table></div>'
     + '<div class="flyer-links-section"><div class="flyer-section-title">Pre-Filtered Listing Links for LMI Buyers</div>'
     + '<a href="' + zillowLow + '" class="flyer-link-item" target="_blank"><div class="flyer-link-dot" style="background:#006aff"></div><div><div class="flyer-link-label">Zillow — Low Income Buyers (under $' + maxLow.toLocaleString() + ')</div><div class="flyer-link-url">' + zillowLow + '</div></div></a>'
-    + '<a href="' + zillowMod + '" class="flyer-link-item" target="_blank"><div class="flyer-link-dot" style="background:#0ed2c8"></div><div><div class="flyer-link-label">Zillow — Moderate Income Buyers (under $' + maxMod.toLocaleString() + ')</div><div class="flyer-link-url">' + zillowMod + '</div></div></a>'
+    + '<a href="' + zillowMod + '" class="flyer-link-item" target="_blank"><div class="flyer-link-dot" style="background:#1B73E3"></div><div><div class="flyer-link-label">Zillow — Moderate Income Buyers (under $' + maxMod.toLocaleString() + ')</div><div class="flyer-link-url">' + zillowMod + '</div></div></a>'
     + '<a href="' + redfinUrl + '" class="flyer-link-item" target="_blank"><div class="flyer-link-dot" style="background:#cc0000"></div><div><div class="flyer-link-label">Redfin — under $' + maxMod.toLocaleString() + '</div><div class="flyer-link-url">' + redfinUrl + '</div></div></a>'
     + '<a href="' + ffiecUrl + '" class="flyer-link-item" target="_blank"><div class="flyer-link-dot" style="background:#1f2937"></div><div><div class="flyer-link-label">FFIEC Tract Verification</div><div class="flyer-link-url">' + ffiecUrl + '</div></div></a>'
     + '</div></div>'
@@ -4999,7 +5180,7 @@ async function generateReferralOnePager() {
     + '<div style="font-size:13px;color:#64748b;margin-bottom:8px">' + (p.title || 'Mortgage Loan Officer') + '</div>'
     + '<div style="display:flex;gap:16px;flex-wrap:wrap">'
     + (p.phone ? '<div style="font-size:13px;color:#1f2937;font-weight:600">📞 ' + p.phone + '</div>' : '')
-    + (p.email ? '<div style="font-size:13px;color:#0ed2c8;font-weight:600">✉️ ' + p.email + '</div>' : '')
+    + (p.email ? '<div style="font-size:13px;color:#1B73E3;font-weight:600">✉️ ' + p.email + '</div>' : '')
     + (nmls    ? '<div style="font-size:13px;color:#64748b">NMLS # ' + nmls + '</div>' : '')
     + '</div>'
     + '<div style="margin-top:8px;font-size:12px;color:#94a3b8">Serving: ' + currentUser.region + '</div>'
@@ -5011,11 +5192,11 @@ async function generateReferralOnePager() {
         return '<div class="flyer-value-item"><div class="flyer-value-icon">' + item.icon + '</div><div class="flyer-value-title">' + item.title + '</div><div class="flyer-value-desc">' + item.desc + '</div></div>';
       }).join('')
     + '</div></div>'
-    + '<div style="background:#f0fdfa;border-radius:12px;padding:16px 20px;border-left:4px solid #0ed2c8;margin-bottom:20px">'
+    + '<div style="background:#EEF4FF;border-radius:12px;padding:16px 20px;border-left:4px solid #1B73E3;margin-bottom:20px">'
     + '<div style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:6px">What I provide to my realtor partners:</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
     + checkItems.map(function(item) {
-        return '<div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#64748b"><span style="color:#0ed2c8;font-weight:700;flex-shrink:0">✓</span>' + item + '</div>';
+        return '<div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#64748b"><span style="color:#1B73E3;font-weight:700;flex-shrink:0">✓</span>' + item + '</div>';
       }).join('')
     + '</div></div>'
     + '</div>'
@@ -5293,7 +5474,7 @@ function renderRealtorList() {
       + '<div class="realtor-card-actions"><button class="invite-portal-btn" onclick="inviteRealtorToPortal(\'' + r.docId + '\')" title="Invite to Realtor Portal">📧 Invite</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="openCallModal(\'' + r.docId + '\',\'realtor\')" title="Log Call">📞</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
       + '<div class="realtor-card-body">'
       + (r.phone ? '<div class="realtor-info-item"><div class="realtor-info-label">Phone</div><div class="realtor-info-value"><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></div></div>' : '')
-      + (r.email ? '<div class="realtor-info-item"><div class="realtor-info-label">Email</div><div class="realtor-info-value"><a href="mailto:' + r.email + '" style="color:#0ed2c8;text-decoration:none">' + r.email + '</a></div></div>' : '')
+      + (r.email ? '<div class="realtor-info-item"><div class="realtor-info-label">Email</div><div class="realtor-info-value"><a href="mailto:' + r.email + '" style="color:#1B73E3;text-decoration:none">' + r.email + '</a></div></div>' : '')
       + (r.area  ? '<div class="realtor-info-item"><div class="realtor-info-label">Area</div><div class="realtor-info-value">' + r.area + '</div></div>' : '')
       + '</div>'
       + (r.notes ? '<div class="realtor-notes">📝 ' + r.notes + '</div>' : '')
@@ -5460,7 +5641,7 @@ function calcQualifier() {
     + '<div class="qual-action-row">'
     + '<button id="qual-save-btn-el" class="' + (isEditing ? 'qual-save-btn update' : 'qual-save-btn') + '" onclick="saveBorrowerProspect(' + income + ',\'' + cat.label + '\',\'' + borrowerName.replace(/'/g,"\\'") + '\',' + maxPrice + ',' + pctAmi + ')">' + (isEditing ? '💾 Update Borrower Record' : '+ Save to Prospect List') + '</button>'
     + '<button class="qual-realtor-btn" onclick="openRealtorPicker()">🏠 Assign Realtors' + (currentBorrowerRealtors.length ? ' (' + currentBorrowerRealtors.length + ')' : '') + '</button>'
-    + '<button style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer" onclick="openSendToRealtorModal()">📤 Send to Realtor</button>'
+    + '<button style="background:linear-gradient(135deg,#1558C0,#1558C0);color:white;border:none;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer" onclick="openSendToRealtorModal()">📤 Send to Realtor</button>'
     + '</div>'
     + '<div id="qual-assigned-realtors-container"></div>'
     + '<div class="qual-note">⚠️ Estimates use ' + farmParams.frontEnd + '% front-end ratio at ' + farmParams.rate + '% rate, ' + farmParams.term + '-year fixed. AMI: $' + currentAmi.toLocaleString() + ' for ' + currentCity + ', ' + currentZip + '.</div>';
@@ -5483,14 +5664,14 @@ async function saveBorrowerProspect(income, category, borrowerName, maxPrice, pc
     renderSaved(); renderRealtorStats();
     showToast('💾 ' + (borrowerName || 'Borrower') + ' record updated');
     const btn = document.getElementById('qual-save-btn-el');
-    if (btn) { btn.textContent = '✓ Updated!'; btn.style.background = '#ccfbf1'; }
+    if (btn) { btn.textContent = '✓ Updated!'; btn.style.background = '#DBEAFE'; }
     try { await db.collection('prospects').doc(editingProspectDocId).set(prospectData); cachedProspects = await fetchMyProspects(); renderSaved(); renderRealtorStats(); } catch(e) {}
   } else {
     cachedProspects.unshift(Object.assign({ docId: 'pending-' + Date.now() }, prospectData));
     renderSaved(); renderRealtorStats();
     showToast('📌 ' + (borrowerName || 'Borrower') + ' saved to prospects');
     const btn = document.getElementById('qual-save-btn-el');
-    if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
+    if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#DBEAFE'; }
     try { await db.collection('prospects').add(prospectData); cachedProspects = await fetchMyProspects(); renderSaved(); renderRealtorStats(); } catch(e) {}
   }
 }
@@ -5503,7 +5684,7 @@ async function saveZip(zip, city) {
   else { cachedProspects.unshift(Object.assign({ docId: 'pending-' + Date.now() }, prospectData)); }
   renderSaved();
   const btn = document.querySelector('.save-btn');
-  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#ccfbf1'; }
+  if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#DBEAFE'; }
   showToast('📌 ' + zip + ' saved to prospects');
   try {
     const snap = await db.collection('prospects').where('userId','==',currentUser.id).where('zip','==',zip).get();
@@ -5967,10 +6148,10 @@ function renderUserTable() {
           + '<td>' + (u.type === 'Internal'
               ? '<div class="branch-tags">' + (u.branches || []).map(function(b) { return '<span class="branch-tag">' + b.zip + ' ' + b.name + '</span>'; }).join('') + (!(u.branches || []).length ? '<span style="font-size:11px;color:#94a3b8">None</span>' : '') + '</div>'
               : '—') + '</td>'
-          + '<td><span class="status-dot ' + (u.active ? 'status-active' : 'status-inactive') + '"></span><span style="font-size:12px;color:' + (u.active ? '#0ed2c8' : '#94a3b8') + '">' + (u.active ? 'Active' : 'Inactive') + '</span></td>'
+          + '<td><span class="status-dot ' + (u.active ? 'status-active' : 'status-inactive') + '"></span><span style="font-size:12px;color:' + (u.active ? '#1B73E3' : '#94a3b8') + '">' + (u.active ? 'Active' : 'Inactive') + '</span></td>'
           + '<td>'
           + (u.password ? '<button class="action-btn copy-btn" onclick="copyPassword(\'' + u.id + '\')" title="Copy password">📋</button>' : '')
-          + (u.type === 'Internal' ? '<button class="action-btn" style="color:#0ed2c8" onclick="openBranchModal(\'' + u.id + '\')" title="Manage branches">🏢</button>' : '')
+          + (u.type === 'Internal' ? '<button class="action-btn" style="color:#1B73E3" onclick="openBranchModal(\'' + u.id + '\')" title="Manage branches">🏢</button>' : '')
           + '<button class="action-btn toggle-btn" onclick="toggleUser(\'' + u.id + '\')">' + (u.active ? '⏸' : '▶️') + '</button>'
           + (u.id !== currentUser.id ? '<button class="action-btn del-btn" onclick="deleteUser(\'' + u.id + '\')">🗑</button>' : '')
           + '</td></tr>';
@@ -6712,8 +6893,8 @@ function generateCraReport() {
   var toLbl    = new Date(to+'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   document.getElementById('cra-doc').innerHTML =
     '<div class="cra-doc-header">'
-    + '<div class="cra-doc-title">LMI Prospect Finder — CRA Activity Report</div>'
-    + '<div class="cra-doc-org">LMI Tool</div>'
+    + '<div class="cra-doc-title">Loopenta — CRA Activity Report</div>'
+    + '<div class="cra-doc-org">Loopenta</div>'
     + '<div class="cra-doc-meta">Date Range: '+fromLbl+' – '+toLbl+' &nbsp;|&nbsp; Generated: '+genDate+'</div>'
     + '</div><div class="cra-doc-body">'
     + '<div class="cra-summary-cards">'
@@ -6971,7 +7152,7 @@ function renderRPSearches() {
     var catBadge = cat ? '<span class="rp-badge" style="background:' + (catColors[cat]||'#f1f5f9') + ';color:' + (catText[cat]||'#64748b') + '">' + cat + '</span>' : '';
     var sharedBadge = s.isShared ? '<span class="rp-badge rp-badge-teal">Shared with MLO</span>' : '<span class="rp-badge rp-badge-gray">Private</span>';
     var convertedBadge = s.mloConverted ? '<span class="rp-badge rp-badge-green">✅ In Pipeline</span>' : '';
-    var pqBtn = !s.mloConverted ? '<button style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;margin-left:auto" onclick="openPrequalModal(' + JSON.stringify({zip:s.zip,buyerName:s.buyerName||''}).replace(/"/g,"'") + ')">📋 Request Pre-Qual</button>' : '';
+    var pqBtn = !s.mloConverted ? '<button style="background:linear-gradient(135deg,#1558C0,#1558C0);color:white;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;margin-left:auto" onclick="openPrequalModal(' + JSON.stringify({zip:s.zip,buyerName:s.buyerName||''}).replace(/"/g,"'") + ')">📋 Request Pre-Qual</button>' : '';
     return '<div class="rp-search-card">'
       + '<div class="rp-search-card-top">'
       + '<div>'
@@ -7378,7 +7559,7 @@ async function renderSAUsers() {
     var orgMap = {};
     cachedAllOrgs.forEach(function(o) { orgMap[o.id] = o.name; });
     var rows = users.map(function(u) {
-      var orgName = orgMap[u.orgId] || (u.orgId === 'golden1-org' ? 'LMI Tool' : u.orgId || '—');
+      var orgName = orgMap[u.orgId] || (u.orgId === 'golden1-org' ? 'Loopenta' : u.orgId || '—');
       var roleBadge = '<span style="font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;background:#f1f5f9;color:#374151">' + (u.role || '—') + '</span>';
       return '<tr style="border-bottom:1px solid #f1f5f9">'
         + '<td style="padding:10px 12px;font-size:13px;font-weight:600">' + (u.name || '—') + '</td>'
@@ -7411,7 +7592,7 @@ async function renderSABilling() {
     var teamMrr = active.filter(function(o) { return o.subscriptionTier === 'team'; }).length * 199;
     statsEl.innerHTML = [
       { label: 'Total MRR',      val: '$' + (indMrr + teamMrr).toLocaleString(), color: '#2563eb' },
-      { label: 'Individual ($49)', val: active.filter(function(o){ return o.subscriptionTier==='individual'; }).length, color: '#0d9488' },
+      { label: 'Individual ($49)', val: active.filter(function(o){ return o.subscriptionTier==='individual'; }).length, color: '#1558C0' },
       { label: 'Team ($199)',    val: active.filter(function(o){ return o.subscriptionTier==='team'; }).length, color: '#7c3aed' },
       { label: 'On Trial',       val: trial.length, color: '#d97706' }
     ].map(function(s) {
@@ -7486,7 +7667,7 @@ async function createOrganization() {
   var adminEmail= (document.getElementById('co-admin-email').value || '').trim().toLowerCase();
   var adminPass = (document.getElementById('co-admin-password').value || '').trim();
   var primary   = document.getElementById('co-primary-color').value || '#1f2937';
-  var accent    = document.getElementById('co-accent-color').value || '#0ed2c8';
+  var accent    = document.getElementById('co-accent-color').value || '#1B73E3';
   var tier      = document.getElementById('co-tier').value || 'trial';
   var errEl     = document.getElementById('co-error');
   var btn       = document.getElementById('co-submit-btn');
@@ -7565,9 +7746,9 @@ function obSyncSwatch(which) {
 
 function obUpdatePreview() {
   var primary = (document.getElementById('ob-primary-hex') || {}).value || '#1f2937';
-  var accent = (document.getElementById('ob-accent-hex') || {}).value || '#0ed2c8';
+  var accent = (document.getElementById('ob-accent-hex') || {}).value || '#1B73E3';
   var headerStyle = (document.getElementById('ob-header-style') || {}).value || 'dark';
-  var company = (document.getElementById('ob-company-name') || {}).value || 'LMI Prospect Finder';
+  var company = (document.getElementById('ob-company-name') || {}).value || 'Loopenta';
   var tagline = (document.getElementById('ob-tagline') || {}).value || 'Mortgage Prospecting Platform';
   var logoUrl = (document.getElementById('ob-logo-url') || {}).value || '';
   var textColor = headerStyle === 'dark' ? 'white' : '#1f2937';
@@ -7597,7 +7778,7 @@ function obUpdatePreview() {
 
 function obApplyPreview() {
   var primary = (document.getElementById('ob-primary-hex') || {}).value || '#1f2937';
-  var accent = (document.getElementById('ob-accent-hex') || {}).value || '#0ed2c8';
+  var accent = (document.getElementById('ob-accent-hex') || {}).value || '#1B73E3';
   var headerStyle = (document.getElementById('ob-header-style') || {}).value || 'dark';
   var company = (document.getElementById('ob-company-name') || {}).value || '';
   var tagline = (document.getElementById('ob-tagline') || {}).value || '';
@@ -7616,13 +7797,13 @@ function loadOrgBrandingForm() {
   set('ob-tagline', o.tagline);
   set('ob-logo-url', o.logoUrl);
   set('ob-primary-hex', o.primaryColor || '#1f2937');
-  set('ob-accent-hex', o.accentColor || '#0ed2c8');
+  set('ob-accent-hex', o.accentColor || '#1B73E3');
   var hs = document.getElementById('ob-header-style');
   if (hs) hs.value = o.headerStyle || 'dark';
   var ps = document.getElementById('ob-primary-swatch');
   if (ps) ps.value = o.primaryColor || '#1f2937';
   var as2 = document.getElementById('ob-accent-swatch');
-  if (as2) as2.value = o.accentColor || '#0ed2c8';
+  if (as2) as2.value = o.accentColor || '#1B73E3';
   obPreviewLogo();
   obUpdatePreview();
 }
@@ -7630,7 +7811,7 @@ function loadOrgBrandingForm() {
 async function obSaveBranding() {
   if (!currentOrg || !db) return;
   var primary = (document.getElementById('ob-primary-hex') || {}).value || '#1f2937';
-  var accent = (document.getElementById('ob-accent-hex') || {}).value || '#0ed2c8';
+  var accent = (document.getElementById('ob-accent-hex') || {}).value || '#1B73E3';
   var headerStyle = (document.getElementById('ob-header-style') || {}).value || 'dark';
   var company = (document.getElementById('ob-company-name') || {}).value || '';
   var tagline = (document.getElementById('ob-tagline') || {}).value || '';
@@ -7721,8 +7902,8 @@ function renderAdminBillingInfo() {
   var mloCount = allUsers.filter(function(u){ return u.role==='mlo' && u.active; }).length;
   var realtorCount = allUsers.filter(function(u){ return u.role==='realtor' && u.active; }).length;
 
-  var upgradeSubject = encodeURIComponent('LMI Tool Subscription Upgrade Request');
-  var upgradeBody = encodeURIComponent('Hi,\n\nI would like to upgrade my LMI Tool subscription.\n\nOrganization: ' + (org.name||'') + '\nCurrent Plan: ' + tierLabel + '\n\nPlease contact me to complete the upgrade.\n\nThank you');
+  var upgradeSubject = encodeURIComponent('Loopenta Subscription Upgrade Request');
+  var upgradeBody = encodeURIComponent('Hi,\n\nI would like to upgrade my Loopenta subscription.\n\nOrganization: ' + (org.name||'') + '\nCurrent Plan: ' + tierLabel + '\n\nPlease contact me to complete the upgrade.\n\nThank you');
 
   el.innerHTML = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
     + '<span style="background:' + tierColor + '22;color:' + tierColor + ';border:1px solid ' + tierColor + '44;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700">' + tierLabel + '</span>'
@@ -7733,11 +7914,11 @@ function renderAdminBillingInfo() {
     + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:#1f2937">' + mloCount + '</div><div style="font-size:11px;color:#64748b;margin-top:2px">Active MLO Seats</div></div>'
     + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:800;color:#1f2937">' + realtorCount + '</div><div style="font-size:11px;color:#64748b;margin-top:2px">Realtor Portal Users</div></div>'
     + '</div>'
-    + '<div style="font-size:12px;color:#64748b;margin-bottom:16px;text-align:center">💡 Stripe integration coming soon — contact <a href="mailto:admin@lmitool.com" style="color:#3b82f6">admin@lmitool.com</a> to activate your subscription</div>'
+    + '<div style="font-size:12px;color:#64748b;margin-bottom:16px;text-align:center">💡 Stripe integration coming soon — contact <a href="mailto:admin@loopenta.com" style="color:#3b82f6">admin@loopenta.com</a> to activate your subscription</div>'
     + '<div style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:10px">Upgrade Your Plan</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + '<div style="border:2px solid #3b82f6;border-radius:10px;padding:14px"><div style="font-size:13px;font-weight:800;color:#1e40af;margin-bottom:4px">Individual</div><div style="font-size:20px;font-weight:800;color:#1f2937;margin-bottom:8px">$49<span style="font-size:12px;font-weight:400;color:#64748b">/mo</span></div><div style="font-size:11px;color:#374151;margin-bottom:10px">• Up to 3 MLOs<br>• Unlimited realtors<br>• All features</div><a href="mailto:admin@lmitool.com?subject=' + upgradeSubject + '&body=' + upgradeBody + '" style="display:block;text-align:center;background:#3b82f6;color:white;padding:7px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">Contact to Upgrade</a></div>'
-    + '<div style="border:2px solid #8b5cf6;border-radius:10px;padding:14px"><div style="font-size:13px;font-weight:800;color:#6d28d9;margin-bottom:4px">Team</div><div style="font-size:20px;font-weight:800;color:#1f2937;margin-bottom:8px">$199<span style="font-size:12px;font-weight:400;color:#64748b">/mo</span></div><div style="font-size:11px;color:#374151;margin-bottom:10px">• Unlimited MLOs<br>• Priority support<br>• Custom branding</div><a href="mailto:admin@lmitool.com?subject=' + upgradeSubject + '&body=' + upgradeBody + '" style="display:block;text-align:center;background:#8b5cf6;color:white;padding:7px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">Contact to Upgrade</a></div>'
+    + '<div style="border:2px solid #3b82f6;border-radius:10px;padding:14px"><div style="font-size:13px;font-weight:800;color:#1e40af;margin-bottom:4px">Individual</div><div style="font-size:20px;font-weight:800;color:#1f2937;margin-bottom:8px">$49<span style="font-size:12px;font-weight:400;color:#64748b">/mo</span></div><div style="font-size:11px;color:#374151;margin-bottom:10px">• Up to 3 MLOs<br>• Unlimited realtors<br>• All features</div><a href="mailto:admin@loopenta.com?subject=' + upgradeSubject + '&body=' + upgradeBody + '" style="display:block;text-align:center;background:#3b82f6;color:white;padding:7px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">Contact to Upgrade</a></div>'
+    + '<div style="border:2px solid #8b5cf6;border-radius:10px;padding:14px"><div style="font-size:13px;font-weight:800;color:#6d28d9;margin-bottom:4px">Team</div><div style="font-size:20px;font-weight:800;color:#1f2937;margin-bottom:8px">$199<span style="font-size:12px;font-weight:400;color:#64748b">/mo</span></div><div style="font-size:11px;color:#374151;margin-bottom:10px">• Unlimited MLOs<br>• Priority support<br>• Custom branding</div><a href="mailto:admin@loopenta.com?subject=' + upgradeSubject + '&body=' + upgradeBody + '" style="display:block;text-align:center;background:#8b5cf6;color:white;padding:7px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">Contact to Upgrade</a></div>'
     + '</div>';
 }
 
@@ -7786,7 +7967,7 @@ function savoShowTab(tab) {
 
   if (tab === 'branding') {
     var primary = org.primaryColor || '#1f2937';
-    var accent = org.accentColor || '#0ed2c8';
+    var accent = org.accentColor || '#1B73E3';
     body.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'
       + '<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Company Name</label>'
       + '<input type="text" id="savo-company-name" value="' + (org.companyName||'') + '" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;box-sizing:border-box" /></div>'
@@ -8049,7 +8230,7 @@ async function submitSignup() {
     var orgData = {
       name: _signupData.orgName, adminEmail: _signupData.email,
       industry: _signupData.industry, teamSize: _signupData.teamSize,
-      primaryColor: '#1f2937', accentColor: '#0ed2c8',
+      primaryColor: '#1f2937', accentColor: '#1B73E3',
       subscriptionTier: 'trial', subscriptionStatus: 'trial',
       trialEndDate: trialEnd.toISOString(), createdAt: now.toISOString(), memberCount: 1
     };
@@ -8073,7 +8254,7 @@ async function submitSignup() {
     document.getElementById('signup-screen').style.display = 'none';
     cachedUsers = [adminUser];
     await _postLoginSetup(adminUser);
-    showToast('🎉 Welcome to LMI Tool, ' + _signupData.fname + '!');
+    showToast('🎉 Welcome to Loopenta, ' + _signupData.fname + '!');
   } catch(e) {
     btn.textContent = '🚀 Start Free 30-Day Trial'; btn.disabled = false;
     err.textContent = 'Error creating account: ' + e.message; err.style.display = 'block';
@@ -8107,8 +8288,8 @@ async function runDataMigration() {
     statusEl.style.color = '#059669';
     // Ensure golden1-org document exists
     await db.collection('organizations').doc('golden1-org').set({
-      name: 'LMI Tool', adminEmail: 'admin@lmitool.com',
-      primaryColor: '#1f2937', accentColor: '#0ed2c8',
+      name: 'Loopenta', adminEmail: 'admin@loopenta.com',
+      primaryColor: '#1f2937', accentColor: '#1B73E3',
       subscriptionTier: 'team', subscriptionStatus: 'active',
       trialEndDate: null, createdAt: new Date().toISOString(), memberCount: counts.users
     }, { merge: true });
@@ -8140,7 +8321,7 @@ async function rpDoSearch() {
     var data = await response.json();
     statusEl.style.display = 'none';
     if (!data || !data.length || data.error) {
-      resultEl.innerHTML = '<div class="not-found" style="text-align:center;padding:32px;background:white;border-radius:14px"><div style="font-size:36px;margin-bottom:10px">📍</div><h3 style="color:#1f2937;margin-bottom:8px">No LMI data found for ZIP ' + zip + '</h3><p style="color:#64748b">Try checking at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank" style="color:#0d9488">FFIEC.gov →</a></p></div>';
+      resultEl.innerHTML = '<div class="not-found" style="text-align:center;padding:32px;background:white;border-radius:14px"><div style="font-size:36px;margin-bottom:10px">📍</div><h3 style="color:#1f2937;margin-bottom:8px">No LMI data found for ZIP ' + zip + '</h3><p style="color:#64748b">Try checking at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank" style="color:#1558C0">FFIEC.gov →</a></p></div>';
       resultEl.style.display = 'block'; return;
     }
     var city = data[0].city || zip;
@@ -8813,7 +8994,7 @@ function renderRPBuyerProfiles() {
     var dateStr = p.sentAt ? new Date(p.sentAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
     var safeId = p.id;
     var pqPrefill = JSON.stringify({ zip: p.zip||'', buyerName: p.borrowerName||'' }).replace(/"/g,"'");
-    return '<div class="rp-search-card" id="rp-push-' + safeId + '" style="' + (isNew ? 'border-left:3px solid #0ed2c8;' : '') + '">'
+    return '<div class="rp-search-card" id="rp-push-' + safeId + '" style="' + (isNew ? 'border-left:3px solid #1B73E3;' : '') + '">'
       // — Card header (always visible, click to expand)
       + '<div class="rp-search-card-top" onclick="rpTogglePush(\'' + safeId + '\')" style="cursor:pointer">'
       + '<div style="flex:1;min-width:0">'
@@ -8829,7 +9010,7 @@ function renderRPBuyerProfiles() {
       + (p.mloNotes ? '<span style="color:#6366f1;font-style:italic">· "' + p.mloNotes + '"</span>' : '')
       + '</div>'
       // — Expanded detail panel
-      + '<div id="rp-push-detail-' + safeId + '" style="display:none;margin-top:14px;padding-top:14px;border-top:2px solid #f0fdfa">'
+      + '<div id="rp-push-detail-' + safeId + '" style="display:none;margin-top:14px;padding-top:14px;border-top:2px solid #EEF4FF">'
       + '<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;color:#374151;line-height:2">'
       + '<div><span style="font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.4px">Buyer</span><br><span style="font-size:15px;font-weight:800;color:#1f2937">' + (p.borrowerName || '—') + '</span></div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
@@ -8856,7 +9037,7 @@ function renderRPBuyerProfiles() {
       + (!p.viewed
           ? '<button onclick="rpMarkPushViewed(\'' + safeId + '\')" style="background:#f0fdf4;color:#059669;border:1.5px solid #bbf7d0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">✓ Mark as Reviewed</button>'
           : '<span style="font-size:12px;color:#94a3b8;font-weight:600">✓ Reviewed</span>')
-      + '<button onclick="openPrequalModal(' + pqPrefill + ')" style="background:linear-gradient(135deg,#0f766e,#0d9488);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">📋 Request Pre-Qual</button>'
+      + '<button onclick="openPrequalModal(' + pqPrefill + ')" style="background:linear-gradient(135deg,#1558C0,#1558C0);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">📋 Request Pre-Qual</button>'
       + '</div>'
       + '</div>'
       + '</div>';
@@ -8909,7 +9090,7 @@ function rpMarkPushViewed(id) {
 
 // ── TAGS ────────────────────────────────────────────────────
 var PREDEFINED_TAGS = [
-  {name:'LMI Eligible',color:'#0ed2c8'},{name:'Hot Lead',color:'#dc2626'},
+  {name:'LMI Eligible',color:'#1B73E3'},{name:'Hot Lead',color:'#dc2626'},
   {name:'Warm Lead',color:'#d97706'},{name:'Cold Lead',color:'#3b82f6'},
   {name:'Follow Up',color:'#7c3aed'},{name:'Past Client',color:'#059669'},
   {name:'Active Buyer',color:'#10b981'},{name:'Lost',color:'#6b7280'},
@@ -9004,7 +9185,7 @@ function renderContactsBorrowers() {
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:6px">💰 '+maxP+(p.amiPct?' &nbsp;·&nbsp; 📊 '+p.amiPct+'% AMI':'')+'</div>'
       +(tags?'<div style="margin-bottom:6px">'+tags+'</div>':'')
       +'<div style="display:flex;gap:6px;margin-top:4px">'
-      +'<button onclick="event.stopPropagation();addProspectToPipeline(\''+p.id+'\')" style="flex:1;padding:5px;background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">➕ Pipeline</button>'
+      +'<button onclick="event.stopPropagation();addProspectToPipeline(\''+p.id+'\')" style="flex:1;padding:5px;background:#EEF4FF;color:#1558C0;border:1px solid #BFDBFE;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">➕ Pipeline</button>'
       +'<button onclick="event.stopPropagation();openCallModal(\''+p.id+'\',\'borrower\')" style="flex:1;padding:5px;background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">📞 Log Call</button>'
       +'</div>'
       +'</div>';
@@ -9094,7 +9275,7 @@ function bdShowTab(tab) {
         ['Max Price',maxP],['ZIP',p.zip],['City',p.city],['MLO',p.mloName]
       ].map(function(r){return '<div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">'+r[0]+'</div><div style="font-size:14px;font-weight:600;color:#1f2937">'+(r[1]||'—')+'</div></div>';}).join('')+'</div>'
       +'<div style="display:flex;gap:8px;margin-top:12px">'
-      +'<button onclick="addProspectToPipeline(\''+p.id+'\')" style="flex:1;padding:8px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">➕ Add to Pipeline</button>'
+      +'<button onclick="addProspectToPipeline(\''+p.id+'\')" style="flex:1;padding:8px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">➕ Add to Pipeline</button>'
       +'</div>';
   }
   else if(tab==='tags'){
@@ -9556,7 +9737,7 @@ function exportContactsRealtors() {
 // ════════════════════════════════════════════════════════════
 
 var PIPELINE_STAGES = ['Leads','Qualified','Applied','Approved','Closed','Lost'];
-var STAGE_COLORS = {Leads:'#94a3b8',Qualified:'#3b82f6',Applied:'#f59e0b',Approved:'#0ed2c8',Closed:'#16a34a',Lost:'#ef4444'};
+var STAGE_COLORS = {Leads:'#94a3b8',Qualified:'#3b82f6',Applied:'#f59e0b',Approved:'#1B73E3',Closed:'#16a34a',Lost:'#ef4444'};
 var STAGE_PROB   = {Leads:10,Qualified:30,Applied:60,Approved:85,Closed:100,Lost:0};
 var cachedDeals  = [];
 var _dealForm    = {};
@@ -9753,7 +9934,7 @@ function renderPipelineList() {
     return '<div class="deal-list-card" onclick="openDealDetail(\''+d.id+'\')" style="border-left-color:'+c+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
       +'<span style="font-size:14px;font-weight:700;color:#1f2937">'+(d.borrowerName||'Unknown')+'</span>'
-      +'<span style="font-size:13px;font-weight:800;color:#0d9488">'+(d.loanAmount?fmtK(d.loanAmount):'—')+'</span>'
+      +'<span style="font-size:13px;font-weight:800;color:#1558C0">'+(d.loanAmount?fmtK(d.loanAmount):'—')+'</span>'
       +'</div>'
       +'<div style="font-size:12px;color:#6b7280">'
       +'<span style="background:'+c+'22;color:'+c+';padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-right:6px">'+d.stage+'</span>'
@@ -9931,15 +10112,15 @@ function ddShowTab(tab) {
       +rows.map(function(r){ return '<div style="background:#f8fafc;border-radius:7px;padding:8px"><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:2px">'+r[0]+'</div><div style="font-size:13px;font-weight:600;color:#1f2937">'+(r[1]||'—')+'</div></div>'; }).join('')
       +'</div>'
       +'<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Probability: <span id="dd-prob-val">'+(d.probability||STAGE_PROB[d.stage]||0)+'</span>%</label>'
-      +'<input type="range" min="0" max="100" value="'+(d.probability||STAGE_PROB[d.stage]||0)+'" oninput="document.getElementById(\'dd-prob-val\').textContent=this.value" onchange="ddUpdateProb(this.value)" style="width:100%;accent-color:#0ed2c8" /></div>'
+      +'<input type="range" min="0" max="100" value="'+(d.probability||STAGE_PROB[d.stage]||0)+'" oninput="document.getElementById(\'dd-prob-val\').textContent=this.value" onchange="ddUpdateProb(this.value)" style="width:100%;accent-color:#1B73E3" /></div>'
       +'<div style="display:flex;gap:8px">'
       +'<button onclick="openEditDeal(\''+d.id+'\')" style="flex:1;padding:8px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✏️ Edit</button>'
-      +'<button onclick="ddMoveStage()" style="flex:1;padding:8px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">↗ Move Stage</button>'
+      +'<button onclick="ddMoveStage()" style="flex:1;padding:8px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">↗ Move Stage</button>'
       +'</div>';
   } else if (tab==='timeline') {
     var items=(d.timeline||[]).slice().reverse();
     body.innerHTML=items.length
-      ?items.map(function(i){ return '<div class="timeline-item"><div class="timeline-dot" style="background:#0ed2c8"></div><div class="timeline-content"><div class="timeline-desc">'+i.event+'</div><div class="timeline-meta">'+(i.author?i.author+' · ':'')+new Date(i.date||0).toLocaleDateString()+'</div></div></div>'; }).join('')
+      ?items.map(function(i){ return '<div class="timeline-item"><div class="timeline-dot" style="background:#1B73E3"></div><div class="timeline-content"><div class="timeline-desc">'+i.event+'</div><div class="timeline-meta">'+(i.author?i.author+' · ':'')+new Date(i.date||0).toLocaleDateString()+'</div></div></div>'; }).join('')
       :'<div style="color:#94a3b8;text-align:center;padding:30px">No timeline events yet.</div>';
   } else if (tab==='dnotes') {
     var notes=d.notes_list||[];
@@ -10043,7 +10224,7 @@ function renderPipelineAnalytics(containerId) {
   cachedDeals.forEach(function(d){ if(d.source) sources[d.source]=(sources[d.source]||0)+1; });
   var maxSrc=Math.max.apply(null,Object.values(sources).concat([1]));
   var srcHtml=Object.keys(sources).length
-    ?Object.keys(sources).map(function(s){ var p=Math.round(sources[s]/maxSrc*100); return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="min-width:110px;font-size:11px;color:#374151">'+s+'</div><div style="flex:1;background:#f1f5f9;border-radius:3px;height:12px"><div style="width:'+p+'%;height:100%;background:#0ed2c8;border-radius:3px"></div></div><span style="min-width:20px;font-size:11px;font-weight:700;color:#1f2937">'+sources[s]+'</span></div>'; }).join('')
+    ?Object.keys(sources).map(function(s){ var p=Math.round(sources[s]/maxSrc*100); return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="min-width:110px;font-size:11px;color:#374151">'+s+'</div><div style="flex:1;background:#f1f5f9;border-radius:3px;height:12px"><div style="width:'+p+'%;height:100%;background:#1B73E3;border-radius:3px"></div></div><span style="min-width:20px;font-size:11px;font-weight:700;color:#1f2937">'+sources[s]+'</span></div>'; }).join('')
     :'<div style="color:#94a3b8;font-size:12px">No data yet</div>';
   var projected=cachedDeals.filter(function(d){ return d.stage==='Applied'||d.stage==='Approved'; })
     .reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0)*(STAGE_PROB[d.stage]||0)/100; },0);
@@ -10054,7 +10235,7 @@ function renderPipelineAnalytics(containerId) {
   function pst(label,val,color){ return '<div style="background:'+color+'11;border:1px solid '+color+'33;border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:'+color+'">'+val+'</div><div style="font-size:11px;color:#64748b;margin-top:2px">'+label+'</div></div>'; }
   el.innerHTML='<div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px">📊 Pipeline Analytics</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
-    +pst('Win Rate',wr+'%','#16a34a')+pst('LMI Deals',lmiN,'#0ed2c8')
+    +pst('Win Rate',wr+'%','#16a34a')+pst('LMI Deals',lmiN,'#1B73E3')
     +pst('Projected Close',fmtK(projected),'#7c3aed')+pst('Total Deals',cachedDeals.length,'#3b82f6')
     +'</div>'
     +'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">Deal Funnel</div>'+funnelHtml
@@ -10095,7 +10276,7 @@ async function renderAdminTeamPipeline(containerId) {
         var wr2=(m.closed+m.lost)>0?Math.round(m.closed/(m.closed+m.lost)*100):0;
         return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 10px"><span style="font-size:10px;color:#94a3b8;margin-right:4px">#'+(i+1)+'</span>'+m.name+'</td>'
           +'<td style="padding:7px;text-align:right;font-weight:700">'+m.deals+'</td>'
-          +'<td style="padding:7px;text-align:right;font-weight:700;color:#0d9488">'+fmtK(m.value)+'</td>'
+          +'<td style="padding:7px;text-align:right;font-weight:700;color:#1558C0">'+fmtK(m.value)+'</td>'
           +'<td style="padding:7px;text-align:right"><span style="color:'+(wr2>=50?'#16a34a':'#94a3b8')+'">'+wr2+'%</span></td></tr>';
       }).join('')
       +'</tbody></table>';
@@ -10209,7 +10390,7 @@ function buildTemplateEditor(t) {
       +'</div>';
   }
   var sendBtn=t&&t.approvalStatus==='approved'?
-    '<button onclick="openCommSendModal(\''+t.id+'\')" style="padding:9px 18px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 Send</button>':'';
+    '<button onclick="openCommSendModal(\''+t.id+'\')" style="padding:9px 18px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 Send</button>':'';
   return '<div style="max-width:700px">'
     +(isNew?'<div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">New Template</div>':'')
     +(!isNew?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px"><div style="font-size:16px;font-weight:800;color:#1f2937">'+esc(t.name)+'</div><div style="display:flex;gap:8px;align-items:center">'+statusBadge+' '+sendBtn+'</div></div>':'')
@@ -10465,7 +10646,7 @@ function renderCampaignBuilder() {
     +'<button onclick="addCampaignStep(\'wait\')" style="flex:1;padding:8px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">+ ⏳ Wait</button>'
     +'<button onclick="addCampaignStep(\'condition\')" style="flex:1;padding:8px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">+ 🔀 Condition</button>'
     +'</div>'
-    +(c.id!=='new'?'<div style="margin-top:16px"><button onclick="showEnrollModal(\''+c.id+'\')" style="padding:8px 16px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👤 Enroll a Contact</button></div>':'');
+    +(c.id!=='new'?'<div style="margin-top:16px"><button onclick="showEnrollModal(\''+c.id+'\')" style="padding:8px 16px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👤 Enroll a Contact</button></div>':'');
 }
 
 function addCampaignStep(type) {
@@ -10520,7 +10701,7 @@ function showEnrollModal(campaignId) {
     +'<div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:14px">Enroll Contact</div>'
     +'<select id="enroll-contact" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;margin-bottom:12px"><option value="">Select...</option>'+names+'</select>'
     +'<div style="display:flex;gap:8px">'
-    +'<button onclick="enrollContactConfirm(\''+campaignId+'\')" style="flex:1;padding:9px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Enroll</button>'
+    +'<button onclick="enrollContactConfirm(\''+campaignId+'\')" style="flex:1;padding:9px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Enroll</button>'
     +'<button onclick="this.closest(\'[id=enroll-modal]\').remove()" style="flex:1;padding:9px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>'
     +'</div></div>';
   var overlay=document.createElement('div');
