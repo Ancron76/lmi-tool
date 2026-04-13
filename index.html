@@ -1330,6 +1330,181 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   box-shadow: 0 0 0 3px rgba(27,115,227,0.1) !important;
 }
 .search-btn:hover { background: var(--brand-accent-dark) !important; }
+
+/* ── SIDEBAR LAYOUT ─────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 232px;
+  background: var(--brand-primary);
+  display: flex;
+  flex-direction: column;
+  z-index: 500;
+  overflow-y: auto;
+  transition: transform 0.25s ease;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 18px 16px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.sidebar-logo-text { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.3px; line-height: 1.2; }
+.sidebar-logo-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; }
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.32);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  padding: 14px 18px 5px;
+}
+.sidebar-nav { flex: 1; padding: 0 8px 8px; }
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 7px;
+  margin-bottom: 1px;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.sidebar-nav-item.active { background: rgba(27,115,227,0.3); color: white; font-weight: 600; }
+.sidebar-nav-item.active .sn-icon { opacity: 1; }
+.sn-icon { font-size: 14px; width: 20px; text-align: center; opacity: 0.65; flex-shrink: 0; }
+.sidebar-footer {
+  padding: 8px 8px 14px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 499;
+}
+.sidebar-backdrop.open { display: block; }
+/* Topbar */
+.topbar {
+  position: fixed;
+  top: 0; left: 232px; right: 0;
+  height: 56px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 0 20px;
+  z-index: 400;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+}
+.topbar-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 7px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.topbar-menu-btn:hover { background: var(--body-bg); }
+.topbar-page-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.topbar-search {
+  flex: 1;
+  max-width: 360px;
+  position: relative;
+}
+.topbar-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+.topbar-search .global-search-input {
+  width: 100%;
+  padding: 7px 12px 7px 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--body-bg);
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+}
+.topbar-search .global-search-input:focus {
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 3px rgba(27,115,227,0.1);
+  background: white;
+}
+.topbar-search .search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  margin-top: 4px;
+  z-index: 600;
+}
+.topbar-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.topbar-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.topbar-action-btn:hover { background: var(--body-bg); }
+.topbar-action-btn.is-admin { background: var(--brand-accent); border-color: var(--brand-accent); color: white; }
+.topbar-action-btn.is-admin:hover { background: var(--brand-accent-dark); }
+.topbar-action-btn.is-super { background: #7f1d1d; border-color: #7f1d1d; color: white; }
+/* Content offset for sidebar + topbar */
+[id^="tab-"][id$="-content"] {
+  margin-left: 232px;
+  padding-top: 56px;
+  box-sizing: border-box;
+}
+/* Mobile sidebar */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+  .topbar { left: 0; }
+  .topbar-menu-btn { display: inline-flex; }
+  [id^="tab-"][id$="-content"] { margin-left: 0; }
+}
+/* Hide old nav chrome */
+.header { display: none !important; }
+.bottom-nav { display: none !important; }
 </style>
 </head>
 <body>
@@ -1506,49 +1681,65 @@ admin@loopenta.com</div>
 
 <!-- MAIN APP -->
 <div id="app-screen">
-  <div class="header">
-    <div class="header-left">
-      <div class="hamburger-menu" id="hamburger-menu">
-        <button class="hamburger-btn" onclick="toggleHamburger(event)">☰ Menu</button>
-        <div class="hamburger-dropdown" id="hamburger-dropdown">
-          <button class="hamburger-item" id="tab-home" onclick="showTab('home');closeHamburger()">🏠 Home</button>
-          <button class="hamburger-item" id="tab-search" onclick="showTab('search');closeHamburger()">🔍 LMI Search</button>
-          <button class="hamburger-item" id="tab-dashboard" onclick="showTab('dashboard');closeHamburger()">📊 Dashboard</button>
-          <button class="hamburger-item" id="tab-realtors" onclick="showTab('realtors');closeHamburger()">🏠 Realtors</button>
-          <button class="hamburger-item" id="tab-activity" onclick="showTab('activity');closeHamburger()">📋 Activity Log</button>
-          <button class="hamburger-item" id="tab-marketing" onclick="showTab('marketing');closeHamburger()">🖨 Marketing</button>
-          <button class="hamburger-item" id="tab-oyz" onclick="showTab('oyz');closeHamburger()">🏡 OYZ</button>
-          <button class="hamburger-item" id="tab-analytics" onclick="showTab('analytics');closeHamburger()">📈 Analytics</button>
-          <button class="hamburger-item" id="tab-contacts" onclick="showTab('contacts');closeHamburger()">👥 Contacts</button>
-          <button class="hamburger-item" id="tab-pipeline" onclick="showTab('pipeline');closeHamburger()">📊 Pipeline</button>
-          <button class="hamburger-item" id="tab-comms" onclick="showTab('comms');closeHamburger()">💬 Communications</button>
-        </div>
-      </div>
-      <div class="header-icon" id="header-icon" style="background:var(--brand-accent)">
-        <svg width="20" height="20" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <path d="M55 45L55 132L126 132" stroke="white" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <circle cx="55" cy="45" r="16" fill="rgba(255,255,255,0.85)"/>
-        </svg>
-      </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo" onclick="showTab('home');closeSidebar()">
+      <svg width="34" height="34" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+        <rect width="180" height="180" rx="36" fill="rgba(255,255,255,0.1)"/>
+        <path d="M55 45L55 132L126 132" stroke="#1B73E3" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="55" cy="45" r="15" fill="#4FA3F7"/>
+      </svg>
       <div>
-        <div class="header-title">Loopenta</div>
-        <div class="header-sub">Mortgage CRM</div>
+        <div class="sidebar-logo-text">Loopenta</div>
+        <div class="sidebar-logo-sub">Mortgage CRM</div>
       </div>
     </div>
-    <div class="global-search-wrap" id="global-search-wrap">
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">WORKSPACE</div>
+      <button class="sidebar-nav-item active" id="sn-home" onclick="showTab('home');closeSidebar()"><span class="sn-icon">🏠</span>Home</button>
+      <button class="sidebar-nav-item" id="sn-pipeline" onclick="showTab('pipeline');closeSidebar()"><span class="sn-icon">🎯</span>Deal Pipeline</button>
+      <button class="sidebar-nav-item" id="sn-contacts" onclick="showTab('contacts');closeSidebar()"><span class="sn-icon">👥</span>Contacts</button>
+      <button class="sidebar-nav-item" id="sn-comms" onclick="showTab('comms');closeSidebar()"><span class="sn-icon">💬</span>Communications</button>
+      <div class="sidebar-section-label">PROSPECTING</div>
+      <button class="sidebar-nav-item" id="sn-search" onclick="showTab('search');closeSidebar()"><span class="sn-icon">🗺️</span>LMI Search</button>
+      <button class="sidebar-nav-item" id="sn-realtors" onclick="showTab('realtors');closeSidebar()"><span class="sn-icon">🤝</span>Realtors</button>
+      <button class="sidebar-nav-item" id="sn-oyz" onclick="showTab('oyz');closeSidebar()"><span class="sn-icon">🏡</span>Open Houses</button>
+      <div class="sidebar-section-label">REPORTING</div>
+      <button class="sidebar-nav-item" id="sn-dashboard" onclick="showTab('dashboard');closeSidebar()"><span class="sn-icon">📊</span>Dashboard</button>
+      <button class="sidebar-nav-item" id="sn-activity" onclick="showTab('activity');closeSidebar()"><span class="sn-icon">📋</span>Activity Log</button>
+      <button class="sidebar-nav-item" id="sn-analytics" onclick="showTab('analytics');closeSidebar()"><span class="sn-icon">📈</span>Analytics</button>
+      <button class="sidebar-nav-item" id="sn-marketing" onclick="showTab('marketing');closeSidebar()"><span class="sn-icon">🖨️</span>Marketing</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-nav-item" onclick="openSettings()"><span class="sn-icon">⚙️</span>Settings</button>
+      <button class="sidebar-nav-item" onclick="logout()"><span class="sn-icon">↩</span>Sign Out</button>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+  <!-- TOPBAR -->
+  <div class="topbar" id="topbar">
+    <button class="topbar-menu-btn" onclick="openSidebar()" aria-label="Open navigation">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect y="2.5" width="18" height="2" rx="1" fill="currentColor"/>
+        <rect y="8" width="18" height="2" rx="1" fill="currentColor"/>
+        <rect y="13.5" width="18" height="2" rx="1" fill="currentColor"/>
+      </svg>
+    </button>
+    <div class="topbar-page-title" id="topbar-page-title">Home</div>
+    <div class="topbar-search">
+      <svg class="topbar-search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#94A3B8" stroke-width="1.5"/><path d="M11 11L14 14" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round"/></svg>
       <input type="text" class="global-search-input" id="global-search-input"
-        placeholder="🔍 Search contacts, properties..."
+        placeholder="Search contacts, properties..."
         oninput="globalSearchInput(this.value)"
         onkeydown="if(event.key==='Escape')closeGlobalSearch()"
         autocomplete="off" />
       <div class="search-dropdown" id="search-dropdown" style="display:none"></div>
     </div>
-    <div class="header-actions">
-      <button class="hdr-btn" onclick="openSettings()">⚙️ Settings</button>
-      <button class="notif-bell-btn" id="notif-bell" onclick="openNotifications()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
-      <span id="admin-nav-btn" class="hdr-btn teal" onclick="goAdmin()" style="display:none">🛡 Admin</span>
-      <span id="superadmin-nav-btn" class="hdr-btn" onclick="goSuperAdmin()" style="display:none;background:#7f1d1d;border-color:#7f1d1d;color:white">⚡ Super Admin</span>
-      <button class="hdr-btn" onclick="logout()">Sign Out</button>
+    <div class="topbar-actions">
+      <button class="notif-bell-btn topbar-action-btn" id="notif-bell" onclick="openNotifications()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
+      <span id="admin-nav-btn" class="topbar-action-btn is-admin" onclick="goAdmin()" style="display:none">🛡 Admin</span>
+      <span id="superadmin-nav-btn" class="topbar-action-btn is-super" onclick="goSuperAdmin()" style="display:none">⚡ Super</span>
     </div>
   </div>
 
@@ -3947,13 +4138,25 @@ window.onload = async function() {
 };
 
 // ── TAB NAV ───────────────────────────────────────────────────
+var _tabTitles = {
+  home: 'Home', search: 'LMI Search', dashboard: 'Dashboard',
+  realtors: 'Realtors', activity: 'Activity Log', marketing: 'Marketing',
+  oyz: 'Open Houses', analytics: 'Analytics', contacts: 'Contacts',
+  pipeline: 'Deal Pipeline', comms: 'Communications'
+};
 function showTab(tab) {
   ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
     if (btn) btn.classList.toggle('active', t === tab);
+    // sidebar active state
+    var sn = document.getElementById('sn-' + t);
+    if (sn) sn.classList.toggle('active', t === tab);
   });
+  // update topbar title
+  var title = document.getElementById('topbar-page-title');
+  if (title) title.textContent = _tabTitles[tab] || '';
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'realtors') { renderRealtorStats(); renderRealtorList(); }
   if (tab === 'activity') { renderActivityLog(); renderActivityStats(); }
@@ -3965,7 +4168,7 @@ function showTab(tab) {
   if (tab === 'comms') renderCommsTab();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
-    if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋'; }
+    if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '!'; }
   }
   if (typeof updateBottomNav === 'function') updateBottomNav(tab);
 }
@@ -3973,11 +4176,26 @@ function showTab(tab) {
 // ── HAMBURGER MENU ────────────────────────────────────────────
 function toggleHamburger(e) {
   e.stopPropagation();
-  document.getElementById('hamburger-dropdown').classList.toggle('open');
+  var d = document.getElementById('hamburger-dropdown');
+  if (d) d.classList.toggle('open');
 }
 function closeHamburger() {
   var d = document.getElementById('hamburger-dropdown');
   if (d) d.classList.remove('open');
+}
+function openSidebar() {
+  var s = document.getElementById('sidebar');
+  var b = document.getElementById('sidebar-backdrop');
+  if (s) s.classList.add('open');
+  if (b) b.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  var s = document.getElementById('sidebar');
+  var b = document.getElementById('sidebar-backdrop');
+  if (s) s.classList.remove('open');
+  if (b) b.classList.remove('open');
+  document.body.style.overflow = '';
 }
 function toggleAdminHamburger(e) {
   e.stopPropagation();
