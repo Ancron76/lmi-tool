@@ -1083,6 +1083,42 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .merge-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:10px}
 .merge-side{font-size:12px}
 .merge-side-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:5px}
+
+/* ── PHASE 14: DEAL PIPELINE ── */
+.pipeline-summary-bar{display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px;background:white;border-bottom:1px solid #e5e7eb;align-items:center}
+.psb-stat{text-align:center;flex:1;min-width:90px}
+.psb-val{font-size:20px;font-weight:800;color:#1f2937}
+.psb-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.kanban-board{display:flex;gap:0;overflow-x:auto;padding:12px;min-height:calc(100vh - 220px);align-items:flex-start}
+.kanban-col{flex:0 0 215px;background:#f8fafc;border-radius:10px;margin-right:10px;display:flex;flex-direction:column;max-height:calc(100vh - 240px)}
+.kanban-col-header{padding:10px 12px 8px;border-top:3px solid #e5e7eb;border-radius:10px 10px 0 0}
+.kanban-col-title{font-size:13px;font-weight:800;color:#1f2937}
+.kanban-col-meta{font-size:11px;color:#64748b;margin-top:2px}
+.kanban-col-cards{flex:1;overflow-y:auto;padding:4px 8px}
+.kanban-add-btn{margin:6px 8px 8px;padding:7px;background:transparent;border:1.5px dashed #cbd5e1;border-radius:8px;font-size:12px;font-weight:600;color:#94a3b8;cursor:pointer;width:calc(100% - 16px);text-align:center}
+.kanban-add-btn:hover{border-color:#0ed2c8;color:#0ed2c8;background:#f0fdfa}
+.deal-card{background:white;border-radius:9px;padding:10px 11px;margin-bottom:7px;box-shadow:0 1px 4px rgba(0,0,0,.07);cursor:pointer;border-left:3px solid #e5e7eb;position:relative;user-select:none;transition:box-shadow .15s}
+.deal-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.12)}
+.deal-card.dragging{opacity:.45;transform:scale(.97)}
+.kanban-col.drag-over .kanban-col-cards{background:#f0fdfa;border-radius:8px;outline:2px dashed #0ed2c8}
+.deal-card-name{font-size:13px;font-weight:700;color:#1f2937;margin-bottom:4px}
+.deal-card-amount{font-size:13px;font-weight:800;color:#0d9488}
+.deal-card-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.prob-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.pipeline-list-view{padding:12px}
+.pipeline-stage-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.psf-btn{padding:5px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:white;font-size:12px;font-weight:600;color:#64748b;cursor:pointer}
+.psf-btn.active{border-color:#0ed2c8;background:#f0fdfa;color:#0d9488}
+.deal-list-card{background:white;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;border-left:4px solid #e5e7eb}
+.deal-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:8800;overflow-y:auto;display:none}
+.deal-modal-panel{max-width:620px;margin:30px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.deal-modal-hdr{background:var(--brand-primary,#1f2937);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.deal-modal-tabs{display:flex;border-bottom:2px solid #f1f5f9;background:#f8fafc}
+.dmt{flex:1;padding:9px 4px;border:none;background:transparent;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent}
+.dmt.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.deal-modal-body{padding:18px;min-height:260px}
+.deal-detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:8700;overflow-y:auto;display:none}
+.deal-detail-panel{max-width:680px;margin:30px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
@@ -1269,6 +1305,7 @@ admin@lmitool.com</div>
           <button class="hamburger-item" id="tab-oyz" onclick="showTab('oyz');closeHamburger()">🏡 OYZ</button>
           <button class="hamburger-item" id="tab-analytics" onclick="showTab('analytics');closeHamburger()">📈 Analytics</button>
           <button class="hamburger-item" id="tab-contacts" onclick="showTab('contacts');closeHamburger()">👥 Contacts</button>
+          <button class="hamburger-item" id="tab-pipeline" onclick="showTab('pipeline');closeHamburger()">📊 Pipeline</button>
         </div>
       </div>
       <div class="header-icon" id="header-icon">
@@ -1343,6 +1380,11 @@ admin@lmitool.com</div>
           <div class="home-card-icon">👥</div>
           <div class="home-card-title">Contacts</div>
           <div class="home-card-desc">Manage all your borrower and realtor contacts in one place</div>
+        </div>
+        <div class="home-card" onclick="showTab('pipeline')">
+          <div class="home-card-icon">📊</div>
+          <div class="home-card-title">Pipeline</div>
+          <div class="home-card-desc">Track deals from lead to close with a visual pipeline</div>
         </div>
       </div>
     </div>
@@ -1753,6 +1795,13 @@ admin@lmitool.com</div>
         </div>
       </div>
 
+      <!-- PIPELINE ANALYTICS -->
+      <div id="pipeline-analytics-section" style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;border-top:4px solid #0ed2c8">
+        <div class="analytics-section-title" style="margin-bottom:6px">📊 Pipeline Analytics</div>
+        <div class="analytics-section-sub" style="margin-bottom:20px">Deal funnel, win rate, and projected close value</div>
+        <div id="pipeline-analytics-body"><div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div></div>
+      </div>
+
     </div>
   </div>
 
@@ -1811,6 +1860,108 @@ admin@lmitool.com</div>
           <button class="mkt-generate-btn green" onclick="generateReferralOnePager()">Generate One-Pager</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIPELINE TAB -->
+<div id="tab-pipeline-content" style="display:none">
+  <!-- Summary Bar -->
+  <div class="pipeline-summary-bar" id="pipeline-summary-bar">
+    <div class="psb-stat"><div class="psb-val" id="psb-active">—</div><div class="psb-label">Active Deals</div></div>
+    <div class="psb-stat"><div class="psb-val" id="psb-total-val">—</div><div class="psb-label">Pipeline Value</div></div>
+    <div class="psb-stat"><div class="psb-val" id="psb-weighted">—</div><div class="psb-label">Weighted Value</div></div>
+    <div class="psb-stat"><div class="psb-val" id="psb-closed-mo">—</div><div class="psb-label">Closed This Month</div></div>
+    <div class="psb-stat"><div class="psb-val" id="psb-win-rate">—</div><div class="psb-label">Win Rate</div></div>
+    <div style="margin-left:auto;align-self:center;padding-right:4px">
+      <button onclick="openCreateDealModal(null,null)" style="padding:8px 14px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">+ Add Deal</button>
+    </div>
+  </div>
+  <!-- Kanban board (desktop) -->
+  <div class="kanban-board" id="kanban-board"></div>
+  <!-- List view (mobile) -->
+  <div class="pipeline-list-view" id="pipeline-list-view" style="display:none">
+    <div class="pipeline-stage-filter" id="pipeline-stage-filter">
+      <button class="psf-btn active" onclick="plSetFilter(this,'all')">All</button>
+      <button class="psf-btn" onclick="plSetFilter(this,'Leads')">Leads</button>
+      <button class="psf-btn" onclick="plSetFilter(this,'Qualified')">Qualified</button>
+      <button class="psf-btn" onclick="plSetFilter(this,'Applied')">Applied</button>
+      <button class="psf-btn" onclick="plSetFilter(this,'Approved')">Approved</button>
+      <button class="psf-btn" onclick="plSetFilter(this,'Closed')">Closed</button>
+      <button class="psf-btn" onclick="plSetFilter(this,'Lost')">Lost</button>
+    </div>
+    <div id="pipeline-list-cards"></div>
+  </div>
+</div>
+
+<!-- CREATE/EDIT DEAL MODAL -->
+<div class="deal-modal-overlay" id="deal-modal-overlay">
+  <div class="deal-modal-panel">
+    <div class="deal-modal-hdr">
+      <div id="deal-modal-title" style="font-size:16px;font-weight:800;color:white">New Deal</div>
+      <button onclick="closeCreateDealModal()" style="background:rgba(255,255,255,.15);border:none;color:white;width:30px;height:30px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div class="deal-modal-tabs">
+      <button class="dmt active" id="dmt-borrower" onclick="dmShowTab('borrower')">👤 Borrower</button>
+      <button class="dmt" id="dmt-loan" onclick="dmShowTab('loan')">💰 Loan</button>
+      <button class="dmt" id="dmt-property" onclick="dmShowTab('property')">🏠 Property</button>
+      <button class="dmt" id="dmt-realtor" onclick="dmShowTab('realtor')">🤝 Realtor</button>
+      <button class="dmt" id="dmt-notes" onclick="dmShowTab('notes')">📝 Notes</button>
+    </div>
+    <div class="deal-modal-body" id="deal-modal-body"></div>
+    <div style="padding:12px 18px;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
+      <select id="deal-stage-select" style="padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;flex:1">
+        <option value="Leads">Leads</option>
+        <option value="Qualified">Qualified</option>
+        <option value="Applied">Applied</option>
+        <option value="Approved">Approved</option>
+        <option value="Closed">Closed</option>
+        <option value="Lost">Lost</option>
+      </select>
+      <button onclick="saveDeal()" style="flex:2;padding:9px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Deal</button>
+    </div>
+    <div id="deal-save-status" style="padding:6px 18px 10px;font-size:12px;text-align:center;display:none"></div>
+  </div>
+</div>
+
+<!-- DEAL DETAIL OVERLAY -->
+<div class="deal-detail-overlay" id="deal-detail-overlay">
+  <div class="deal-detail-panel">
+    <div style="background:var(--brand-primary,#1f2937);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div id="dd-name" style="font-size:17px;font-weight:800;color:white">Deal</div>
+        <div id="dd-sub" style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px"></div>
+      </div>
+      <button onclick="closeDealDetail()" style="background:rgba(255,255,255,.15);border:none;color:white;width:30px;height:30px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div style="display:flex;border-bottom:2px solid #f1f5f9;background:#f8fafc">
+      <button class="dmt active" id="ddt-overview" onclick="ddShowTab('overview')">📋 Overview</button>
+      <button class="dmt" id="ddt-timeline" onclick="ddShowTab('timeline')">📅 Timeline</button>
+      <button class="dmt" id="ddt-notes" onclick="ddShowTab('dnotes')">📝 Notes</button>
+      <button class="dmt" id="ddt-docs" onclick="ddShowTab('docs')">📁 Docs</button>
+    </div>
+    <div style="padding:18px;min-height:300px" id="dd-body">Loading...</div>
+  </div>
+</div>
+
+<!-- LOST REASON MODAL -->
+<div id="lost-reason-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:9600;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:12px;padding:22px;max-width:400px;width:90%;margin:18vh auto;box-shadow:0 20px 50px rgba(0,0,0,.3)">
+    <div style="font-size:15px;font-weight:800;color:#dc2626;margin-bottom:12px">😞 Mark as Lost</div>
+    <div style="font-size:13px;color:#374151;margin-bottom:8px">Why was this deal lost?</div>
+    <select id="lost-reason-select" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;margin-bottom:10px;box-sizing:border-box">
+      <option value="">Select a reason...</option>
+      <option>Rate too high</option>
+      <option>Went with another lender</option>
+      <option>Couldn't qualify</option>
+      <option>Property fell through</option>
+      <option>Lost contact</option>
+      <option>Other</option>
+    </select>
+    <textarea id="lost-reason-notes" placeholder="Additional notes (optional)..." style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;resize:vertical;min-height:64px;box-sizing:border-box;margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button onclick="lostReasonConfirm()" style="flex:1;padding:9px;background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Mark Lost</button>
+      <button onclick="lostReasonCancel()" style="flex:1;padding:9px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>
     </div>
   </div>
 </div>
@@ -2188,6 +2339,10 @@ admin@lmitool.com</div>
       </div>
       <div id="admin-billing-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px"></div>
       <div id="admin-billing-table" style="overflow-x:auto"></div>
+    </div>
+    <div id="admin-team-pipeline-card" class="admin-card" style="display:none">
+      <div class="admin-card-title" style="margin-bottom:16px">📊 Team Pipeline</div>
+      <div id="admin-team-pipeline-body"><div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -3370,6 +3525,9 @@ async function goAdmin() {
     loadOrgPlatformSettings();
     renderAdminBillingInfo();
   }
+  var atpCard = document.getElementById('admin-team-pipeline-card');
+  if (atpCard) atpCard.style.display = '';
+  renderAdminTeamPipeline('admin-team-pipeline-body');
 }
 
 function goApp() {
@@ -3406,7 +3564,7 @@ window.onload = async function() {
 
 // ── TAB NAV ───────────────────────────────────────────────────
 function showTab(tab) {
-  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts'].forEach(function(t) {
+  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -3419,6 +3577,7 @@ function showTab(tab) {
   if (tab === 'oyz') loadOYZ();
   if (tab === 'analytics') renderAnalytics();
   if (tab === 'contacts') renderContactsBorrowers();
+  if (tab === 'pipeline') renderPipeline();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
     if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋'; }
@@ -6021,6 +6180,7 @@ function renderAnalytics() {
   // Init CRA range
   var firstBtn = document.querySelector('.cra-range-btn');
   setCraRange('month', firstBtn);
+  renderPipelineAnalytics('pipeline-analytics-body');
 }
 
 function getGoalActuals() {
@@ -8719,7 +8879,10 @@ function bdShowTab(tab) {
       +[['Name',p.borrowerName],['Annual Income',p.annualIncome?'$'+Number(p.annualIncome).toLocaleString():'—'],
         ['LMI Category',p.lmiCategory],['% AMI',p.amiPct?p.amiPct+'%':'—'],
         ['Max Price',maxP],['ZIP',p.zip],['City',p.city],['MLO',p.mloName]
-      ].map(function(r){return '<div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">'+r[0]+'</div><div style="font-size:14px;font-weight:600;color:#1f2937">'+(r[1]||'—')+'</div></div>';}).join('')+'</div>';
+      ].map(function(r){return '<div style="background:#f8fafc;border-radius:8px;padding:10px"><div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">'+r[0]+'</div><div style="font-size:14px;font-weight:600;color:#1f2937">'+(r[1]||'—')+'</div></div>';}).join('')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px">'
+      +'<button onclick="addProspectToPipeline(\''+p.id+'\')" style="flex:1;padding:8px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">➕ Add to Pipeline</button>'
+      +'</div>';
   }
   else if(tab==='tags'){
     var tags=p.tags||[];
@@ -9174,6 +9337,558 @@ function exportContactsRealtors() {
   XLSX.utils.book_append_sheet(wb,ws,'Realtors'); XLSX.writeFile(wb,'realtors.xlsx');
 }
 // ── END PHASE 13 ─────────────────────────────────────────────
+
+// ════════════════════════════════════════════════════════════
+// PHASE 14 — DEAL PIPELINE
+// ════════════════════════════════════════════════════════════
+
+var PIPELINE_STAGES = ['Leads','Qualified','Applied','Approved','Closed','Lost'];
+var STAGE_COLORS = {Leads:'#94a3b8',Qualified:'#3b82f6',Applied:'#f59e0b',Approved:'#0ed2c8',Closed:'#16a34a',Lost:'#ef4444'};
+var STAGE_PROB   = {Leads:10,Qualified:30,Applied:60,Approved:85,Closed:100,Lost:0};
+var cachedDeals  = [];
+var _dealForm    = {};
+var _editDealId  = null;
+var _currentDeal = null;
+var _plFilter    = 'all';
+var _lostResolve = null;
+var _dragDealId  = null;
+
+function fmtK(n) {
+  n = parseFloat(n)||0;
+  if (n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+  if (n>=1000)    return '$'+Math.round(n/1000)+'k';
+  return '$'+Math.round(n);
+}
+
+// ── LOAD & RENDER ────────────────────────────────────────────
+async function loadDeals() {
+  try {
+    var snap = await db.collection('deals').get();
+    cachedDeals = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    var orgId = currentUser&&currentUser.orgId;
+    if (orgId && !isSuperAdmin()) cachedDeals = cachedDeals.filter(function(d){ return d.orgId===orgId; });
+    if (!isAnyAdmin()) cachedDeals = cachedDeals.filter(function(d){ return d.userId===currentUser.id; });
+  } catch(e){ cachedDeals=[]; }
+}
+
+async function renderPipeline() {
+  await loadDeals();
+  renderPipelineSummary();
+  var isMobile = window.innerWidth < 768;
+  var kb = document.getElementById('kanban-board');
+  var lv = document.getElementById('pipeline-list-view');
+  if (kb) kb.style.display = isMobile ? 'none' : 'flex';
+  if (lv) lv.style.display = isMobile ? '' : 'none';
+  if (isMobile) renderPipelineList(); else renderKanban();
+}
+
+function renderPipelineSummary() {
+  var active  = cachedDeals.filter(function(d){ return d.stage!=='Closed'&&d.stage!=='Lost'; });
+  var totVal  = active.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
+  var wtd     = active.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0)*(STAGE_PROB[d.stage]||0)/100; },0);
+  var now     = new Date();
+  var closedMoVal = cachedDeals.filter(function(d){
+    if (d.stage!=='Closed') return false;
+    var u=d.updatedAt?new Date(d.updatedAt):null;
+    return u&&u.getMonth()===now.getMonth()&&u.getFullYear()===now.getFullYear();
+  }).reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
+  var nClosed = cachedDeals.filter(function(d){ return d.stage==='Closed'; }).length;
+  var nLost   = cachedDeals.filter(function(d){ return d.stage==='Lost'; }).length;
+  var wr      = (nClosed+nLost)>0 ? Math.round(nClosed/(nClosed+nLost)*100) : 0;
+  function sv(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+  sv('psb-active',  active.length);
+  sv('psb-total-val', fmtK(totVal));
+  sv('psb-weighted',  fmtK(wtd));
+  sv('psb-closed-mo', fmtK(closedMoVal));
+  sv('psb-win-rate',  wr+'%');
+}
+
+// ── KANBAN ───────────────────────────────────────────────────
+function renderKanban() {
+  var board = document.getElementById('kanban-board');
+  if (!board) return;
+  board.innerHTML = PIPELINE_STAGES.map(function(stage) {
+    var deals = cachedDeals.filter(function(d){ return d.stage===stage; });
+    var total = deals.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
+    var c = STAGE_COLORS[stage];
+    return '<div class="kanban-col" id="kcol-'+stage+'"'
+      +' ondragover="kDragOver(event,\''+stage+'\')"'
+      +' ondragleave="kDragLeave(event,\''+stage+'\')"'
+      +' ondrop="kDrop(event,\''+stage+'\')">'
+      +'<div class="kanban-col-header" style="border-top-color:'+c+'">'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +'<span class="kanban-col-title">'+stage+'</span>'
+      +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700">'+deals.length+'</span>'
+      +'</div>'
+      +'<div class="kanban-col-meta">'+(total?fmtK(total):'No deals')+'</div>'
+      +'</div>'
+      +'<div class="kanban-col-cards" id="kcards-'+stage+'">'
+      +deals.map(function(d){ return buildDealCard(d); }).join('')
+      +'</div>'
+      +'<button class="kanban-add-btn" onclick="openCreateDealModal(\''+stage+'\',null)">+ Add Deal</button>'
+      +'</div>';
+  }).join('');
+}
+
+function buildDealCard(deal) {
+  var c = STAGE_COLORS[deal.stage]||'#94a3b8';
+  var prob = STAGE_PROB[deal.stage]||deal.probability||0;
+  var pc = prob>=80?'#16a34a':prob>=50?'#d97706':'#94a3b8';
+  var amt = deal.loanAmount ? fmtK(deal.loanAmount) : '—';
+  var lmiColors = {'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#3b82f6','Upper Income':'#6b7280'};
+  var lc = lmiColors[deal.borrowerCategory]||'#94a3b8';
+  var created = deal.createdAt ? new Date(deal.createdAt) : new Date();
+  var daysIn  = Math.max(0, Math.floor((new Date()-created)/86400000));
+  var lmiBadge = deal.borrowerCategory
+    ? '<span style="background:'+lc+'22;color:'+lc+';border:1px solid '+lc+'44;padding:1px 5px;border-radius:7px;font-size:10px;font-weight:700">'+deal.borrowerCategory.split(' ')[0]+'</span>' : '';
+  return '<div class="deal-card" id="dc-'+deal.id+'"'
+    +' draggable="true"'
+    +' ondragstart="kDragStart(event,\''+deal.id+'\')"'
+    +' ondragend="kDragEnd(event)"'
+    +' onclick="openDealDetail(\''+deal.id+'\')"'
+    +' style="border-left-color:'+c+'">'
+    +'<div class="deal-card-name">'+( deal.borrowerName||'Unknown')+'</div>'
+    +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
+    +'<span class="deal-card-amount">'+amt+'</span>'+lmiBadge
+    +'</div>'
+    +(deal.propertyZip||deal.propertyCity?'<div class="deal-card-meta">📍 '+(deal.propertyZip||'')+(deal.propertyCity?' '+deal.propertyCity:'')+'</div>':'')
+    +(deal.assignedRealtorName?'<div class="deal-card-meta">🤝 '+deal.assignedRealtorName+'</div>':'')
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px">'
+    +'<span class="prob-pill" style="background:'+pc+'22;color:'+pc+';border:1px solid '+pc+'44">'+prob+'%</span>'
+    +'<span style="font-size:10px;color:#94a3b8">Day '+daysIn+'</span>'
+    +(deal.source?'<span style="font-size:10px;color:#94a3b8">'+deal.source.split(' ')[0]+'</span>':'')
+    +'</div>'
+    +'</div>';
+}
+
+// ── DRAG & DROP ──────────────────────────────────────────────
+function kDragStart(event, dealId) {
+  _dragDealId = dealId;
+  event.dataTransfer.effectAllowed = 'move';
+  setTimeout(function(){ var el=document.getElementById('dc-'+dealId); if(el) el.classList.add('dragging'); },0);
+}
+function kDragEnd() {
+  if (_dragDealId) { var el=document.getElementById('dc-'+_dragDealId); if(el) el.classList.remove('dragging'); }
+  document.querySelectorAll('.kanban-col').forEach(function(c){ c.classList.remove('drag-over'); });
+}
+function kDragOver(event, stage) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect='move';
+  var col=document.getElementById('kcol-'+stage); if(col) col.classList.add('drag-over');
+}
+function kDragLeave(event, stage) {
+  var col=document.getElementById('kcol-'+stage); if(col) col.classList.remove('drag-over');
+}
+async function kDrop(event, newStage) {
+  event.preventDefault();
+  var col=document.getElementById('kcol-'+newStage); if(col) col.classList.remove('drag-over');
+  if (!_dragDealId) return;
+  var deal=cachedDeals.find(function(d){ return d.id===_dragDealId; });
+  if (!deal||deal.stage===newStage){ _dragDealId=null; return; }
+  if (newStage==='Lost') {
+    var reason=await promptLostReason();
+    if (!reason){ _dragDealId=null; return; }
+    deal.lostReason=reason.reason; deal.lostNotes=reason.notes||'';
+  }
+  var oldStage=deal.stage;
+  deal.stage=newStage; deal.probability=STAGE_PROB[newStage]; deal.updatedAt=new Date().toISOString();
+  var entry={event:'Moved from '+oldStage+' to '+newStage,date:deal.updatedAt,author:(currentUser&&currentUser.name)||''};
+  deal.timeline=(deal.timeline||[]).concat([entry]);
+  try {
+    var upd={stage:newStage,probability:deal.probability,updatedAt:deal.updatedAt,timeline:deal.timeline};
+    if (newStage==='Lost'){ upd.lostReason=deal.lostReason; upd.lostNotes=deal.lostNotes||''; }
+    await db.collection('deals').doc(_dragDealId).update(upd);
+    renderKanban(); renderPipelineSummary();
+  } catch(e){ alert('Error: '+e.message); }
+  _dragDealId=null;
+}
+
+// ── LOST REASON ──────────────────────────────────────────────
+function promptLostReason() {
+  return new Promise(function(resolve){
+    _lostResolve=resolve;
+    var sel=document.getElementById('lost-reason-select'); if(sel) sel.value='';
+    var nt=document.getElementById('lost-reason-notes'); if(nt) nt.value='';
+    var m=document.getElementById('lost-reason-modal'); if(m) m.style.display='flex';
+  });
+}
+function lostReasonConfirm() {
+  var reason=((document.getElementById('lost-reason-select')||{}).value||'').trim();
+  if (!reason){ alert('Please select a reason.'); return; }
+  var notes=((document.getElementById('lost-reason-notes')||{}).value||'').trim();
+  var m=document.getElementById('lost-reason-modal'); if(m) m.style.display='none';
+  if (_lostResolve){ _lostResolve({reason:reason,notes:notes}); _lostResolve=null; }
+}
+function lostReasonCancel() {
+  var m=document.getElementById('lost-reason-modal'); if(m) m.style.display='none';
+  if (_lostResolve){ _lostResolve(null); _lostResolve=null; }
+}
+
+// ── MOBILE LIST VIEW ─────────────────────────────────────────
+function plSetFilter(btn, filter) {
+  _plFilter=filter;
+  document.querySelectorAll('.psf-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPipelineList();
+}
+function renderPipelineList() {
+  var el=document.getElementById('pipeline-list-cards'); if(!el) return;
+  var deals=_plFilter==='all'?cachedDeals:cachedDeals.filter(function(d){ return d.stage===_plFilter; });
+  if (!deals.length){ el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8">No deals found.</div>'; return; }
+  el.innerHTML=deals.map(function(d){
+    var c=STAGE_COLORS[d.stage]||'#94a3b8';
+    return '<div class="deal-list-card" onclick="openDealDetail(\''+d.id+'\')" style="border-left-color:'+c+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      +'<span style="font-size:14px;font-weight:700;color:#1f2937">'+(d.borrowerName||'Unknown')+'</span>'
+      +'<span style="font-size:13px;font-weight:800;color:#0d9488">'+(d.loanAmount?fmtK(d.loanAmount):'—')+'</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:#6b7280">'
+      +'<span style="background:'+c+'22;color:'+c+';padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-right:6px">'+d.stage+'</span>'
+      +(d.propertyZip||'')+(d.assignedRealtorName?' · '+d.assignedRealtorName:'')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── CREATE/EDIT DEAL MODAL ───────────────────────────────────
+function openCreateDealModal(stage, prefill) {
+  _editDealId=null; _dealForm=prefill?Object.assign({},prefill):{};
+  document.getElementById('deal-modal-title').textContent='New Deal';
+  var stEl=document.getElementById('deal-stage-select'); if(stEl) stEl.value=stage||'Leads';
+  var st=document.getElementById('deal-save-status'); if(st) st.style.display='none';
+  document.getElementById('deal-modal-overlay').style.display='block';
+  dmShowTab('borrower');
+}
+function closeCreateDealModal() {
+  document.getElementById('deal-modal-overlay').style.display='none';
+  _dealForm={}; _editDealId=null;
+}
+
+function dmShowTab(tab) {
+  ['borrower','loan','property','realtor','notes'].forEach(function(t){
+    var b=document.getElementById('dmt-'+t); if(b) b.classList.toggle('active',t===tab);
+  });
+  var body=document.getElementById('deal-modal-body'); if(!body) return;
+  var f=_dealForm;
+  if (tab==='borrower') {
+    var parts=(f.borrowerName||'').split(' ');
+    var fn=parts[0]||'', ln=parts.slice(1).join(' ')||'';
+    body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      +_dmF('First Name','dm-fn','text',fn)+_dmF('Last Name','dm-ln','text',ln)
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">'
+      +_dmF('Annual Income ($)','dm-income','number',f.borrowerIncome||'')
+      +'<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">LMI Category</label>'
+      +'<select id="dm-lmi-cat" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'
+      +['','Low Income','Moderate Income','Middle Income','Upper Income'].map(function(c){ return '<option value="'+c+'" '+(f.borrowerCategory===c?'selected':'')+'>'+( c||'— Select —')+'</option>'; }).join('')
+      +'</select></div>'
+      +'</div>'
+      +'<div style="margin-top:10px">'+_dmF('% AMI','dm-ami','number',f.borrowerPctAmi||'')+'</div>';
+  } else if (tab==='loan') {
+    body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      +_dmF('Loan Amount ($)','dm-loan-amt','number',f.loanAmount||'')
+      +_dmF('Expected Close Date','dm-close-date','date',f.expectedCloseDate||'')
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">'
+      +'<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Loan Type</label>'
+      +'<select id="dm-loan-type" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'
+      +['','FHA','Conventional','VA','USDA','Other'].map(function(t){ return '<option value="'+t+'" '+(f.loanType===t?'selected':'')+'>'+( t||'— Select —')+'</option>'; }).join('')
+      +'</select></div>'
+      +'<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Source</label>'
+      +'<select id="dm-source" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'
+      +['','Realtor Referral','Open House','Direct','Marketing','Other'].map(function(s){ return '<option value="'+s+'" '+(f.source===s?'selected':'')+'>'+( s||'— Select —')+'</option>'; }).join('')
+      +'</select></div>'
+      +'</div>';
+  } else if (tab==='property') {
+    body.innerHTML=_dmF('Street Address','dm-addr','text',f.propertyAddress||'')
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px">'
+      +_dmF('City','dm-city','text',f.propertyCity||'')
+      +_dmF('State','dm-state','text',f.propertyState||'CA')
+      +_dmF('ZIP','dm-zip','text',f.propertyZip||'')
+      +'</div>';
+  } else if (tab==='realtor') {
+    var rOpts='<option value="">— None —</option>'
+      +(cachedRealtors||[]).map(function(r){ return '<option value="'+r.id+'" data-name="'+(r.name||'')+'" '+(f.assignedRealtorId===r.id?'selected':'')+'>'+( r.name||'')+(r.brokerage?' ('+r.brokerage+')':'')+'</option>'; }).join('');
+    body.innerHTML='<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Assign from contacts</label>'
+      +'<select id="dm-realtor" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'+rOpts+'</select></div>'
+      +_dmF('Or type realtor name','dm-realtor-name','text',f.assignedRealtorName||'');
+  } else if (tab==='notes') {
+    body.innerHTML='<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Notes</label>'
+      +'<textarea id="dm-notes" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;resize:vertical;min-height:130px;box-sizing:border-box">'+(f.notes||'')+'</textarea>';
+  }
+}
+
+function _dmF(label,id,type,val) {
+  return '<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">'+label+'</label>'
+    +'<input type="'+type+'" id="'+id+'" value="'+(val||'')+'" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;box-sizing:border-box" /></div>';
+}
+
+function _dmCollect() {
+  function gv(id){ var e=document.getElementById(id); return e?e.value:''; }
+  var rSel=document.getElementById('dm-realtor');
+  var rId=rSel?rSel.value:'';
+  var rName=rSel&&rSel.selectedOptions[0]?rSel.selectedOptions[0].getAttribute('data-name')||'':'';
+  if (!rName) rName=gv('dm-realtor-name');
+  return {
+    borrowerName: ((gv('dm-fn')+' '+gv('dm-ln')).trim())||_dealForm.borrowerName||'',
+    borrowerIncome: parseFloat(gv('dm-income'))||null,
+    borrowerCategory: gv('dm-lmi-cat'),
+    borrowerPctAmi: parseFloat(gv('dm-ami'))||null,
+    loanAmount: parseFloat(gv('dm-loan-amt'))||null,
+    loanType: gv('dm-loan-type'),
+    expectedCloseDate: gv('dm-close-date'),
+    source: gv('dm-source'),
+    propertyAddress: gv('dm-addr'),
+    propertyCity: gv('dm-city'),
+    propertyState: gv('dm-state'),
+    propertyZip: gv('dm-zip'),
+    assignedRealtorId: rId,
+    assignedRealtorName: rName,
+    notes: gv('dm-notes')
+  };
+}
+
+async function saveDeal() {
+  if (!db||!currentUser) return;
+  var statusEl=document.getElementById('deal-save-status');
+  Object.assign(_dealForm,_dmCollect());
+  var stage=(document.getElementById('deal-stage-select')||{}).value||'Leads';
+  var now=new Date().toISOString();
+  var data=Object.assign({},_dealForm,{
+    stage:stage, probability:STAGE_PROB[stage]||10,
+    userId:currentUser.id, userName:currentUser.name||'',
+    userRegion:currentUser.region||'', orgId:currentUser.orgId||'golden1-org',
+    updatedAt:now
+  });
+  if (!_editDealId){
+    data.createdAt=now;
+    data.timeline=[{event:'Deal created in '+stage,date:now,author:currentUser.name||''}];
+  }
+  try {
+    if (_editDealId){
+      await db.collection('deals').doc(_editDealId).update(data);
+      var idx=cachedDeals.findIndex(function(d){ return d.id===_editDealId; });
+      if (idx!==-1) cachedDeals[idx]=Object.assign({},cachedDeals[idx],data,{id:_editDealId});
+    } else {
+      var ref=await db.collection('deals').add(data);
+      cachedDeals.push(Object.assign({},data,{id:ref.id}));
+    }
+    closeCreateDealModal();
+    renderKanban(); renderPipelineSummary();
+  } catch(e){
+    if (statusEl){ statusEl.textContent='❌ '+e.message; statusEl.style.color='#ef4444'; statusEl.style.display='block'; }
+  }
+}
+
+// ── DEAL DETAIL ──────────────────────────────────────────────
+function openDealDetail(id) {
+  _currentDeal=cachedDeals.find(function(d){ return d.id===id; });
+  if (!_currentDeal) return;
+  document.getElementById('dd-name').textContent=_currentDeal.borrowerName||'Deal';
+  document.getElementById('dd-sub').textContent=(_currentDeal.stage||'')+' · '+fmtK(_currentDeal.loanAmount);
+  document.getElementById('deal-detail-overlay').style.display='block';
+  ddShowTab('overview');
+}
+function closeDealDetail() {
+  document.getElementById('deal-detail-overlay').style.display='none';
+  _currentDeal=null;
+}
+
+function ddShowTab(tab) {
+  ['overview','timeline','dnotes','docs'].forEach(function(t){
+    var b=document.getElementById('ddt-'+t.replace('dnotes','notes')); if(b) b.classList.toggle('active',t===tab);
+  });
+  var body=document.getElementById('dd-body'); if(!body||!_currentDeal) return;
+  var d=_currentDeal;
+  var c=STAGE_COLORS[d.stage]||'#94a3b8';
+
+  if (tab==='overview') {
+    var rows=[
+      ['Borrower',d.borrowerName],['LMI Category',d.borrowerCategory],
+      ['% AMI',d.borrowerPctAmi?d.borrowerPctAmi+'%':'—'],['Annual Income',d.borrowerIncome?'$'+Number(d.borrowerIncome).toLocaleString():'—'],
+      ['Loan Amount',d.loanAmount?'$'+Number(d.loanAmount).toLocaleString():'—'],['Loan Type',d.loanType],
+      ['Property',d.propertyAddress||(d.propertyCity||'')+(d.propertyZip?' '+d.propertyZip:'')],
+      ['Source',d.source],['Realtor',d.assignedRealtorName],['Expected Close',d.expectedCloseDate]
+    ];
+    body.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'
+      +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:4px 12px;border-radius:10px;font-size:13px;font-weight:700">'+d.stage+'</span>'
+      +(d.lostReason?'<span style="font-size:12px;color:#ef4444">Lost: '+d.lostReason+'</span>':'')
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+      +rows.map(function(r){ return '<div style="background:#f8fafc;border-radius:7px;padding:8px"><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:2px">'+r[0]+'</div><div style="font-size:13px;font-weight:600;color:#1f2937">'+(r[1]||'—')+'</div></div>'; }).join('')
+      +'</div>'
+      +'<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Probability: <span id="dd-prob-val">'+(d.probability||STAGE_PROB[d.stage]||0)+'</span>%</label>'
+      +'<input type="range" min="0" max="100" value="'+(d.probability||STAGE_PROB[d.stage]||0)+'" oninput="document.getElementById(\'dd-prob-val\').textContent=this.value" onchange="ddUpdateProb(this.value)" style="width:100%;accent-color:#0ed2c8" /></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button onclick="openEditDeal(\''+d.id+'\')" style="flex:1;padding:8px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✏️ Edit</button>'
+      +'<button onclick="ddMoveStage()" style="flex:1;padding:8px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">↗ Move Stage</button>'
+      +'</div>';
+  } else if (tab==='timeline') {
+    var items=(d.timeline||[]).slice().reverse();
+    body.innerHTML=items.length
+      ?items.map(function(i){ return '<div class="timeline-item"><div class="timeline-dot" style="background:#0ed2c8"></div><div class="timeline-content"><div class="timeline-desc">'+i.event+'</div><div class="timeline-meta">'+(i.author?i.author+' · ':'')+new Date(i.date||0).toLocaleDateString()+'</div></div></div>'; }).join('')
+      :'<div style="color:#94a3b8;text-align:center;padding:30px">No timeline events yet.</div>';
+  } else if (tab==='dnotes') {
+    var notes=d.notes_list||[];
+    body.innerHTML='<div id="dd-notes-list">'+_ddNotesList(notes)+'</div>'
+      +'<textarea id="dd-new-note" placeholder="Add a note..." style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;resize:vertical;min-height:80px;box-sizing:border-box;margin-top:10px"></textarea>'
+      +'<button onclick="ddAddNote()" style="margin-top:8px;width:100%;padding:9px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Note</button>';
+  } else if (tab==='docs') {
+    body.innerHTML='<div style="text-align:center;padding:16px;color:#94a3b8;font-size:13px;margin-bottom:14px">📁 Document upload coming soon</div>'
+      +'<div style="background:#f8fafc;border-radius:10px;padding:14px">'
+      +'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Typical Documents Needed</div>'
+      +['Pre-approval Letter','Purchase Agreement','Appraisal Report','Title Report','Income Verification','Tax Returns (2 years)'].map(function(doc){ return '<div style="padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#374151">📄 '+doc+'</div>'; }).join('')
+      +'</div>';
+  }
+}
+
+function _ddNotesList(notes) {
+  if (!notes||!notes.length) return '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:16px">No notes yet.</div>';
+  return notes.slice().reverse().map(function(n){ return '<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:13px;color:#1f2937">'+(n.text||'')+'</div><div style="font-size:11px;color:#94a3b8;margin-top:3px">'+(n.author||'')+' · '+(n.date||'')+'</div></div>'; }).join('');
+}
+
+async function ddAddNote() {
+  if (!_currentDeal||!db) return;
+  var txt=((document.getElementById('dd-new-note')||{}).value||'').trim(); if(!txt) return;
+  var note={text:txt,author:(currentUser&&currentUser.name)||'',date:new Date().toLocaleDateString()};
+  var nl=(_currentDeal.notes_list||[]).concat([note]);
+  var entry={event:'Note added',date:new Date().toISOString(),author:(currentUser&&currentUser.name)||''};
+  var tl=(_currentDeal.timeline||[]).concat([entry]);
+  try {
+    await db.collection('deals').doc(_currentDeal.id).update({notes_list:nl,timeline:tl});
+    _currentDeal.notes_list=nl; _currentDeal.timeline=tl;
+    var idx=cachedDeals.findIndex(function(d){ return d.id===_currentDeal.id; });
+    if(idx!==-1){ cachedDeals[idx].notes_list=nl; cachedDeals[idx].timeline=tl; }
+    document.getElementById('dd-new-note').value='';
+    document.getElementById('dd-notes-list').innerHTML=_ddNotesList(nl);
+  } catch(e){ alert('Error: '+e.message); }
+}
+
+async function ddUpdateProb(val) {
+  if (!_currentDeal||!db) return;
+  _currentDeal.probability=parseInt(val);
+  try { await db.collection('deals').doc(_currentDeal.id).update({probability:_currentDeal.probability}); } catch(e){}
+}
+
+function openEditDeal(id) {
+  _currentDeal=cachedDeals.find(function(d){ return d.id===id; });
+  if (!_currentDeal) return;
+  _editDealId=id; _dealForm=Object.assign({},_currentDeal);
+  document.getElementById('deal-modal-title').textContent='Edit Deal';
+  var stEl=document.getElementById('deal-stage-select'); if(stEl) stEl.value=_currentDeal.stage||'Leads';
+  closeDealDetail();
+  document.getElementById('deal-modal-overlay').style.display='block';
+  dmShowTab('borrower');
+}
+
+async function ddMoveStage() {
+  if (!_currentDeal) return;
+  var idx=PIPELINE_STAGES.indexOf(_currentDeal.stage);
+  var next=PIPELINE_STAGES[Math.min(idx+1,PIPELINE_STAGES.length-1)];
+  if (next===_currentDeal.stage) return;
+  if (next==='Lost'){
+    var r=await promptLostReason(); if(!r) return;
+    _currentDeal.lostReason=r.reason;
+  }
+  var old=_currentDeal.stage;
+  _currentDeal.stage=next; _currentDeal.probability=STAGE_PROB[next]; _currentDeal.updatedAt=new Date().toISOString();
+  var entry={event:'Moved from '+old+' to '+next,date:_currentDeal.updatedAt,author:(currentUser&&currentUser.name)||''};
+  _currentDeal.timeline=(_currentDeal.timeline||[]).concat([entry]);
+  try {
+    await db.collection('deals').doc(_currentDeal.id).update({stage:next,probability:_currentDeal.probability,updatedAt:_currentDeal.updatedAt,timeline:_currentDeal.timeline});
+    var i=cachedDeals.findIndex(function(d){ return d.id===_currentDeal.id; });
+    if(i!==-1) Object.assign(cachedDeals[i],_currentDeal);
+    document.getElementById('dd-sub').textContent=_currentDeal.stage+' · '+fmtK(_currentDeal.loanAmount);
+    ddShowTab('overview'); renderKanban(); renderPipelineSummary();
+  } catch(e){ alert('Error: '+e.message); }
+}
+
+// ── CONVERT PROSPECT → DEAL ──────────────────────────────────
+function addProspectToPipeline(prospectId) {
+  var p=(cachedProspects||[]).find(function(x){ return x.id===prospectId; });
+  if (!p) return;
+  openCreateDealModal('Qualified',{
+    borrowerName:p.borrowerName||'',borrowerIncome:p.annualIncome||null,
+    borrowerCategory:p.lmiCategory||'',borrowerPctAmi:p.amiPct||null,
+    propertyZip:p.zip||'',propertyCity:p.city||'',prospectDocId:p.id
+  });
+}
+
+// ── PIPELINE ANALYTICS ───────────────────────────────────────
+function renderPipelineAnalytics(containerId) {
+  var el=document.getElementById(containerId); if(!el) return;
+  var funnelHtml=PIPELINE_STAGES.map(function(stage){
+    var n=cachedDeals.filter(function(d){ return d.stage===stage; }).length;
+    var c=STAGE_COLORS[stage]; var pct=cachedDeals.length?Math.round(n/cachedDeals.length*100):0;
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+      +'<div style="min-width:72px;font-size:12px;font-weight:600;color:#374151">'+stage+'</div>'
+      +'<div style="flex:1;background:#f1f5f9;border-radius:4px;height:16px;overflow:hidden"><div style="width:'+Math.max(pct,2)+'%;height:100%;background:'+c+';border-radius:4px"></div></div>'
+      +'<div style="min-width:24px;text-align:right;font-size:12px;font-weight:700;color:#1f2937">'+n+'</div>'
+      +'</div>';
+  }).join('');
+  var sources={};
+  cachedDeals.forEach(function(d){ if(d.source) sources[d.source]=(sources[d.source]||0)+1; });
+  var maxSrc=Math.max.apply(null,Object.values(sources).concat([1]));
+  var srcHtml=Object.keys(sources).length
+    ?Object.keys(sources).map(function(s){ var p=Math.round(sources[s]/maxSrc*100); return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="min-width:110px;font-size:11px;color:#374151">'+s+'</div><div style="flex:1;background:#f1f5f9;border-radius:3px;height:12px"><div style="width:'+p+'%;height:100%;background:#0ed2c8;border-radius:3px"></div></div><span style="min-width:20px;font-size:11px;font-weight:700;color:#1f2937">'+sources[s]+'</span></div>'; }).join('')
+    :'<div style="color:#94a3b8;font-size:12px">No data yet</div>';
+  var projected=cachedDeals.filter(function(d){ return d.stage==='Applied'||d.stage==='Approved'; })
+    .reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0)*(STAGE_PROB[d.stage]||0)/100; },0);
+  var nc=cachedDeals.filter(function(d){ return d.stage==='Closed'; }).length;
+  var nl=cachedDeals.filter(function(d){ return d.stage==='Lost'; }).length;
+  var wr=(nc+nl)>0?Math.round(nc/(nc+nl)*100):0;
+  var lmiN=cachedDeals.filter(function(d){ return d.borrowerCategory==='Low Income'||d.borrowerCategory==='Moderate Income'; }).length;
+  function pst(label,val,color){ return '<div style="background:'+color+'11;border:1px solid '+color+'33;border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:'+color+'">'+val+'</div><div style="font-size:11px;color:#64748b;margin-top:2px">'+label+'</div></div>'; }
+  el.innerHTML='<div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:12px">📊 Pipeline Analytics</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    +pst('Win Rate',wr+'%','#16a34a')+pst('LMI Deals',lmiN,'#0ed2c8')
+    +pst('Projected Close',fmtK(projected),'#7c3aed')+pst('Total Deals',cachedDeals.length,'#3b82f6')
+    +'</div>'
+    +'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">Deal Funnel</div>'+funnelHtml
+    +'<div style="font-size:13px;font-weight:700;color:#374151;margin:12px 0 8px">Lead Sources</div>'+srcHtml;
+}
+
+// ── ADMIN TEAM PIPELINE ──────────────────────────────────────
+async function renderAdminTeamPipeline(containerId) {
+  var el=document.getElementById(containerId); if(!el) return;
+  el.innerHTML='<div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div>';
+  try {
+    var snap=await db.collection('deals').get();
+    var all=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    var orgId=currentUser&&currentUser.orgId;
+    if (orgId&&!isSuperAdmin()) all=all.filter(function(d){ return d.orgId===orgId; });
+    var totVal=all.filter(function(d){ return d.stage!=='Closed'&&d.stage!=='Lost'; }).reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
+    var wtd=all.filter(function(d){ return d.stage!=='Closed'&&d.stage!=='Lost'; }).reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0)*(STAGE_PROB[d.stage]||0)/100; },0);
+    var mloMap={};
+    all.forEach(function(d){
+      var k=d.userId||'?'; if(!mloMap[k]) mloMap[k]={name:d.userName||k,deals:0,value:0,closed:0,lost:0};
+      mloMap[k].deals++; mloMap[k].value+=parseFloat(d.loanAmount)||0;
+      if(d.stage==='Closed') mloMap[k].closed++; if(d.stage==='Lost') mloMap[k].lost++;
+    });
+    var mlos=Object.keys(mloMap).map(function(k){ return Object.assign({id:k},mloMap[k]); });
+    mlos.sort(function(a,b){ return b.value-a.value; });
+    function pst(label,val,color){ return '<div style="background:'+color+'11;border:1px solid '+color+'33;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:'+color+'">'+val+'</div><div style="font-size:10px;color:#64748b;margin-top:2px">'+label+'</div></div>'; }
+    el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+      +pst('Team Pipeline',fmtK(totVal),'#3b82f6')+pst('Weighted Value',fmtK(wtd),'#7c3aed')+'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">MLO Leaderboard</div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="background:#f8fafc">'
+      +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:#374151;border-bottom:1px solid #e5e7eb">MLO</th>'
+      +'<th style="padding:7px;text-align:right;font-weight:700;color:#374151;border-bottom:1px solid #e5e7eb">Deals</th>'
+      +'<th style="padding:7px;text-align:right;font-weight:700;color:#374151;border-bottom:1px solid #e5e7eb">Value</th>'
+      +'<th style="padding:7px;text-align:right;font-weight:700;color:#374151;border-bottom:1px solid #e5e7eb">Win%</th>'
+      +'</tr></thead><tbody>'
+      +mlos.map(function(m,i){
+        var wr2=(m.closed+m.lost)>0?Math.round(m.closed/(m.closed+m.lost)*100):0;
+        return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 10px"><span style="font-size:10px;color:#94a3b8;margin-right:4px">#'+(i+1)+'</span>'+m.name+'</td>'
+          +'<td style="padding:7px;text-align:right;font-weight:700">'+m.deals+'</td>'
+          +'<td style="padding:7px;text-align:right;font-weight:700;color:#0d9488">'+fmtK(m.value)+'</td>'
+          +'<td style="padding:7px;text-align:right"><span style="color:'+(wr2>=50?'#16a34a':'#94a3b8')+'">'+wr2+'%</span></td></tr>';
+      }).join('')
+      +'</tbody></table>';
+  } catch(e){ el.innerHTML='<div style="color:#ef4444;text-align:center;padding:20px">Error: '+e.message+'</div>'; }
+}
+// ── END PHASE 14 ─────────────────────────────────────────────
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
@@ -9195,6 +9910,9 @@ function exportContactsRealtors() {
   </button>
   <button class="bottom-nav-item" id="bn-analytics" onclick="showTab('analytics');updateBottomNav('analytics')">
     <span class="bn-icon">📈</span>Analytics
+  </button>
+  <button class="bottom-nav-item" id="bn-pipeline" onclick="showTab('pipeline');updateBottomNav('pipeline')">
+    <span class="bn-icon">📊</span>Pipeline
   </button>
 </nav>
 
