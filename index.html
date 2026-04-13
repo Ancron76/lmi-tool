@@ -1119,6 +1119,45 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; min-heig
 .deal-modal-body{padding:18px;min-height:260px}
 .deal-detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:8700;overflow-y:auto;display:none}
 .deal-detail-panel{max-width:680px;margin:30px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+/* ── PHASE 15: COMMUNICATION HUB ── */
+.comm-tab-nav{display:flex;gap:0;border-bottom:2px solid #e5e7eb;background:white;padding:0 16px;flex-wrap:wrap}
+.comm-tab-btn{padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s;white-space:nowrap}
+.comm-tab-btn.active{color:#0ed2c8;border-bottom-color:#0ed2c8}
+.comm-layout{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 210px)}
+@media(max-width:768px){.comm-layout{grid-template-columns:1fr}}
+.comm-sidebar{border-right:1px solid #e5e7eb;background:#f8fafc;padding:12px;overflow-y:auto;max-height:calc(100vh - 210px)}
+@media(max-width:768px){.comm-sidebar{border-right:none;border-bottom:1px solid #e5e7eb;max-height:240px}}
+.comm-main{padding:16px;overflow-y:auto;max-height:calc(100vh - 210px)}
+@media(max-width:768px){.comm-main{max-height:none}}
+.tpl-card{background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:border .15s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.tpl-card:hover{border-color:#e2e8f0}
+.tpl-card.active{border-color:#0ed2c8}
+.tpl-card-name{font-size:13px;font-weight:700;color:#1f2937;margin-bottom:5px}
+.tpl-card-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.tpl-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px}
+.tpl-badge.approved{background:#dcfce7;color:#16a34a}
+.tpl-badge.pending{background:#fef9c3;color:#92400e}
+.tpl-badge.rejected{background:#fee2e2;color:#dc2626}
+.tpl-badge.system{background:#ede9fe;color:#7c3aed}
+.tpl-badge.cat{background:#f1f5f9;color:#64748b}
+.var-btn{display:inline-block;padding:3px 8px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;font-size:11px;font-weight:700;color:#0d9488;cursor:pointer;margin:2px;font-family:monospace}
+.var-btn:hover{background:#ccfbf1}
+.step-card{background:white;border-radius:10px;padding:12px;margin-bottom:4px;border:1px solid #e2e8f0;position:relative}
+.step-connector{text-align:center;color:#94a3b8;font-size:20px;margin:2px 0;line-height:1}
+.campaign-card{background:white;border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid #e2e8f0;cursor:pointer;transition:border .15s}
+.campaign-card:hover{border-color:#0ed2c8}
+.call-stats-bar{display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px;background:white;border-bottom:1px solid #e5e7eb;align-items:center}
+.call-stat{text-align:center;flex:1;min-width:80px}
+.call-stat-num{font-size:20px;font-weight:900;color:#1f2937}
+.call-stat-lbl{font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-top:2px}
+.call-entry{background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1px solid #e2e8f0}
+.call-outcome-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.call-outcome-badge.connected{background:#dcfce7;color:#16a34a}
+.call-outcome-badge.voicemail{background:#fef9c3;color:#92400e}
+.call-outcome-badge.no-answer,.call-outcome-badge.wrong-number{background:#fee2e2;color:#dc2626}
+.call-outcome-badge.busy{background:#fef3c7;color:#b45309}
+.comm-send-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:9100;overflow-y:auto;display:none}
+.call-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:9200;overflow-y:auto;display:none}
 </style>
 </head>
 <body>
@@ -1306,6 +1345,7 @@ admin@lmitool.com</div>
           <button class="hamburger-item" id="tab-analytics" onclick="showTab('analytics');closeHamburger()">📈 Analytics</button>
           <button class="hamburger-item" id="tab-contacts" onclick="showTab('contacts');closeHamburger()">👥 Contacts</button>
           <button class="hamburger-item" id="tab-pipeline" onclick="showTab('pipeline');closeHamburger()">📊 Pipeline</button>
+          <button class="hamburger-item" id="tab-comms" onclick="showTab('comms');closeHamburger()">💬 Communications</button>
         </div>
       </div>
       <div class="header-icon" id="header-icon">
@@ -1385,6 +1425,11 @@ admin@lmitool.com</div>
           <div class="home-card-icon">📊</div>
           <div class="home-card-title">Pipeline</div>
           <div class="home-card-desc">Track deals from lead to close with a visual pipeline</div>
+        </div>
+        <div class="home-card" onclick="showTab('comms')">
+          <div class="home-card-icon">💬</div>
+          <div class="home-card-title">Communications</div>
+          <div class="home-card-desc">Email templates, drip campaigns, and call logging</div>
         </div>
       </div>
     </div>
@@ -1966,6 +2011,151 @@ admin@lmitool.com</div>
   </div>
 </div>
 
+<!-- COMMUNICATIONS TAB -->
+<div id="tab-comms-content" style="display:none">
+  <div style="background:white;border-bottom:1px solid #e5e7eb;padding:16px 20px 0">
+    <div style="font-size:20px;font-weight:800;color:#1f2937;margin-bottom:12px">💬 Communications</div>
+    <div class="comm-tab-nav">
+      <button class="comm-tab-btn active" id="ctab-templates" onclick="commShowTab('templates')">📧 Templates</button>
+      <button class="comm-tab-btn" id="ctab-drip" onclick="commShowTab('drip')">🔄 Drip Campaigns</button>
+      <button class="comm-tab-btn" id="ctab-calllog" onclick="commShowTab('calllog')">📞 Call Log</button>
+    </div>
+  </div>
+  <!-- TEMPLATES SUB-TAB -->
+  <div id="comm-templates-pane" style="display:block">
+    <div class="comm-layout">
+      <div class="comm-sidebar">
+        <button onclick="openTemplateEditor('new')" style="width:100%;padding:9px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px">+ New Template</button>
+        <div id="tpl-list"><div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px">Loading...</div></div>
+      </div>
+      <div class="comm-main" id="tpl-editor-pane">
+        <div style="color:#94a3b8;text-align:center;padding:60px 20px">
+          <div style="font-size:32px;margin-bottom:12px">📧</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">Select a template to edit</div>
+          <div style="font-size:13px">or create a new one</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- DRIP CAMPAIGNS SUB-TAB -->
+  <div id="comm-drip-pane" style="display:none;padding:16px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800;color:#1f2937">Drip Campaigns</div>
+      <button onclick="openCampaignBuilder('new')" style="padding:9px 18px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer">+ New Campaign</button>
+    </div>
+    <div id="drip-list"><div style="color:#94a3b8;text-align:center;padding:40px;font-size:13px">Loading...</div></div>
+    <div id="drip-builder" style="display:none"></div>
+  </div>
+  <!-- CALL LOG SUB-TAB -->
+  <div id="comm-calllog-pane" style="display:none">
+    <div class="call-stats-bar" id="call-stats-bar">
+      <div class="call-stat"><div class="call-stat-num" id="cs-total">0</div><div class="call-stat-lbl">Calls This Week</div></div>
+      <div class="call-stat"><div class="call-stat-num" id="cs-connected">0%</div><div class="call-stat-lbl">Connected</div></div>
+      <div class="call-stat"><div class="call-stat-num" id="cs-avgdur">0m</div><div class="call-stat-lbl">Avg Duration</div></div>
+      <div class="call-stat"><div class="call-stat-num" id="cs-followups">0</div><div class="call-stat-lbl">Follow-ups Due</div></div>
+      <button onclick="openCallModal()" style="margin-left:auto;padding:9px 18px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">📞 Log a Call</button>
+    </div>
+    <div style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="call-search" placeholder="Search by name..." oninput="renderCallLog()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;width:200px" />
+      <select id="call-filter" onchange="renderCallLog()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none">
+        <option value="all">All Outcomes</option>
+        <option value="Connected">Connected</option>
+        <option value="Left Voicemail">Voicemail</option>
+        <option value="No Answer">No Answer</option>
+        <option value="Busy">Busy</option>
+        <option value="Wrong Number">Wrong Number</option>
+      </select>
+    </div>
+    <div id="call-log-list" style="padding:0 16px 80px"></div>
+  </div>
+</div>
+
+<!-- EMAIL SEND MODAL -->
+<div class="comm-send-overlay" id="comm-send-overlay">
+  <div style="max-width:600px;margin:40px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:#1f2937;color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;font-size:15px">📧 Send Email</div>
+      <button onclick="closeCommSendModal()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:20px">
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">RECIPIENT</label>
+        <select id="send-recipient" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none">
+          <option value="">Select a contact...</option>
+        </select>
+        <div style="margin-top:6px;display:flex;gap:8px">
+          <input type="text" id="send-name-manual" placeholder="Or type name..." style="flex:1;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" />
+          <input type="email" id="send-email-manual" placeholder="email@example.com" style="flex:1;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" />
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">SUBJECT</label>
+        <input type="text" id="send-subject" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box" />
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">PREVIEW</label>
+        <div id="send-preview" style="padding:12px;background:#f8fafc;border-radius:8px;font-size:13px;color:#374151;white-space:pre-wrap;max-height:200px;overflow-y:auto;border:1px solid #e2e8f0"></div>
+      </div>
+      <button onclick="doSendEmail()" style="width:100%;padding:11px;background:#0ed2c8;color:#1f2937;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer">Send Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALL LOG MODAL -->
+<div class="call-modal-overlay" id="call-modal-overlay">
+  <div style="max-width:520px;margin:40px auto;background:white;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:#4f46e5;color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;font-size:15px">📞 Log a Call</div>
+      <button onclick="closeCallModal()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="grid-column:1/-1">
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:5px">CONTACT</label>
+        <select id="call-contact-select" onchange="callContactSelected()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;margin-bottom:6px">
+          <option value="">Select a contact...</option>
+        </select>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="call-name-manual" placeholder="Or name..." style="flex:1;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" />
+          <input type="text" id="call-phone-manual" placeholder="Phone..." style="flex:1;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" />
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:5px">DATE &amp; TIME</label>
+        <input type="datetime-local" id="call-datetime" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" />
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:5px">DURATION (min)</label>
+        <input type="number" id="call-duration" min="0" placeholder="0" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" />
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:5px">OUTCOME</label>
+        <select id="call-outcome" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none">
+          <option>Connected</option>
+          <option>Left Voicemail</option>
+          <option>No Answer</option>
+          <option>Busy</option>
+          <option>Wrong Number</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:5px">NOTES</label>
+        <textarea id="call-notes" rows="3" placeholder="What was discussed..." style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="call-followup-toggle" onchange="document.getElementById('call-followup-date').style.display=this.checked?'block':'none'" style="width:16px;height:16px;accent-color:#4f46e5" />
+        <label for="call-followup-toggle" style="font-size:13px;color:#374151;cursor:pointer">Schedule follow-up</label>
+        <input type="date" id="call-followup-date" style="display:none;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;margin-left:8px" />
+      </div>
+      <input type="hidden" id="call-edit-id" value="" />
+      <input type="hidden" id="call-contact-id" value="" />
+      <input type="hidden" id="call-contact-type" value="" />
+      <div style="grid-column:1/-1">
+        <button onclick="saveCallLog()" style="width:100%;padding:11px;background:#4f46e5;color:white;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer">Save Call</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- CONTACTS TAB -->
 <div id="tab-contacts-content" style="display:none">
   <div style="max-width:900px;margin:0 auto;padding:16px">
@@ -2343,6 +2533,16 @@ admin@lmitool.com</div>
     <div id="admin-team-pipeline-card" class="admin-card" style="display:none">
       <div class="admin-card-title" style="margin-bottom:16px">📊 Team Pipeline</div>
       <div id="admin-team-pipeline-body"><div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div></div>
+    </div>
+    <div id="admin-comms-card" class="admin-card" style="display:none">
+      <div class="admin-card-title" style="margin-bottom:4px">💬 Communications</div>
+      <div style="display:flex;gap:0;border-bottom:1px solid #e5e7eb;margin-bottom:16px">
+        <button class="comm-tab-btn active" id="actab-pending" onclick="adminCommTab('pending')" style="padding:10px 16px;font-size:12px">📧 Pending Templates <span id="pending-tpl-badge" style="background:#ef4444;color:white;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;display:none">0</span></button>
+        <button class="comm-tab-btn" id="actab-emaillog" onclick="adminCommTab('emaillog')" style="padding:10px 16px;font-size:12px">📨 Email Log</button>
+        <button class="comm-tab-btn" id="actab-campaigns" onclick="adminCommTab('campaigns')" style="padding:10px 16px;font-size:12px">🔄 Campaigns</button>
+        <button class="comm-tab-btn" id="actab-callsummary" onclick="adminCommTab('callsummary')" style="padding:10px 16px;font-size:12px">📞 Call Summary</button>
+      </div>
+      <div id="admin-comms-body"><div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -3528,6 +3728,9 @@ async function goAdmin() {
   var atpCard = document.getElementById('admin-team-pipeline-card');
   if (atpCard) atpCard.style.display = '';
   renderAdminTeamPipeline('admin-team-pipeline-body');
+  var acCard = document.getElementById('admin-comms-card');
+  if (acCard) acCard.style.display = '';
+  renderAdminComms('pending');
 }
 
 function goApp() {
@@ -3564,7 +3767,7 @@ window.onload = async function() {
 
 // ── TAB NAV ───────────────────────────────────────────────────
 function showTab(tab) {
-  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline'].forEach(function(t) {
+  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -3578,6 +3781,7 @@ function showTab(tab) {
   if (tab === 'analytics') renderAnalytics();
   if (tab === 'contacts') renderContactsBorrowers();
   if (tab === 'pipeline') renderPipeline();
+  if (tab === 'comms') renderCommsTab();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
     if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '! 👋'; }
@@ -5086,7 +5290,7 @@ function renderRealtorList() {
       + '<div class="realtor-card-brokerage">' + r.brokerage + (r.license ? ' · Lic: ' + r.license : '') + '</div>'
       + oyzSummary
       + '</div>'
-      + '<div class="realtor-card-actions"><button class="invite-portal-btn" onclick="inviteRealtorToPortal(\'' + r.docId + '\')" title="Invite to Realtor Portal">📧 Invite</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
+      + '<div class="realtor-card-actions"><button class="invite-portal-btn" onclick="inviteRealtorToPortal(\'' + r.docId + '\')" title="Invite to Realtor Portal">📧 Invite</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="openCallModal(\'' + r.docId + '\',\'realtor\')" title="Log Call">📞</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
       + '<div class="realtor-card-body">'
       + (r.phone ? '<div class="realtor-info-item"><div class="realtor-info-label">Phone</div><div class="realtor-info-value"><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></div></div>' : '')
       + (r.email ? '<div class="realtor-info-item"><div class="realtor-info-label">Email</div><div class="realtor-info-value"><a href="mailto:' + r.email + '" style="color:#0ed2c8;text-decoration:none">' + r.email + '</a></div></div>' : '')
@@ -8798,7 +9002,12 @@ function renderContactsBorrowers() {
       +'<div class="contact-card-sub">'+(p.city||'')+(p.zip?' · ZIP '+p.zip:'')+'</div></div>'
       +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(p.lmiCategory||'Unknown')+'</span></div>'
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:6px">💰 '+maxP+(p.amiPct?' &nbsp;·&nbsp; 📊 '+p.amiPct+'% AMI':'')+'</div>'
-      +(tags?'<div>'+tags+'</div>':'')+'</div>';
+      +(tags?'<div style="margin-bottom:6px">'+tags+'</div>':'')
+      +'<div style="display:flex;gap:6px;margin-top:4px">'
+      +'<button onclick="event.stopPropagation();addProspectToPipeline(\''+p.id+'\')" style="flex:1;padding:5px;background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">➕ Pipeline</button>'
+      +'<button onclick="event.stopPropagation();openCallModal(\''+p.id+'\',\'borrower\')" style="flex:1;padding:5px;background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">📞 Log Call</button>'
+      +'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -8846,7 +9055,11 @@ function renderContactsRealtors() {
       +'<div class="contact-card-sub">'+(r.brokerage||'')+(r.area?' · '+r.area:'')+'</div></div>'
       +'<span style="background:'+(hasP?'#f0fdf4':'#f8fafc')+';color:'+(hasP?'#16a34a':'#94a3b8')+';border:1px solid '+(hasP?'#bbf7d0':'#e5e7eb')+';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(hasP?'Has Portal':'No Portal')+'</span></div>'
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:6px">🎯 <span style="color:'+capC+';font-weight:700">'+cap+'%</span> capture &nbsp;·&nbsp; '+s.total+' open houses'+(r.phone?' &nbsp;·&nbsp; 📞 '+r.phone:'')+'</div>'
-      +(tags?'<div>'+tags+'</div>':'')+'</div>';
+      +(tags?'<div style="margin-bottom:6px">'+tags+'</div>':'')
+      +'<div style="display:flex;gap:6px;margin-top:4px">'
+      +'<button onclick="event.stopPropagation();openCallModal(\''+(r.docId||r.id)+'\',\'realtor\')" style="flex:1;padding:5px;background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">📞 Log Call</button>'
+      +'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -9889,6 +10102,694 @@ async function renderAdminTeamPipeline(containerId) {
   } catch(e){ el.innerHTML='<div style="color:#ef4444;text-align:center;padding:20px">Error: '+e.message+'</div>'; }
 }
 // ── END PHASE 14 ─────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════
+// PHASE 15 — COMMUNICATION HUB
+// ══════════════════════════════════════════════════════════════
+
+// ── SYSTEM TEMPLATES ─────────────────────────────────────────
+var SYSTEM_TEMPLATES = [
+  { id:'sys-1', name:'New Client Introduction', category:'intro', isSystemTemplate:true, approvalStatus:'approved',
+    subject:'Welcome — Your Mortgage Journey Starts Here',
+    body:'Hi {{borrowerName}},\n\nWelcome! I\'m thrilled to be your mortgage loan officer as you begin your home-buying journey.\n\nMy name is {{mloName}} and I\'m here to guide you every step of the way. Here\'s what to expect:\n\n✅ Step 1: Pre-approval — We\'ll review your finances to determine your buying power\n✅ Step 2: House hunting — Work with your realtor to find the perfect home\n✅ Step 3: Loan application — Once you have an accepted offer, we move fast\n✅ Step 4: Closing — Typically 30–45 days after application\n\nFeel free to reach me anytime:\n📞 {{mloPhone}}\n📧 {{mloEmail}}\nNMLS# {{mloNmls}}\n\nLooking forward to working with you!\n\n{{mloName}}',
+    variables:['borrowerName','mloName','mloPhone','mloEmail','mloNmls'] },
+  { id:'sys-2', name:'7-Day Follow Up', category:'follow-up', isSystemTemplate:true, approvalStatus:'approved',
+    subject:'Checking In — How Can I Help?',
+    body:'Hi {{borrowerName}},\n\nI just wanted to check in and see how things are going. It\'s been about a week since we connected, and I want to make sure you have everything you need.\n\nDo you have any questions about:\n• The pre-approval process\n• What documents you\'ll need\n• Down payment options\n• LMI programs that may benefit you\n\nI\'m always here to help — don\'t hesitate to reach out!\n\n📞 {{mloPhone}}\n\nBest regards,\n{{mloName}}',
+    variables:['borrowerName','mloName','mloPhone'] },
+  { id:'sys-3', name:'Pre-Approval Congratulations', category:'congrats', isSystemTemplate:true, approvalStatus:'approved',
+    subject:'Congratulations — You\'re Pre-Approved!',
+    body:'Hi {{borrowerName}},\n\n🎉 Congratulations — you\'re pre-approved!\n\nYour pre-approval gives you the power to shop with confidence. Here are your key numbers:\n\n🏡 Maximum Purchase Price: {{maxPrice}}\n\nNext steps:\n1. Share this pre-approval letter with your realtor\n2. Start touring homes in your price range\n3. When you find the one, we\'ll move quickly on your offer\n\nRemember, pre-approvals are typically valid for 90 days. If you need a refreshed letter, just let me know.\n\nSo excited for you — let\'s find your dream home!\n\n📞 {{mloPhone}}\n{{mloName}}',
+    variables:['borrowerName','maxPrice','mloName','mloPhone'] },
+  { id:'sys-4', name:'Rate Update Alert', category:'rate-update', isSystemTemplate:true, approvalStatus:'approved',
+    subject:'Rate Update — Now Might Be the Time',
+    body:'Hi {{borrowerName}},\n\nI wanted to reach out with a quick market update that could directly affect your home purchase.\n\nInterest rates have shifted recently, and this may impact your buying power. Even a small rate change can mean a significant difference in your monthly payment.\n\nHere\'s why this matters:\n• Lower rates = more buying power\n• Even a 0.5% rate drop can save hundreds per month\n• Acting when rates dip can save tens of thousands over the life of your loan\n\nI\'d love to run updated numbers with you and see how the current environment affects your situation.\n\nGive me a call or reply to this email — let\'s talk strategy!\n\n📞 {{mloPhone}}\n{{mloName}}',
+    variables:['borrowerName','mloName','mloPhone'] },
+  { id:'sys-5', name:'Open House Invitation', category:'open-house', isSystemTemplate:true, approvalStatus:'approved',
+    subject:'Open House This Weekend — You\'re Invited!',
+    body:'Hi {{borrowerName}},\n\nYou\'re invited to an open house this weekend!\n\n🏡 Property: {{propertyAddress}}\n📅 Date & Time: {{openHouseDate}}\n🏠 Hosted by: {{realtorName}}\n\nThis is a great opportunity to tour the home and envision your future there. I\'ll be available to discuss financing options on the spot.\n\nWhat to bring:\n• Your pre-approval letter\n• A list of must-haves and nice-to-haves\n• An open mind!\n\nHope to see you there. Feel free to reach out with any questions beforehand.\n\n📞 {{mloPhone}}\n{{mloName}}',
+    variables:['borrowerName','propertyAddress','openHouseDate','realtorName','mloName','mloPhone'] }
+];
+
+// ── EMAIL TEMPLATES ───────────────────────────────────────────
+var cachedTemplates = [];
+var _activeTplId = null;
+
+async function loadEmailTemplates() {
+  if (!currentUser) return [];
+  try {
+    var snap = await db.collection('email_templates')
+      .where('orgId','==',currentUser.orgId||currentUser.id).get();
+    var userTpls = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    // Merge system templates (keep user copies if they exist)
+    var userSysIds = userTpls.filter(function(t){return t.isSystemTemplate;}).map(function(t){return t.sysId||t.id;});
+    var sysToAdd = SYSTEM_TEMPLATES.filter(function(s){return userSysIds.indexOf(s.id)===-1;});
+    cachedTemplates = sysToAdd.concat(userTpls);
+    return cachedTemplates;
+  } catch(e) { console.warn('[templates]',e); cachedTemplates = SYSTEM_TEMPLATES.slice(); return cachedTemplates; }
+}
+
+function renderCommsTab() {
+  loadEmailTemplates().then(function() { renderTemplateList(); });
+  loadDripCampaigns().then(function() { renderDripList(); });
+  loadCallLogData().then(function() { renderCallLog(); renderCallStats(); });
+}
+
+function commShowTab(tab) {
+  ['templates','drip','calllog'].forEach(function(t){
+    var btn=document.getElementById('ctab-'+t); if(btn) btn.classList.toggle('active',t===tab);
+    var pane=document.getElementById('comm-'+t+'-pane'); if(pane) pane.style.display=t===tab?'block':'none';
+  });
+}
+
+function renderTemplateList() {
+  var el=document.getElementById('tpl-list'); if(!el) return;
+  if(!cachedTemplates.length){el.innerHTML='<div style="color:#94a3b8;text-align:center;padding:20px;font-size:13px">No templates yet.</div>';return;}
+  el.innerHTML=cachedTemplates.map(function(t){
+    var statusBadge=t.approvalStatus==='approved'?'approved':(t.approvalStatus==='rejected'?'rejected':'pending');
+    var catLabel=(t.category||'custom').replace(/-/g,' ');
+    return '<div class="tpl-card'+(t.id===_activeTplId?' active':'')+'" onclick="openTemplateEditor(\''+t.id+'\')">'
+      +'<div class="tpl-card-name">'+esc(t.name||'Untitled')+'</div>'
+      +'<div class="tpl-card-meta">'
+      +(t.isSystemTemplate?'<span class="tpl-badge system">System</span>':'')
+      +'<span class="tpl-badge cat">'+catLabel+'</span>'
+      +'<span class="tpl-badge '+statusBadge+'">'+statusBadge+'</span>'
+      +'</div></div>';
+  }).join('');
+}
+
+function openTemplateEditor(id) {
+  _activeTplId = id;
+  renderTemplateList();
+  var pane=document.getElementById('tpl-editor-pane'); if(!pane) return;
+  if(id==='new'){
+    pane.innerHTML=buildTemplateEditor(null);
+    return;
+  }
+  var t=cachedTemplates.find(function(x){return x.id===id;});
+  if(!t) return;
+  pane.innerHTML=buildTemplateEditor(t);
+}
+
+function buildTemplateEditor(t) {
+  var isNew=!t;
+  var isSystem=t&&t.isSystemTemplate;
+  var isAdmin=isAnyAdmin();
+  var canEdit=!isSystem||(isAdmin&&isSystem);
+  var vars=(t?t.variables:['borrowerName','mloName','mloPhone','mloEmail'])||[];
+  var allVars=['borrowerName','mloName','mloPhone','mloEmail','mloNmls','maxPrice','loanAmount','propertyAddress','openHouseDate','realtorName'];
+  var statusBadge=t?('<span class="tpl-badge '+(t.approvalStatus||'pending')+'">'+t.approvalStatus+'</span>'):'';
+  var rejNote=t&&t.approvalStatus==='rejected'&&t.rejectionNote?
+    '<div style="background:#fee2e2;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#dc2626">❌ Rejected: '+esc(t.rejectionNote)+'</div>':'';
+  var approveBar='';
+  if(isAdmin&&t&&t.approvalStatus==='pending'&&!t.isSystemTemplate){
+    approveBar='<div style="display:flex;gap:8px;margin-bottom:14px">'
+      +'<button onclick="approveTemplate(\''+t.id+'\')" style="flex:1;padding:8px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✅ Approve</button>'
+      +'<button onclick="rejectTemplatePrompt(\''+t.id+'\')" style="flex:1;padding:8px;background:#dc2626;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">❌ Reject</button>'
+      +'</div>';
+  }
+  var sendBtn=t&&t.approvalStatus==='approved'?
+    '<button onclick="openCommSendModal(\''+t.id+'\')" style="padding:9px 18px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 Send</button>':'';
+  return '<div style="max-width:700px">'
+    +(isNew?'<div style="font-size:16px;font-weight:800;color:#1f2937;margin-bottom:16px">New Template</div>':'')
+    +(!isNew?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px"><div style="font-size:16px;font-weight:800;color:#1f2937">'+esc(t.name)+'</div><div style="display:flex;gap:8px;align-items:center">'+statusBadge+' '+sendBtn+'</div></div>':'')
+    +approveBar+rejNote
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    +'<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">NAME</label>'
+    +'<input id="tpl-name" value="'+esc(t?t.name||'':'')+(isNew?' (copy)':'')+'" '+(isSystem&&!isAdmin?'readonly ':'')+'style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box" /></div>'
+    +'<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">CATEGORY</label>'
+    +'<select id="tpl-cat" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none">'
+    +'<option value="intro"'+(t&&t.category==='intro'?' selected':'')+'>Intro</option>'
+    +'<option value="follow-up"'+(t&&t.category==='follow-up'?' selected':'')+'>Follow-Up</option>'
+    +'<option value="congrats"'+(t&&t.category==='congrats'?' selected':'')+'>Congrats</option>'
+    +'<option value="rate-update"'+(t&&t.category==='rate-update'?' selected':'')+'>Rate Update</option>'
+    +'<option value="open-house"'+(t&&t.category==='open-house'?' selected':'')+'>Open House</option>'
+    +'<option value="custom"'+(t&&t.category==='custom'?' selected':'')+'>Custom</option>'
+    +'</select></div></div>'
+    +'<div style="margin-bottom:12px"><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">SUBJECT LINE</label>'
+    +'<input id="tpl-subject" value="'+esc(t?t.subject||'':'')+'" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box" /></div>'
+    +'<div style="margin-bottom:8px"><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">INSERT VARIABLE</label>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:4px">'+allVars.map(function(v){return '<span class="var-btn" onclick="tplInsertVar(\'{{'+v+'}}\')">{&#x200B;{'+v+'}}</span>';}).join('')+'</div></div>'
+    +'<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">BODY</label>'
+    +'<textarea id="tpl-body" rows="12" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit">'+esc(t?t.body||'':'')+'</textarea></div>'
+    +'<div style="display:flex;gap:8px">'
+    +(isNew||!isSystem||isAdmin?'<button onclick="saveTemplate('+(isNew?'\'new\'':'\''+t.id+'\'')+',false)" style="flex:1;padding:9px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Draft</button>':'')
+    +(isNew||!isSystem||isAdmin?'<button onclick="saveTemplate('+(isNew?'\'new\'':'\''+t.id+'\'')+',true)" style="flex:1;padding:9px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">'+(isAdmin?'✅ Save & Approve':'📤 Submit for Approval')+'</button>':'')
+    +'</div>'
+    +(!isNew&&!isSystem?'<div style="margin-top:10px"><button onclick="deleteTemplate(\''+t.id+'\')" style="padding:7px 14px;background:none;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🗑 Delete Template</button></div>':'')
+    +'</div>';
+}
+
+function tplInsertVar(variable) {
+  var ta=document.getElementById('tpl-body'); if(!ta) return;
+  var start=ta.selectionStart, end=ta.selectionEnd;
+  ta.value=ta.value.substring(0,start)+variable+ta.value.substring(end);
+  ta.selectionStart=ta.selectionEnd=start+variable.length;
+  ta.focus();
+}
+
+async function saveTemplate(id, submit) {
+  var name=(document.getElementById('tpl-name')||{}).value||'';
+  var subject=(document.getElementById('tpl-subject')||{}).value||'';
+  var body=(document.getElementById('tpl-body')||{}).value||'';
+  var category=(document.getElementById('tpl-cat')||{}).value||'custom';
+  if(!name.trim()||!subject.trim()){showToast('⚠️ Name and subject are required.');return;}
+  var isAdmin=isAnyAdmin();
+  var status=submit?(isAdmin?'approved':'pending'):'draft';
+  var data={
+    name:name.trim(), subject:subject.trim(), body:body, category:category,
+    approvalStatus:status, isSystemTemplate:false,
+    createdBy:currentUser.id, createdByName:currentUser.name,
+    orgId:currentUser.orgId||currentUser.id,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(isAdmin&&submit){ data.approvedBy=currentUser.id; data.approvedAt=new Date().toISOString(); }
+  try {
+    if(id==='new'){
+      data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('email_templates').add(data);
+    } else {
+      await db.collection('email_templates').doc(id).set(data,{merge:true});
+    }
+    showToast(submit?(isAdmin?'✅ Template approved!':'📤 Submitted for approval'):'💾 Draft saved');
+    await loadEmailTemplates(); renderTemplateList();
+    if(id==='new') _activeTplId=null;
+  } catch(e){ showToast('❌ Error: '+e.message); }
+}
+
+async function approveTemplate(id) {
+  try {
+    await db.collection('email_templates').doc(id).update({approvalStatus:'approved',approvedBy:currentUser.id,approvedAt:new Date().toISOString(),rejectionNote:''});
+    showToast('✅ Template approved!');
+    await loadEmailTemplates(); renderTemplateList(); openTemplateEditor(id);
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+async function rejectTemplatePrompt(id) {
+  var note=prompt('Rejection reason (shown to MLO):','');
+  if(note===null) return;
+  try {
+    await db.collection('email_templates').doc(id).update({approvalStatus:'rejected',rejectionNote:note||''});
+    showToast('❌ Template rejected.');
+    await loadEmailTemplates(); renderTemplateList(); openTemplateEditor(id);
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+async function deleteTemplate(id) {
+  if(!confirm('Delete this template?')) return;
+  try {
+    await db.collection('email_templates').doc(id).delete();
+    _activeTplId=null;
+    showToast('🗑 Deleted');
+    await loadEmailTemplates(); renderTemplateList();
+    var pane=document.getElementById('tpl-editor-pane');
+    if(pane) pane.innerHTML='<div style="color:#94a3b8;text-align:center;padding:60px 20px"><div style="font-size:32px;margin-bottom:12px">📧</div><div style="font-size:15px;font-weight:700">Select a template to edit</div></div>';
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+// ── SEND EMAIL ────────────────────────────────────────────────
+var _sendTplId=null;
+
+function openCommSendModal(tplId) {
+  _sendTplId=tplId;
+  var t=cachedTemplates.find(function(x){return x.id===tplId;});
+  if(!t) return;
+  // Populate recipient dropdown
+  var sel=document.getElementById('send-recipient'); if(!sel) return;
+  sel.innerHTML='<option value="">Select a contact...</option>';
+  (cachedProspects||[]).filter(function(p){return p.borrowerName&&p.email;}).forEach(function(p){
+    var opt=document.createElement('option');
+    opt.value=JSON.stringify({name:p.borrowerName,email:p.email,type:'borrower',id:p.id});
+    opt.textContent=p.borrowerName+' (borrower)';
+    sel.appendChild(opt);
+  });
+  (cachedRealtors||[]).filter(function(r){return r.email;}).forEach(function(r){
+    var opt=document.createElement('option');
+    opt.value=JSON.stringify({name:r.name,email:r.email,type:'realtor',id:r.docId});
+    opt.textContent=(r.name||r.email)+' (realtor)';
+    sel.appendChild(opt);
+  });
+  document.getElementById('send-subject').value=t.subject||'';
+  document.getElementById('send-preview').textContent=fillTemplateVars(t.body||'',{borrowerName:'[Borrower Name]',mloName:currentUser.name,mloPhone:currentUser.phone||'',mloEmail:currentUser.email||'',mloNmls:currentUser.nmls||''});
+  document.getElementById('send-name-manual').value='';
+  document.getElementById('send-email-manual').value='';
+  sel.onchange=function(){
+    if(!sel.value) return;
+    var c=JSON.parse(sel.value);
+    var vars={borrowerName:c.name,mloName:currentUser.name,mloPhone:currentUser.phone||'',mloEmail:currentUser.email||'',mloNmls:currentUser.nmls||''};
+    document.getElementById('send-preview').textContent=fillTemplateVars(t.body||'',vars);
+  };
+  document.getElementById('comm-send-overlay').style.display='block';
+}
+
+function closeCommSendModal(){document.getElementById('comm-send-overlay').style.display='none';}
+
+function fillTemplateVars(body,vars){
+  return body.replace(/\{\{(\w+)\}\}/g,function(_,k){return vars[k]||('{{'+k+'}}');});
+}
+
+async function doSendEmail() {
+  var t=cachedTemplates.find(function(x){return x.id===_sendTplId;});
+  if(!t) return;
+  var sel=document.getElementById('send-recipient');
+  var toName='', toEmail='';
+  if(sel&&sel.value){ var c=JSON.parse(sel.value); toName=c.name; toEmail=c.email; }
+  else {
+    toName=(document.getElementById('send-name-manual')||{}).value||'';
+    toEmail=(document.getElementById('send-email-manual')||{}).value||'';
+  }
+  if(!toEmail.trim()){showToast('⚠️ Please select or enter a recipient email.');return;}
+  var subject=(document.getElementById('send-subject')||{}).value||t.subject;
+  var vars={borrowerName:toName,mloName:currentUser.name,mloPhone:currentUser.phone||'',mloEmail:currentUser.email||'',mloNmls:currentUser.nmls||''};
+  var body=fillTemplateVars(t.body||'',vars);
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {to_name:toName,to_email:toEmail,subject:subject,message:body});
+    await db.collection('email_log').add({
+      templateId:_sendTplId, templateName:t.name, recipientEmail:toEmail, recipientName:toName,
+      sentBy:currentUser.id, sentByName:currentUser.name, orgId:currentUser.orgId||currentUser.id,
+      subject:subject, sentAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('📧 Email sent!');
+    closeCommSendModal();
+  } catch(e){ showToast('❌ Send failed: '+e.message); }
+}
+
+// ── DRIP CAMPAIGNS ────────────────────────────────────────────
+var cachedCampaigns=[], _editCampaign=null;
+
+var SYSTEM_CAMPAIGNS=[{
+  id:'sys-camp-1', name:'New Lead Nurture', status:'draft',
+  trigger:'manual', description:'5-step sequence for new leads',
+  steps:[
+    {id:'s1',type:'email',templateId:'sys-1',label:'Send "New Client Introduction"'},
+    {id:'s2',type:'wait',waitDays:7,label:'Wait 7 days'},
+    {id:'s3',type:'condition',condition:{type:'email_opened',trueBranch:'s4',falseBranch:'s5'},label:'Email opened?'},
+    {id:'s4',type:'email',templateId:'sys-4',label:'Send "Rate Update Alert" (opened)'},
+    {id:'s5',type:'email',templateId:'sys-2',label:'Send "7-Day Follow Up" (not opened)'}
+  ],
+  createdBy:'system', orgId:'system', enrolledContacts:0
+}];
+
+async function loadDripCampaigns() {
+  if(!currentUser) return [];
+  try {
+    var snap=await db.collection('drip_campaigns').where('orgId','==',currentUser.orgId||currentUser.id).get();
+    cachedCampaigns=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    return cachedCampaigns;
+  } catch(e){ cachedCampaigns=SYSTEM_CAMPAIGNS.slice(); return cachedCampaigns; }
+}
+
+function renderDripList() {
+  var el=document.getElementById('drip-list'); if(!el) return;
+  var all=SYSTEM_CAMPAIGNS.concat(cachedCampaigns.filter(function(c){return c.id.indexOf('sys-')===-1;}));
+  if(!all.length){el.innerHTML='<div style="color:#94a3b8;text-align:center;padding:40px">No campaigns yet.</div>';return;}
+  el.innerHTML=all.map(function(c){
+    var statusC={draft:'#94a3b8',active:'#16a34a',paused:'#f59e0b'}[c.status]||'#94a3b8';
+    return '<div class="campaign-card" onclick="openCampaignBuilder(\''+c.id+'\')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      +'<div style="font-size:14px;font-weight:800;color:#1f2937">'+esc(c.name||'Unnamed')+'</div>'
+      +'<span style="background:'+statusC+'22;color:'+statusC+';border:1px solid '+statusC+'44;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;text-transform:capitalize">'+(c.status||'draft')+'</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:8px">'+(c.description||'')+'</div>'
+      +'<div style="font-size:12px;color:#94a3b8">Trigger: '+(c.trigger||'manual')+' &nbsp;·&nbsp; '+(c.steps||[]).length+' steps &nbsp;·&nbsp; '+(c.enrolledContacts||0)+' enrolled</div>'
+      +'</div>';
+  }).join('');
+}
+
+function openCampaignBuilder(id) {
+  var el=document.getElementById('drip-builder'); if(!el) return;
+  document.getElementById('drip-list').style.display='none';
+  el.style.display='block';
+  var all=SYSTEM_CAMPAIGNS.concat(cachedCampaigns);
+  _editCampaign=id==='new'?{id:'new',name:'New Campaign',status:'draft',trigger:'manual',steps:[],enrolledContacts:0}:
+    (all.find(function(c){return c.id===id;})||{id:'new',name:'',status:'draft',trigger:'manual',steps:[]});
+  renderCampaignBuilder();
+}
+
+function renderCampaignBuilder() {
+  var c=_editCampaign; if(!c) return;
+  var el=document.getElementById('drip-builder'); if(!el) return;
+  var approvedTpls=cachedTemplates.filter(function(t){return t.approvalStatus==='approved';}).concat(SYSTEM_TEMPLATES);
+  var tplOpts=approvedTpls.map(function(t){return '<option value="'+t.id+'">'+esc(t.name)+'</option>';}).join('');
+  el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">'
+    +'<button onclick="closeCampaignBuilder()" style="padding:7px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;cursor:pointer">← Back</button>'
+    +'<div style="font-size:16px;font-weight:800;color:#1f2937">'+esc(c.name)+'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="saveCampaign(\'draft\')" style="padding:8px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Draft</button>'
+    +'<button onclick="saveCampaign(\'active\')" style="padding:8px 14px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">▶ Activate</button>'
+    +'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+    +'<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">CAMPAIGN NAME</label>'
+    +'<input id="camp-name" value="'+esc(c.name||'')+'" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box" /></div>'
+    +'<div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">TRIGGER</label>'
+    +'<select id="camp-trigger" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none">'
+    +'<option value="manual"'+(c.trigger==='manual'?' selected':'')+'>Manual enrollment</option>'
+    +'<option value="new_prospect"'+(c.trigger==='new_prospect'?' selected':'')+'>New prospect saved</option>'
+    +'<option value="stage_change"'+(c.trigger==='stage_change'?' selected':'')+'>Pipeline stage change</option>'
+    +'</select></div></div>'
+    +'<div style="font-size:13px;font-weight:800;color:#1f2937;margin-bottom:10px">Steps</div>'
+    +(c.steps||[]).map(function(s,i){
+      return '<div class="step-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase">'
+        +(s.type==='email'?'📧 Send Email':s.type==='wait'?'⏳ Wait':s.type==='condition'?'🔀 Condition':'Step')+'</div>'
+        +'<button onclick="removeStep('+i+')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:16px;line-height:1">✕</button>'
+        +'</div>'
+        +(s.type==='email'?'<select onchange="_editCampaign.steps['+i+'].templateId=this.value" style="width:100%;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none">'+tplOpts.replace('value="'+s.templateId+'"','value="'+s.templateId+'" selected')+'</select>':'')
+        +(s.type==='wait'?'<div style="display:flex;align-items:center;gap:8px"><input type="number" value="'+(s.waitDays||1)+'" min="1" onchange="_editCampaign.steps['+i+'].waitDays=parseInt(this.value)||1" style="width:70px;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" /><span style="font-size:13px;color:#374151">days</span></div>':'')
+        +(s.type==='condition'?'<div style="font-size:12px;color:#6b7280">If previous email was opened → next step; otherwise → step after that<br><span style="font-size:11px;color:#94a3b8;font-style:italic">(Open tracking coming soon — defaults to "not opened" path)</span></div>':'')
+        +'</div>'
+        +(i<(c.steps.length-1)?'<div class="step-connector">↓</div>':'');
+    }).join('')
+    +'<div style="display:flex;gap:8px;margin-top:12px">'
+    +'<button onclick="addCampaignStep(\'email\')" style="flex:1;padding:8px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">+ 📧 Email</button>'
+    +'<button onclick="addCampaignStep(\'wait\')" style="flex:1;padding:8px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">+ ⏳ Wait</button>'
+    +'<button onclick="addCampaignStep(\'condition\')" style="flex:1;padding:8px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">+ 🔀 Condition</button>'
+    +'</div>'
+    +(c.id!=='new'?'<div style="margin-top:16px"><button onclick="showEnrollModal(\''+c.id+'\')" style="padding:8px 16px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">👤 Enroll a Contact</button></div>':'');
+}
+
+function addCampaignStep(type) {
+  if(!_editCampaign) return;
+  var defTplId=(SYSTEM_TEMPLATES[0]||{}).id||'';
+  var s={id:'s'+(Date.now()),type:type};
+  if(type==='email') s.templateId=defTplId;
+  if(type==='wait') s.waitDays=7;
+  if(type==='condition') s.condition={type:'email_opened'};
+  _editCampaign.steps=(_editCampaign.steps||[]).concat([s]);
+  renderCampaignBuilder();
+}
+
+function removeStep(idx) {
+  if(!_editCampaign) return;
+  _editCampaign.steps.splice(idx,1);
+  renderCampaignBuilder();
+}
+
+function closeCampaignBuilder() {
+  var el=document.getElementById('drip-builder'); if(el) el.style.display='none';
+  var list=document.getElementById('drip-list'); if(list) list.style.display='block';
+  _editCampaign=null;
+}
+
+async function saveCampaign(status) {
+  if(!_editCampaign) return;
+  var name=(document.getElementById('camp-name')||{}).value||_editCampaign.name||'Unnamed';
+  var trigger=(document.getElementById('camp-trigger')||{}).value||'manual';
+  var data={name:name,trigger:trigger,status:status,steps:_editCampaign.steps||[],
+    createdBy:currentUser.id,createdByName:currentUser.name,orgId:currentUser.orgId||currentUser.id,
+    enrolledContacts:_editCampaign.enrolledContacts||0,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  try {
+    if(_editCampaign.id==='new'||_editCampaign.id.indexOf('sys-')===0){
+      data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('drip_campaigns').add(data);
+    } else {
+      await db.collection('drip_campaigns').doc(_editCampaign.id).set(data,{merge:true});
+    }
+    showToast(status==='active'?'▶ Campaign activated!':'💾 Campaign saved');
+    await loadDripCampaigns(); closeCampaignBuilder(); renderDripList();
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+function showEnrollModal(campaignId) {
+  var names=(cachedProspects||[]).filter(function(p){return p.borrowerName;}).map(function(p){
+    return '<option value="'+p.id+'|borrower">'+esc(p.borrowerName)+' (borrower)</option>';
+  }).concat((cachedRealtors||[]).map(function(r){
+    return '<option value="'+(r.docId||r.id)+'|realtor">'+esc(r.name||r.email)+' (realtor)</option>';
+  })).join('');
+  var html='<div style="background:white;border-radius:12px;padding:20px;max-width:420px;margin:15vh auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+    +'<div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:14px">Enroll Contact</div>'
+    +'<select id="enroll-contact" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;margin-bottom:12px"><option value="">Select...</option>'+names+'</select>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="enrollContactConfirm(\''+campaignId+'\')" style="flex:1;padding:9px;background:#0ed2c8;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Enroll</button>'
+    +'<button onclick="this.closest(\'[id=enroll-modal]\').remove()" style="flex:1;padding:9px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>'
+    +'</div></div>';
+  var overlay=document.createElement('div');
+  overlay.id='enroll-modal';
+  overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.75);z-index:9500;overflow-y:auto';
+  overlay.innerHTML=html;
+  document.body.appendChild(overlay);
+}
+
+async function enrollContactConfirm(campaignId) {
+  var sel=document.getElementById('enroll-contact'); if(!sel||!sel.value) return;
+  var parts=sel.value.split('|'); var contactId=parts[0]; var contactType=parts[1]||'borrower';
+  var contact=contactType==='borrower'?(cachedProspects||[]).find(function(p){return p.id===contactId;}):
+    (cachedRealtors||[]).find(function(r){return (r.docId||r.id)===contactId;});
+  if(!contact) return;
+  try {
+    var camp=cachedCampaigns.find(function(c){return c.id===campaignId;});
+    var firstStep=((camp&&camp.steps)||[])[0]||{};
+    await db.collection('drip_enrollments').add({
+      campaignId:campaignId, contactId:contactId, contactName:contact.borrowerName||contact.name||'',
+      contactEmail:contact.email||'', contactType:contactType,
+      currentStepId:firstStep.id||'s1', status:'active',
+      enrolledAt:firebase.firestore.FieldValue.serverTimestamp(), stepHistory:[],
+      orgId:currentUser.orgId||currentUser.id
+    });
+    await db.collection('drip_campaigns').doc(campaignId).update({enrolledContacts:firebase.firestore.FieldValue.increment(1)});
+    var modal=document.getElementById('enroll-modal'); if(modal) modal.remove();
+    showToast('👤 Contact enrolled!');
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+// ── CALL LOG ──────────────────────────────────────────────────
+var cachedCallLog=[];
+
+async function loadCallLogData() {
+  if(!currentUser) return [];
+  try {
+    var snap=await db.collection('call_log').where('userId','==',currentUser.id).get();
+    cachedCallLog=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+      .sort(function(a,b){return new Date(b.callDate||b.createdAt||0)-new Date(a.callDate||a.createdAt||0);});
+    return cachedCallLog;
+  } catch(e){ console.warn('[calllog]',e); return []; }
+}
+
+function renderCallStats() {
+  var now=new Date(); var weekAgo=new Date(now-7*864e5);
+  var week=cachedCallLog.filter(function(c){return new Date(c.callDate||c.createdAt||0)>=weekAgo;});
+  var connected=week.filter(function(c){return c.outcome==='Connected';});
+  var totalDur=week.reduce(function(s,c){return s+(parseInt(c.duration)||0);},0);
+  var today=now.toISOString().slice(0,10);
+  var followups=cachedCallLog.filter(function(c){return c.followUpDate&&c.followUpDate<=today;}).length;
+  var cs=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+  cs('cs-total',week.length);
+  cs('cs-connected',week.length?Math.round(connected.length/week.length*100)+'%':'0%');
+  cs('cs-avgdur',week.length?Math.round(totalDur/week.length)+'m':'0m');
+  cs('cs-followups',followups);
+}
+
+function renderCallLog() {
+  var el=document.getElementById('call-log-list'); if(!el) return;
+  var q=((document.getElementById('call-search')||{}).value||'').toLowerCase();
+  var filter=((document.getElementById('call-filter')||{}).value||'all');
+  var items=cachedCallLog.slice();
+  if(q) items=items.filter(function(c){return (c.contactName||'').toLowerCase().indexOf(q)!==-1;});
+  if(filter!=='all') items=items.filter(function(c){return c.outcome===filter;});
+  if(!items.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">No calls logged yet.</div>';return;}
+  var outcomeClass={Connected:'connected','Left Voicemail':'voicemail','No Answer':'no-answer',Busy:'busy','Wrong Number':'wrong-number'};
+  el.innerHTML=items.map(function(c){
+    var cls=outcomeClass[c.outcome]||'no-answer';
+    var dt=c.callDate?new Date(c.callDate.seconds?c.callDate.seconds*1000:c.callDate).toLocaleString():'—';
+    return '<div class="call-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">'
+      +'<div><div style="font-size:14px;font-weight:700;color:#1f2937">'+esc(c.contactName||'Unknown')+'</div>'
+      +(c.contactPhone?'<div style="font-size:12px;color:#6b7280">📞 '+esc(c.contactPhone)+'</div>':'')+'</div>'
+      +'<div style="display:flex;gap:6px;align-items:center">'
+      +'<span class="call-outcome-badge '+cls+'">'+esc(c.outcome||'—')+'</span>'
+      +(c.duration?'<span style="font-size:11px;color:#94a3b8">'+c.duration+'m</span>':'')
+      +'</div></div>'
+      +'<div style="font-size:11px;color:#94a3b8;margin-top:4px">'+dt+'</div>'
+      +(c.notes?'<div style="font-size:12px;color:#374151;margin-top:6px;white-space:pre-wrap">'+esc(c.notes)+'</div>':'')
+      +(c.followUpDate?'<div style="font-size:11px;color:#f59e0b;margin-top:4px;font-weight:700">📅 Follow up by '+c.followUpDate+'</div>':'')
+      +'<div style="display:flex;gap:6px;margin-top:8px">'
+      +'<button onclick="openCallModal(null,null,\''+c.id+'\')" style="padding:4px 10px;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700">✏️ Edit</button>'
+      +'<button onclick="deleteCallEntry(\''+c.id+'\')" style="padding:4px 10px;background:none;border:1px solid #fca5a5;color:#dc2626;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700">🗑</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function openCallModal(contactId, contactType, editId) {
+  var modal=document.getElementById('call-modal-overlay'); if(!modal) return;
+  // Set datetime default
+  var now=new Date(); var local=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('call-datetime').value=local;
+  document.getElementById('call-duration').value='';
+  document.getElementById('call-outcome').value='Connected';
+  document.getElementById('call-notes').value='';
+  document.getElementById('call-followup-toggle').checked=false;
+  document.getElementById('call-followup-date').style.display='none';
+  document.getElementById('call-edit-id').value=editId||'';
+  document.getElementById('call-contact-id').value='';
+  document.getElementById('call-contact-type').value='';
+  // Populate contact dropdown
+  var sel=document.getElementById('call-contact-select'); if(!sel) return;
+  sel.innerHTML='<option value="">Select a contact...</option>';
+  (cachedProspects||[]).filter(function(p){return p.borrowerName;}).forEach(function(p){
+    var opt=document.createElement('option');
+    opt.value=JSON.stringify({id:p.id,name:p.borrowerName,phone:p.phone||'',type:'borrower'});
+    opt.textContent=p.borrowerName+' (borrower)';
+    sel.appendChild(opt);
+  });
+  (cachedRealtors||[]).forEach(function(r){
+    var opt=document.createElement('option');
+    opt.value=JSON.stringify({id:r.docId||r.id,name:r.name||'',phone:r.phone||'',type:'realtor'});
+    opt.textContent=(r.name||r.email||'Realtor')+' (realtor)';
+    sel.appendChild(opt);
+  });
+  if(editId) {
+    var entry=cachedCallLog.find(function(c){return c.id===editId;});
+    if(entry){
+      document.getElementById('call-name-manual').value=entry.contactName||'';
+      document.getElementById('call-phone-manual').value=entry.contactPhone||'';
+      document.getElementById('call-duration').value=entry.duration||'';
+      document.getElementById('call-outcome').value=entry.outcome||'Connected';
+      document.getElementById('call-notes').value=entry.notes||'';
+      if(entry.followUpDate){document.getElementById('call-followup-toggle').checked=true;document.getElementById('call-followup-date').style.display='block';document.getElementById('call-followup-date').value=entry.followUpDate;}
+      var dt=entry.callDate?new Date(entry.callDate.seconds?entry.callDate.seconds*1000:entry.callDate):now;
+      var dtl=new Date(dt-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+      document.getElementById('call-datetime').value=dtl;
+    }
+  } else if(contactId) {
+    // Pre-fill from contact
+    var contact=contactType==='borrower'?(cachedProspects||[]).find(function(p){return p.id===contactId;}):
+      (cachedRealtors||[]).find(function(r){return (r.docId||r.id)===contactId;});
+    if(contact){
+      document.getElementById('call-name-manual').value=contact.borrowerName||contact.name||'';
+      document.getElementById('call-phone-manual').value=contact.phone||'';
+      document.getElementById('call-contact-id').value=contactId;
+      document.getElementById('call-contact-type').value=contactType;
+    }
+  }
+  modal.style.display='block';
+}
+
+function callContactSelected() {
+  var sel=document.getElementById('call-contact-select'); if(!sel||!sel.value) return;
+  var c=JSON.parse(sel.value);
+  document.getElementById('call-name-manual').value=c.name||'';
+  document.getElementById('call-phone-manual').value=c.phone||'';
+  document.getElementById('call-contact-id').value=c.id||'';
+  document.getElementById('call-contact-type').value=c.type||'';
+}
+
+function closeCallModal(){var m=document.getElementById('call-modal-overlay');if(m)m.style.display='none';}
+
+async function saveCallLog() {
+  var name=document.getElementById('call-name-manual').value||'';
+  var phone=document.getElementById('call-phone-manual').value||'';
+  var outcome=document.getElementById('call-outcome').value||'Connected';
+  var duration=parseInt(document.getElementById('call-duration').value)||0;
+  var notes=document.getElementById('call-notes').value||'';
+  var dtVal=document.getElementById('call-datetime').value;
+  var followUpDate=document.getElementById('call-followup-toggle').checked?(document.getElementById('call-followup-date').value||null):null;
+  var editId=document.getElementById('call-edit-id').value||'';
+  var cId=document.getElementById('call-contact-id').value||'';
+  var cType=document.getElementById('call-contact-type').value||'';
+  if(!name.trim()){showToast('⚠️ Contact name is required.');return;}
+  var data={userId:currentUser.id,userName:currentUser.name,orgId:currentUser.orgId||currentUser.id,
+    contactName:name.trim(),contactPhone:phone.trim(),contactId:cId,contactType:cType,
+    outcome:outcome,duration:duration,notes:notes,
+    callDate:dtVal?new Date(dtVal).toISOString():new Date().toISOString(),
+    followUpDate:followUpDate||null};
+  try {
+    if(editId){ await db.collection('call_log').doc(editId).set(data,{merge:true}); }
+    else { data.createdAt=firebase.firestore.FieldValue.serverTimestamp(); await db.collection('call_log').add(data); }
+    showToast('📞 Call logged!');
+    closeCallModal();
+    await loadCallLogData(); renderCallLog(); renderCallStats();
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+async function deleteCallEntry(id) {
+  if(!confirm('Delete this call log entry?')) return;
+  try {
+    await db.collection('call_log').doc(id).delete();
+    showToast('🗑 Deleted');
+    await loadCallLogData(); renderCallLog(); renderCallStats();
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+// ── ADMIN COMMUNICATIONS ──────────────────────────────────────
+var _adminCommTab='pending';
+
+function adminCommTab(tab) {
+  _adminCommTab=tab;
+  ['pending','emaillog','campaigns','callsummary'].forEach(function(t){
+    var btn=document.getElementById('actab-'+t); if(btn) btn.classList.toggle('active',t===tab);
+  });
+  renderAdminComms(tab);
+}
+
+async function renderAdminComms(tab) {
+  tab=tab||_adminCommTab;
+  var el=document.getElementById('admin-comms-body'); if(!el) return;
+  el.innerHTML='<div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div>';
+  try {
+    if(tab==='pending'){
+      var snap=await db.collection('email_templates').where('orgId','==',currentUser.orgId||currentUser.id).where('approvalStatus','==','pending').get();
+      var items=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      var badge=document.getElementById('pending-tpl-badge');
+      if(badge){badge.textContent=items.length;badge.style.display=items.length?'inline':'none';}
+      if(!items.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8">No pending templates</div>';return;}
+      el.innerHTML=items.map(function(t){
+        return '<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #e2e8f0">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:#1f2937">'+esc(t.name||'Untitled')+'</div>'
+          +'<span style="font-size:11px;color:#64748b">by '+esc(t.createdByName||'MLO')+'</span></div>'
+          +'<div style="font-size:12px;color:#6b7280;margin-bottom:8px">Subject: '+esc(t.subject||'—')+'</div>'
+          +'<div style="font-size:12px;color:#374151;background:white;border-radius:7px;padding:8px;border:1px solid #e5e7eb;white-space:pre-wrap;max-height:80px;overflow:hidden">'+esc((t.body||'').slice(0,200))+'...</div>'
+          +'<div style="display:flex;gap:8px;margin-top:10px">'
+          +'<button onclick="approveTemplate(\''+t.id+'\')" style="flex:1;padding:7px;background:#16a34a;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">✅ Approve</button>'
+          +'<button onclick="rejectTemplatePrompt(\''+t.id+'\')" style="flex:1;padding:7px;background:#dc2626;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">❌ Reject</button>'
+          +'</div></div>';
+      }).join('');
+    } else if(tab==='emaillog'){
+      var snap2=await db.collection('email_log').where('orgId','==',currentUser.orgId||currentUser.id).get();
+      var logs=snap2.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .sort(function(a,b){return new Date(b.sentAt||0)-new Date(a.sentAt||0);}).slice(0,50);
+      if(!logs.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8">No emails sent yet</div>';return;}
+      el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px">'
+        +'<thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Sent by</th><th style="padding:8px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Recipient</th><th style="padding:8px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Template</th><th style="padding:8px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Date</th></tr></thead><tbody>'
+        +logs.map(function(l){
+          var dt=l.sentAt?new Date(l.sentAt.seconds?l.sentAt.seconds*1000:l.sentAt).toLocaleDateString():'—';
+          return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 8px">'+esc(l.sentByName||'—')+'</td><td style="padding:7px 8px">'+esc(l.recipientName||l.recipientEmail||'—')+'</td><td style="padding:7px 8px">'+esc(l.templateName||'—')+'</td><td style="padding:7px 8px;color:#94a3b8">'+dt+'</td></tr>';
+        }).join('')+'</tbody></table>';
+    } else if(tab==='campaigns'){
+      var snap3=await db.collection('drip_campaigns').where('orgId','==',currentUser.orgId||currentUser.id).get();
+      var camps=snap3.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      if(!camps.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8">No campaigns created yet</div>';return;}
+      el.innerHTML=camps.map(function(c){
+        var sc={draft:'#94a3b8',active:'#16a34a',paused:'#f59e0b'}[c.status]||'#94a3b8';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9">'
+          +'<div><div style="font-size:13px;font-weight:700;color:#1f2937">'+esc(c.name||'Unnamed')+'</div>'
+          +'<div style="font-size:11px;color:#94a3b8">'+(c.steps||[]).length+' steps &nbsp;·&nbsp; '+(c.enrolledContacts||0)+' enrolled</div></div>'
+          +'<span style="background:'+sc+'22;color:'+sc+';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(c.status||'draft')+'</span></div>';
+      }).join('');
+    } else if(tab==='callsummary'){
+      var snap4=await db.collection('call_log').where('orgId','==',currentUser.orgId||currentUser.id).get();
+      var allCalls=snap4.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      var weekAgo=new Date(Date.now()-7*864e5);
+      var weekCalls=allCalls.filter(function(c){return new Date(c.callDate||c.createdAt||0)>=weekAgo;});
+      var connRate=weekCalls.length?Math.round(weekCalls.filter(function(c){return c.outcome==='Connected';}).length/weekCalls.length*100):0;
+      var callerMap={};
+      weekCalls.forEach(function(c){if(!callerMap[c.userName])callerMap[c.userName]=0;callerMap[c.userName]++;});
+      var leaders=Object.keys(callerMap).sort(function(a,b){return callerMap[b]-callerMap[a];}).slice(0,5);
+      el.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'
+        +'<div style="background:#f0fdf4;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#16a34a">'+weekCalls.length+'</div><div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase">Calls This Week</div></div>'
+        +'<div style="background:#eff6ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#2563eb">'+connRate+'%</div><div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase">Connected Rate</div></div>'
+        +'<div style="background:#fefce8;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#92400e">'+allCalls.length+'</div><div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase">Total All Time</div></div>'
+        +'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px">Top Callers This Week</div>'
+        +(leaders.length?'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+          +leaders.map(function(n,i){return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:7px 8px"><span style="font-size:10px;color:#94a3b8;margin-right:6px">#'+(i+1)+'</span>'+esc(n)+'</td><td style="padding:7px 8px;text-align:right;font-weight:700">'+callerMap[n]+' calls</td></tr>';}).join('')
+          +'</table>':'<div style="color:#94a3b8;font-size:13px">No calls this week</div>');
+    }
+  } catch(e){ el.innerHTML='<div style="color:#ef4444;padding:20px">Error: '+esc(e.message)+'</div>'; }
+}
+
+// ── HELPER ────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── END PHASE 15 ─────────────────────────────────────────────
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
@@ -9913,6 +10814,9 @@ async function renderAdminTeamPipeline(containerId) {
   </button>
   <button class="bottom-nav-item" id="bn-pipeline" onclick="showTab('pipeline');updateBottomNav('pipeline')">
     <span class="bn-icon">📊</span>Pipeline
+  </button>
+  <button class="bottom-nav-item" id="bn-comms" onclick="showTab('comms');updateBottomNav('comms')">
+    <span class="bn-icon">💬</span>Comms
   </button>
 </nav>
 
@@ -9944,7 +10848,7 @@ function updateBottomNav(tab) {
   // Realtor portal tabs
   var rpMap = { 'rp-home':'rbn-home', 'rp-search':'rbn-search', 'rp-searches':'rbn-searches', 'rp-openhouses':'rbn-openhouses' };
   // MLO tabs
-  var mloMap = { home:'bn-home', search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics' };
+  var mloMap = { home:'bn-home', search:'bn-search', oyz:'bn-oyz', realtors:'bn-realtors', dashboard:'bn-dashboard', analytics:'bn-analytics', pipeline:'bn-pipeline', comms:'bn-comms' };
   var id = rpMap[tab] || mloMap[tab];
   if (id) { var el = document.getElementById(id); if (el) el.classList.add('active'); }
 }
