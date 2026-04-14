@@ -881,20 +881,76 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 .realtor-profile-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: flex-start; justify-content: center; z-index: 700; overflow-y: auto; padding: 24px 20px; }
 .realtor-profile-overlay.open { display: flex; }
 .realtor-profile-box { background: var(--body-bg); border-radius: 18px; width: 100%; max-width: 760px; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-.realtor-profile-header { background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 18px 18px 0 0; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; }
+.realtor-profile-header { background: #7a9eaa; border-radius: 18px 18px 0 0; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; }
 .realtor-profile-name { color: white; font-size: 20px; font-weight: 800; }
 .realtor-profile-brokerage { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 3px; }
 .realtor-profile-close { background: rgba(255,255,255,0.15); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
 .realtor-profile-body { padding: 24px 28px; }
 .rp-section { background: white; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.rp-section-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+.rp-section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #ede8df; }
 .rp-perf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .rp-perf-item { text-align: center; }
-.rp-perf-num { font-size: 24px; font-weight: 900; color: #1f2937; }
-.rp-perf-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+.rp-perf-num { font-size: 24px; font-weight: 900; color: var(--text-primary); font-family: var(--font-display); }
+.rp-perf-label { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 .rp-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.rp-contact-item label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 3px; }
-.rp-contact-item span { font-size: 13px; font-weight: 600; color: #1f2937; }
+.rp-contact-item label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 3px; }
+.rp-contact-item span { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+/* Scorecard Hero Metrics */
+.sc-hero-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.sc-hero-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+.sc-hero-val { font-size: 28px; font-weight: 700; color: var(--text-primary); font-family: var(--font-display); line-height: 1.1; }
+.sc-hero-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
+.sc-hero-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+/* Stage Bar Chart */
+.sc-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.sc-bar-label { width: 100px; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-align: right; flex-shrink: 0; }
+.sc-bar-track { flex: 1; height: 20px; background: #f5f0e8; border-radius: 6px; overflow: hidden; }
+.sc-bar-fill { height: 100%; border-radius: 6px; transition: width .3s; min-width: 2px; }
+.sc-bar-count { width: 32px; font-size: 11px; font-weight: 700; color: var(--text-primary); }
+/* Ranking Table */
+.rank-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rank-table th { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); cursor: pointer; white-space: nowrap; }
+.rank-table th:hover { color: var(--text-secondary); }
+.rank-table td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
+.rank-table tr:hover td { background: #f5f0e8; }
+.rank-table .rank-top3 { border-left: 3px solid var(--brand-accent); }
+.rank-table .rate-good { color: #5a8a6a; font-weight: 700; }
+.rank-table .rate-warn { color: #b07030; font-weight: 700; }
+.rank-table .rate-bad { color: #9a4a3a; font-weight: 700; }
+.rank-table .needs-attn { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9a4a3a; margin-left: 6px; }
+/* Deal attribution table */
+.sc-deal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sc-deal-table th { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); cursor: pointer; }
+.sc-deal-table td { padding: 10px; border-bottom: 1px solid var(--border); }
+.sc-deal-table tr:hover td { background: #f5f0e8; cursor: pointer; }
+/* Share popover */
+.sc-share-pop { position: absolute; top: 100%; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.15); z-index: 10; min-width: 200px; display: none; }
+.sc-share-pop.open { display: block; }
+.sc-share-btn { display: block; width: 100%; padding: 10px 14px; background: none; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-primary); cursor: pointer; text-align: left; margin-bottom: 6px; min-height: 44px; font-family: inherit; }
+.sc-share-btn:last-child { margin-bottom: 0; }
+.sc-share-btn:hover { background: #f5f0e8; }
+@media(max-width:640px){
+  .sc-hero-grid { grid-template-columns: 1fr 1fr; }
+  .rp-perf-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rp-contact-grid { grid-template-columns: 1fr; }
+  .sc-bar-label { width: 70px; font-size: 10px; }
+  .rank-table .hide-mobile { display: none; }
+  .realtor-profile-body { padding: 14px 12px; }
+  .realtor-profile-header { padding: 16px 20px; }
+}
+/* Print styles */
+@media print {
+  body { background: white !important; }
+  .sidebar, .topbar, .header, .bottom-nav, #app-mobile-nav,
+  .realtor-profile-close, .sc-share-pop, .schedule-btn,
+  .schedule-form, .pipeline-fab, .settings-overlay, .settings-backdrop { display: none !important; }
+  .realtor-profile-overlay { position: static !important; background: none !important; padding: 0 !important; display: block !important; z-index: auto !important; }
+  .realtor-profile-box { box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; }
+  .realtor-profile-header { border-radius: 0 !important; background: var(--text-primary) !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .rp-section { break-inside: avoid; box-shadow: none !important; border: 1px solid #ddd; }
+  .sc-hero-card { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .sc-bar-fill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
 .schedule-btn { background: linear-gradient(135deg, #1f2937, #374151); color: white; border: none; border-radius: 9px; padding: 11px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .schedule-form { background: #f8fafc; border-radius: 10px; padding: 16px; margin-top: 14px; display: none; }
 .schedule-form.open { display: block; }
@@ -2116,6 +2172,11 @@ admin@loopenta.com</div>
         <div class="realtor-stat-card"><div class="realtor-stat-num" id="rt-stat-total">0</div><div class="realtor-stat-label">Total Realtors</div></div>
         <div class="realtor-stat-card"><div class="realtor-stat-num" id="rt-stat-brokerages">0</div><div class="realtor-stat-label">Brokerages</div></div>
         <div class="realtor-stat-card"><div class="realtor-stat-num" id="rt-stat-assigned">0</div><div class="realtor-stat-label">Assigned to Clients</div></div>
+      </div>
+      <!-- Partner Performance Ranking Table -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:12px">Partner Performance</div>
+        <div id="realtor-ranking-body" style="overflow-x:auto"><div style="color:var(--text-muted);font-size:13px;padding:12px 0">Loading deals data...</div></div>
       </div>
       <div class="realtor-form-card" id="realtor-form-card">
         <div class="realtor-form-title" id="realtor-form-title">➕ Add New Realtor</div>
@@ -4522,6 +4583,28 @@ async function useRequiredActions() {
     });
   } catch(e){ console.warn('[RequiredActions] stuck deals:', e); }
 
+  // 8. COLD REALTORS — no contact in 60+ days
+  try {
+    var sixtyDaysAgo = new Date(now.getTime() - 60 * 86400000);
+    var crSnap = await db.collection('realtors').get();
+    crSnap.forEach(function(d){
+      var r = d.data();
+      if (!r.lastContact) return;
+      var lc = _toDateLocal(r.lastContact);
+      if (!lc) return;
+      if (lc <= sixtyDaysAgo) {
+        var daysSince = Math.floor((now - lc) / 86400000);
+        actions.push({
+          p: 'low',
+          title: (r.name||'Realtor') + ' partnership going cold \u00b7 ' + daysSince + 'd',
+          detail: 'No contact or referral in ' + daysSince + ' days',
+          module: 'Realtors', tab: 'realtors',
+          _realtorId: d.id
+        });
+      }
+    });
+  } catch(e){ console.warn('[RequiredActions] cold realtors:', e); }
+
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
   actions.sort(function(a,b){ return (order[a.p]||9) - (order[b.p]||9); });
@@ -4703,11 +4786,19 @@ function renderHomeModules() {
       sub:    searchesMtd.length ? searchesMtd.length+' new this month' : lmiSrchPct ? lmiSrchPct+'% LMI searches overall' : 'Search a ZIP code to start',
       spark:  prospWeeks,
     },
-    realtors: {
-      metric: realtors.length ? realtors.length+' Partner'+(realtors.length !== 1 ? 's' : '') : 'No Partners Yet',
-      sub:    realtors.length ? 'Referral network · '+realtors.length+' contacts' : 'Add realtors to get started',
-      spark:  relWeeks,
-    },
+    realtors: (function(){
+      var refsMtd = (cachedDeals||[]).filter(function(d){
+        var rid = d.realtorId || d.assignedRealtorId;
+        if (!rid) return false;
+        var dt = d.createdAt ? new Date(d.createdAt) : null;
+        return dt && dt >= moStart;
+      }).length;
+      return {
+        metric: realtors.length ? realtors.length+' Partner'+(realtors.length !== 1 ? 's' : '') : 'No Partners Yet',
+        sub:    refsMtd ? refsMtd+' referral'+(refsMtd!==1?'s':'')+' MTD' : (realtors.length ? 'Referral network' : 'Add realtors to get started'),
+        spark:  relWeeks,
+      };
+    })(),
     contacts: {
       metric: borrowers.length ? borrowers.length+' Borrower'+(borrowers.length !== 1 ? 's' : '') : prospects.length ? prospects.length+' Prospects' : 'No Contacts Yet',
       sub:    prospMtd.length ? prospMtd.length+' added this month' : prospects.length ? prospects.length+' total tracked' : 'Run a search to add contacts',
@@ -4911,7 +5002,7 @@ function showTab(tab) {
   var title = document.getElementById('topbar-page-title');
   if (title) title.textContent = _tabTitles[tab] || '';
   if (tab === 'dashboard') renderDashboard();
-  if (tab === 'realtors') { renderRealtorStats(); renderRealtorList(); }
+  if (tab === 'realtors') { renderRealtorStats(); renderRealtorList(); renderRealtorRankingTable(); }
   if (tab === 'activity') { renderActivityLog(); renderActivityStats(); }
   if (tab === 'marketing') renderMarketingTab();
   if (tab === 'oyz') loadOYZ();
@@ -5898,34 +5989,113 @@ function openRealtorProfile(docId) {
       + '</div></div>';
   }).join('') : '<div style="color:#94a3b8;font-size:13px;padding:10px 0">No activity found.</div>';
 
+  // ── SCORECARD DATA — deals linked to this realtor ────────
+  var linkedDeals = (cachedDeals || []).filter(function(d) {
+    return d.realtorId === docId || d.assignedRealtorId === docId;
+  });
+  var totalRefs = linkedDeals.length;
+  var fundedDeals = linkedDeals.filter(function(d) { return d.stage === 'Funded' || d.stage === 'Closed'; });
+  var pipelineVal = linkedDeals.reduce(function(s,d) { return s + (parseFloat(d.loanAmount)||0); }, 0);
+  var fundedVal = fundedDeals.reduce(function(s,d) { return s + (parseFloat(d.loanAmount)||0); }, 0);
+  var convRate = totalRefs > 0 ? Math.round(fundedDeals.length / totalRefs * 100) : 0;
+  var lmiDeals = linkedDeals.filter(function(d) { return d.lmiEligible === true; });
+  var lmiRate = totalRefs > 0 ? Math.round(lmiDeals.length / totalRefs * 100) : 0;
+  var lmiGoalMet = lmiRate >= 40;
+
+  // Stage breakdown
+  var stageCountMax = 0;
+  var stageRows = PIPELINE_STAGES.map(function(stage) {
+    var ct = linkedDeals.filter(function(d) { return d.stage === stage; }).length;
+    if (ct > stageCountMax) stageCountMax = ct;
+    return { stage: stage, count: ct, color: STAGE_COLORS[stage] };
+  });
+  var stageBarHtml = stageRows.filter(function(s) { return s.count > 0; }).map(function(s) {
+    var pct = stageCountMax > 0 ? Math.round(s.count / stageCountMax * 100) : 0;
+    return '<div class="sc-bar-row">'
+      + '<div class="sc-bar-label">' + s.stage + '</div>'
+      + '<div class="sc-bar-track"><div class="sc-bar-fill" style="width:' + pct + '%;background:' + s.color + '"></div></div>'
+      + '<div class="sc-bar-count">' + s.count + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Deal table
+  var dealTableHtml = '';
+  if (linkedDeals.length) {
+    dealTableHtml = '<table class="sc-deal-table"><thead><tr><th>Borrower</th><th>Amount</th><th>Stage</th><th class="hide-mobile">LMI</th><th class="hide-mobile">Days</th></tr></thead><tbody>'
+      + linkedDeals.map(function(d) {
+        var sc = STAGE_COLORS[d.stage] || '#c4b49a';
+        var days = _dealDaysInStage(d);
+        return '<tr onclick="closeRealtorProfile();showTab(\'pipeline\');setTimeout(function(){openDealDetail(\''+d.id+'\')},300)">'
+          + '<td style="font-weight:600">' + (d.borrowerName||'Unknown') + '</td>'
+          + '<td>' + (d.loanAmount ? '$'+Number(d.loanAmount).toLocaleString() : '—') + '</td>'
+          + '<td><span style="background:'+sc+'22;color:'+sc+';padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700">' + d.stage + '</span></td>'
+          + '<td class="hide-mobile">' + (d.lmiEligible ? '<span style="background:#eef4f0;color:#5a8a6a;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px">LMI ✓</span>' : '—') + '</td>'
+          + '<td class="hide-mobile">' + days + 'd</td>'
+          + '</tr>';
+      }).join('')
+      + '</tbody></table>';
+  }
+
+  // Relationship summary
+  var firstRef = linkedDeals.length ? linkedDeals.reduce(function(min, d) { var dt = d.createdAt ? new Date(d.createdAt) : new Date(); return dt < min ? dt : min; }, new Date()) : null;
+  var partnerSince = firstRef ? firstRef.toLocaleDateString('en-US', {month:'long',year:'numeric'}) : '—';
+  var avgLoan = totalRefs > 0 ? Math.round(pipelineVal / totalRefs) : 0;
+  var loanTypes = {};
+  linkedDeals.forEach(function(d) { if (d.loanType) loanTypes[d.loanType] = (loanTypes[d.loanType]||0) + 1; });
+  var topType = Object.keys(loanTypes).sort(function(a,b) { return loanTypes[b]-loanTypes[a]; })[0] || '—';
+  var topTypePct = topType !== '—' && totalRefs > 0 ? Math.round(loanTypes[topType] / totalRefs * 100) : 0;
+
   document.getElementById('realtor-profile-body').innerHTML =
-    '<div class="rp-section">'
+    // ── Share Button Row ──
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:12px;position:relative">'
+    + '<button style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px" onclick="_scToggleShare(this)">Share Scorecard</button>'
+    + '<div class="sc-share-pop" id="sc-share-pop">'
+    + '<button class="sc-share-btn" onclick="_scCopyLink(\''+docId+'\')">📋 Copy Link</button>'
+    + '<button class="sc-share-btn" onclick="_scPrintPDF(\''+esc(r.name||'')+'\')">📄 Download PDF</button>'
+    + '</div>'
+    + '</div>'
+    // ── Hero Metrics ──
+    + '<div class="sc-hero-grid" style="margin-bottom:16px">'
+    + '<div class="sc-hero-card"><div class="sc-hero-val">' + totalRefs + '</div><div class="sc-hero-label">Total Referrals</div></div>'
+    + '<div class="sc-hero-card"><div class="sc-hero-val">' + fmtK(pipelineVal) + '</div><div class="sc-hero-label">Pipeline Value</div><div class="sc-hero-sub">' + fmtK(fundedVal) + ' funded</div></div>'
+    + '<div class="sc-hero-card"><div class="sc-hero-val">' + convRate + '%</div><div class="sc-hero-label">Referral → Funded</div><div class="sc-hero-sub">' + fundedDeals.length + ' funded</div></div>'
+    + '<div class="sc-hero-card"><div class="sc-hero-val" style="color:' + (lmiGoalMet?'#5a8a6a':'#b07030') + '">' + lmiRate + '%</div><div class="sc-hero-label">LMI Rate</div><div class="sc-hero-sub">Goal: 40% ' + (lmiGoalMet?'✓':'') + '</div></div>'
+    + '</div>'
+    // ── Contact Info ──
+    + '<div class="rp-section">'
     + '<div class="rp-section-title">Contact Info</div>'
     + '<div class="rp-contact-grid">'
-    + (r.phone ? '<div class="rp-contact-item"><label>Phone</label><span><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></span></div>' : '')
-    + (r.email ? '<div class="rp-contact-item"><label>Email</label><span><a href="mailto:' + r.email + '" style="color:#1B73E3;text-decoration:none">' + r.email + '</a></span></div>' : '')
+    + (r.phone ? '<div class="rp-contact-item"><label>Phone</label><span><a href="tel:' + r.phone + '" style="color:var(--text-primary);text-decoration:none">' + r.phone + '</a></span></div>' : '')
+    + (r.email ? '<div class="rp-contact-item"><label>Email</label><span><a href="mailto:' + r.email + '" style="color:#5a8a9e;text-decoration:none">' + r.email + '</a></span></div>' : '')
     + (r.area  ? '<div class="rp-contact-item"><label>Area / ZIP</label><span>' + r.area + '</span></div>' : '')
-    + (r.notes ? '<div class="rp-contact-item"><label>Notes</label><span style="font-style:italic;color:#64748b">' + r.notes + '</span></div>' : '')
-    + (lastContact ? '<div class="rp-contact-item"><label>Last OYZ Contact</label><span>' + new Date(lastContact).toLocaleDateString() + '</span></div>' : '')
+    + (lastContact ? '<div class="rp-contact-item"><label>Last Contact</label><span>' + new Date(lastContact).toLocaleDateString() + '</span></div>' : '')
+    + '<div class="rp-contact-item"><label>Partnership Since</label><span>' + partnerSince + '</span></div>'
     + '</div>'
     + '</div>'
+    // ── Relationship Summary ──
     + '<div class="rp-section">'
-    + '<div class="rp-section-title">Performance Summary</div>'
-    + '<div class="rp-perf-grid">'
-    + '<div class="rp-perf-item"><div class="rp-perf-num">' + total + '</div><div class="rp-perf-label">Open Houses</div></div>'
-    + '<div class="rp-perf-item"><div class="rp-perf-num" style="color:#059669">' + captured + '</div><div class="rp-perf-label">Captured</div></div>'
-    + '<div class="rp-perf-item"><div class="rp-perf-num" style="color:#dc2626">' + lost + '</div><div class="rp-perf-label">Lost</div></div>'
-    + '<div class="rp-perf-item"><div class="rp-perf-num" style="color:#7c3aed">' + capRate + '%</div><div class="rp-perf-label">Capture Rate</div></div>'
+    + '<div class="rp-section-title">Relationship Summary</div>'
+    + '<div class="rp-contact-grid">'
+    + '<div class="rp-contact-item"><label>Open Houses Together</label><span>' + total + '</span></div>'
+    + '<div class="rp-contact-item"><label>Avg Loan Amount</label><span>' + (avgLoan ? '$'+Number(avgLoan).toLocaleString() : '—') + '</span></div>'
+    + '<div class="rp-contact-item"><label>Top Loan Type</label><span>' + topType + (topTypePct ? ' — '+topTypePct+'%' : '') + '</span></div>'
+    + '<div class="rp-contact-item"><label>OYZ Capture Rate</label><span>' + capRate + '%</span></div>'
     + '</div>'
     + '</div>'
+    // ── Pipeline Breakdown ──
+    + (stageBarHtml ? '<div class="rp-section"><div class="rp-section-title">Pipeline by Stage</div>' + stageBarHtml + '</div>' : '')
+    // ── Linked Deals Table ──
+    + (dealTableHtml ? '<div class="rp-section"><div class="rp-section-title">Linked Deals (' + totalRefs + ')</div>' + dealTableHtml + '</div>' : '')
+    // ── OYZ Open Houses ──
     + '<div class="rp-section">'
     + '<div class="rp-section-title">OYZ Open Houses</div>'
     + oyzCardsHtml
     + '</div>'
+    // ── Activity Timeline ──
     + '<div class="rp-section">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
     + '<div class="rp-section-title" style="margin-bottom:0">Activity Timeline</div>'
-    + '<button class="schedule-btn" onclick="toggleScheduleForm()">+ Schedule Activity</button>'
+    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;min-height:44px" onclick="toggleScheduleForm()">+ Log Activity</button>'
     + '</div>'
     + '<div class="schedule-form" id="rp-schedule-form">'
     + '<div class="schedule-grid">'
@@ -5934,14 +6104,14 @@ function openRealtorProfile(docId) {
     + '<div class="schedule-field"><label>Property ZIP</label><input type="text" id="rp-sch-zip" placeholder="e.g. 93701" maxlength="5" /></div>'
     + '<div class="schedule-field"><label>Notes</label><input type="text" id="rp-sch-notes" placeholder="Optional notes..." /></div>'
     + '</div>'
-    + '<button style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px" onclick="saveScheduledActivity(\'' + docId + '\',\'' + (r.name||'') + '\')">Log Activity</button>'
-    + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer" onclick="toggleScheduleForm()">Cancel</button>'
+    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px" onclick="saveScheduledActivity(\'' + docId + '\',\'' + (r.name||'') + '\')">Log Activity</button>'
+    + '<button style="background:#f5f0e8;color:var(--text-secondary);border:none;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer" onclick="toggleScheduleForm()">Cancel</button>'
     + '</div>'
     + timelineHtml
     + '</div>'
     + '<div class="rp-section" id="rp-shared-searches-section">'
-    + '<div class="rp-section-title">🔍 Shared Searches</div>'
-    + '<div id="rp-shared-searches-body"><div style="color:#94a3b8;font-size:13px;padding:8px 0">Loading shared searches...</div></div>'
+    + '<div class="rp-section-title">Shared Searches</div>'
+    + '<div id="rp-shared-searches-body"><div style="color:var(--text-muted);font-size:13px;padding:8px 0">Loading shared searches...</div></div>'
     + '</div>';
 
   document.getElementById('realtor-profile-overlay').classList.add('open');
@@ -5979,6 +6149,101 @@ function openRealtorProfile(docId) {
 
 function closeRealtorProfile() {
   document.getElementById('realtor-profile-overlay').classList.remove('open');
+}
+
+// ── SCORECARD SHARE / PDF ────────────────────────────────────
+function _scToggleShare(btn) {
+  var pop = document.getElementById('sc-share-pop');
+  if (pop) pop.classList.toggle('open');
+}
+async function _scCopyLink(realtorId) {
+  if (!db || !currentUser) return;
+  var token = btoa(realtorId + ':' + (currentUser.orgId||'') + ':' + Date.now());
+  try { await db.collection('realtors').doc(realtorId).update({ scorecardToken: token }); } catch(e) {}
+  var url = window.location.origin + '/realtor-scorecard/' + realtorId + '?token=' + token;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('Scorecard link copied!');
+  } catch(e) { prompt('Copy this link:', url); }
+  var pop = document.getElementById('sc-share-pop');
+  if (pop) pop.classList.remove('open');
+}
+function _scPrintPDF(name) {
+  var pop = document.getElementById('sc-share-pop');
+  if (pop) pop.classList.remove('open');
+  var origTitle = document.title;
+  document.title = name + ' Partnership Report - ' + new Date().toLocaleDateString();
+  window.print();
+  setTimeout(function(){ document.title = origTitle; }, 1000);
+}
+
+// ── REALTOR RANKING TABLE ─────────────────────────────────────
+var _rankSort = 'pipeVal';
+var _rankDir  = -1;
+
+function renderRealtorRankingTable() {
+  var el = document.getElementById('realtor-ranking-body');
+  if (!el) return;
+  var deals = cachedDeals || [];
+  var now = new Date();
+  var thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+
+  var realtorMap = {};
+  (cachedRealtors || []).forEach(function(r) {
+    realtorMap[r.docId || r.id] = { name: r.name, id: r.docId || r.id, refs: 0, pipeVal: 0, funded: 0, fundedVal: 0, lmi: 0, lastContact: r.lastContact || r.createdAt || '' };
+  });
+  deals.forEach(function(d) {
+    var rid = d.realtorId || d.assignedRealtorId;
+    if (!rid || !realtorMap[rid]) return;
+    var rm = realtorMap[rid];
+    rm.refs++;
+    rm.pipeVal += parseFloat(d.loanAmount) || 0;
+    if (d.stage === 'Funded' || d.stage === 'Closed') { rm.funded++; rm.fundedVal += parseFloat(d.loanAmount) || 0; }
+    if (d.lmiEligible) rm.lmi++;
+  });
+
+  var rows = Object.values(realtorMap).filter(function(r) { return r.refs > 0 || cachedRealtors.length <= 20; });
+  rows.sort(function(a, b) {
+    var av = a[_rankSort] || 0, bv = b[_rankSort] || 0;
+    if (typeof av === 'string') return av.localeCompare(bv) * _rankDir;
+    return (av - bv) * _rankDir;
+  });
+
+  function rateCls(val, thresholds) {
+    return val >= thresholds[0] ? 'rate-good' : val >= thresholds[1] ? 'rate-warn' : 'rate-bad';
+  }
+
+  el.innerHTML = '<table class="rank-table"><thead><tr>'
+    + '<th onclick="_rankSortBy(\'name\')">Realtor</th>'
+    + '<th onclick="_rankSortBy(\'refs\')">Refs</th>'
+    + '<th onclick="_rankSortBy(\'pipeVal\')">Pipeline</th>'
+    + '<th onclick="_rankSortBy(\'funded\')" class="hide-mobile">Funded</th>'
+    + '<th onclick="_rankSortBy(\'convRate\')">Conv%</th>'
+    + '<th onclick="_rankSortBy(\'lmiRate\')" class="hide-mobile">LMI%</th>'
+    + '<th class="hide-mobile">Contact</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(function(rm, i) {
+      var convR = rm.refs > 0 ? Math.round(rm.funded / rm.refs * 100) : 0;
+      var lmiR = rm.refs > 0 ? Math.round(rm.lmi / rm.refs * 100) : 0;
+      rm.convRate = convR; rm.lmiRate = lmiR;
+      var lcDate = rm.lastContact ? new Date(rm.lastContact) : null;
+      var needsAttn = lcDate && lcDate < thirtyDaysAgo;
+      return '<tr class="' + (i < 3 ? 'rank-top3' : '') + '" onclick="openRealtorProfileById(\''+rm.id+'\',\''+esc(rm.name)+'\')" style="cursor:pointer">'
+        + '<td style="font-weight:600">' + esc(rm.name) + (needsAttn ? '<span class="needs-attn" title="No contact in 30+ days"></span>' : '') + '</td>'
+        + '<td>' + rm.refs + '</td>'
+        + '<td>' + fmtK(rm.pipeVal) + '</td>'
+        + '<td class="hide-mobile">' + rm.funded + '</td>'
+        + '<td class="' + rateCls(convR, [20, 10]) + '">' + convR + '%</td>'
+        + '<td class="hide-mobile ' + rateCls(lmiR, [40, 20]) + '">' + lmiR + '%</td>'
+        + '<td class="hide-mobile">' + (lcDate ? lcDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—') + '</td>'
+        + '</tr>';
+    }).join('')
+    + '</tbody></table>';
+}
+
+function _rankSortBy(col) {
+  if (_rankSort === col) _rankDir *= -1; else { _rankSort = col; _rankDir = -1; }
+  renderRealtorRankingTable();
 }
 
 function toggleScheduleForm() {

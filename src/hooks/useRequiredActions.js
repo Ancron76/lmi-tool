@@ -162,6 +162,27 @@ export function useRequiredActions(uid) {
         });
       } catch (e) { console.warn("stuck deals", e); }
 
+      // 8. Cold realtors — no contact in 60+ days
+      try {
+        const rSnap = await getDocs(collection(db, "realtors"));
+        const sixtyDaysAgo = new Date(now.getTime() - 60 * 86400000);
+        rSnap.forEach(doc => {
+          const r = doc.data();
+          if (!r.lastContact) return;
+          const last = r.lastContact.toDate ? r.lastContact.toDate() : new Date(r.lastContact);
+          if (last <= sixtyDaysAgo) {
+            const daysSince = Math.floor((now - last) / 86400000);
+            results.push({
+              priority: "low",
+              label: `${r.name || "Realtor"} partnership going cold · ${daysSince}d`,
+              detail: `No contact or referral in ${daysSince} days`,
+              module: "Realtors", moduleIc: "realtors", moduleColor: "#c4943a",
+              navTarget: `/realtors?id=${doc.id}`, docId: doc.id,
+            });
+          }
+        });
+      } catch (e) { console.warn("cold realtors", e); }
+
       const order = { high: 0, med: 1, low: 2 };
       results.sort((a, b) => order[a.priority] - order[b.priority]);
       setActions(results);
