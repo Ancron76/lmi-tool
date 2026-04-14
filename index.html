@@ -1551,6 +1551,98 @@ h1,h2,h3 { letter-spacing: -0.3px; }
 /* Hide old nav chrome */
 .header { display: none !important; }
 .bottom-nav { display: none !important; }
+
+/* ── MOBILE APP NAV ──────────────────────────────────────────── */
+#app-mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 450;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 12px rgba(26,20,16,0.07);
+}
+.amn-inner { display: flex; justify-content: space-around; align-items: stretch; height: 54px; }
+.amn-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; background: none; border: none; cursor: pointer;
+  font-size: 9.5px; font-weight: 500; color: var(--text-muted);
+  padding: 8px 4px; font-family: var(--font-body);
+  transition: color 0.12s; -webkit-tap-highlight-color: transparent;
+}
+.amn-item.active { color: var(--brand-accent); }
+.amn-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+@media (max-width: 900px) {
+  #app-mobile-nav { display: block; }
+  [id^="tab-"][id$="-content"] { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important; }
+  .home-layout { grid-template-columns: 1fr !important; }
+  .home-layout > div:last-child { order: -1; } /* Actions panel first on mobile */
+  .home-main { padding: 20px 16px 8px; }
+  .topbar { padding: 0 12px; }
+}
+
+/* ── DASHBOARD SETTINGS PANEL ───────────────────────────────── */
+#dash-settings-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(26,20,16,0.35); z-index: 799;
+}
+#dash-settings-backdrop.open { display: block; }
+#dash-settings-panel {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 360px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  z-index: 800;
+  display: flex; flex-direction: column;
+  transform: translateX(110%);
+  transition: transform 0.28s cubic-bezier(.3,.7,.3,1);
+}
+#dash-settings-panel.open { transform: translateX(0); }
+.dsp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dsp-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text-primary); }
+.dsp-close { background: none; border: 1px solid var(--border); border-radius: 7px; width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; line-height: 1; }
+.dsp-body { flex: 1; overflow-y: auto; }
+.dsp-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.dsp-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-muted); margin-bottom: 12px; }
+/* Drag rows */
+.dsp-mod-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); user-select: none; }
+.dsp-mod-row:last-child { border-bottom: none; }
+.dsp-mod-row.drag-over { border-top: 2px solid var(--brand-accent); margin-top: -1px; }
+.dsp-drag-handle { cursor: grab; color: var(--text-muted); opacity: 0.5; flex-shrink: 0; }
+.dsp-drag-handle:active { cursor: grabbing; }
+.dsp-mod-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dsp-mod-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+/* Toggle switch */
+.dsp-toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+.dsp-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.dsp-toggle-slider { position: absolute; inset: 0; background: var(--border-strong); border-radius: 99px; transition: background 0.2s; cursor: pointer; }
+.dsp-toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; bottom: 3px; border-radius: 50%; background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.dsp-toggle input:checked + .dsp-toggle-slider { background: var(--brand-accent); }
+.dsp-toggle input:checked + .dsp-toggle-slider:before { transform: translateX(16px); }
+/* Settings rows */
+.dsp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; }
+.dsp-row + .dsp-row { border-top: 1px solid var(--border); }
+.dsp-row-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.dsp-row-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.dsp-seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.dsp-seg-btn { padding: 5px 12px; background: none; border: none; font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; font-family: var(--font-body); white-space: nowrap; }
+.dsp-seg-btn.active { background: var(--brand-accent); color: white; }
+.dsp-input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; width: 72px; text-align: center; background: var(--body-bg); color: var(--text-primary); outline: none; font-family: var(--font-body); }
+.dsp-input:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 2px rgba(196,148,58,0.15); }
+.dsp-footer { padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 10px; align-items: center; }
+.dsp-save-btn { flex: 1; padding: 10px; background: var(--brand-accent); color: white; border: none; border-radius: 9px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background 0.15s; }
+.dsp-save-btn:hover { background: var(--brand-accent-dark); }
+.dsp-save-confirm { font-size: 12px; color: var(--color-positive); font-weight: 600; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
+.dsp-save-confirm.show { opacity: 1; }
+/* Gear btn in topbar */
+.topbar-gear-btn { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; color: var(--text-muted); flex-shrink: 0; transition: background 0.12s; }
+.topbar-gear-btn:hover { background: var(--body-bg); color: var(--brand-accent); }
+@media (max-width: 600px) {
+  #dash-settings-panel { width: 100%; border-left: none; transform: translateY(110%); top: auto; border-radius: 20px 20px 0 0; max-height: 88vh; }
+  #dash-settings-panel.open { transform: translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -1782,6 +1874,9 @@ admin@loopenta.com</div>
       <button class="notif-bell-btn topbar-action-btn" id="notif-bell" onclick="openNotifications()" title="Notifications">🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span></button>
       <span id="admin-nav-btn" class="topbar-action-btn is-admin" onclick="goAdmin()" style="display:none">🛡 Admin</span>
       <span id="superadmin-nav-btn" class="topbar-action-btn is-super" onclick="goSuperAdmin()" style="display:none">⚡ Super</span>
+      <button class="topbar-gear-btn" onclick="openDashSettings()" title="Dashboard settings" id="topbar-gear-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
     </div>
   </div>
 
@@ -4056,6 +4151,7 @@ async function _postLoginSetup(user) {
   setDefaultDate();
   loadProfileToSettings();
   generateNotifications();
+  loadDashboardPrefs(); // load saved home screen layout prefs
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
 }
 
@@ -4228,30 +4324,48 @@ function renderHomeTab() {
 function renderHomeModules() {
   var grid = document.getElementById('home-modules-grid');
   if (!grid) return;
-  // pull live counts where easy
-  var pipeCount  = (typeof cachedDeals !== 'undefined')    ? cachedDeals.filter(function(d){return d.stage!=='closed_won'&&d.stage!=='closed_lost';}).length : null;
-  var contactCnt = (typeof cachedBorrowers !== 'undefined')? cachedBorrowers.length : null;
-  var realtorCnt = (typeof cachedRealtors !== 'undefined') ? cachedRealtors.length  : null;
+  // Apply saved grid column count
+  var cols = (_dashPrefs && _dashPrefs.gridCols) || 2;
+  grid.style.gridTemplateColumns = 'repeat('+cols+', 1fr)';
+
+  // Live counts where available
+  var pipeCount  = (typeof cachedDeals !== 'undefined')     ? cachedDeals.filter(function(d){return d.stage!=='closed_won'&&d.stage!=='closed_lost';}).length : null;
+  var contactCnt = (typeof cachedBorrowers !== 'undefined') ? cachedBorrowers.length : null;
+  var realtorCnt = (typeof cachedRealtors !== 'undefined')  ? cachedRealtors.length  : null;
+  var mo = new Date(); mo.setDate(1); mo.setHours(0,0,0,0);
+  var actMtd = (typeof cachedActivities !== 'undefined') ? cachedActivities.filter(function(a){ return a.date && new Date(a.date) >= mo; }).length : null;
 
   var metrics = {
-    pipeline:   pipeCount  !== null ? pipeCount+' Active Deals'  : '— Active Deals',
-    search:     '— Searches',
-    realtors:   realtorCnt !== null ? realtorCnt+' Partners'     : '— Partners',
-    contacts:   contactCnt !== null ? contactCnt+' Contacts'     : '— Contacts',
-    comms:      '— Templates',
-    oyz:        '— Scheduled',
-    activity:   '— Activities MTD',
-    analytics:  '— % to Goal',
-    dashboard:  '— MLOs Active',
-    marketing:  '— Campaigns',
+    pipeline:  pipeCount  !== null ? pipeCount+' Active Deals'    : '— Deals',
+    search:    '— Searches',
+    realtors:  realtorCnt !== null ? realtorCnt+' Partners'       : '— Partners',
+    contacts:  contactCnt !== null ? contactCnt+' Contacts'       : '— Contacts',
+    comms:     '— Templates',
+    oyz:       '— Scheduled',
+    activity:  actMtd     !== null ? actMtd+' Activities MTD'     : '— Activities',
+    analytics: '— % to Goal',
+    dashboard: '— MLOs Active',
+    marketing: '— Campaigns',
   };
 
-  grid.innerHTML = HOME_MODULES.map(function(m) {
+  // Filter to visible modules only
+  var visible = HOME_MODULES.filter(function(m) {
+    return _dashPrefs.visibility[m.tab] !== false;
+  });
+
+  if (!visible.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:13px">All modules hidden — open Settings to restore.</div>';
+    return;
+  }
+
+  grid.innerHTML = visible.map(function(m) {
     var metric = metrics[m.tab] || '—';
     return '<div class="home-mod-card" onclick="showTab(\''+m.tab+'\')">'
       +'<div class="home-mod-header">'
         +'<div class="home-mod-label">'
-          +'<div class="home-mod-icon" style="background:'+m.color+'18;color:'+m.color+'">●</div>'
+          +'<div class="home-mod-icon" style="background:'+m.color+'18;color:'+m.color+'">'
+            +'<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5"/></svg>'
+          +'</div>'
           +'<span class="home-mod-name">'+m.name+'</span>'
         +'</div>'
       +'</div>'
@@ -4358,6 +4472,7 @@ function showTab(tab) {
     renderHomeTab();
   }
   if (typeof updateBottomNav === 'function') updateBottomNav(tab);
+  if (typeof _amnActive === 'function') _amnActive(tab);
 }
 
 // ── HAMBURGER MENU ────────────────────────────────────────────
@@ -11375,6 +11490,210 @@ async function renderAdminComms(tab) {
 // ── HELPER ────────────────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ── DASHBOARD PREFS & SETTINGS PANEL ─────────────────────────
+var _dashPrefs = {
+  moduleOrder: null, // null = use HOME_MODULES default order
+  visibility:  {},   // tab → bool (missing = true)
+  gridCols:    2,
+  thresholds:  { rateLock: 3, realtorIdle: 14, lmiTarget: 40 },
+  notif:       { push: true, emailDigest: false }
+};
+
+async function loadDashboardPrefs() {
+  if (!currentUser) return;
+  try {
+    var snap = await db.collection('users').doc(currentUser.id)
+                       .collection('prefs').doc('dashboard').get();
+    if (snap.exists) {
+      var d = snap.data();
+      if (Array.isArray(d.moduleOrder) && d.moduleOrder.length) _dashPrefs.moduleOrder = d.moduleOrder;
+      if (d.visibility)  _dashPrefs.visibility  = d.visibility;
+      if (d.gridCols)    _dashPrefs.gridCols     = d.gridCols;
+      if (d.thresholds)  Object.assign(_dashPrefs.thresholds, d.thresholds);
+      if (d.notif)       Object.assign(_dashPrefs.notif, d.notif);
+    }
+    applyDashPrefs();
+  } catch(e) { console.error('loadDashboardPrefs', e); }
+}
+
+function applyDashPrefs() {
+  // Reorder HOME_MODULES to match saved order
+  if (_dashPrefs.moduleOrder && _dashPrefs.moduleOrder.length) {
+    HOME_MODULES.sort(function(a, b) {
+      var ai = _dashPrefs.moduleOrder.indexOf(a.tab);
+      var bi = _dashPrefs.moduleOrder.indexOf(b.tab);
+      if (ai < 0) ai = 999; if (bi < 0) bi = 999;
+      return ai - bi;
+    });
+  }
+  // Re-render if home is currently visible
+  var homeEl = document.getElementById('tab-home-content');
+  if (homeEl && homeEl.style.display !== 'none') renderHomeModules();
+}
+
+function openDashSettings() {
+  renderDspModules();
+  // Sync grid-cols seg buttons
+  dspSetGrid(_dashPrefs.gridCols, true);
+  // Sync threshold inputs
+  var rl = document.getElementById('dsp-ratelock');
+  var ri = document.getElementById('dsp-realtoridle');
+  var lt = document.getElementById('dsp-lmitarget');
+  if (rl) rl.value = _dashPrefs.thresholds.rateLock;
+  if (ri) ri.value = _dashPrefs.thresholds.realtorIdle;
+  if (lt) lt.value = _dashPrefs.thresholds.lmiTarget;
+  var pn = document.getElementById('dsp-pushnotif');
+  var ed = document.getElementById('dsp-emaildigest');
+  if (pn) pn.checked = _dashPrefs.notif.push;
+  if (ed) ed.checked = _dashPrefs.notif.emailDigest;
+  document.getElementById('dash-settings-backdrop').classList.add('open');
+  document.getElementById('dash-settings-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDashSettings() {
+  document.getElementById('dash-settings-backdrop').classList.remove('open');
+  document.getElementById('dash-settings-panel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function saveDashSettings() {
+  if (!currentUser) return;
+  // Collect order + visibility from current DOM
+  var order = [], vis = {};
+  document.querySelectorAll('#dsp-modules-list .dsp-mod-row').forEach(function(row) {
+    var tab = row.dataset.tab;
+    var chk = row.querySelector('input[type=checkbox]');
+    if (tab) {
+      order.push(tab);
+      vis[tab] = chk ? chk.checked : true;
+    }
+  });
+  // Grid cols
+  var activeBtn = document.querySelector('#dsp-gridcols .dsp-seg-btn.active');
+  var cols = activeBtn ? parseInt(activeBtn.dataset.cols) || 2 : 2;
+  var rateLock    = parseInt((document.getElementById('dsp-ratelock')    || {}).value) || 3;
+  var realtorIdle = parseInt((document.getElementById('dsp-realtoridle') || {}).value) || 14;
+  var lmiTarget   = parseInt((document.getElementById('dsp-lmitarget')   || {}).value) || 40;
+  var pushNotif   = (document.getElementById('dsp-pushnotif')  || {}).checked !== false;
+  var emailDigest = !!(document.getElementById('dsp-emaildigest') || {}).checked;
+
+  _dashPrefs = {
+    moduleOrder: order, visibility: vis, gridCols: cols,
+    thresholds: { rateLock: rateLock, realtorIdle: realtorIdle, lmiTarget: lmiTarget },
+    notif: { push: pushNotif, emailDigest: emailDigest }
+  };
+
+  try {
+    await db.collection('users').doc(currentUser.id)
+            .collection('prefs').doc('dashboard').set(_dashPrefs);
+    applyDashPrefs();
+    var conf = document.getElementById('dsp-save-confirm');
+    if (conf) {
+      conf.classList.add('show');
+      setTimeout(function() { conf.classList.remove('show'); closeDashSettings(); }, 1400);
+    }
+  } catch(e) {
+    console.error('saveDashSettings', e);
+    alert('Could not save preferences. Please try again.');
+  }
+}
+
+function renderDspModules() {
+  var list = document.getElementById('dsp-modules-list');
+  if (!list) return;
+  list.innerHTML = HOME_MODULES.map(function(m) {
+    var vis = _dashPrefs.visibility[m.tab] !== false;
+    return '<div class="dsp-mod-row" data-tab="'+m.tab+'" draggable="true">'
+      +'<span class="dsp-drag-handle" aria-hidden="true">'
+        +'<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">'
+          +'<circle cx="5" cy="3.5" r="1.2"/><circle cx="11" cy="3.5" r="1.2"/>'
+          +'<circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>'
+          +'<circle cx="5" cy="12.5" r="1.2"/><circle cx="11" cy="12.5" r="1.2"/>'
+        +'</svg>'
+      +'</span>'
+      +'<div class="dsp-mod-dot" style="background:'+m.color+'"></div>'
+      +'<span class="dsp-mod-name">'+esc(m.name)+'</span>'
+      +'<label class="dsp-toggle" title="Show/hide">'
+        +'<input type="checkbox"'+(vis?' checked':'')+'>'
+        +'<span class="dsp-toggle-slider"></span>'
+      +'</label>'
+    +'</div>';
+  }).join('');
+  _initDspDrag(list);
+}
+
+function dspSetGrid(n, silent) {
+  document.querySelectorAll('#dsp-gridcols .dsp-seg-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.cols) === n);
+  });
+}
+
+// ── DSP DRAG & DROP ───────────────────────────────────────────
+var _dspDragSrc = null;
+function _initDspDrag(container) {
+  container.querySelectorAll('.dsp-mod-row').forEach(function(row) {
+    row.addEventListener('dragstart', function(e) {
+      _dspDragSrc = row;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(function() { row.style.opacity = '0.4'; }, 0);
+    });
+    row.addEventListener('dragend', function() {
+      row.style.opacity = '';
+      container.querySelectorAll('.dsp-mod-row').forEach(function(r) {
+        r.classList.remove('drag-over');
+      });
+    });
+    row.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      container.querySelectorAll('.dsp-mod-row').forEach(function(r) { r.classList.remove('drag-over'); });
+      if (row !== _dspDragSrc) row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', function() {
+      row.classList.remove('drag-over');
+    });
+    row.addEventListener('drop', function(e) {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      if (!_dspDragSrc || _dspDragSrc === row) return;
+      var rows = Array.from(container.querySelectorAll('.dsp-mod-row'));
+      var si = rows.indexOf(_dspDragSrc), ti = rows.indexOf(row);
+      if (si < ti) container.insertBefore(_dspDragSrc, row.nextSibling);
+      else container.insertBefore(_dspDragSrc, row);
+    });
+  });
+}
+
+// ── MOBILE APP NAV ────────────────────────────────────────────
+function _amnActive(tab) {
+  document.querySelectorAll('.amn-item').forEach(function(el) { el.classList.remove('active'); });
+  var mapped = { search: 'search', pipeline: 'pipeline', home: 'home' };
+  var el = document.getElementById('amn-' + (mapped[tab] || 'home'));
+  if (el) el.classList.add('active');
+}
+
+function _mobileScrollToActions() {
+  // Navigate to home first, then scroll to the actions panel
+  if (document.getElementById('tab-home-content').style.display === 'none') {
+    showTab('home');
+    _amnActive('home');
+  }
+  setTimeout(function() {
+    var el = document.getElementById('home-actions-list');
+    var panel = el && el.closest ? el.closest('.home-layout > div') : el;
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Highlight briefly
+    if (el) {
+      el.style.transition = 'box-shadow 0.2s';
+      el.style.boxShadow = '0 0 0 3px rgba(196,148,58,0.4)';
+      setTimeout(function() { el.style.boxShadow = ''; }, 1000);
+    }
+    var btn = document.getElementById('amn-actions');
+    if (btn) { btn.classList.add('active'); setTimeout(function(){ _amnActive('home'); }, 2000); }
+  }, 80);
+}
+
 // ── END PHASE 15 ─────────────────────────────────────────────
 </script>
 
@@ -11469,5 +11788,110 @@ if ('serviceWorker' in navigator) {
     </div>
   </div>
 </div>
+
+<!-- ── MOBILE APP NAV ──────────────────────────────────────── -->
+<nav id="app-mobile-nav" aria-label="App navigation">
+  <div class="amn-inner">
+    <button class="amn-item active" id="amn-home" onclick="showTab('home');_amnActive('home')" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      Home
+    </button>
+    <button class="amn-item" id="amn-pipeline" onclick="showTab('pipeline');_amnActive('pipeline')" aria-label="Pipeline">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="7" width="5" height="14" rx="1"/><rect x="17" y="11" width="5" height="10" rx="1"/></svg>
+      Pipeline
+    </button>
+    <button class="amn-item" id="amn-search" onclick="showTab('search');_amnActive('search')" aria-label="LMI Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      LMI
+    </button>
+    <button class="amn-item" id="amn-actions" onclick="_mobileScrollToActions()" aria-label="Required Actions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Actions
+    </button>
+    <button class="amn-item" id="amn-menu" onclick="openSidebar()" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      Menu
+    </button>
+  </div>
+</nav>
+
+<!-- ── DASHBOARD SETTINGS PANEL ───────────────────────────── -->
+<div id="dash-settings-backdrop" onclick="closeDashSettings()"></div>
+<aside id="dash-settings-panel" role="dialog" aria-modal="true" aria-label="Dashboard Settings">
+  <div class="dsp-header">
+    <div class="dsp-title">Dashboard Settings</div>
+    <button class="dsp-close" onclick="closeDashSettings()" aria-label="Close">×</button>
+  </div>
+  <div class="dsp-body">
+    <!-- Module Order & Visibility -->
+    <div class="dsp-section">
+      <div class="dsp-section-title">Module Order &amp; Visibility</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Drag to reorder · toggle to show/hide</div>
+      <div id="dsp-modules-list"><!-- populated by renderDspModules() --></div>
+    </div>
+    <!-- Layout -->
+    <div class="dsp-section">
+      <div class="dsp-section-title">Layout</div>
+      <div class="dsp-row">
+        <div>
+          <div class="dsp-row-label">Grid columns</div>
+          <div class="dsp-row-sub">Module card density</div>
+        </div>
+        <div class="dsp-seg" id="dsp-gridcols">
+          <button class="dsp-seg-btn active" data-cols="2" onclick="dspSetGrid(2)">2 Col</button>
+          <button class="dsp-seg-btn" data-cols="1" onclick="dspSetGrid(1)">1 Col</button>
+        </div>
+      </div>
+    </div>
+    <!-- Alert Thresholds -->
+    <div class="dsp-section">
+      <div class="dsp-section-title">Alert Thresholds</div>
+      <div class="dsp-row">
+        <div>
+          <div class="dsp-row-label">Rate lock warning</div>
+          <div class="dsp-row-sub">Days before expiry to alert</div>
+        </div>
+        <input class="dsp-input" id="dsp-ratelock" type="number" min="1" max="30" value="3">
+      </div>
+      <div class="dsp-row">
+        <div>
+          <div class="dsp-row-label">Realtor follow-up idle</div>
+          <div class="dsp-row-sub">Days of inactivity to alert</div>
+        </div>
+        <input class="dsp-input" id="dsp-realtoridle" type="number" min="1" max="60" value="14">
+      </div>
+      <div class="dsp-row">
+        <div>
+          <div class="dsp-row-label">LMI target %</div>
+          <div class="dsp-row-sub">Minimum compliance goal</div>
+        </div>
+        <input class="dsp-input" id="dsp-lmitarget" type="number" min="1" max="100" value="40">
+      </div>
+    </div>
+    <!-- Notifications -->
+    <div class="dsp-section">
+      <div class="dsp-section-title">Notifications</div>
+      <div class="dsp-row">
+        <div>
+          <div class="dsp-row-label">Push notifications</div>
+          <div class="dsp-row-sub">Browser alerts for urgent items</div>
+        </div>
+        <label class="dsp-toggle"><input type="checkbox" id="dsp-pushnotif" checked><span class="dsp-toggle-slider"></span></label>
+      </div>
+      <div class="dsp-row">
+        <div>
+          <div class="dsp-row-label">Email digest</div>
+          <div class="dsp-row-sub">Daily summary to your inbox</div>
+        </div>
+        <label class="dsp-toggle"><input type="checkbox" id="dsp-emaildigest"><span class="dsp-toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+  <div class="dsp-footer">
+    <button class="dsp-save-btn" onclick="saveDashSettings()">Save Preferences</button>
+    <span class="dsp-save-confirm" id="dsp-save-confirm">✓ Saved</span>
+  </div>
+</aside>
+
 </body>
 </html>
