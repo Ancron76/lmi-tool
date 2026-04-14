@@ -4324,59 +4324,253 @@ function renderHomeTab() {
 function renderHomeModules() {
   var grid = document.getElementById('home-modules-grid');
   if (!grid) return;
-  // Apply saved grid column count
   var cols = (_dashPrefs && _dashPrefs.gridCols) || 2;
   grid.style.gridTemplateColumns = 'repeat('+cols+', 1fr)';
 
-  // Live counts where available
-  var pipeCount  = (typeof cachedDeals !== 'undefined')     ? cachedDeals.filter(function(d){return d.stage!=='closed_won'&&d.stage!=='closed_lost';}).length : null;
-  var contactCnt = (typeof cachedBorrowers !== 'undefined') ? cachedBorrowers.length : null;
-  var realtorCnt = (typeof cachedRealtors !== 'undefined')  ? cachedRealtors.length  : null;
-  var mo = new Date(); mo.setDate(1); mo.setHours(0,0,0,0);
-  var actMtd = (typeof cachedActivities !== 'undefined') ? cachedActivities.filter(function(a){ return a.date && new Date(a.date) >= mo; }).length : null;
+  // ── Time helpers ──────────────────────────────────────────────
+  var now     = new Date();
+  var today   = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var todayStr = today.toISOString().slice(0, 10);
+  var moStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var moEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  var metrics = {
-    pipeline:  pipeCount  !== null ? pipeCount+' Active Deals'    : '— Deals',
-    search:    '— Searches',
-    realtors:  realtorCnt !== null ? realtorCnt+' Partners'       : '— Partners',
-    contacts:  contactCnt !== null ? contactCnt+' Contacts'       : '— Contacts',
-    comms:     '— Templates',
-    oyz:       '— Scheduled',
-    activity:  actMtd     !== null ? actMtd+' Activities MTD'     : '— Activities',
-    analytics: '— % to Goal',
-    dashboard: '— MLOs Active',
-    marketing: '— Campaigns',
+  function _toDate(v) {
+    if (!v) return null;
+    if (v && v.seconds) return new Date(v.seconds * 1000); // Firestore timestamp
+    var d = new Date(v);
+    return isNaN(d) ? null : d;
+  }
+
+  function _dayStr(offsetDays) {
+    var d = new Date(today); d.setDate(d.getDate() - offsetDays);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function _weekBucket(dateStr, weeksBack) {
+    // returns index 0–9 for which of the last 10 weeks this date falls in
+    if (!dateStr) return -1;
+    var d = new Date(dateStr);
+    if (isNaN(d)) return -1;
+    var msBack = today - d;
+    var weekIdx = Math.floor(msBack / (7 * 86400000));
+    return (weekIdx >= 0 && weekIdx < weeksBack) ? (weeksBack - 1 - weekIdx) : -1;
+  }
+
+  // ── Deals ─────────────────────────────────────────────────────
+  var deals       = cachedDeals || [];
+  var activeDeals = deals.filter(function(d) { return d.stage !== 'Closed' && d.stage !== 'Lost'; });
+  var pipeValue   = activeDeals.reduce(function(s, d) { return s + (parseFloat(d.loanAmount) || 0); }, 0);
+  var closingMo   = activeDeals.filter(function(d) {
+    var cd = _toDate(d.expectedCloseDate);
+    return cd && cd >= moStart && cd <= moEnd;
+  });
+  // Deals sparkline: active deal count snapshotted by weekly creation date (last 10 weeks)
+  var dealWeeks = new Array(10).fill(0);
+  deals.forEach(function(d) {
+    if (d.stage === 'Closed' || d.stage === 'Lost') return;
+    var dt = _toDate(d.createdAt || d.updatedAt);
+    if (!dt) return;
+    var idx = _weekBucket(dt.toISOString().slice(0, 10), 10);
+    if (idx >= 0) dealWeeks[idx]++;
+  });
+  // Make cumulative so spark shows growth
+  for (var i = 1; i < dealWeeks.length; i++) dealWeeks[i] += dealWeeks[i - 1];
+  if (dealWeeks.every(function(v) { return v === 0; })) dealWeeks = [0,0,0,0,0,0,0,0,0,activeDeals.length||1];
+
+  // ── Activities ────────────────────────────────────────────────
+  var acts    = cachedActivities || [];
+  var actMtd  = acts.filter(function(a) { return a.date && new Date(a.date) >= moStart; });
+  var actGoal = 30; // monthly CRA goal
+  var lmiActs = actMtd.filter(function(a) {
+    return a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income';
+  });
+  var lmiPct  = actMtd.length ? Math.round(lmiActs.length / actMtd.length * 100) : 0;
+  var craGoalPct = Math.min(100, Math.round(actMtd.length / actGoal * 100));
+  // Activity sparkline: count per day for last 10 days
+  var actSpark = [];
+  for (var ai = 9; ai >= 0; ai--) {
+    var ds = _dayStr(ai);
+    actSpark.push(acts.filter(function(a) { return a.date === ds; }).length);
+  }
+  if (actSpark.every(function(v) { return v === 0; })) actSpark = [0,1,0,1,1,2,1,2,1,Math.max(actMtd.length > 0 ? 1 : 0, 0)];
+
+  // ── Realtors ──────────────────────────────────────────────────
+  var realtors = cachedRealtors || [];
+  // Spark: cumulative count over last 10 weeks by any date-ish field
+  var relWeeks = new Array(10).fill(0);
+  realtors.forEach(function(r) {
+    var dt = _toDate(r.savedAt || r.createdAt || r.added);
+    if (!dt) return;
+    var idx = _weekBucket(dt.toISOString().slice(0, 10), 10);
+    if (idx >= 0) relWeeks[idx]++;
+  });
+  for (var ri = 1; ri < relWeeks.length; ri++) relWeeks[ri] += relWeeks[ri - 1];
+  if (relWeeks.every(function(v) { return v === 0; })) relWeeks = new Array(10).fill(realtors.length || 1);
+
+  // ── Contacts/Borrowers ────────────────────────────────────────
+  var prospects  = cachedProspects || [];
+  var borrowers  = prospects.filter(function(p) { return p.borrowerName; });
+  var prospMtd   = prospects.filter(function(p) {
+    var d = _toDate(p.savedAt || p.date || p.created);
+    return d && d >= moStart;
+  });
+  // Spark: cumulative by week
+  var prospWeeks = new Array(10).fill(0);
+  prospects.forEach(function(p) {
+    var dt = _toDate(p.savedAt || p.date || p.created);
+    if (!dt) return;
+    var idx = _weekBucket(dt.toISOString().slice(0, 10), 10);
+    if (idx >= 0) prospWeeks[idx]++;
+  });
+  for (var pi = 1; pi < prospWeeks.length; pi++) prospWeeks[pi] += prospWeeks[pi - 1];
+  if (prospWeeks.every(function(v) { return v === 0; })) prospWeeks = new Array(10).fill(prospects.length || 1);
+
+  // ── Open Houses ───────────────────────────────────────────────
+  var oyzAll      = cachedOYZ || cachedOyzEntries || [];
+  var upcomingOYZ = oyzAll.filter(function(e) { return e.openHouseDate && e.openHouseDate >= todayStr; });
+  var oyzLeads    = oyzAll.filter(function(e) { return e.dealOutcome; });
+  var oyzWeeks    = new Array(10).fill(0);
+  oyzAll.forEach(function(e) {
+    var idx = _weekBucket(e.openHouseDate, 10);
+    if (idx >= 0) oyzWeeks[idx]++;
+  });
+  if (oyzWeeks.every(function(v) { return v === 0; })) oyzWeeks = [0,0,0,1,0,1,0,1,0,upcomingOYZ.length > 0 ? 1 : 0];
+
+  // ── Searches (LMI) ────────────────────────────────────────────
+  var searchesMtd = prospects.filter(function(p) {
+    var d = _toDate(p.savedAt || p.date || p.created);
+    return d && d >= moStart;
+  });
+  var lmiSearches = prospects.filter(function(p) {
+    var cat = (p.lmiCategory || p.borrowerCategory || '').toLowerCase();
+    return cat.indexOf('low') !== -1 || cat.indexOf('moderate') !== -1;
+  });
+  var lmiSrchPct = prospects.length ? Math.round(lmiSearches.length / prospects.length * 100) : 0;
+
+  // ── Dashboard (team stats for admins) ─────────────────────────
+  var teamActs  = allTeamActivities || [];
+  var teamMtd   = teamActs.filter(function(a) { return a.date && new Date(a.date) >= moStart; });
+  var mloIds    = {};
+  teamMtd.forEach(function(a) { if (a.userId) mloIds[a.userId] = true; });
+  var activeMlos = Object.keys(mloIds).length;
+  var dashMetric, dashSub, dashSpark;
+  if (isAnyAdmin && isAnyAdmin() && teamActs.length > 0) {
+    dashMetric = activeMlos ? activeMlos+' Active MLO'+(activeMlos !== 1 ? 's' : '') : 'Team Dashboard';
+    dashSub    = teamMtd.length+' team activities MTD';
+    // Spark: team activity by day last 10 days
+    dashSpark = [];
+    for (var di = 9; di >= 0; di--) {
+      var dds = _dayStr(di);
+      dashSpark.push(teamActs.filter(function(a) { return a.date === dds; }).length);
+    }
+    if (dashSpark.every(function(v) { return v === 0; })) dashSpark = [1,2,1,2,3,2,3,2,3,teamMtd.length > 0 ? 2 : 1];
+  } else {
+    var weekStart = new Date(today); weekStart.setDate(weekStart.getDate() - 6);
+    var actsThisWeek = acts.filter(function(a) { return a.date && new Date(a.date) >= weekStart; });
+    dashMetric = actsThisWeek.length+' Activit'+(actsThisWeek.length !== 1 ? 'ies' : 'y')+' This Week';
+    dashSub    = actMtd.length+' total MTD · '+craGoalPct+'% to goal';
+    dashSpark  = actSpark.slice();
+  }
+
+  // ── Build per-module data map ─────────────────────────────────
+  var MD = {
+    pipeline: {
+      metric: activeDeals.length ? activeDeals.length+' Active Deal'+(activeDeals.length !== 1 ? 's' : '') : 'No Active Deals',
+      sub:    pipeValue ? fmtK(pipeValue)+' total value' : closingMo.length ? closingMo.length+' closing this month' : 'Add deals to get started',
+      spark:  dealWeeks,
+    },
+    search: {
+      metric: prospects.length ? prospects.length+' Saved Search'+(prospects.length !== 1 ? 'es' : '') : 'No Searches Yet',
+      sub:    searchesMtd.length ? searchesMtd.length+' new this month' : lmiSrchPct ? lmiSrchPct+'% LMI searches overall' : 'Search a ZIP code to start',
+      spark:  prospWeeks,
+    },
+    realtors: {
+      metric: realtors.length ? realtors.length+' Partner'+(realtors.length !== 1 ? 's' : '') : 'No Partners Yet',
+      sub:    realtors.length ? 'Referral network · '+realtors.length+' contacts' : 'Add realtors to get started',
+      spark:  relWeeks,
+    },
+    contacts: {
+      metric: borrowers.length ? borrowers.length+' Borrower'+(borrowers.length !== 1 ? 's' : '') : prospects.length ? prospects.length+' Prospects' : 'No Contacts Yet',
+      sub:    prospMtd.length ? prospMtd.length+' added this month' : prospects.length ? prospects.length+' total tracked' : 'Run a search to add contacts',
+      spark:  prospWeeks,
+    },
+    comms: {
+      metric: (cachedCallLog && cachedCallLog.length) ? cachedCallLog.length+' Call'+(cachedCallLog.length !== 1 ? 's' : '')+' Logged' : 'Communications',
+      sub:    (cachedTemplates && cachedTemplates.length) ? cachedTemplates.length+' email templates' : 'Templates · Campaigns · Call Log',
+      spark:  [1,1,2,1,2,2,3,2,3,(cachedCallLog && cachedCallLog.length) ? 3 : 2],
+    },
+    oyz: {
+      metric: oyzAll.length ? oyzAll.length+' Open House'+(oyzAll.length !== 1 ? 's' : '') : 'No Entries Yet',
+      sub:    upcomingOYZ.length ? upcomingOYZ.length+' upcoming' : oyzLeads.length ? oyzLeads.length+' lead'+(oyzLeads.length !== 1 ? 's' : '')+' captured' : 'Log open house visits',
+      spark:  oyzWeeks,
+    },
+    activity: {
+      metric: actMtd.length+' Activit'+(actMtd.length !== 1 ? 'ies' : 'y')+' MTD',
+      sub:    craGoalPct >= 100 ? '✓ CRA goal met ('+actGoal+' activities)' : actMtd.length+' of '+actGoal+' · '+craGoalPct+'% to goal',
+      spark:  actSpark,
+    },
+    analytics: {
+      metric: craGoalPct+'% to CRA Goal',
+      sub:    lmiPct ? lmiPct+'% LMI-qualifying · '+lmiActs.length+' of '+actMtd.length+' acts' : actMtd.length+' of '+actGoal+' activities MTD',
+      spark:  actSpark,
+    },
+    dashboard: {
+      metric: dashMetric,
+      sub:    dashSub,
+      spark:  dashSpark,
+    },
+    marketing: {
+      metric: prospects.length ? prospects.length+' Prospect'+(prospects.length !== 1 ? 's' : '') : 'Marketing Materials',
+      sub:    'Flyers · Shopping lists · Materials',
+      spark:  prospWeeks,
+    },
   };
 
-  // Filter to visible modules only
+  // ── Filter visibility & render ────────────────────────────────
   var visible = HOME_MODULES.filter(function(m) {
     return _dashPrefs.visibility[m.tab] !== false;
   });
 
   if (!visible.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:13px">All modules hidden — open Settings to restore.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:13px">All modules hidden — open ⚙ Settings to restore.</div>';
     return;
   }
 
   grid.innerHTML = visible.map(function(m) {
-    var metric = metrics[m.tab] || '—';
+    var d = MD[m.tab] || { metric: '—', sub: '', spark: [1,1,1,1,1,1,1,1,1,1] };
     return '<div class="home-mod-card" onclick="showTab(\''+m.tab+'\')">'
       +'<div class="home-mod-header">'
         +'<div class="home-mod-label">'
-          +'<div class="home-mod-icon" style="background:'+m.color+'18;color:'+m.color+'">'
-            +'<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5"/></svg>'
-          +'</div>'
+          +'<div class="home-mod-icon" style="background:'+m.color+'1a;color:'+m.color+'">'+_modIcon(m.tab)+'</div>'
           +'<span class="home-mod-name">'+m.name+'</span>'
         +'</div>'
       +'</div>'
       +'<div class="home-mod-foot">'
-        +'<div>'
-          +'<div class="home-mod-metric">'+metric+'</div>'
+        +'<div style="min-width:0">'
+          +'<div class="home-mod-metric">'+esc(d.metric)+'</div>'
+          +'<div class="home-mod-sub">'+esc(d.sub)+'</div>'
         +'</div>'
-        +_sparkSVG(m.spark, m.color, 60, 26)
+        +_sparkSVG(d.spark, m.color, 58, 28)
       +'</div>'
     +'</div>';
   }).join('');
+}
+
+// Small inline SVG icons for module cards
+function _modIcon(tab) {
+  var icons = {
+    pipeline:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="7" width="5" height="14" rx="1"/><rect x="17" y="11" width="4" height="10" rx="1"/></svg>',
+    search:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>',
+    realtors:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+    contacts:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="3"/><path d="M3 20c0-4 2.7-7 6-7s6 3 6 7"/><circle cx="18" cy="8" r="2.5"/><path d="M15.5 20c0-3 1.6-5.5 3.5-5.5"/></svg>',
+    comms:     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    oyz:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><rect x="9" y="13" width="6" height="8"/></svg>',
+    activity:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>',
+    analytics: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    dashboard: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+    marketing: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>',
+  };
+  return icons[tab] || '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5"/></svg>';
 }
 
 function renderHomeActions() {
@@ -4410,14 +4604,23 @@ function _renderHomeGlance() {
   var lmiVal = '—', lmiW = 0;
   var pipeVal = '—', pipeW = 0;
 
-  if (typeof cachedActivities !== 'undefined' && cachedActivities.length) {
+  var acts = cachedActivities || [];
+  if (acts.length) {
     var mo = new Date(); mo.setDate(1); mo.setHours(0,0,0,0);
-    var mtd = cachedActivities.filter(function(a){ return a.date && new Date(a.date) >= mo; }).length;
-    var goal = 30; craW = Math.min(100, Math.round(mtd/goal*100)); craVal = craW+'%';
+    var mtd = acts.filter(function(a){ return a.date && new Date(a.date) >= mo; }).length;
+    var lmiMo = acts.filter(function(a){
+      return a.date && new Date(a.date) >= mo && (a.lmiCategory==='Low Income'||a.lmiCategory==='Moderate Income');
+    }).length;
+    var goal = 30;
+    craW = Math.min(100, Math.round(mtd/goal*100)); craVal = craW+'%';
+    lmiW = mtd ? Math.min(100, Math.round(lmiMo/mtd*100)) : 0; lmiVal = lmiW+'%';
   }
-  if (typeof cachedDeals !== 'undefined' && cachedDeals.length) {
-    var active = cachedDeals.filter(function(d){return d.stage!=='closed_won'&&d.stage!=='closed_lost';});
-    pipeVal = active.length+' active'; pipeW = Math.min(100, active.length*10);
+  var deals = cachedDeals || [];
+  if (deals.length) {
+    var active = deals.filter(function(d){return d.stage!=='Closed'&&d.stage!=='Lost';});
+    var pipeV = active.reduce(function(s,d){return s+(parseFloat(d.loanAmount)||0);},0);
+    pipeVal = fmtK(pipeV)||active.length+' active';
+    pipeW = Math.min(100, active.length * 8); // scale: 12 deals ≈ 100%
   }
 
   var cv = document.getElementById('hg-cra-val'), cb = document.getElementById('hg-cra-bar');
