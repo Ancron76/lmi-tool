@@ -810,8 +810,18 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
   .tos-footer { border-radius: 0 0 14px 14px; }
   .prop-detail-overlay, .realtor-profile-overlay { padding: 12px 8px; }
   .prop-detail-box, .realtor-profile-box { border-radius: 14px; }
-  .prop-detail-body, .realtor-profile-body { padding: 16px; }
-  .prop-detail-header, .realtor-profile-header { padding: 16px 20px; }
+  .prop-detail-body, .realtor-profile-body { padding: 14px 12px; }
+  .prop-detail-header, .realtor-profile-header { padding: 14px 16px; }
+  .prop-detail-title { font-size: 15px; }
+  .prop-detail-grid { grid-template-columns: 1fr; gap: 8px; }
+  .prop-detail-section { padding: 16px 14px; margin-bottom: 12px; border-radius: 12px; }
+  .prop-detail-section-title { font-size: 11px; margin-bottom: 10px; padding-bottom: 6px; }
+  .outcome-select { font-size: 15px; padding: 12px 14px; }
+  .sched-activity-row { grid-template-columns: 1fr; gap: 6px; }
+  .sched-activity-label { padding-top: 0; }
+  .add-note-textarea { min-height: 90px; font-size: 15px; padding: 12px; }
+  .note-timeline-item { padding: 10px 12px; }
+  .note-timeline-text { font-size: 14px; }
   .flyer-modal-overlay { padding: 0; align-items: flex-start; }
   .flyer-modal-box { border-radius: 0; min-height: 100vh; }
   .invite-modal-box { width: 95%; padding: 28px 20px; }
@@ -826,7 +836,7 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 .prop-detail-close { background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
 .prop-detail-body { padding: 24px 28px; }
 .prop-detail-section { background: white; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.prop-detail-section-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+.prop-detail-section-title { font-size: 12px; font-weight: 700; color: #a89880; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #ede8df; }
 .prop-detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 .prop-detail-item label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 3px; }
 .prop-detail-item span { font-size: 13px; font-weight: 600; color: #1f2937; }
@@ -5532,15 +5542,16 @@ function openPropDetail(id) {
     : '<div style="color:#94a3b8;font-size:13px;padding:6px 0">No notes yet.</div>';
 
   // Build Property Details editable fields
+  var _mob = window.innerWidth < 640;
   function _pdFieldRow(label, fieldName, value, entryId, isTextarea) {
     var dispVal = value || '—';
     if (fieldName === 'listPrice' && value) dispVal = '$' + Number(value).toLocaleString();
-    return '<div style="background:#faf8f4;border:1px solid #ddd4c0;border-radius:10px;padding:10px 14px;margin-bottom:8px" id="pd-row-' + fieldName + '">'
+    return '<div style="background:#faf8f4;border:1px solid #ddd4c0;border-radius:10px;padding:' + (_mob ? '12px 14px' : '10px 14px') + ';margin-bottom:8px" id="pd-row-' + fieldName + '">'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<div><div style="font-size:10px;color:#a89880;text-transform:uppercase;letter-spacing:0.3px;font-weight:700;margin-bottom:2px">' + label + '</div>'
-      + '<div style="font-size:13px;color:#1a1410;font-weight:500" id="pd-val-' + fieldName + '">' + esc(dispVal) + '</div></div>'
-      + '<button style="background:none;border:none;cursor:pointer;color:#a89880;font-size:13px;padding:4px" onclick="_pdStartEdit(\'' + entryId + '\',\'' + fieldName + '\',\'' + label + '\',' + (isTextarea?'true':'false') + ')" title="Edit">'
-      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:' + (_mob ? '11px' : '10px') + ';color:#a89880;text-transform:uppercase;letter-spacing:0.3px;font-weight:700;margin-bottom:2px">' + label + '</div>'
+      + '<div style="font-size:' + (_mob ? '15px' : '13px') + ';color:#1a1410;font-weight:500" id="pd-val-' + fieldName + '">' + esc(dispVal) + '</div></div>'
+      + '<button style="background:none;border:none;cursor:pointer;color:#a89880;padding:' + (_mob ? '8px' : '4px') + ';-webkit-tap-highlight-color:transparent" onclick="_pdStartEdit(\'' + entryId + '\',\'' + fieldName + '\',\'' + label + '\',' + (isTextarea?'true':'false') + ')" title="Edit">'
+      + '<svg width="' + (_mob ? '18' : '14') + '" height="' + (_mob ? '18' : '14') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
       + '</button></div></div>';
   }
 
@@ -5582,23 +5593,23 @@ function openPropDetail(id) {
     + '<div class="prop-detail-section">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
     + '<div class="prop-detail-section-title" style="margin-bottom:0">📝 Notes</div>'
-    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">+ Add Note</button>'
+    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:' + (_mob?'10px 16px':'7px 14px') + ';font-size:' + (_mob?'14px':'12px') + ';font-weight:700;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">+ Add Note</button>'
     + '</div>'
     + notesTimelineHtml
     + '<div class="add-note-form" id="add-note-form-' + entry.id + '">'
     + '<textarea class="add-note-textarea" id="add-note-text-' + entry.id + '" placeholder="Add a note about this property..."></textarea>'
-    + '<div style="display:flex;gap:8px;margin-top:8px">'
-    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer" onclick="saveOYZNote(\'' + entry.id + '\')">Save Note</button>'
-    + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">Cancel</button>'
+    + '<div style="display:flex;gap:8px;margin-top:10px">'
+    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:' + (_mob?'12px 20px':'8px 16px') + ';font-size:' + (_mob?'15px':'13px') + ';font-weight:700;cursor:pointer" onclick="saveOYZNote(\'' + entry.id + '\')">Save Note</button>'
+    + '<button style="background:#f1f5f9;color:#64748b;border:none;border-radius:8px;padding:' + (_mob?'12px 16px':'8px 14px') + ';font-size:' + (_mob?'15px':'13px') + ';cursor:pointer" onclick="toggleAddNoteForm(\'' + entry.id + '\')">Cancel</button>'
     + '</div></div>'
     + '</div>'
     + '<div class="prop-detail-section">'
     + '<div class="prop-detail-section-title">Linked CRA Activity</div>'
     + craTimelineHtml
     + '</div>'
-    + '<div style="padding:4px 0 8px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="padding:' + (_mob?'8px 0 12px':'4px 0 8px') + ';display:flex;align-items:center;justify-content:space-between">'
     + '<div id="end-tracking-area-' + entry.id + '">'
-    + '<button style="background:transparent;border:1px solid #ddd4c0;color:#9a4a3a;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer" onclick="_showEndTrackingConfirm(\'' + entry.id + '\')">End Tracking</button>'
+    + '<button style="background:transparent;border:1px solid #ddd4c0;color:#9a4a3a;border-radius:10px;padding:' + (_mob?'12px 20px':'9px 16px') + ';font-size:' + (_mob?'15px':'13px') + ';font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="_showEndTrackingConfirm(\'' + entry.id + '\')">End Tracking</button>'
     + '</div>'
     + '<div></div>'
     + '</div>';
@@ -5614,12 +5625,13 @@ function closePropDetail() {
 function _showEndTrackingConfirm(id) {
   var area = document.getElementById('end-tracking-area-' + id);
   if (!area) return;
+  var mob = window.innerWidth < 640;
   area.innerHTML =
-    '<div style="background:#f8ecea;border:1px solid #e8c8c0;border-radius:10px;padding:12px 16px">'
-    + '<div style="font-size:13px;color:#1a1410;margin-bottom:10px">Stop tracking this property? It will be archived and removed from your active OYZ list.</div>'
-    + '<div style="display:flex;gap:8px">'
-    + '<button style="background:transparent;border:1px solid #ddd4c0;color:#a89880;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer" onclick="openPropDetail(\'' + id + '\')">Cancel</button>'
-    + '<button style="background:#9a4a3a;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer" onclick="_confirmEndTracking(\'' + id + '\')">Yes, Archive</button>'
+    '<div style="background:#f8ecea;border:1px solid #e8c8c0;border-radius:10px;padding:' + (mob?'14px':'12px 16px') + '">'
+    + '<div style="font-size:' + (mob?'14px':'13px') + ';color:#1a1410;margin-bottom:12px;line-height:1.5">Stop tracking this property? It will be archived and removed from your active OYZ list.</div>'
+    + '<div style="display:flex;gap:10px">'
+    + '<button style="background:transparent;border:1px solid #ddd4c0;color:#a89880;border-radius:8px;padding:' + (mob?'10px 18px':'6px 14px') + ';font-size:' + (mob?'14px':'12px') + ';cursor:pointer" onclick="openPropDetail(\'' + id + '\')">Cancel</button>'
+    + '<button style="background:#9a4a3a;color:white;border:none;border-radius:8px;padding:' + (mob?'10px 18px':'6px 14px') + ';font-size:' + (mob?'14px':'12px') + ';font-weight:600;cursor:pointer" onclick="_confirmEndTracking(\'' + id + '\')">Yes, Archive</button>'
     + '</div></div>';
 }
 
@@ -5644,17 +5656,20 @@ async function _confirmEndTracking(id) {
 function _pdStartEdit(entryId, fieldName, label, isTextarea) {
   var row = document.getElementById('pd-row-' + fieldName);
   if (!row) return;
+  var mob = window.innerWidth < 640;
   var entry = cachedOYZ.find(function(e){ return e.id === entryId; });
   var curVal = entry ? (entry[fieldName] || '') : '';
+  var fz = mob ? '16px' : '13px';
+  var pd = mob ? '10px 12px' : '6px 10px';
   var inputHtml = isTextarea
-    ? '<textarea id="pd-input-' + fieldName + '" style="border:1px solid #7a9eaa;border-radius:8px;padding:6px 10px;font-size:13px;width:100%;min-height:60px;resize:vertical;font-family:inherit;box-sizing:border-box">' + esc(String(curVal)) + '</textarea>'
-    : '<input id="pd-input-' + fieldName + '" type="' + (fieldName === 'listPrice' ? 'number' : 'text') + '" value="' + esc(String(curVal)) + '" style="border:1px solid #7a9eaa;border-radius:8px;padding:6px 10px;font-size:13px;width:100%;box-sizing:border-box" />';
+    ? '<textarea id="pd-input-' + fieldName + '" style="border:1px solid #7a9eaa;border-radius:8px;padding:' + pd + ';font-size:' + fz + ';width:100%;min-height:' + (mob?'80px':'60px') + ';resize:vertical;font-family:inherit;box-sizing:border-box">' + esc(String(curVal)) + '</textarea>'
+    : '<input id="pd-input-' + fieldName + '" type="' + (fieldName === 'listPrice' ? 'number' : 'text') + '" value="' + esc(String(curVal)) + '" style="border:1px solid #7a9eaa;border-radius:8px;padding:' + pd + ';font-size:' + fz + ';width:100%;box-sizing:border-box" />';
   row.innerHTML =
-    '<div style="margin-bottom:6px"><div style="font-size:10px;color:#a89880;text-transform:uppercase;letter-spacing:0.3px;font-weight:700;margin-bottom:4px">' + label + '</div>'
+    '<div style="margin-bottom:8px"><div style="font-size:' + (mob?'11px':'10px') + ';color:#a89880;text-transform:uppercase;letter-spacing:0.3px;font-weight:700;margin-bottom:4px">' + label + '</div>'
     + inputHtml + '</div>'
-    + '<div style="display:flex;gap:6px">'
-    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer" onclick="_pdSaveField(\'' + entryId + '\',\'' + fieldName + '\')">Save</button>'
-    + '<button style="background:transparent;color:#a89880;border:none;font-size:12px;cursor:pointer;padding:5px 8px" onclick="openPropDetail(\'' + entryId + '\')">Cancel</button>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button style="background:#7a9eaa;color:white;border:none;border-radius:8px;padding:' + (mob?'10px 18px':'5px 12px') + ';font-size:' + (mob?'14px':'12px') + ';font-weight:600;cursor:pointer" onclick="_pdSaveField(\'' + entryId + '\',\'' + fieldName + '\')">Save</button>'
+    + '<button style="background:transparent;color:#a89880;border:none;font-size:' + (mob?'14px':'12px') + ';cursor:pointer;padding:' + (mob?'10px 12px':'5px 8px') + '" onclick="openPropDetail(\'' + entryId + '\')">Cancel</button>'
     + '</div>';
   var inp = document.getElementById('pd-input-' + fieldName);
   if (inp) inp.focus();
