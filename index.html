@@ -2344,7 +2344,8 @@ admin@loopenta.com</div>
           <div class="oyz-field"><label>State</label><input type="text" id="oyz-state-field" placeholder="e.g. CA" maxlength="2" /></div>
         </div>
         <div class="oyz-form-grid">
-          <div class="oyz-field"><label>ZIP Code</label><input type="text" id="oyz-zip-field" placeholder="e.g. 93701" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" /></div>
+          <div class="oyz-field"><label>ZIP Code</label><input type="text" id="oyz-zip-field" placeholder="e.g. 93701" maxlength="5" oninput="this.value=this.value.replace(/\D/g,'')" onblur="_oyzCheckLmi()" /></div>
+          <div id="oyz-lmi-result" style="grid-column:1/-1"></div>
           <div class="oyz-field"><label>Open House Date</label><input type="date" id="oyz-oh-date" /></div>
           <div class="oyz-field"><label>First Contact Date</label><input type="date" id="oyz-first-contact" /></div>
         </div>
@@ -3764,11 +3765,22 @@ admin@loopenta.com</div>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">🎯 My Alert Preferences</div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <label style="font-size:13px;color:var(--text-secondary);font-weight:500">Flag deal as stuck after</label>
         <input type="number" id="settings-stuck-threshold" min="1" max="30" value="3" style="width:60px;padding:8px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;text-align:center;font-family:inherit" />
         <span style="font-size:13px;color:var(--text-muted)">days in same stage</span>
         <button onclick="_saveStuckThreshold()" style="padding:8px 14px;background:var(--brand-accent);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Save</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <label style="font-size:13px;color:var(--text-secondary);font-weight:500">LMI goal</label>
+        <input type="number" id="settings-lmi-goal" min="0" max="100" value="40" style="width:60px;padding:8px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;text-align:center;font-family:inherit" />
+        <span style="font-size:13px;color:var(--text-muted)">% of deals</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:13px;color:var(--text-secondary);font-weight:500">Alert below</label>
+        <input type="number" id="settings-lmi-alert" min="0" max="100" value="35" style="width:60px;padding:8px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;text-align:center;font-family:inherit" />
+        <span style="font-size:13px;color:var(--text-muted)">%</span>
+        <button onclick="_saveLmiGoals()" style="padding:8px 14px;background:var(--brand-accent);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Save</button>
       </div>
     </div>
     <div class="settings-section"><div class="settings-section-title">🎨 Preferences</div><div class="settings-coming-soon">More customization options coming in future updates.</div></div>
@@ -4700,6 +4712,34 @@ async function useRequiredActions() {
     });
   } catch(e){ console.warn('[RequiredActions] seq rejected:', e); }
 
+  // 11. LMI RATE BELOW GOAL
+  try {
+    var lmiPrefs = {};
+    try {
+      var lpDoc = await db.collection('users').doc(currentUser.id).get();
+      if (lpDoc.exists) lmiPrefs = lpDoc.data().preferences || {};
+    } catch(e){}
+    var lmiGoal = lmiPrefs.lmiGoalPct || 40;
+    var lmiAlertBelow = lmiPrefs.lmiAlertBelowPct || 35;
+    var moStart = new Date(); moStart.setDate(1); moStart.setHours(0,0,0,0);
+    var myDeals = (cachedDeals || []).filter(function(d) {
+      var dt = d.createdAt ? new Date(d.createdAt) : null;
+      return dt && dt >= moStart && (d.userId === currentUser.id || d.assignedTo === currentUser.id);
+    });
+    if (myDeals.length > 0) {
+      var lmiDealCount = myDeals.filter(function(d){ return d.lmiEligible === true; }).length;
+      var myLmiRate = Math.round(lmiDealCount / myDeals.length * 100);
+      if (myLmiRate < lmiAlertBelow) {
+        actions.push({
+          p: myLmiRate < lmiAlertBelow - 10 ? 'high' : 'med',
+          title: 'LMI rate below goal \u00b7 ' + myLmiRate + '% (goal: ' + lmiGoal + '%)',
+          detail: lmiDealCount + ' of ' + myDeals.length + ' deals this month are LMI',
+          module: 'Analytics', tab: 'analytics', _nav: 'analytics'
+        });
+      }
+    }
+  } catch(e){ console.warn('[RequiredActions] lmi rate:', e); }
+
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
   actions.sort(function(a,b){ return (order[a.p]||9) - (order[b.p]||9); });
@@ -5050,12 +5090,26 @@ function _renderHomeGlance() {
   if (acts.length) {
     var mo = new Date(); mo.setDate(1); mo.setHours(0,0,0,0);
     var mtd = acts.filter(function(a){ return a.date && new Date(a.date) >= mo; }).length;
-    var lmiMo = acts.filter(function(a){
-      return a.date && new Date(a.date) >= mo && (a.lmiCategory==='Low Income'||a.lmiCategory==='Moderate Income');
-    }).length;
     var goal = 30;
     craW = Math.min(100, Math.round(mtd/goal*100)); craVal = craW+'%';
-    lmiW = mtd ? Math.min(100, Math.round(lmiMo/mtd*100)) : 0; lmiVal = lmiW+'%';
+  }
+  // LMI Compliance — use deal data for accuracy
+  var myDealsGlance = (cachedDeals||[]).filter(function(d){
+    var mo = new Date(); mo.setDate(1); mo.setHours(0,0,0,0);
+    var dt = d.createdAt ? new Date(d.createdAt) : null;
+    return dt && dt >= mo && (d.userId === (currentUser&&currentUser.id) || d.assignedTo === (currentUser&&currentUser.id));
+  });
+  if (myDealsGlance.length > 0) {
+    var lmiDG = myDealsGlance.filter(function(d){ return d.lmiEligible === true; }).length;
+    lmiW = Math.round(lmiDG / myDealsGlance.length * 100);
+    lmiVal = lmiW + '%';
+  } else if (acts.length) {
+    var mo2 = new Date(); mo2.setDate(1); mo2.setHours(0,0,0,0);
+    var mtd2 = acts.filter(function(a){ return a.date && new Date(a.date) >= mo2; }).length;
+    var lmiMo = acts.filter(function(a){
+      return a.date && new Date(a.date) >= mo2 && (a.lmiCategory==='Low Income'||a.lmiCategory==='Moderate Income'||a.lmiEligible===true);
+    }).length;
+    lmiW = mtd2 ? Math.min(100, Math.round(lmiMo/mtd2*100)) : 0; lmiVal = lmiW+'%';
   }
   var deals = cachedDeals || [];
   if (deals.length) {
@@ -7426,6 +7480,11 @@ async function _loadStuckThreshold() {
       _stuckThreshold = val;
       var el = document.getElementById('settings-stuck-threshold');
       if (el) el.value = val;
+      // Load LMI goals too
+      var goalEl = document.getElementById('settings-lmi-goal');
+      var alertEl = document.getElementById('settings-lmi-alert');
+      if (goalEl) goalEl.value = prefs.lmiGoalPct || 40;
+      if (alertEl) alertEl.value = prefs.lmiAlertBelowPct || 35;
     }
   } catch(e) {}
 }
@@ -7442,6 +7501,22 @@ async function _saveStuckThreshold() {
     await db.collection('users').doc(currentUser.id).set({ preferences: { stuckThresholdDays: val } }, { merge: true });
     showToast('Stuck threshold saved: ' + val + ' days');
   } catch(e) { console.error('Save stuck threshold:', e); }
+}
+
+async function _saveLmiGoals() {
+  if (!db || !currentUser) return;
+  var goalEl = document.getElementById('settings-lmi-goal');
+  var alertEl = document.getElementById('settings-lmi-alert');
+  var goal = parseInt((goalEl||{}).value) || 40;
+  var alert = parseInt((alertEl||{}).value) || 35;
+  if (goal < 0) goal = 0; if (goal > 100) goal = 100;
+  if (alert < 0) alert = 0; if (alert > 100) alert = 100;
+  if (goalEl) goalEl.value = goal;
+  if (alertEl) alertEl.value = alert;
+  try {
+    await db.collection('users').doc(currentUser.id).set({ preferences: { lmiGoalPct: goal, lmiAlertBelowPct: alert } }, { merge: true });
+    showToast('LMI goals saved: ' + goal + '% goal, alert below ' + alert + '%');
+  } catch(e) { console.error('Save LMI goals:', e); }
 }
 
 async function saveSettingsPassword() {
@@ -11547,26 +11622,101 @@ function dmShowTab(tab) {
   }
 }
 
-async function _dmCheckLmi(zip) {
+// ── SHARED LMI LOOKUP + BADGE ────────────────────────────────
+var _lmiLookupTimer = null;
+var _lastLmiResult = null;
+
+async function _lmiLookup(zip, targetElId, storeObj) {
   if (!zip || zip.length !== 5) return;
-  var el = document.getElementById('dm-lmi-result');
+  var el = document.getElementById(targetElId);
   if (!el) return;
-  el.innerHTML='<span style="font-size:12px;color:var(--text-muted)">Checking LMI status...</span>';
+  el.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Checking LMI status\u2026</span>';
   try {
     var resp = await fetch(PROXY_URL + '?zip=' + zip);
     if (!resp.ok) throw new Error('API error');
     var data = await resp.json();
-    if (!data || !data.length) { el.innerHTML=''; return; }
+    if (!data || !data.length) { el.innerHTML = ''; return; }
     var tract = data[0];
     var tractId = tract.tract_id || tract.census_tract || '';
-    var isLmi = tract.lmi_status === true || tract.income_ratio <= 80 || (tract.lmi_category && (tract.lmi_category.indexOf('Low')!==-1||tract.lmi_category.indexOf('Moderate')!==-1));
-    _dealForm.tractId = tractId;
-    _dealForm.lmiEligible = isLmi;
-    _dealForm.lmiIncomeRatio = tract.income_ratio || null;
-    el.innerHTML = isLmi
-      ? '<span style="background:#eef4f0;color:#5a8a6a;font-size:12px;font-weight:700;padding:3px 10px;border-radius:8px">✓ LMI Eligible · Tract '+tractId+'</span>'
-      : '<span style="background:#f5f0e8;color:var(--text-secondary);font-size:12px;font-weight:600;padding:3px 10px;border-radius:8px">Not LMI · Tract '+tractId+'</span>';
-  } catch(e) { el.innerHTML=''; }
+    var incRatio = tract.income_ratio || null;
+    var isLmi = tract.lmi_status === true || (incRatio && incRatio <= 80) || (tract.lmi_category && (tract.lmi_category.indexOf('Low') !== -1 || tract.lmi_category.indexOf('Moderate') !== -1));
+    _lastLmiResult = { eligible: isLmi, tractId: tractId, incomeRatio: incRatio };
+    if (storeObj) { storeObj.tractId = tractId; storeObj.lmiEligible = isLmi; storeObj.lmiIncomeRatio = incRatio; }
+    if (isLmi) {
+      el.innerHTML = '<div style="background:#eef4f0;border:1px solid #b8d4be;border-radius:10px;padding:10px 14px;margin-top:6px">'
+        + '<div style="font-size:13px;font-weight:700;color:#3a6a4a">\u2713 LMI Eligible \u00b7 Tract ' + tractId + '</div>'
+        + (incRatio ? '<div style="font-size:11px;color:#5a8a6a;margin-top:2px">Income ratio: ' + incRatio + '% of AMI</div>' : '')
+        + '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+        + '<button onclick="_lmiLogCRA(\'' + esc(zip) + '\')" style="background:#eef4f0;border:1px solid #5a8a6a;color:#5a8a6a;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px">Log as CRA Activity</button>'
+        + '<button onclick="_lmiEnrollSeq()" style="background:rgba(122,158,170,.1);border:1px solid #7a9eaa;color:#5a8a9e;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px">Enroll in LMI Sequence</button>'
+        + '</div></div>';
+    } else {
+      el.innerHTML = '<div style="background:#f5f1ec;border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-top:6px">'
+        + '<span style="font-size:12px;font-weight:600;color:var(--text-secondary)">\u25CB Not LMI \u00b7 Tract ' + tractId + '</span></div>';
+    }
+  } catch (e) { el.innerHTML = ''; }
+}
+
+async function _dmCheckLmi(zip) { await _lmiLookup(zip, 'dm-lmi-result', _dealForm); }
+
+function _oyzCheckLmi() {
+  var zip = (document.getElementById('oyz-zip-field') || {}).value || '';
+  _lmiLookup(zip, 'oyz-lmi-result', null);
+}
+
+// ── CRA QUICK-LOG FROM LMI BADGE ────────────────────────────
+function _lmiLogCRA(zip) {
+  if (!db || !currentUser) return;
+  var addr = '';
+  // Try to get address context
+  var addrEl = document.getElementById('dm-addr') || document.getElementById('oyz-street');
+  if (addrEl) addr = addrEl.value || '';
+  var lmi = _lastLmiResult || {};
+  var desc = 'LMI-eligible property identified' + (addr ? ': ' + addr : '') + (zip ? ' (ZIP ' + zip + ')' : '');
+
+  // Quick confirm
+  var ok = confirm('Log CRA Activity?\n\nType: LMI Outreach\nDescription: ' + desc + '\n\nThis will be logged as a qualifying CRA activity.');
+  if (!ok) return;
+
+  var entry = {
+    type: 'lmi_outreach',
+    description: desc,
+    propertyAddress: addr,
+    tractId: lmi.tractId || '',
+    lmiEligible: true,
+    incomeRatio: lmi.incomeRatio || null,
+    craQualifying: true,
+    logged: true,
+    autoPrompted: true,
+    userId: currentUser.id,
+    tenantId: currentUser.orgId || '',
+    date: new Date().toISOString().slice(0, 10),
+    loggedAt: new Date().toISOString()
+  };
+  db.collection('activity').add(entry).then(function() {
+    cachedActivities.push(entry);
+    showToast('CRA activity logged \u2713');
+  }).catch(function(e) { console.error('CRA log error:', e); });
+}
+
+function _lmiEnrollSeq() {
+  // Look for approved LMI sequences
+  var lmiSeqs = (cachedSequences || []).filter(function(s) {
+    return s.status === 'approved' && s.isActive && (s.name || '').toLowerCase().indexOf('lmi') !== -1;
+  });
+  if (!lmiSeqs.length) {
+    showToast('No LMI sequences approved yet. Build one in Sequences.');
+    return;
+  }
+  var seq = lmiSeqs[0];
+  var contactName = '';
+  var fnEl = document.getElementById('dm-fn'); var lnEl = document.getElementById('dm-ln');
+  if (fnEl && lnEl) contactName = ((fnEl.value || '') + ' ' + (lnEl.value || '')).trim();
+  if (!contactName) contactName = 'LMI Lead';
+  var ok = confirm('Enroll "' + contactName + '" in sequence "' + seq.name + '"?');
+  if (!ok) return;
+  checkAndEnroll('manual', { contactId: '', contactName: contactName, contactType: 'borrower' });
+  showToast('Enrolled in ' + seq.name);
 }
 
 function _dmF(label,id,type,val) {
@@ -12795,6 +12945,13 @@ var SEQ_TEMPLATES = [
     {stepId:'t4s2',order:2,delayDays:7,actionType:'email',actionConfig:{subject:'Your rate lock expires in 7 days',body:'Hi {{contactName}},\n\nJust a reminder that your rate lock expires in 7 days. Let\'s make sure we\'re on track.'}},
     {stepId:'t4s3',order:3,delayDays:7,actionType:'task',actionConfig:{taskTitle:'Call {{contactName}} — rate lock expiring soon',taskDescription:'Rate lock expires in 3 days',dueInDays:0,priority:'high'}},
     {stepId:'t4s4',order:4,delayDays:4,actionType:'flag',actionConfig:{label:'URGENT: Rate lock expires in 3 days',detail:'{{contactName}} — {{loanAmount}}',priority:'high'}}
+  ]},
+  { name:'LMI Eligible Lead Follow-Up', trigger:'manual', description:'Nurture LMI-eligible leads with targeted outreach', steps:[
+    {stepId:'t5s1',order:1,delayDays:0,actionType:'flag',actionConfig:{label:'LMI lead identified: {{contactName}}',detail:'LMI-eligible property found',priority:'high'}},
+    {stepId:'t5s2',order:2,delayDays:1,actionType:'task',actionConfig:{taskTitle:'Discuss LMI lending options with {{contactName}}',taskDescription:'New LMI-eligible lead — review special programs',dueInDays:1,priority:'high'}},
+    {stepId:'t5s3',order:3,delayDays:1,actionType:'cra_activity',actionConfig:{activityType:'lmi_outreach',description:'LMI outreach — {{contactName}}',craQualifying:true}},
+    {stepId:'t5s4',order:4,delayDays:7,actionType:'email',actionConfig:{subject:'Special lending programs for your neighborhood',body:'Hi {{contactName}},\n\nYour property may qualify for special lending programs designed for your neighborhood. Let me walk you through the options.'}},
+    {stepId:'t5s5',order:5,delayDays:14,actionType:'task',actionConfig:{taskTitle:'Follow up: LMI pre-qual for {{contactName}}',taskDescription:'Check on LMI lending program interest',dueInDays:2,priority:'med'}}
   ]}
 ];
 
