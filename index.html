@@ -2013,7 +2013,7 @@ admin@loopenta.com</div>
 <div id="app-screen">
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo" onclick="showTab('home');closeSidebar()">
+    <div class="sidebar-logo" onclick="_goHome();closeSidebar()" style="cursor:pointer">
       <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,#c4943a,#b07030);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:16px;color:white;letter-spacing:-0.02em">L</div>
       <div>
         <div class="sidebar-logo-text" style="font-family:var(--font-display)">Loopenta</div>
@@ -3491,6 +3491,12 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
     </div>
   </div>
   <div style="max-width:1100px;margin:0 auto;padding:28px 20px">
+    <div style="margin-bottom:16px">
+      <button onclick="_goHome()" style="background:transparent;border:none;color:#c4943a;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0;font-family:inherit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Home
+      </button>
+    </div>
     <div class="sa-tabs">
       <button class="sa-tab active" id="sa-tab-orgs" onclick="saShowTab('orgs')">🏢 Organizations</button>
       <button class="sa-tab" id="sa-tab-users" onclick="saShowTab('users')">👥 All Users</button>
