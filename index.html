@@ -938,6 +938,44 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
   .realtor-profile-body { padding: 14px 12px; }
   .realtor-profile-header { padding: 16px 20px; }
 }
+/* MLO Scorecard */
+.sc-ring-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:20px}
+.sc-ring-label{font-size:13px;font-weight:600;color:var(--text-secondary);margin-top:6px}
+.sc-ring-sub{font-size:11px;color:var(--text-muted)}
+.sc-metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.sc-metric-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.sc-metric-name{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.sc-metric-val{font-size:24px;font-weight:700;color:var(--text-primary);font-family:var(--font-display);line-height:1.1}
+.sc-metric-goal{font-size:12px;color:var(--text-muted);margin-left:4px;font-family:var(--font-body)}
+.sc-metric-bar{height:6px;background:#f5f0e8;border-radius:4px;margin-top:8px;overflow:hidden}
+.sc-metric-fill{height:100%;border-radius:4px;transition:width .4s}
+.sc-metric-pct{font-size:10px;font-weight:700;margin-top:3px;text-align:right}
+.sc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* Team table */
+.sc-team-table{width:100%;border-collapse:collapse;font-size:13px}
+.sc-team-table th{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);cursor:pointer;white-space:nowrap}
+.sc-team-table td{padding:10px;border-bottom:1px solid var(--border)}
+.sc-team-table tr:hover td{background:#f5f0e8;cursor:pointer}
+/* Leaderboard */
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:22px;font-size:14px;font-weight:800;text-align:center;flex-shrink:0}
+.lb-avatar{width:28px;height:28px;border-radius:50%;background:var(--border);font-size:10px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lb-name{flex:1;font-size:13px;font-weight:600;color:var(--text-primary)}
+.lb-val{font-size:13px;font-weight:700;color:var(--text-primary);font-family:var(--font-display)}
+.lb-me{border:1.5px solid var(--brand-accent);border-radius:10px;background:rgba(196,148,58,.04)}
+/* Admin goal setting */
+.goal-panel{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:100%;background:var(--surface);box-shadow:-8px 0 30px rgba(0,0,0,.15);z-index:900;overflow-y:auto;transform:translateX(100%);transition:transform .25s}
+.goal-panel.open{transform:translateX(0)}
+.goal-panel-hdr{background:var(--brand-primary);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1}
+.goal-field{margin-bottom:12px}
+.goal-field label{font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px}
+.goal-field input,.goal-field select{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;min-height:44px}
+@media(max-width:640px){
+  .sc-metrics-grid{grid-template-columns:1fr}
+  .sc-team-table .hide-mobile{display:none}
+  .goal-panel{width:100%}
+}
 /* Sequence cards */
 .seq-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:box-shadow .15s}
 .seq-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
@@ -1971,6 +2009,7 @@ admin@loopenta.com</div>
       <button class="sidebar-nav-item" id="sn-realtors" onclick="showTab('realtors');closeSidebar()"><span class="sn-icon">🤝</span>Realtors</button>
       <button class="sidebar-nav-item" id="sn-oyz" onclick="showTab('oyz');closeSidebar()"><span class="sn-icon">🏡</span>Open Houses</button>
       <div class="sidebar-section-label">REPORTING</div>
+      <button class="sidebar-nav-item" id="sn-scorecard" onclick="showTab('scorecard');closeSidebar()"><span class="sn-icon">🎯</span>My Scorecard</button>
       <button class="sidebar-nav-item" id="sn-dashboard" onclick="showTab('dashboard');closeSidebar()"><span class="sn-icon">📊</span>Dashboard</button>
       <button class="sidebar-nav-item" id="sn-activity" onclick="showTab('activity');closeSidebar()"><span class="sn-icon">📋</span>Activity Log</button>
       <button class="sidebar-nav-item" id="sn-analytics" onclick="showTab('analytics');closeSidebar()"><span class="sn-icon">📈</span>Analytics</button>
@@ -2065,8 +2104,28 @@ admin@loopenta.com</div>
               <div class="home-glance-bar"><div class="home-glance-fill" id="hg-pipe-bar" style="background:var(--color-sand);width:0%"></div></div>
             </div>
           </div>
+          <!-- Leaderboard Widget -->
+          <div id="home-leaderboard-widget" style="display:none"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- SCORECARD TAB -->
+  <div id="tab-scorecard-content" style="display:none">
+    <div style="max-width:900px;margin:0 auto;padding:20px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+        <div>
+          <div style="font-size:20px;font-weight:800;color:var(--text-primary)" id="sc-page-title">My Scorecard</div>
+          <div style="font-size:13px;color:var(--text-muted)" id="sc-page-sub">Performance overview</div>
+        </div>
+        <div style="display:flex;gap:6px;overflow-x:auto" id="sc-period-pills">
+          <button class="psp-btn active" onclick="_scSetPeriod('mtd',this)">MTD</button>
+          <button class="psp-btn" onclick="_scSetPeriod('wtd',this)">WTD</button>
+          <button class="psp-btn" onclick="_scSetPeriod('ytd',this)">YTD</button>
+        </div>
+      </div>
+      <div id="sc-body"><div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">Loading scorecard...</div></div>
     </div>
   </div>
 
@@ -2601,6 +2660,16 @@ admin@loopenta.com</div>
       <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end" id="seq-builder-footer"></div>
     </div>
   </div>
+
+  <!-- GOAL SETTING PANEL (admin) -->
+  <div class="goal-panel" id="goal-panel">
+    <div class="goal-panel-hdr">
+      <div style="font-size:16px;font-weight:800;color:white" id="goal-panel-title">Set Goals</div>
+      <button onclick="closeGoalPanel()" style="background:rgba(255,255,255,.15);border:none;color:white;width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div style="padding:20px" id="goal-panel-body"></div>
+  </div>
+  <div id="goal-panel-backdrop" onclick="closeGoalPanel()" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:899;display:none"></div>
 
 <!-- CREATE/EDIT DEAL MODAL -->
 <div class="deal-modal-overlay" id="deal-modal-overlay">
@@ -3784,6 +3853,23 @@ admin@loopenta.com</div>
       </div>
     </div>
     <div class="settings-section"><div class="settings-section-title">🎨 Preferences</div><div class="settings-coming-soon">More customization options coming in future updates.</div></div>
+    <div class="settings-section" id="leaderboard-settings" style="display:none">
+      <div class="settings-section-title">🏆 Team Leaderboard</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <label style="font-size:13px;color:var(--text-secondary);font-weight:500">Show leaderboard to all MLOs</label>
+        <input type="checkbox" id="settings-lb-enabled" style="width:20px;height:20px;cursor:pointer" onchange="_saveLeaderboardToggle()" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:13px;color:var(--text-secondary);font-weight:500">Rank by</label>
+        <select id="settings-lb-metric" style="padding:8px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;min-height:44px" onchange="_saveLeaderboardToggle()">
+          <option value="pipelineVolume">Pipeline Volume</option>
+          <option value="lmiPct">LMI %</option>
+          <option value="dealsFunded">Deals Funded</option>
+          <option value="craActivities">CRA Activities</option>
+          <option value="overall">Overall Score</option>
+        </select>
+      </div>
+    </div>
     <div class="settings-section">
       <div class="settings-section-title">🔔 Notification Preferences</div>
       <div class="settings-item">
@@ -4340,6 +4426,11 @@ async function _postLoginSetup(user) {
   generateNotifications();
   loadDashboardPrefs(); // load saved home screen layout prefs
   runDueSequenceSteps(); // execute any pending sequence steps
+  renderLeaderboard(); // show leaderboard if enabled
+  _checkAndSendDigest(); // check if digest email is due
+  // Show admin-only settings sections
+  var lbSettings = document.getElementById('leaderboard-settings');
+  if (lbSettings) lbSettings.style.display = isAnyAdmin() ? '' : 'none';
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
 }
 
@@ -4740,6 +4831,35 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] lmi rate:', e); }
 
+  // 12. MLO BEHIND ON GOALS (admin only, mid-month+)
+  try {
+    if (isAnyAdmin() && new Date().getDate() >= 15) {
+      var snapSnap = await db.collection('scorecardSnapshots').get();
+      var latestByMlo = {};
+      snapSnap.forEach(function(d) {
+        var s = d.data();
+        if (!s.mloUid) return;
+        if (!latestByMlo[s.mloUid] || s.createdAt > latestByMlo[s.mloUid].createdAt) latestByMlo[s.mloUid] = s;
+      });
+      Object.keys(latestByMlo).forEach(function(uid) {
+        var s = latestByMlo[uid];
+        if (!s.metrics || !s.goals) return;
+        var keys = Object.keys(s.goals);
+        if (!keys.length) return;
+        var avg = keys.reduce(function(sum, k) { return sum + Math.min((s.metrics[k]||0)/(s.goals[k]||1), 1); }, 0) / keys.length * 100;
+        if (avg < 50) {
+          var mlo = (cachedUsers||[]).find(function(u){ return u.id === uid; });
+          actions.push({
+            p: 'med',
+            title: (mlo ? mlo.name : 'MLO') + ' behind on goals \u00b7 ' + Math.round(avg) + '%',
+            detail: 'Less than 50% of monthly goals at mid-month',
+            module: 'Dashboard', tab: 'scorecard', _nav: 'scorecard'
+          });
+        }
+      });
+    }
+  } catch(e){ console.warn('[RequiredActions] mlo goals:', e); }
+
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
   actions.sort(function(a,b){ return (order[a.p]||9) - (order[b.p]||9); });
@@ -5135,10 +5255,11 @@ var _tabTitles = {
   home: 'Home', search: 'LMI Search', dashboard: 'Dashboard',
   realtors: 'Realtors', activity: 'Activity Log', marketing: 'Marketing',
   oyz: 'Open Houses', analytics: 'Analytics', contacts: 'Contacts',
-  pipeline: 'Deal Pipeline', comms: 'Communications', sequences: 'Sequences'
+  pipeline: 'Deal Pipeline', comms: 'Communications', sequences: 'Sequences',
+  scorecard: 'Scorecard'
 };
 function showTab(tab) {
-  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences'].forEach(function(t) {
+  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences','scorecard'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -5160,6 +5281,7 @@ function showTab(tab) {
   if (tab === 'pipeline') renderPipeline();
   if (tab === 'comms') renderCommsTab();
   if (tab === 'sequences') renderSequencesTab();
+  if (tab === 'scorecard') renderScorecardTab();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
     var hr = new Date().getHours();
@@ -13362,6 +13484,372 @@ async function _executeStep(step, enrollment, mergeData) {
 }
 
 // ── END PHASE 18 ─────────────────────────────────────────────
+
+// ════════════════════════════════════════════════════════════
+// PHASE 20 — MLO SCORECARDS + LEADERBOARD
+// ════════════════════════════════════════════════════════════
+
+var _scPeriod = 'mtd';
+var _scViewMlo = null; // null = self, or uid for admin viewing another
+
+var SC_METRICS = [
+  { key:'pipelineVolume', label:'Pipeline Volume', icon:'💰', fmt:'dollar' },
+  { key:'lmiPct', label:'LMI %', icon:'🏘️', fmt:'pct' },
+  { key:'realtorContacts', label:'Realtor Contacts', icon:'🤝', fmt:'num' },
+  { key:'openHouses', label:'Open Houses', icon:'🏡', fmt:'num' },
+  { key:'craActivities', label:'CRA Activities', icon:'📋', fmt:'num' },
+  { key:'dealsFunded', label:'Deals Funded', icon:'✅', fmt:'num' },
+  { key:'followUpResponseRate', label:'Response Rate', icon:'⚡', fmt:'pct' }
+];
+
+var SC_DEFAULT_GOALS = { pipelineVolume:2000000, lmiPct:40, realtorContacts:10, openHouses:4, craActivities:30, dealsFunded:3, followUpResponseRate:80 };
+
+function _scPeriodStart(period) {
+  var d = new Date();
+  if (period === 'wtd') { d.setDate(d.getDate() - d.getDay()); }
+  else if (period === 'ytd') { d = new Date(d.getFullYear(), 0, 1); }
+  else { d.setDate(1); } // mtd
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function _scSetPeriod(period, btn) {
+  _scPeriod = period;
+  document.querySelectorAll('#sc-period-pills .psp-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderScorecardBody();
+}
+
+async function renderScorecardTab() {
+  var uid = _scViewMlo || (currentUser && currentUser.id);
+  if (isAnyAdmin() && !_scViewMlo) {
+    renderTeamOverview();
+  } else {
+    renderScorecardBody();
+  }
+}
+
+async function renderScorecardBody() {
+  var el = document.getElementById('sc-body');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div>';
+  var uid = _scViewMlo || (currentUser && currentUser.id);
+  var start = _scPeriodStart(_scPeriod);
+  var metrics = await _scCalcMetrics(uid, start);
+  var goals = await _scLoadGoals(uid);
+  var pcts = {};
+  var onTrack = 0;
+  SC_METRICS.forEach(function(m) {
+    var g = goals[m.key] || SC_DEFAULT_GOALS[m.key] || 1;
+    pcts[m.key] = Math.min(100, Math.round((metrics[m.key] || 0) / g * 100));
+    if (pcts[m.key] >= 100) onTrack++;
+  });
+  var overall = Math.round(SC_METRICS.reduce(function(s,m){ return s + pcts[m.key]; },0) / SC_METRICS.length);
+
+  // Performance ring
+  var ringColor = overall >= 90 ? '#5a8a6a' : overall >= 70 ? '#c4943a' : '#9a4a3a';
+  var ringPct = Math.min(100, overall);
+  var circumference = 2 * Math.PI * 52;
+  var offset = circumference - (ringPct / 100) * circumference;
+
+  var html = '<div class="sc-ring-wrap">'
+    +'<svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="#f5f0e8" stroke-width="8"/>'
+    +'<circle cx="60" cy="60" r="52" fill="none" stroke="'+ringColor+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+circumference+'" stroke-dashoffset="'+offset+'" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/>'
+    +'<text x="60" y="60" text-anchor="middle" dominant-baseline="central" font-size="28" font-weight="700" fill="'+ringColor+'" font-family="var(--font-display)">'+overall+'%</text></svg>'
+    +'<div class="sc-ring-label">Overall Performance</div>'
+    +'<div class="sc-ring-sub">'+onTrack+' of 7 goals on track</div></div>';
+
+  // Metric cards
+  html += '<div class="sc-metrics-grid">';
+  SC_METRICS.forEach(function(m) {
+    var val = metrics[m.key] || 0;
+    var g = goals[m.key] || SC_DEFAULT_GOALS[m.key] || 1;
+    var p = pcts[m.key];
+    var color = p >= 100 ? '#5a8a6a' : p >= 75 ? '#c4943a' : p >= 50 ? '#b07030' : '#9a4a3a';
+    var valStr = m.fmt === 'dollar' ? fmtK(val) : m.fmt === 'pct' ? val + '%' : val;
+    var goalStr = m.fmt === 'dollar' ? fmtK(g) : m.fmt === 'pct' ? g + '%' : g;
+    html += '<div class="sc-metric-card">'
+      +'<div class="sc-metric-name"><span class="sc-dot" style="background:'+color+'"></span>'+m.label+'</div>'
+      +'<div><span class="sc-metric-val">'+valStr+'</span><span class="sc-metric-goal"> / '+goalStr+'</span></div>'
+      +'<div class="sc-metric-bar"><div class="sc-metric-fill" style="width:'+p+'%;background:'+color+'"></div></div>'
+      +'<div class="sc-metric-pct" style="color:'+color+'">'+p+'%</div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  // Write snapshot if needed
+  _scMaybeWriteSnapshot(uid, metrics, goals);
+}
+
+async function _scCalcMetrics(uid, start) {
+  var m = { pipelineVolume:0, lmiPct:0, realtorContacts:0, openHouses:0, craActivities:0, dealsFunded:0, followUpResponseRate:0 };
+  if (!db) return m;
+  try {
+    // Deals
+    var dSnap = await db.collection('deals').get();
+    var myDeals = dSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); })
+      .filter(function(d){ return (d.userId===uid||d.assignedTo===uid) && d.createdAt && new Date(d.createdAt)>=start; });
+    m.pipelineVolume = myDeals.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
+    m.lmiPct = myDeals.length>0 ? Math.round(myDeals.filter(function(d){return d.lmiEligible===true;}).length/myDeals.length*100) : 0;
+    m.dealsFunded = myDeals.filter(function(d){ return d.stage==='Funded'||d.stage==='Closed'; }).length;
+    // OYZ
+    var oSnap = await db.collection('oyz').get();
+    m.openHouses = oSnap.docs.filter(function(d){ var e=d.data(); return (e.userId===uid) && e.openHouseDate && new Date(e.openHouseDate)>=start; }).length;
+    // Activities
+    var aSnap = await db.collection('activity').get();
+    m.craActivities = aSnap.docs.filter(function(d){ var a=d.data(); return (a.userId===uid) && a.craQualifying===true && a.date && new Date(a.date)>=start; }).length;
+    // Realtors contacted
+    var rSnap = await db.collection('realtors').get();
+    m.realtorContacts = rSnap.docs.filter(function(d){ var r=d.data(); return (r.userId===uid) && r.lastContact && new Date(r.lastContact)>=start; }).length;
+    // Sequence response rate
+    try {
+      var sSnap = await db.collection('sequenceEnrollments').get();
+      var myEnroll = sSnap.docs.filter(function(d){ var e=d.data(); return e.enrolledBy===uid && e.startedAt && new Date(e.startedAt)>=start; });
+      var completed = myEnroll.filter(function(d){ return d.data().status==='completed'; }).length;
+      m.followUpResponseRate = myEnroll.length>0 ? Math.round(completed/myEnroll.length*100) : 0;
+    } catch(e){}
+  } catch(e) { console.warn('scorecard calc error:', e); }
+  return m;
+}
+
+async function _scLoadGoals(uid) {
+  if (!db) return SC_DEFAULT_GOALS;
+  try {
+    var doc = await db.collection('users').doc(uid).get();
+    if (doc.exists && doc.data().preferences && doc.data().preferences.goals) return doc.data().preferences.goals;
+  } catch(e){}
+  return SC_DEFAULT_GOALS;
+}
+
+async function _scMaybeWriteSnapshot(uid, metrics, goals) {
+  if (!db) return;
+  var now = new Date();
+  var weekNum = Math.ceil((((now - new Date(now.getFullYear(),0,1)) / 86400000) + new Date(now.getFullYear(),0,1).getDay() + 1) / 7);
+  var periodKey = now.getFullYear() + '-W' + String(weekNum).padStart(2,'0');
+  try {
+    var existing = await db.collection('scorecardSnapshots').where('mloUid','==',uid).get();
+    var hasThisPeriod = false;
+    existing.forEach(function(d){ if(d.data().period === periodKey) hasThisPeriod = true; });
+    if (!hasThisPeriod) {
+      await db.collection('scorecardSnapshots').add({
+        mloUid: uid, tenantId: currentUser.orgId||'', period: periodKey, periodType: 'weekly',
+        metrics: metrics, goals: goals, createdAt: now.toISOString()
+      });
+    }
+  } catch(e){}
+}
+
+// ── ADMIN TEAM OVERVIEW ──────────────────────────────────────
+var _teamSortCol = 'overall';
+var _teamSortDir = -1;
+
+async function renderTeamOverview() {
+  var el = document.getElementById('sc-body');
+  if (!el) return;
+  document.getElementById('sc-page-title').textContent = 'Team Scorecards';
+  document.getElementById('sc-page-sub').textContent = 'All MLOs performance overview';
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading team data...</div>';
+  var start = _scPeriodStart(_scPeriod);
+  var users = cachedUsers || [];
+  var mlos = users.filter(function(u){ return u.role==='mlo' && u.active; });
+  if (!mlos.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No active MLOs found.</div>'; return; }
+  var rows = [];
+  for (var i = 0; i < mlos.length; i++) {
+    var mlo = mlos[i];
+    var metrics = await _scCalcMetrics(mlo.id, start);
+    var goals = await _scLoadGoals(mlo.id);
+    var pcts = {};
+    SC_METRICS.forEach(function(m) {
+      var g = goals[m.key] || SC_DEFAULT_GOALS[m.key] || 1;
+      pcts[m.key] = Math.min(100, Math.round((metrics[m.key]||0) / g * 100));
+    });
+    var overall = Math.round(SC_METRICS.reduce(function(s,m){ return s+pcts[m.key]; },0) / SC_METRICS.length);
+    rows.push({ id: mlo.id, name: mlo.name||mlo.email, metrics: metrics, pcts: pcts, overall: overall });
+  }
+  rows.sort(function(a,b){ return ((b[_teamSortCol]||b.overall||0)-(a[_teamSortCol]||a.overall||0))*_teamSortDir; });
+
+  function _pctColor(p) { return p>=100?'#5a8a6a':p>=75?'#c4943a':p>=50?'#b07030':'#9a4a3a'; }
+
+  var tableHtml = '<div style="overflow-x:auto"><table class="sc-team-table"><thead><tr>'
+    +'<th onclick="_teamSort(\'name\')">MLO</th>'
+    +'<th onclick="_teamSort(\'overall\')">Overall</th>'
+    +'<th onclick="_teamSort(\'lmiPct\')" class="hide-mobile">LMI%</th>'
+    +'<th onclick="_teamSort(\'dealsFunded\')">Funded</th>'
+    +'<th onclick="_teamSort(\'pipelineVolume\')" class="hide-mobile">Pipeline</th>'
+    +'<th onclick="_teamSort(\'craActivities\')" class="hide-mobile">CRA</th>'
+    +'<th></th>'
+    +'</tr></thead><tbody>'
+    + rows.map(function(r) {
+      return '<tr onclick="_scViewMlo=\''+r.id+'\';renderScorecardBody()" style="cursor:pointer">'
+        +'<td style="font-weight:600">'+esc(r.name)+'</td>'
+        +'<td style="font-weight:700;color:'+_pctColor(r.overall)+'">'+r.overall+'%</td>'
+        +'<td class="hide-mobile" style="color:'+_pctColor(r.pcts.lmiPct)+'">'+r.pcts.lmiPct+'%</td>'
+        +'<td style="color:'+_pctColor(r.pcts.dealsFunded)+'">'+r.metrics.dealsFunded+'</td>'
+        +'<td class="hide-mobile">'+fmtK(r.metrics.pipelineVolume)+'</td>'
+        +'<td class="hide-mobile">'+r.metrics.craActivities+'</td>'
+        +'<td><button onclick="event.stopPropagation();openGoalPanel(\''+r.id+'\',\''+esc(r.name)+'\')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--text-secondary);cursor:pointer;min-height:36px">Set Goals</button></td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table></div>'
+    +'<div style="margin-top:12px;text-align:right">'
+    +'<button onclick="_scViewMlo=null;renderScorecardBody=renderTeamOverview;renderScorecardBody()" style="display:none">Back to Team</button>'
+    +'</div>';
+
+  el.innerHTML = tableHtml;
+}
+
+function _teamSort(col) {
+  if (_teamSortCol === col) _teamSortDir *= -1; else { _teamSortCol = col; _teamSortDir = -1; }
+  renderTeamOverview();
+}
+
+// ── GOAL SETTING PANEL ───────────────────────────────────────
+var _goalMloId = null;
+function openGoalPanel(mloId, mloName) {
+  _goalMloId = mloId;
+  document.getElementById('goal-panel-title').textContent = 'Goals: ' + (mloName||'MLO');
+  document.getElementById('goal-panel').classList.add('open');
+  document.getElementById('goal-panel-backdrop').style.display = 'block';
+  _loadGoalPanel(mloId);
+}
+function closeGoalPanel() {
+  document.getElementById('goal-panel').classList.remove('open');
+  document.getElementById('goal-panel-backdrop').style.display = 'none';
+  _goalMloId = null;
+}
+async function _loadGoalPanel(uid) {
+  var body = document.getElementById('goal-panel-body');
+  if (!body) return;
+  var goals = await _scLoadGoals(uid);
+  var prefs = {};
+  try { var doc = await db.collection('users').doc(uid).get(); if(doc.exists) prefs=doc.data().preferences||{}; } catch(e){}
+  body.innerHTML = SC_METRICS.map(function(m) {
+    var val = goals[m.key] || SC_DEFAULT_GOALS[m.key];
+    var unit = m.fmt === 'dollar' ? '$ per month' : m.fmt === 'pct' ? '% target' : 'per month';
+    return '<div class="goal-field"><label>'+m.icon+' '+m.label+' ('+unit+')</label>'
+      +'<input type="number" id="goal-'+m.key+'" value="'+val+'" /></div>';
+  }).join('')
+  +'<div class="goal-field"><label>📧 Digest Frequency</label>'
+  +'<select id="goal-digest-freq"><option value="off"'+(prefs.digestFrequency==='off'||!prefs.digestFrequency?' selected':'')+'>Off</option>'
+  +'<option value="weekly"'+(prefs.digestFrequency==='weekly'?' selected':'')+'>Weekly</option>'
+  +'<option value="monthly"'+(prefs.digestFrequency==='monthly'?' selected':'')+'>Monthly</option></select></div>'
+  +'<button onclick="_saveGoalPanel()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;min-height:44px;margin-top:12px">Save Goals</button>';
+}
+async function _saveGoalPanel() {
+  if (!db || !_goalMloId) return;
+  var goals = {};
+  SC_METRICS.forEach(function(m) { goals[m.key] = parseFloat((document.getElementById('goal-'+m.key)||{}).value) || SC_DEFAULT_GOALS[m.key]; });
+  var digest = (document.getElementById('goal-digest-freq')||{}).value || 'off';
+  try {
+    await db.collection('users').doc(_goalMloId).set({ preferences: { goals: goals, digestFrequency: digest } }, { merge: true });
+    showToast('Goals saved');
+    closeGoalPanel();
+    if (isAnyAdmin()) renderTeamOverview();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+// ── LEADERBOARD ──────────────────────────────────────────────
+async function renderLeaderboard() {
+  var widget = document.getElementById('home-leaderboard-widget');
+  if (!widget) return;
+  // Check if leaderboard is enabled for this tenant
+  var enabled = false;
+  var lbMetric = 'pipelineVolume';
+  try {
+    var tDoc = await db.collection('tenants').doc(currentUser.orgId||'golden1-org').get();
+    if (tDoc.exists) { enabled = tDoc.data().leaderboardEnabled === true; lbMetric = tDoc.data().leaderboardMetric || 'pipelineVolume'; }
+  } catch(e){}
+  if (!enabled) { widget.style.display = 'none'; return; }
+  widget.style.display = '';
+  var start = _scPeriodStart('mtd');
+  var users = cachedUsers || [];
+  var mlos = users.filter(function(u){ return u.role==='mlo' && u.active; });
+  if (mlos.length < 2) { widget.style.display = 'none'; return; }
+  var rows = [];
+  for (var i = 0; i < Math.min(mlos.length, 10); i++) {
+    var m = await _scCalcMetrics(mlos[i].id, start);
+    var initials = (mlos[i].name||'').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+    rows.push({ id: mlos[i].id, name: mlos[i].name||'MLO', initials: initials, val: m[lbMetric]||0, metrics: m });
+  }
+  rows.sort(function(a,b){ return b.val - a.val; });
+  var top5 = rows.slice(0, 5);
+  var metricDef = SC_METRICS.find(function(m){ return m.key === lbMetric; }) || SC_METRICS[0];
+  var rankColors = ['#c4943a','#9e8e7a','#a0784a','var(--text-muted)','var(--text-muted)'];
+
+  widget.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:16px">'
+    +'<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px">Team Leaderboard</span>'
+    +'<span style="font-size:11px;color:var(--text-muted)">'+metricDef.label+'</span></div>'
+    + top5.map(function(r, idx) {
+      var isMe = r.id === currentUser.id;
+      var valStr = metricDef.fmt === 'dollar' ? fmtK(r.val) : metricDef.fmt === 'pct' ? r.val+'%' : r.val;
+      return '<div class="lb-row'+(isMe?' lb-me':'')+'">'
+        +'<div class="lb-rank" style="color:'+rankColors[idx]+'">'+(idx+1)+'</div>'
+        +'<div class="lb-avatar">'+r.initials+'</div>'
+        +'<div class="lb-name">'+esc(r.name)+(isMe?' (you)':'')+'</div>'
+        +'<div class="lb-val">'+valStr+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+// ── LEADERBOARD ADMIN TOGGLE ─────────────────────────────────
+async function _saveLeaderboardToggle() {
+  if (!db || !currentUser) return;
+  var enabled = (document.getElementById('settings-lb-enabled')||{}).checked || false;
+  var metric = (document.getElementById('settings-lb-metric')||{}).value || 'pipelineVolume';
+  try {
+    await db.collection('tenants').doc(currentUser.orgId||'golden1-org').set({ leaderboardEnabled: enabled, leaderboardMetric: metric }, { merge: true });
+    showToast('Leaderboard '+(enabled?'enabled':'disabled'));
+  } catch(e) { console.error('Save leaderboard:', e); }
+}
+
+// ── DIGEST EMAIL ─────────────────────────────────────────────
+async function _checkAndSendDigest() {
+  if (!db || !currentUser) return;
+  try {
+    var doc = await db.collection('users').doc(currentUser.id).get();
+    if (!doc.exists) return;
+    var prefs = doc.data().preferences || {};
+    if (!prefs.digestFrequency || prefs.digestFrequency === 'off') return;
+    var lastSent = prefs.lastDigestSent ? new Date(prefs.lastDigestSent) : null;
+    var now = new Date();
+    var isDue = false;
+    if (prefs.digestFrequency === 'weekly') {
+      var dow = now.toLocaleDateString('en-US',{weekday:'long'}).toLowerCase();
+      isDue = dow === (prefs.digestDay||'monday') && (!lastSent || (now-lastSent) > 6*86400000);
+    } else if (prefs.digestFrequency === 'monthly') {
+      isDue = now.getDate() === parseInt(prefs.digestDay||'1') && (!lastSent || (now-lastSent) > 27*86400000);
+    }
+    if (!isDue) return;
+    var start = _scPeriodStart(prefs.digestFrequency === 'weekly' ? 'wtd' : 'mtd');
+    var metrics = await _scCalcMetrics(currentUser.id, start);
+    var goals = prefs.goals || SC_DEFAULT_GOALS;
+    var periodLabel = prefs.digestFrequency === 'weekly' ? 'Weekly' : 'Monthly';
+    var lines = SC_METRICS.map(function(m) {
+      var val = metrics[m.key]||0;
+      var g = goals[m.key]||SC_DEFAULT_GOALS[m.key];
+      var valStr = m.fmt==='dollar'?fmtK(val):m.fmt==='pct'?val+'%':val;
+      var goalStr = m.fmt==='dollar'?fmtK(g):m.fmt==='pct'?g+'%':g;
+      var status = val >= g ? '✓ On Track' : '⚠ Behind';
+      return m.label.padEnd(22) + valStr.toString().padEnd(12) + goalStr.toString().padEnd(10) + status;
+    }).join('\n');
+    var onTrack = SC_METRICS.filter(function(m){ return (metrics[m.key]||0) >= (goals[m.key]||SC_DEFAULT_GOALS[m.key]); }).length;
+    var body = 'Hi ' + (currentUser.name||'').split(' ')[0] + ',\n\nHere\'s your '+periodLabel.toLowerCase()+' performance summary:\n\n'
+      + lines + '\n\n' + onTrack + ' of 7 goals on track.\n\nView your full scorecard at https://lmitool.com\n\n— LMI Prospect Finder';
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_name: currentUser.name||'', to_email: currentUser.email||'',
+        subject: 'Your '+periodLabel+' Performance Summary', message: body, notes: body
+      });
+    } catch(e) { console.warn('Digest email error:', e); }
+    await db.collection('users').doc(currentUser.id).set({ preferences: { lastDigestSent: now.toISOString() } }, { merge: true });
+  } catch(e) { console.warn('Digest check error:', e); }
+}
+
+// ── END PHASE 20 ─────────────────────────────────────────────
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
