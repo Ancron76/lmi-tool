@@ -6,11 +6,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Loopenta"/>
-<meta name="theme-color" content="#0C1F3F"/>
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230C1F3F'/%3E%3Cpath d='M55 45L55 132L126 132' stroke='%231B73E3' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='55' cy='45' r='15' fill='%234FA3F7'/%3E%3C/svg%3E"/>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230C1F3F'/%3E%3Cpath d='M55 45L55 132L126 132' stroke='%231B73E3' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='55' cy='45' r='15' fill='%234FA3F7'/%3E%3C/svg%3E"/>
+<meta name="theme-color" content="#1c1812"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%231c1812'/%3E%3Cpath d='M55 45L55 132L126 132' stroke='%23c4943a' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='55' cy='45' r='15' fill='%23d4b070'/%3E%3C/svg%3E"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%231c1812'/%3E%3Cpath d='M55 45L55 132L126 132' stroke='%23c4943a' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='55' cy='45' r='15' fill='%23d4b070'/%3E%3C/svg%3E"/>
 <link rel="manifest" href="/manifest.json"/>
 <title>Loopenta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -19,46 +22,59 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 :root {
-  --brand-primary: #0C1F3F;
-  --brand-accent: #1B73E3;
-  --brand-accent-dark: #1558C0;
-  --brand-accent-light: #EEF4FF;
-  --body-bg: #F2F5F9;
-  --surface: #FFFFFF;
-  --border: #E2E8F0;
-  --border-strong: #CBD5E1;
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
-  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
-  --shadow-md: 0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
-  --shadow-lg: 0 12px 32px rgba(15,23,42,0.12), 0 4px 8px rgba(15,23,42,0.06);
+  /* Earth palette */
+  --brand-primary:      #1c1812;
+  --brand-accent:       #c4943a;
+  --brand-accent-dark:  #b07030;
+  --brand-accent-light: rgba(196,148,58,0.12);
+  --body-bg:            #f2ede4;
+  --surface:            #faf8f4;
+  --border:             #ddd4c0;
+  --border-strong:      #c4b49a;
+  --text-primary:       #1a1410;
+  --text-secondary:     #7a6a58;
+  --text-muted:         #a89880;
+  --color-ocean:        #7a9eaa;
+  --color-ocean-light:  #a0bcc8;
+  --color-sand:         #c4943a;
+  --color-stone:        #9e8e7a;
+  --color-positive:     #5a8a6a;
+  --color-positive-bg:  #eef4f0;
+  --color-negative:     #9a4a3a;
+  --color-negative-bg:  #f8ecea;
+  --color-warning:      #b07030;
+  --color-warning-bg:   #faf0e4;
+  --shadow-sm:  0 1px 3px rgba(26,20,16,0.06), 0 1px 2px rgba(26,20,16,0.04);
+  --shadow-md:  0 4px 12px rgba(26,20,16,0.08), 0 2px 4px rgba(26,20,16,0.04);
+  --shadow-lg:  0 12px 32px rgba(26,20,16,0.14), 0 4px 8px rgba(26,20,16,0.06);
   --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
+  --radius:    12px;
+  --radius-lg: 14px;
   --radius-xl: 20px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'DM Sans', 'Segoe UI', system-ui, sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; background: var(--body-bg); min-height: 100vh; color: var(--text-primary); }
+body { font-family: var(--font-body); background: var(--body-bg); min-height: 100vh; color: var(--text-primary); }
 
 #login-screen {
   display: flex; align-items: center; justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(160deg, #091830 0%, #0C1F3F 55%, #152D56 100%);
+  background: linear-gradient(160deg, #0d0b08 0%, #1c1812 55%, #2e2820 100%);
 }
 .login-box {
-  background: white; border-radius: var(--radius-xl); padding: 52px 44px; width: 100%; max-width: 420px;
+  background: var(--surface); border-radius: var(--radius-xl); padding: 52px 44px; width: 100%; max-width: 420px;
   box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.2); text-align: center;
 }
 .login-logo { margin-bottom: 18px; display: flex; justify-content: center; }
-.login-title { font-size: 30px; font-weight: 800; color: var(--brand-primary); margin-bottom: 6px; letter-spacing: -0.5px; }
+.login-title { font-size: 30px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.5px; }
 .login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 36px; letter-spacing: 0.1px; }
 .login-box input {
   width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   font-size: 15px; margin-bottom: 12px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
-  color: var(--text-primary); font-family: inherit; background: var(--body-bg);
+  color: var(--text-primary); font-family: var(--font-body); background: var(--body-bg);
 }
-.login-box input:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(27,115,227,0.12); background: white; }
+.login-box input:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(196,148,58,0.15); background: var(--surface); }
 .login-box input::placeholder { color: var(--text-muted); }
 .login-btn {
   width: 100%; padding: 14px; background: var(--brand-accent);
@@ -92,7 +108,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; bac
 /* Super Admin header style */
 .header-superadmin { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%) !important; }
 /* Signup screen */
-#signup-screen { display: none; min-height: 100vh; background: linear-gradient(160deg, #091830 0%, #0C1F3F 55%, #152D56 100%); align-items: center; justify-content: center; }
+#signup-screen { display: none; min-height: 100vh; background: linear-gradient(160deg, #0d0b08 0%, #1c1812 55%, #2e2820 100%); align-items: center; justify-content: center; }
 .signup-box { background: white; border-radius: var(--radius-xl); padding: 40px; width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); }
 .signup-step { display: none; }
 .signup-step.active { display: block; }
@@ -102,7 +118,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; bac
 .signup-field { margin-bottom: 14px; }
 .signup-field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .signup-field input, .signup-field select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; background: var(--body-bg); }
-.signup-field input:focus, .signup-field select:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(27,115,227,0.1); background: white; }
+.signup-field input:focus, .signup-field select:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(196,148,58,0.15); background: var(--surface); }
 .signup-btn { width: 100%; padding: 13px; background: var(--brand-accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.15s; font-family: inherit; }
 .signup-btn:hover { background: var(--brand-accent-dark); }
 /* SA panel styles */
@@ -709,15 +725,44 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; bac
 }
 
 /* HOME LANDING */
-.home-main { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
-.home-greeting { font-size: 26px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
-.home-sub { font-size: 14px; color: #94a3b8; margin-bottom: 36px; }
-.home-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.home-card { background: white; border-radius: 18px; padding: 28px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); cursor: pointer; transition: all 0.18s; border: 2px solid transparent; text-align: center; }
-.home-card:hover { border-color: #1B73E3; box-shadow: 0 4px 20px rgba(14,210,200,0.15); transform: translateY(-2px); }
-.home-card-icon { font-size: 36px; margin-bottom: 14px; }
-.home-card-title { font-size: 15px; font-weight: 800; color: #1f2937; margin-bottom: 6px; }
-.home-card-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+.home-main { padding: 28px 28px 60px; max-width: 1100px; }
+.home-greeting { font-family: var(--font-display); font-size: 32px; font-weight: 600; color: var(--text-primary); margin-bottom: 5px; letter-spacing: -0.02em; line-height: 1.1; }
+.home-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 0; }
+.home-layout { display: grid; grid-template-columns: 1fr 310px; gap: 20px; align-items: start; margin-top: 24px; }
+.home-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.09em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+/* Module summary cards */
+.home-modules-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.home-mod-card { background: var(--surface); border-radius: var(--radius-lg); padding: 14px 16px 13px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s, border-color 0.18s; }
+.home-mod-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.home-mod-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.home-mod-label { display: flex; align-items: center; gap: 7px; }
+.home-mod-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.home-mod-name { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.home-mod-badge { font-size: 9.5px; font-weight: 600; padding: 2px 7px; border-radius: 99px; display: inline-flex; align-items: center; gap: 2px; }
+.home-mod-badge.up { background: var(--color-positive-bg); color: var(--color-positive); }
+.home-mod-badge.dn { background: var(--color-negative-bg); color: var(--color-negative); }
+.home-mod-foot { display: flex; align-items: flex-end; justify-content: space-between; }
+.home-mod-metric { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1; }
+.home-mod-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
+/* Actions panel */
+.home-actions-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); }
+.home-act-row { padding: 11px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+.home-act-row:last-child { border-bottom: none; }
+.home-act-row:hover { background: #f5f0e8; }
+.home-act-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.home-act-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.home-act-detail { font-size: 10.5px; color: var(--text-muted); margin-bottom: 5px; }
+.home-act-footer { display: flex; align-items: center; justify-content: space-between; }
+.home-act-module { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 500; color: var(--text-secondary); }
+.home-act-tag { font-size: 9.5px; font-weight: 600; padding: 1.5px 7px; border-radius: 99px; }
+/* Glance bars */
+.home-glance-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 16px; box-shadow: var(--shadow-sm); }
+.home-glance-row { margin-bottom: 13px; }
+.home-glance-row:last-child { margin-bottom: 0; }
+.home-glance-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11.5px; }
+.home-glance-bar { height: 5px; border-radius: 99px; background: var(--body-bg); border: 1px solid var(--border); overflow: hidden; }
+.home-glance-fill { height: 100%; border-radius: 99px; }
+@media (max-width: 640px) { .home-layout { grid-template-columns: 1fr; } .home-modules-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 640px) { .home-cards-grid { grid-template-columns: 1fr 1fr; } }
 
 @media (max-width: 390px) {
@@ -1327,7 +1372,7 @@ h1,h2,h3 { letter-spacing: -0.3px; }
 }
 .search-row input:focus {
   border-color: var(--brand-accent) !important;
-  box-shadow: 0 0 0 3px rgba(27,115,227,0.1) !important;
+  box-shadow: 0 0 0 3px rgba(196,148,58,0.15) !important;
 }
 .search-btn:hover { background: var(--brand-accent-dark) !important; }
 
@@ -1382,7 +1427,7 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   transition: background 0.15s, color 0.15s;
 }
 .sidebar-nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
-.sidebar-nav-item.active { background: rgba(27,115,227,0.3); color: white; font-weight: 600; }
+.sidebar-nav-item.active { background: rgba(196,148,58,0.18); color: #c4943a; font-weight: 600; }
 .sidebar-nav-item.active .sn-icon { opacity: 1; }
 .sn-icon { font-size: 14px; width: 20px; text-align: center; opacity: 0.65; flex-shrink: 0; }
 .sidebar-footer {
@@ -1403,14 +1448,14 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   position: fixed;
   top: 0; left: 232px; right: 0;
   height: 56px;
-  background: white;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 16px 0 20px;
   z-index: 400;
-  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+  box-shadow: 0 1px 4px rgba(26,20,16,0.06);
 }
 .topbar-menu-btn {
   display: none;
@@ -1455,11 +1500,12 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   color: var(--text-primary);
   outline: none;
   box-sizing: border-box;
+  font-family: var(--font-body);
 }
 .topbar-search .global-search-input:focus {
   border-color: var(--brand-accent);
-  box-shadow: 0 0 0 3px rgba(27,115,227,0.1);
-  background: white;
+  box-shadow: 0 0 0 3px rgba(196,148,58,0.15);
+  background: var(--surface);
 }
 .topbar-search .search-dropdown {
   position: absolute;
@@ -1485,8 +1531,8 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   white-space: nowrap;
 }
 .topbar-action-btn:hover { background: var(--body-bg); }
-.topbar-action-btn.is-admin { background: var(--brand-accent); border-color: var(--brand-accent); color: white; }
-.topbar-action-btn.is-admin:hover { background: var(--brand-accent-dark); }
+.topbar-action-btn.is-admin { background: var(--brand-accent); border-color: var(--brand-accent); color: white; font-weight: 600; }
+.topbar-action-btn.is-admin:hover { background: var(--brand-accent-dark); border-color: var(--brand-accent-dark); }
 .topbar-action-btn.is-super { background: #7f1d1d; border-color: #7f1d1d; color: white; }
 /* Content offset for sidebar + topbar */
 [id^="tab-"][id$="-content"] {
@@ -1655,12 +1701,12 @@ admin@loopenta.com</div>
   <div class="login-box">
     <div class="login-logo">
       <svg width="52" height="52" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-        <rect width="180" height="180" rx="36" fill="#0C1F3F"/>
-        <path d="M55 45 L55 132 L126 132" stroke="#1B73E3" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <circle cx="55" cy="45" r="15" fill="#4FA3F7"/>
+        <rect width="180" height="180" rx="36" fill="#2e2820"/>
+        <path d="M55 45 L55 132 L126 132" stroke="#c4943a" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="55" cy="45" r="15" fill="#d4b070"/>
       </svg>
     </div>
-    <div class="login-title">Loopenta</div>
+    <div class="login-title" style="font-family:var(--font-display);font-weight:600;letter-spacing:-0.02em">Loopenta</div>
     <div class="login-sub">Mortgage CRM &nbsp;·&nbsp; Loan Officer Platform</div>
     <div style="text-align:left;margin-bottom:4px">
       <label style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Email</label>
@@ -1684,14 +1730,10 @@ admin@loopenta.com</div>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo" onclick="showTab('home');closeSidebar()">
-      <svg width="34" height="34" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-        <rect width="180" height="180" rx="36" fill="rgba(255,255,255,0.1)"/>
-        <path d="M55 45L55 132L126 132" stroke="#1B73E3" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <circle cx="55" cy="45" r="15" fill="#4FA3F7"/>
-      </svg>
+      <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,#c4943a,#b07030);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:16px;color:white;letter-spacing:-0.02em">L</div>
       <div>
-        <div class="sidebar-logo-text">Loopenta</div>
-        <div class="sidebar-logo-sub">Mortgage CRM</div>
+        <div class="sidebar-logo-text" style="font-family:var(--font-display)">Loopenta</div>
+        <div class="sidebar-logo-sub">MORTGAGE CRM</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1746,61 +1788,56 @@ admin@loopenta.com</div>
   <!-- HOME TAB -->
   <div id="tab-home-content" style="display:none">
     <div class="home-main">
-      <div style="margin-bottom:28px">
-        <div class="home-greeting" id="home-greeting">Good morning! 👋</div>
-        <div class="home-sub">What would you like to work on today?</div>
+      <div>
+        <div class="home-greeting" id="home-greeting">Good morning, there</div>
+        <div class="home-sub" id="home-date-line">Here's your overview for today</div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:14px">Quick Access</div>
-      <div class="home-cards-grid">
-        <div class="home-card" onclick="showTab('pipeline')">
-          <div class="home-card-icon">🎯</div>
-          <div class="home-card-title">Deal Pipeline</div>
-          <div class="home-card-desc">Track deals from lead to close</div>
+      <div class="home-layout">
+        <!-- LEFT: Module Grid -->
+        <div>
+          <div class="home-section-label">Module Summary</div>
+          <div class="home-modules-grid" id="home-modules-grid">
+            <!-- rendered by renderHomeModules() -->
+            <div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-muted);font-size:13px">Loading…</div>
+          </div>
         </div>
-        <div class="home-card" onclick="showTab('contacts')">
-          <div class="home-card-icon">👥</div>
-          <div class="home-card-title">Contacts</div>
-          <div class="home-card-desc">Borrowers and realtor relationships</div>
-        </div>
-        <div class="home-card" onclick="showTab('comms')">
-          <div class="home-card-icon">💬</div>
-          <div class="home-card-title">Communications</div>
-          <div class="home-card-desc">Email templates, campaigns, call log</div>
-        </div>
-        <div class="home-card" onclick="showTab('search')">
-          <div class="home-card-icon">🗺️</div>
-          <div class="home-card-title">LMI Search</div>
-          <div class="home-card-desc">Census tract data by ZIP code</div>
-        </div>
-        <div class="home-card" onclick="showTab('dashboard')">
-          <div class="home-card-icon">📊</div>
-          <div class="home-card-title">Dashboard</div>
-          <div class="home-card-desc">Activity stats and team performance</div>
-        </div>
-        <div class="home-card" onclick="showTab('realtors')">
-          <div class="home-card-icon">🤝</div>
-          <div class="home-card-title">Realtors</div>
-          <div class="home-card-desc">Partner network and capture rates</div>
-        </div>
-        <div class="home-card" onclick="showTab('activity')">
-          <div class="home-card-icon">📋</div>
-          <div class="home-card-title">Activity Log</div>
-          <div class="home-card-desc">CRA-qualifying mortgage activities</div>
-        </div>
-        <div class="home-card" onclick="showTab('analytics')">
-          <div class="home-card-icon">📈</div>
-          <div class="home-card-title">Analytics</div>
-          <div class="home-card-desc">Goals, trends and CRA compliance</div>
-        </div>
-        <div class="home-card" onclick="showTab('oyz')">
-          <div class="home-card-icon">🏡</div>
-          <div class="home-card-title">Open House</div>
-          <div class="home-card-desc">OYZ prospecting and outreach</div>
-        </div>
-        <div class="home-card" onclick="showTab('marketing')">
-          <div class="home-card-icon">🖨️</div>
-          <div class="home-card-title">Marketing</div>
-          <div class="home-card-desc">Flyers, shopping lists, materials</div>
+        <!-- RIGHT: Actions + Glance -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- Required Actions -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div class="home-section-label" style="margin-bottom:0">Required Actions</div>
+              <span id="home-urgent-badge" style="font-size:9.5px;font-weight:700;background:var(--color-negative-bg);color:var(--color-negative);border-radius:99px;padding:2px 8px;display:none"></span>
+            </div>
+            <div class="home-actions-card" id="home-actions-list">
+              <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px">Loading…</div>
+            </div>
+          </div>
+          <!-- At a Glance -->
+          <div class="home-glance-card">
+            <div class="home-section-label">Today at a Glance</div>
+            <div class="home-glance-row">
+              <div class="home-glance-label">
+                <span style="color:var(--text-secondary);font-weight:500">CRA Goal Progress</span>
+                <span id="hg-cra-val" style="font-weight:600;color:var(--text-primary)">—</span>
+              </div>
+              <div class="home-glance-bar"><div class="home-glance-fill" id="hg-cra-bar" style="background:var(--color-ocean);width:0%"></div></div>
+            </div>
+            <div class="home-glance-row">
+              <div class="home-glance-label">
+                <span style="color:var(--text-secondary);font-weight:500">LMI Compliance MTD</span>
+                <span id="hg-lmi-val" style="font-weight:600;color:var(--text-primary)">—</span>
+              </div>
+              <div class="home-glance-bar"><div class="home-glance-fill" id="hg-lmi-bar" style="background:var(--color-positive);width:0%"></div></div>
+            </div>
+            <div class="home-glance-row">
+              <div class="home-glance-label">
+                <span style="color:var(--text-secondary);font-weight:500">Pipeline to Close</span>
+                <span id="hg-pipe-val" style="font-weight:600;color:var(--text-primary)">—</span>
+              </div>
+              <div class="home-glance-bar"><div class="home-glance-fill" id="hg-pipe-bar" style="background:var(--color-sand);width:0%"></div></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -4137,6 +4174,149 @@ window.onload = async function() {
   }
 };
 
+// ── HOME TAB ──────────────────────────────────────────────────
+function _sparkSVG(data, color, w, h) {
+  w = w || 60; h = h || 26;
+  if (!data || data.length < 2) return '';
+  var max = Math.max.apply(null,data), min = Math.min.apply(null,data), range = max-min||1;
+  var pts = data.map(function(v,i){
+    var x = (i/(data.length-1))*w;
+    var y = h - ((v-min)/range)*(h-6) - 3;
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  var last = pts.split(' ').pop().split(',');
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="overflow:visible;flex-shrink:0">'
+    +'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.5" fill="'+color+'"/>'
+    +'</svg>';
+}
+
+var HOME_MODULES = [
+  { tab:'pipeline',    name:'Deal Pipeline',   color:'#7a9eaa', spark:[8,10,9,12,11,14,13,16,14,17]  },
+  { tab:'search',      name:'LMI Search',      color:'#5a8a6a', spark:[30,33,35,38,36,40,39,41,40,41] },
+  { tab:'realtors',    name:'Realtors',        color:'#c4943a', spark:[18,19,20,21,21,23,23,25,26,27] },
+  { tab:'contacts',    name:'Contacts',        color:'#7a9eaa', spark:[200,210,215,220,225,228,232,238,243,247] },
+  { tab:'comms',       name:'Communications',  color:'#b07030', spark:[98,97,96,98,95,97,96,94,95,94] },
+  { tab:'oyz',         name:'Open Houses',     color:'#5a8a6a', spark:[3,4,5,4,6,5,7,6,8,8]          },
+  { tab:'activity',    name:'Activity Log',    color:'#9e8e7a', spark:[20,24,26,28,30,33,36,39,43,47] },
+  { tab:'analytics',   name:'Analytics',       color:'#7a9eaa', spark:[50,56,60,65,66,70,72,76,79,82] },
+  { tab:'dashboard',   name:'Dashboard',       color:'#c4943a', spark:[5,6,6,7,7,7,8,8,8,8]          },
+  { tab:'marketing',   name:'Marketing',       color:'#6a5e50', spark:[1,1,2,2,2,3,3,3,3,3]          },
+];
+
+var HOME_ACTIONS = [
+  { p:'high', title:'Rate lock expires in 3 days',    detail:'Deal: Smith, R. — $485,000 purchase',         module:'Deal Pipeline',  tab:'pipeline' },
+  { p:'high', title:'Pre-qual request pending review', detail:'Submitted by Realtor: Maria Gonzalez',        module:'Contacts',       tab:'contacts' },
+  { p:'med',  title:'Realtor follow-up overdue · 2d', detail:'Carlos Mendez — Elk Grove territory',         module:'Realtors',       tab:'realtors' },
+  { p:'med',  title:'Open house report not submitted', detail:'Event: Elk Grove OYZ — Apr 10',              module:'Open Houses',    tab:'oyz'      },
+  { p:'med',  title:'CRA activities unlogged',         detail:'3 qualifying activities need entry this week',module:'Activity Log',   tab:'activity' },
+  { p:'low',  title:'2 unread messages',               detail:'Communications inbox · oldest: 18hr ago',     module:'Communications', tab:'comms'    },
+];
+
+var _PA = {
+  high: { dot:'#9a4a3a', bg:'#f8ecea', label:'Urgent'     },
+  med:  { dot:'#b07030', bg:'#faf0e4', label:'Follow-up'  },
+  low:  { dot:'#9e8e7a', bg:'#f5f0e8', label:'Info'       },
+};
+
+function renderHomeTab() {
+  renderHomeModules();
+  renderHomeActions();
+  _renderHomeGlance();
+}
+
+function renderHomeModules() {
+  var grid = document.getElementById('home-modules-grid');
+  if (!grid) return;
+  // pull live counts where easy
+  var pipeCount  = (typeof cachedDeals !== 'undefined')    ? cachedDeals.filter(function(d){return d.stage!=='closed_won'&&d.stage!=='closed_lost';}).length : null;
+  var contactCnt = (typeof cachedBorrowers !== 'undefined')? cachedBorrowers.length : null;
+  var realtorCnt = (typeof cachedRealtors !== 'undefined') ? cachedRealtors.length  : null;
+
+  var metrics = {
+    pipeline:   pipeCount  !== null ? pipeCount+' Active Deals'  : '— Active Deals',
+    search:     '— Searches',
+    realtors:   realtorCnt !== null ? realtorCnt+' Partners'     : '— Partners',
+    contacts:   contactCnt !== null ? contactCnt+' Contacts'     : '— Contacts',
+    comms:      '— Templates',
+    oyz:        '— Scheduled',
+    activity:   '— Activities MTD',
+    analytics:  '— % to Goal',
+    dashboard:  '— MLOs Active',
+    marketing:  '— Campaigns',
+  };
+
+  grid.innerHTML = HOME_MODULES.map(function(m) {
+    var metric = metrics[m.tab] || '—';
+    return '<div class="home-mod-card" onclick="showTab(\''+m.tab+'\')">'
+      +'<div class="home-mod-header">'
+        +'<div class="home-mod-label">'
+          +'<div class="home-mod-icon" style="background:'+m.color+'18;color:'+m.color+'">●</div>'
+          +'<span class="home-mod-name">'+m.name+'</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="home-mod-foot">'
+        +'<div>'
+          +'<div class="home-mod-metric">'+metric+'</div>'
+        +'</div>'
+        +_sparkSVG(m.spark, m.color, 60, 26)
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function renderHomeActions() {
+  var list = document.getElementById('home-actions-list');
+  var badge = document.getElementById('home-urgent-badge');
+  if (!list) return;
+  var urgent = HOME_ACTIONS.filter(function(a){return a.p==='high';}).length;
+  if (badge && urgent > 0) { badge.textContent = urgent+' Urgent'; badge.style.display='inline'; }
+  list.innerHTML = HOME_ACTIONS.map(function(a,i) {
+    var pm = _PA[a.p];
+    return '<div class="home-act-row" onclick="showTab(\''+a.tab+'\')">'+
+      '<div style="display:flex;gap:9px;align-items:flex-start">'+
+        '<div class="home-act-dot" style="background:'+pm.dot+'"></div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="home-act-title">'+esc(a.title)+'</div>'+
+          '<div class="home-act-detail">'+esc(a.detail)+'</div>'+
+          '<div class="home-act-footer">'+
+            '<div class="home-act-module">'+esc(a.module)+'</div>'+
+            '<span class="home-act-tag" style="background:'+pm.bg+';color:'+pm.dot+'">'+pm.label+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<svg style="flex-shrink:0;margin-top:3px;color:#c4b49a" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function _renderHomeGlance() {
+  // CRA goal: use analytics data if available
+  var craVal = '—', craW = 0;
+  var lmiVal = '—', lmiW = 0;
+  var pipeVal = '—', pipeW = 0;
+
+  if (typeof cachedActivities !== 'undefined' && cachedActivities.length) {
+    var mo = new Date(); mo.setDate(1); mo.setHours(0,0,0,0);
+    var mtd = cachedActivities.filter(function(a){ return a.date && new Date(a.date) >= mo; }).length;
+    var goal = 30; craW = Math.min(100, Math.round(mtd/goal*100)); craVal = craW+'%';
+  }
+  if (typeof cachedDeals !== 'undefined' && cachedDeals.length) {
+    var active = cachedDeals.filter(function(d){return d.stage!=='closed_won'&&d.stage!=='closed_lost';});
+    pipeVal = active.length+' active'; pipeW = Math.min(100, active.length*10);
+  }
+
+  var cv = document.getElementById('hg-cra-val'), cb = document.getElementById('hg-cra-bar');
+  var lv = document.getElementById('hg-lmi-val'), lb = document.getElementById('hg-lmi-bar');
+  var pv = document.getElementById('hg-pipe-val'), pb = document.getElementById('hg-pipe-bar');
+  if (cv) cv.textContent = craVal;
+  if (cb) cb.style.width = craW+'%';
+  if (lv) lv.textContent = lmiVal;
+  if (lb) lb.style.width = lmiW+'%';
+  if (pv) pv.textContent = pipeVal;
+  if (pb) pb.style.width = pipeW+'%';
+}
+
 // ── TAB NAV ───────────────────────────────────────────────────
 var _tabTitles = {
   home: 'Home', search: 'LMI Search', dashboard: 'Dashboard',
@@ -4168,7 +4348,14 @@ function showTab(tab) {
   if (tab === 'comms') renderCommsTab();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
-    if (h) { var hr = new Date().getHours(); h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there') + '!'; }
+    var hr = new Date().getHours();
+    if (h) h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there');
+    var dl = document.getElementById('home-date-line');
+    if (dl) {
+      var d = new Date();
+      dl.textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+    }
+    renderHomeTab();
   }
   if (typeof updateBottomNav === 'function') updateBottomNav(tab);
 }
