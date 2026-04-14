@@ -1,0 +1,147 @@
+import { useState, useEffect } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
+
+export function useRequiredActions(uid) {
+  const [actions, setActions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!uid) return;
+
+    async function fetchActions() {
+      setLoading(true);
+      const results = [];
+      const now = new Date();
+      const in7Days   = new Date(now.getTime() + 7  * 24 * 60 * 60 * 1000);
+      const ago14Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      // 1. Deal Pipeline — rate lock expiring within 7 days
+      // Field-name fix: actual collection uses "stage" not "status"
+      try {
+        const snap = await getDocs(collection(db, "deals"));
+        snap.forEach(doc => {
+          const d = doc.data();
+          if (d.stage === "Closed" || d.stage === "Lost") return;
+          if (!d.rateLockExpiry) return;
+          const expiry = d.rateLockExpiry.toDate ? d.rateLockExpiry.toDate() : new Date(d.rateLockExpiry);
+          if (expiry <= in7Days && expiry >= now) {
+            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            results.push({
+              priority: daysLeft <= 2 ? "high" : "med",
+              label: `Rate lock expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+              detail: `${d.borrowerName || "Deal"} — ${d.loanAmount ? "$" + Number(d.loanAmount).toLocaleString() : ""}`,
+              module: "Deal Pipeline", moduleIc: "pipe", moduleColor: "#7a9eaa",
+              navTarget: `/pipeline?deal=${doc.id}`, docId: doc.id,
+            });
+          }
+        });
+      } catch (e) { console.warn("deals", e); }
+
+      // 2. Pre-qual requests — pending
+      try {
+        const snap = await getDocs(
+          query(collection(db, "prequal"), where("status", "==", "pending"))
+        );
+        snap.forEach(doc => {
+          const d = doc.data();
+          results.push({
+            priority: "high",
+            label: "Pre-qual request pending review",
+            detail: `Submitted by: ${d.realtorName || d.submittedBy || "Realtor"}`,
+            module: "Contacts", moduleIc: "contacts", moduleColor: "#7a9eaa",
+            navTarget: `/contacts?prequal=${doc.id}`, docId: doc.id,
+          });
+        });
+      } catch (e) { console.warn("prequal", e); }
+
+      // 3. Realtors — overdue follow-up (>14 days)
+      // Field-name fix: "territory" → "area" in actual data
+      try {
+        const snap = await getDocs(collection(db, "realtors"));
+        snap.forEach(doc => {
+          const d = doc.data();
+          if (!d.lastContact) return;
+          const last = d.lastContact.toDate ? d.lastContact.toDate() : new Date(d.lastContact);
+          if (last <= ago14Days) {
+            const daysAgo = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+            results.push({
+              priority: "med",
+              label: `Realtor follow-up overdue · ${daysAgo}d`,
+              detail: `${d.name || "Realtor"} — ${d.area || d.territory || d.city || ""}`,
+              module: "Realtors", moduleIc: "realtors", moduleColor: "#c4943a",
+              navTarget: `/realtors?id=${doc.id}`, docId: doc.id,
+            });
+          }
+        });
+      } catch (e) { console.warn("realtors", e); }
+
+      // 4. Open houses — past events without submitted report
+      // Field-name fixes: "eventDate" → "openHouseDate", "address" → "propertyAddress"
+      try {
+        const snap = await getDocs(collection(db, "oyz"));
+        snap.forEach(doc => {
+          const d = doc.data();
+          if (d.reportSubmitted === true) return;
+          const eventDate = d.openHouseDate
+            ? (d.openHouseDate.toDate ? d.openHouseDate.toDate() : new Date(d.openHouseDate))
+            : null;
+          if (!eventDate || eventDate >= now) return;
+          results.push({
+            priority: "med",
+            label: "Open house report not submitted",
+            detail: `${d.propertyAddress || d.streetAddress || "Event"} — ${eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+            module: "Open Houses", moduleIc: "house", moduleColor: "#5a8a6a",
+            navTarget: `/open-houses?id=${doc.id}`, docId: doc.id,
+          });
+        });
+      } catch (e) { console.warn("oyz", e); }
+
+      // 5. Activity log — unlogged CRA activities
+      // Field-name fix: collection is "activity" not "activities"
+      try {
+        const snap = await getDocs(collection(db, "activity"));
+        const unlogged = snap.docs.filter(doc => {
+          const d = doc.data();
+          return d.logged !== true && (d.craQualifying === true || d.type === "cra" || d.type === "lmi_outreach");
+        });
+        if (unlogged.length > 0) {
+          results.push({
+            priority: "med",
+            label: `${unlogged.length} CRA activit${unlogged.length === 1 ? "y" : "ies"} unlogged`,
+            detail: `${unlogged.length} entr${unlogged.length === 1 ? "y needs" : "ies need"} submission`,
+            module: "Activity Log", moduleIc: "log", moduleColor: "#9e8e7a",
+            navTarget: "/activity-log?filter=unlogged", docId: "actlog",
+          });
+        }
+      } catch (e) { console.warn("activities", e); }
+
+      // 6. Communications — unread notifications
+      try {
+        const snap = await getDocs(collection(db, "notifications"));
+        const unread = snap.docs.filter(doc => {
+          const d = doc.data();
+          return d.read !== true && (!d.userId || d.userId === uid);
+        });
+        if (unread.length > 0) {
+          results.push({
+            priority: "low",
+            label: `${unread.length} unread message${unread.length === 1 ? "" : "s"}`,
+            detail: `Communications inbox · ${unread.length} unread`,
+            module: "Communications", moduleIc: "comms", moduleColor: "#b07030",
+            navTarget: "/communications?filter=unread", docId: "comms",
+          });
+        }
+      } catch (e) { console.warn("notifications", e); }
+
+      const order = { high: 0, med: 1, low: 2 };
+      results.sort((a, b) => order[a.priority] - order[b.priority]);
+      setActions(results);
+      setLoading(false);
+    }
+
+    fetchActions();
+  }, [uid]);
+
+  return { actions, loading };
+}

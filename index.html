@@ -4307,118 +4307,114 @@ async function useRequiredActions() {
   var actions = [];
   if (!db || !currentUser) return actions;
   var now = new Date();
-  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var todayStr = today.toISOString().slice(0,10);
+  var in7Days   = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  var ago14Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
   function _toDateLocal(v) {
     if (!v) return null;
+    if (v && v.toDate) return v.toDate();
     if (v && v.seconds) return new Date(v.seconds * 1000);
     var d = new Date(v);
     return isNaN(d) ? null : d;
   }
 
-  // 1. DEAL PIPELINE — rateLockExpiry exists AND <= today + 7 days
+  // 1. DEAL PIPELINE — active deals with rateLockExpiry within 7 days
   try {
-    var sevenDaysOut = new Date(today.getTime() + 7 * 86400000);
     var dealSnap = await db.collection('deals').get();
     var dealDocs = dealSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var orgId = currentUser && currentUser.orgId;
     if (orgId && !isSuperAdmin()) dealDocs = dealDocs.filter(function(d){ return d.orgId===orgId; });
     if (!isAnyAdmin()) dealDocs = dealDocs.filter(function(d){ return d.userId===currentUser.id; });
     dealDocs.forEach(function(d){
+      if (d.stage === 'Closed' || d.stage === 'Lost') return;
       if (!d.rateLockExpiry) return;
       var exp = _toDateLocal(d.rateLockExpiry);
       if (!exp) return;
-      if (exp <= sevenDaysOut) {
-        var daysLeft = Math.ceil((exp - today) / 86400000);
-        var label = daysLeft <= 0 ? 'Rate lock expired' : 'Rate lock expires in ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '');
+      if (exp <= in7Days && exp >= now) {
+        var daysLeft = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
         actions.push({
-          p: daysLeft <= 1 ? 'high' : 'med',
-          title: label,
-          detail: 'Deal: ' + (d.borrowerName||'Unknown') + (d.loanAmount ? ' — $' + Number(d.loanAmount).toLocaleString() : ''),
+          p: daysLeft <= 2 ? 'high' : 'med',
+          title: 'Rate lock expires in ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : ''),
+          detail: (d.borrowerName||'Deal') + ' — ' + (d.loanAmount ? '$' + Number(d.loanAmount).toLocaleString() : ''),
           module: 'Deal Pipeline', tab: 'pipeline',
           _dealId: d.id
         });
       }
     });
-  } catch(e){ console.error('[RequiredActions] deals:', e); }
+  } catch(e){ console.warn('[RequiredActions] deals:', e); }
 
   // 2. PREQUAL REQUESTS — status == "pending"
   try {
-    var pqSnap = await db.collection('prequal').get();
+    var pqSnap = await db.collection('prequal').where('status','==','pending').get();
     pqSnap.forEach(function(d){
       var pq = d.data();
-      if (pq.status !== 'pending') return;
-      if (pq.mloUserId && pq.mloUserId !== currentUser.id && !isAnyAdmin()) return;
       actions.push({
         p: 'high',
         title: 'Pre-qual request pending review',
-        detail: 'From: ' + (pq.realtorName || pq.borrowerName || 'Unknown'),
+        detail: 'Submitted by: ' + (pq.realtorName || pq.submittedBy || 'Realtor'),
         module: 'Contacts', tab: 'contacts',
         _nav: 'contacts'
       });
     });
-  } catch(e){ console.error('[RequiredActions] prequal:', e); }
+  } catch(e){ console.warn('[RequiredActions] prequal:', e); }
 
-  // 3. REALTORS — lastContact exists AND lastContact <= today - 14 days
+  // 3. REALTORS — lastContact exists AND lastContact <= 14 days ago
   try {
-    var fourteenDaysAgo = new Date(today.getTime() - 14 * 86400000);
-    var rSnap = await db.collection('realtors').where('userId','==',currentUser.id).get();
+    var rSnap = await db.collection('realtors').get();
     rSnap.forEach(function(d){
       var r = Object.assign({id:d.id, docId:d.id}, d.data());
       if (!r.lastContact) return;
       var lc = _toDateLocal(r.lastContact);
       if (!lc) return;
-      if (lc <= fourteenDaysAgo) {
-        var daysAgo = Math.floor((today - lc) / 86400000);
+      if (lc <= ago14Days) {
+        var daysAgo = Math.floor((now - lc) / (1000 * 60 * 60 * 24));
         actions.push({
           p: 'med',
-          title: 'Realtor follow-up overdue · ' + daysAgo + 'd',
-          detail: (r.name||'Unknown') + (r.area ? ' — ' + r.area + ' territory' : ''),
+          title: 'Realtor follow-up overdue \u00b7 ' + daysAgo + 'd',
+          detail: (r.name||'Realtor') + ' \u2014 ' + (r.area || r.territory || r.city || ''),
           module: 'Realtors', tab: 'realtors',
           _realtorId: r.docId
         });
       }
     });
-  } catch(e){ console.error('[RequiredActions] realtors:', e); }
+  } catch(e){ console.warn('[RequiredActions] realtors:', e); }
 
-  // 4. OPEN HOUSES — openHouseDate < today AND reportSubmitted != true
+  // 4. OPEN HOUSES — past openHouseDate AND reportSubmitted != true
   try {
     var oyzSnap = await db.collection('oyz').get();
     oyzSnap.forEach(function(d){
       var e = Object.assign({id:d.id}, d.data());
-      if (!isAnyAdmin() && e.userId !== currentUser.id) return;
-      if (!e.openHouseDate) return;
-      if (e.openHouseDate >= todayStr) return;
-      if (e.reportSubmitted === true || e.status === 'complete') return;
+      if (e.reportSubmitted === true) return;
+      var eventDate = _toDateLocal(e.openHouseDate);
+      if (!eventDate || eventDate >= now) return;
       actions.push({
         p: 'med',
         title: 'Open house report not submitted',
-        detail: (e.propertyAddress || e.streetAddress || 'Unknown') + ' — ' + e.openHouseDate,
+        detail: (e.propertyAddress || e.streetAddress || 'Event') + ' \u2014 ' + eventDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}),
         module: 'Open Houses', tab: 'oyz',
         _oyzId: e.id
       });
     });
-  } catch(e){ console.error('[RequiredActions] oyz:', e); }
+  } catch(e){ console.warn('[RequiredActions] oyz:', e); }
 
-  // 5. ACTIVITY LOG — flagged == true AND logged != true
+  // 5. ACTIVITY LOG — unlogged CRA activities
   try {
-    var actSnap = await db.collection('activity').where('userId','==',currentUser.id).get();
-    var flaggedCount = 0;
+    var actSnap = await db.collection('activity').get();
+    var unlogged = 0;
     actSnap.forEach(function(d){
       var a = d.data();
-      if (a.flagged === true && a.logged !== true) flaggedCount++;
+      if (a.logged !== true && (a.craQualifying === true || a.type === 'cra' || a.type === 'lmi_outreach')) unlogged++;
     });
-    if (flaggedCount > 0) {
+    if (unlogged > 0) {
       actions.push({
         p: 'med',
-        title: flaggedCount + ' flagged activit' + (flaggedCount === 1 ? 'y' : 'ies') + ' unlogged',
-        detail: flaggedCount + ' qualifying activit' + (flaggedCount === 1 ? 'y needs' : 'ies need') + ' entry',
+        title: unlogged + ' CRA activit' + (unlogged === 1 ? 'y' : 'ies') + ' unlogged',
+        detail: unlogged + ' entr' + (unlogged === 1 ? 'y needs' : 'ies need') + ' submission',
         module: 'Activity Log', tab: 'activity',
         _nav: 'activity'
       });
     }
-  } catch(e){ console.error('[RequiredActions] activity:', e); }
+  } catch(e){ console.warn('[RequiredActions] activity:', e); }
 
   // 6. COMMUNICATIONS — notifications where read != true
   try {
@@ -4426,19 +4422,20 @@ async function useRequiredActions() {
     var unread = 0;
     nSnap.forEach(function(d){
       var n = d.data();
-      if (n.userId !== currentUser.id) return;
-      if (n.read !== true) unread++;
+      if (n.read === true) return;
+      if (n.userId && n.userId !== currentUser.id) return;
+      unread++;
     });
     if (unread > 0) {
       actions.push({
         p: 'low',
         title: unread + ' unread message' + (unread !== 1 ? 's' : ''),
-        detail: 'Communications inbox',
+        detail: 'Communications inbox \u00b7 ' + unread + ' unread',
         module: 'Communications', tab: 'comms',
         _nav: 'comms'
       });
     }
-  } catch(e){ console.error('[RequiredActions] notifications:', e); }
+  } catch(e){ console.warn('[RequiredActions] notifications:', e); }
 
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
