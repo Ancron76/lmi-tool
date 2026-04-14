@@ -2701,6 +2701,128 @@ admin@loopenta.com</div>
   </div>
   <div id="goal-panel-backdrop" onclick="closeGoalPanel()" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:899;display:none"></div>
 
+  <!-- SMS SETUP INSTRUCTIONS MODAL -->
+  <div class="deal-modal-overlay" id="sms-setup-overlay">
+    <div class="deal-modal-panel" style="max-width:520px">
+      <div class="deal-modal-hdr" style="background:#7a9eaa">
+        <div><div style="font-size:16px;font-weight:800;color:white">Setting Up SMS for Your Team</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px">One-time setup \u00b7 Takes about 10 minutes</div></div>
+        <button onclick="_closeSmsSetup()" style="background:rgba(255,255,255,.18);border:none;color:white;width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+      </div>
+      <div style="padding:20px;overflow-y:auto;max-height:calc(100vh - 160px)" id="sms-setup-body">
+        <!-- Cost notice -->
+        <div style="background:#faf0e4;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--text-secondary);line-height:1.6">
+          \uD83D\uDCA1 <strong>Estimated cost:</strong> ~$1.15/mo per MLO number + ~$0.008 per message sent. A 6-MLO team costs roughly $12/month total.
+        </div>
+
+        <!-- Step 1 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#c4943a;color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Create a Twilio Account</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              1. Go to <strong>twilio.com</strong> and sign up for a free account<br>
+              2. Verify your email and phone number<br>
+              3. On your Twilio dashboard, find your <strong>Account SID</strong> and <strong>Auth Token</strong> \u2014 copy both
+            </div>
+            <div style="background:#1c1812;color:#e8e0d4;font-family:monospace;font-size:11.5px;border-radius:8px;padding:10px 14px;margin-top:8px;position:relative;white-space:pre-wrap">Account SID:  ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Auth Token:   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<button onclick="_smsSetupCopy(this,'Account SID:  ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nAuth Token:   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')" style="position:absolute;top:8px;right:8px;background:#c4943a;color:white;border:none;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer">Copy</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#c4943a;color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Add Credentials to Cloudflare Worker</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              1. Go to <strong>dash.cloudflare.com</strong> and log in<br>
+              2. Click <strong>Workers &amp; Pages</strong> \u2192 click <strong>lmi-proxy</strong><br>
+              3. Click <strong>Settings</strong> tab \u2192 <strong>Variables</strong><br>
+              4. Click <strong>Add Variable</strong> and add these two:
+            </div>
+            <div style="background:#1c1812;color:#e8e0d4;font-family:monospace;font-size:11.5px;border-radius:8px;padding:10px 14px;margin-top:8px;position:relative;white-space:pre-wrap">Variable name:   TWILIO_ACCOUNT_SID
+Value:           (paste your Account SID)
+
+Variable name:   TWILIO_AUTH_TOKEN
+Value:           (paste your Auth Token)<button onclick="_smsSetupCopy(this,'Variable name:   TWILIO_ACCOUNT_SID\nValue:           (paste your Account SID)\n\nVariable name:   TWILIO_AUTH_TOKEN\nValue:           (paste your Auth Token)')" style="position:absolute;top:8px;right:8px;background:#c4943a;color:white;border:none;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer">Copy</button></div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:6px">5. Click <strong>Save and Deploy</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#c4943a;color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Add SMS Routes to Your Worker</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">Paste this into Claude Code to update your Worker:</div>
+            <div style="background:#1c1812;color:#e8e0d4;font-family:monospace;font-size:11.5px;border-radius:8px;padding:10px 14px;margin-top:8px;position:relative;white-space:pre-wrap;line-height:1.5" id="sms-setup-worker-prompt">Update the Cloudflare Worker at lmi-proxy.aaronsimonson.workers.dev to add three SMS route handlers. The env vars TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are already set in Cloudflare. Add the /sms/send, /sms/incoming, and /sms/provision routes to the existing Worker code and deploy.<button onclick="_smsSetupCopy(this,document.getElementById('sms-setup-worker-prompt').textContent.replace('Copy','').replace('Copied!','').trim())" style="position:absolute;top:8px;right:8px;background:#c4943a;color:white;border:none;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer">Copy</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#c4943a;color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Assign Phone Numbers</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              Once steps 1\u20133 are complete, come back to this screen:<br><br>
+              1. Each MLO row below will show an <strong>"Assign Number"</strong> button<br>
+              2. Enter their local area code (559 for Fresno, 213 for LA)<br>
+              3. Click <strong>Find Available Numbers</strong><br>
+              4. Confirm to purchase \u2014 about $1.15/month per number
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#c4943a;color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">5</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Connect Twilio to Your App</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              For each phone number you purchase in Twilio:<br><br>
+              1. Go to Twilio \u2192 <strong>Phone Numbers</strong> \u2192 <strong>Active Numbers</strong><br>
+              2. Click the number<br>
+              3. Under Messaging \u2192 "A message comes in" set:
+            </div>
+            <div style="background:#1c1812;color:#e8e0d4;font-family:monospace;font-size:11.5px;border-radius:8px;padding:10px 14px;margin-top:8px;position:relative;white-space:pre-wrap">URL:    https://lmi-proxy.aaronsimonson.workers.dev/sms/incoming
+Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsimonson.workers.dev/sms/incoming')" style="position:absolute;top:8px;right:8px;background:#c4943a;color:white;border:none;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer">Copy</button></div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:6px">4. Click <strong>Save</strong><br>5. Repeat for each MLO's number</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:#5a8a6a;color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">6</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Test It</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              1. Assign a number to yourself first<br>
+              2. Open any contact record with your phone number<br>
+              3. Tap <strong>Send SMS</strong> and send a test message<br>
+              4. You should receive it within a few seconds<br>
+              5. Reply to it \u2014 the reply should appear in your <strong>Communications</strong> inbox
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="sms-setup-status" style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted)">\u25CB Not yet connected</div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--text-muted)">Need help? Email admin@lmitool.com</span>
+        <button onclick="_closeSmsSetup()" style="background:#c4943a;color:white;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px">Close</button>
+      </div>
+    </div>
+  </div>
+
 <!-- CREATE/EDIT DEAL MODAL -->
 <div class="deal-modal-overlay" id="deal-modal-overlay">
   <div class="deal-modal-panel">
@@ -3922,6 +4044,14 @@ admin@loopenta.com</div>
         </select>
       </div>
     </div>
+    <div class="settings-section" id="sms-numbers-section" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="settings-section-title" style="margin-bottom:0">💬 SMS Numbers</div>
+        <button onclick="_openSmsSetup()" style="background:transparent;border:none;color:#7a9eaa;font-size:12px;cursor:pointer;padding:4px 8px">\u24D8 How to activate SMS</button>
+      </div>
+      <div id="sms-numbers-status" style="margin-bottom:12px"></div>
+      <div id="sms-numbers-table"><div style="color:var(--text-muted);font-size:13px">Complete the setup steps to enable SMS for your team.</div></div>
+    </div>
     <div class="settings-section">
       <div class="settings-section-title">🔔 Notification Preferences</div>
       <div class="settings-item">
@@ -4498,6 +4628,7 @@ async function _postLoginSetup(user) {
   if (lbSettings) lbSettings.style.display = isAnyAdmin() ? '' : 'none';
   var instSettings = document.getElementById('institution-settings');
   if (instSettings) instSettings.style.display = isAnyAdmin() ? '' : 'none';
+  _showSmsNumbersSection();
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
 }
 
@@ -14449,6 +14580,62 @@ async function _checkRateLockSmsAlerts() {
       await _sendSms(d.borrowerPhone, msg, d.id, d.borrowerName||'', 'deal');
     }
   } catch(e) { console.warn('Rate lock SMS check:', e); }
+}
+
+// ── SMS SETUP MODAL ──────────────────────────────────────────
+function _openSmsSetup() {
+  document.getElementById('sms-setup-overlay').style.display = 'block';
+  _checkTwilioConnection();
+}
+function _closeSmsSetup() {
+  document.getElementById('sms-setup-overlay').style.display = 'none';
+}
+
+function _smsSetupCopy(btn, text) {
+  try {
+    navigator.clipboard.writeText(text).then(function() {
+      var orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.style.background = '#5a8a6a';
+      setTimeout(function() { btn.textContent = orig; btn.style.background = '#c4943a'; }, 1500);
+    });
+  } catch(e) {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!'; btn.style.background = '#5a8a6a';
+    setTimeout(function() { btn.textContent = orig; btn.style.background = '#c4943a'; }, 1500);
+  }
+}
+
+async function _checkTwilioConnection() {
+  var statusEl = document.getElementById('sms-setup-status');
+  if (!statusEl) return;
+  statusEl.innerHTML = '<span style="color:var(--text-muted)">Checking connection\u2026</span>';
+  try {
+    var resp = await fetch(PROXY_URL + '/sms/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: '', message: '', fromNumber: '', mloUid: '', tenantId: '' })
+    });
+    // If the endpoint exists (even with an error), Twilio is partially configured
+    if (resp.status === 400 || resp.status === 200) {
+      statusEl.innerHTML = '<span style="color:#5a8a6a;font-weight:600">\u2713 Twilio connected</span>';
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--text-muted)">\u25CB Not yet connected</span>';
+    }
+  } catch(e) {
+    statusEl.innerHTML = '<span style="color:var(--text-muted)">\u25CB Not yet connected \u2014 complete steps 1\u20133 above</span>';
+  }
+}
+
+// Show SMS Numbers section for admins
+function _showSmsNumbersSection() {
+  var el = document.getElementById('sms-numbers-section');
+  if (el && isAnyAdmin()) el.style.display = '';
 }
 
 // ── END PHASE 22 ─────────────────────────────────────────────
