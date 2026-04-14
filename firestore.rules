@@ -1,0 +1,155 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSameTenant(tenantId) {
+      return isAuthenticated() && getUserData().tenantId == tenantId;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+
+    function isSuperAdmin() {
+      return hasRole("superadmin");
+    }
+
+    function isAdmin() {
+      return hasRole("tenant_admin") || isSuperAdmin();
+    }
+
+    function isMlo() {
+      return hasRole("mlo") || isAdmin();
+    }
+
+    function ownsTenantData(tenantId) {
+      return isAuthenticated() && isSameTenant(tenantId) && isMlo();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSuperAdmin();
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
+    // Tenants
+    match /tenants/{tenantId} {
+      allow read: if isSameTenant(tenantId);
+      allow write: if isSuperAdmin() || (isAdmin() && isSameTenant(tenantId));
+    }
+
+    // Deals
+    match /deals/{dealId} {
+      allow read: if isAuthenticated() && isSameTenant(resource.data.tenantId);
+      allow create: if isAuthenticated() && isSameTenant(request.resource.data.tenantId);
+      allow update: if isAuthenticated() && isSameTenant(resource.data.tenantId);
+      allow delete: if isAdmin() && isSameTenant(resource.data.tenantId);
+    }
+
+    // Past Customers
+    match /pastCustomers/{customerId} {
+      allow read: if isAuthenticated() && isSameTenant(resource.data.tenantId);
+      allow write: if ownsTenantData(request.resource.data.tenantId);
+    }
+
+    // Realtors
+    match /realtors/{realtorId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // OYZ
+    match /oyz/{oyzId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Prequal
+    match /prequal/{prequalId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+    // Activities
+    match /activity/{activityId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated();
+    }
+
+    // Sequences
+    match /sequences/{seqId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Sequence Enrollments
+    match /sequenceEnrollments/{enrollId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Communications
+    match /communications/{commId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Audit Logs — immutable
+    match /auditLog/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // CRA Reports
+    match /craReports/{reportId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Scorecard Snapshots
+    match /scorecardSnapshots/{snapId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Tasks
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Data Delete Requests
+    match /dataDeleteRequests/{reqId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
