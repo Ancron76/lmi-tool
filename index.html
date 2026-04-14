@@ -1162,16 +1162,61 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 .merge-side-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:5px}
 
 /* ── PHASE 14: DEAL PIPELINE ── */
-.pipeline-summary-bar{display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px;background:white;border-bottom:1px solid #e5e7eb;align-items:center}
-.psb-stat{text-align:center;flex:1;min-width:90px}
-.psb-val{font-size:20px;font-weight:800;color:#1f2937}
-.psb-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
-.kanban-board{display:flex;gap:0;overflow-x:auto;padding:12px;min-height:calc(100vh - 220px);align-items:flex-start}
-.kanban-col{flex:0 0 215px;background:#f8fafc;border-radius:10px;margin-right:10px;display:flex;flex-direction:column;max-height:calc(100vh - 240px)}
-.kanban-col-header{padding:10px 12px 8px;border-top:3px solid #e5e7eb;border-radius:10px 10px 0 0}
-.kanban-col-title{font-size:13px;font-weight:800;color:#1f2937}
-.kanban-col-meta{font-size:11px;color:#64748b;margin-top:2px}
-.kanban-col-cards{flex:1;overflow-y:auto;padding:4px 8px}
+.pipeline-summary-bar{display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
+.psb-stat{text-align:center;flex:1;min-width:80px}
+.psb-val{font-size:18px;font-weight:800;color:var(--text-primary)}
+.psb-label{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.kanban-board{display:flex;gap:0;overflow-x:auto;padding:12px;min-height:calc(100vh - 220px);align-items:flex-start;-webkit-overflow-scrolling:touch}
+.kanban-col{flex:0 0 220px;background:#f5f0e8;border-radius:12px;margin-right:10px;display:flex;flex-direction:column;max-height:calc(100vh - 240px)}
+.kanban-col.dead-col{flex:0 0 48px;cursor:pointer;transition:flex-basis .25s}
+.kanban-col.dead-col.expanded{flex:0 0 220px}
+.kanban-col-header{padding:10px 12px 8px;border-bottom:2px solid var(--border);border-radius:12px 12px 0 0}
+.kanban-col-title{font-size:12px;font-weight:800;color:var(--text-primary);text-transform:uppercase;letter-spacing:.3px}
+.kanban-col-meta{font-size:11px;color:var(--text-secondary);margin-top:2px}
+.kanban-col-cards{flex:1;overflow-y:auto;padding:6px 8px;scrollbar-width:thin}
+.kanban-col-cards::-webkit-scrollbar{width:4px}
+.kanban-col-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.kanban-add-btn{background:none;border:1px dashed var(--border);border-radius:8px;padding:7px;margin:4px 8px 8px;font-size:12px;color:var(--text-muted);cursor:pointer;font-family:inherit}
+.kanban-add-btn:hover{border-color:var(--brand-accent);color:var(--brand-accent)}
+.deal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:grab;border-left:3px solid var(--border);position:relative;user-select:none;transition:transform .15s,box-shadow .15s}
+.deal-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.deal-card.dragging{opacity:.4;transform:scale(.96)}
+.kanban-col.drag-over .kanban-col-cards{background:rgba(122,158,170,.1);border-radius:8px;outline:2px dashed #7a9eaa}
+.deal-card-name{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:3px}
+.deal-card-amount{font-size:12px;font-weight:600;color:var(--text-secondary)}
+.deal-card-meta{font-size:10px;color:var(--text-muted);margin-top:2px}
+.deal-card .lmi-pill{background:#eef4f0;color:#5a8a6a;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:4px}
+.deal-card .stuck-badge{color:var(--color-negative);font-size:10px;font-weight:700}
+.deal-card .mlo-avatar{width:22px;height:22px;border-radius:50%;background:var(--border);font-size:9px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prob-pill{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px}
+.pipeline-list-view{padding:12px}
+.pipeline-stage-pills{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.pipeline-stage-pills::-webkit-scrollbar{display:none}
+.psp-btn{padding:7px 14px;border-radius:99px;border:none;background:#f5f0e8;font-size:13px;font-weight:600;color:#7a6a58;cursor:pointer;white-space:nowrap;font-family:inherit;min-height:36px;transition:background .15s}
+.psp-btn.active{background:#7a9eaa;color:white}
+.deal-list-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;border-left:4px solid var(--border);transition:box-shadow .15s}
+.deal-list-card:active{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.deal-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(28,24,18,.75);z-index:8800;overflow-y:auto;display:none}
+.deal-modal-panel{max-width:620px;margin:30px auto;background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.deal-modal-hdr{background:var(--brand-primary);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.deal-modal-tabs{display:flex;border-bottom:1px solid var(--border);background:#f5f0e8;overflow-x:auto}
+.dmt{flex:1;padding:10px 8px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--text-secondary);white-space:nowrap;font-family:inherit;min-height:44px}
+.dmt.active{color:var(--brand-accent);border-bottom:2px solid var(--brand-accent);background:var(--surface)}
+.deal-modal-body{padding:18px;min-height:260px}
+.deal-detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(28,24,18,.75);z-index:8700;overflow-y:auto;display:none}
+.deal-detail-panel{max-width:620px;margin:30px auto;background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.pipeline-fab{display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:#c4943a;color:white;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(196,148,58,.4);z-index:500;font-family:inherit;line-height:1}
+@media(max-width:767px){
+  .kanban-board{display:none!important}
+  .pipeline-summary-bar{flex-wrap:wrap;gap:8px;padding:12px}
+  .psb-stat{min-width:60px;flex:0 0 calc(33% - 8px)}
+  .psb-val{font-size:15px}
+  .pipeline-fab{display:flex;align-items:center;justify-content:center}
+  .deal-modal-panel{margin:0;border-radius:0;min-height:100vh}
+  .deal-detail-panel{margin:0;border-radius:0;min-height:100vh}
+  .deal-modal-body{padding:16px}
+  .dmt{font-size:11px;padding:10px 6px}
+}
 .kanban-add-btn{margin:6px 8px 8px;padding:7px;background:transparent;border:1.5px dashed #cbd5e1;border-radius:8px;font-size:12px;font-weight:600;color:#94a3b8;cursor:pointer;width:calc(100% - 16px);text-align:center}
 .kanban-add-btn:hover{border-color:#1B73E3;color:#1B73E3;background:#EEF4FF}
 .deal-card{background:white;border-radius:9px;padding:10px 11px;margin-bottom:7px;box-shadow:0 1px 4px rgba(0,0,0,.07);cursor:pointer;border-left:3px solid #e5e7eb;position:relative;user-select:none;transition:box-shadow .15s}
@@ -1284,13 +1329,7 @@ input:focus, textarea:focus, select:focus {
   box-shadow: var(--shadow-sm) !important;
 }
 
-/* Kanban cards */
-.deal-card {
-  box-shadow: var(--shadow-sm) !important;
-  border-radius: var(--radius) !important;
-  border: 1px solid var(--border) !important;
-}
-.deal-card:hover { box-shadow: var(--shadow-md) !important; }
+/* Kanban cards — handled by main CSS block */
 
 /* Modals */
 .deal-modal-panel, .deal-detail-panel,
@@ -2425,32 +2464,22 @@ admin@loopenta.com</div>
 
 <!-- PIPELINE TAB -->
 <div id="tab-pipeline-content" style="display:none">
-  <!-- Summary Bar -->
   <div class="pipeline-summary-bar" id="pipeline-summary-bar">
     <div class="psb-stat"><div class="psb-val" id="psb-active">—</div><div class="psb-label">Active Deals</div></div>
     <div class="psb-stat"><div class="psb-val" id="psb-total-val">—</div><div class="psb-label">Pipeline Value</div></div>
-    <div class="psb-stat"><div class="psb-val" id="psb-weighted">—</div><div class="psb-label">Weighted Value</div></div>
-    <div class="psb-stat"><div class="psb-val" id="psb-closed-mo">—</div><div class="psb-label">Closed This Month</div></div>
+    <div class="psb-stat"><div class="psb-val" id="psb-weighted">—</div><div class="psb-label">Weighted</div></div>
+    <div class="psb-stat"><div class="psb-val" id="psb-funded-mo">—</div><div class="psb-label">Funded MTD</div></div>
     <div class="psb-stat"><div class="psb-val" id="psb-win-rate">—</div><div class="psb-label">Win Rate</div></div>
-    <div style="margin-left:auto;align-self:center;padding-right:4px">
-      <button onclick="openCreateDealModal(null,null)" style="padding:8px 14px;background:#1B73E3;color:#1f2937;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">+ Add Deal</button>
+    <div style="margin-left:auto;align-self:center;padding-right:4px" class="psb-add-desktop">
+      <button onclick="openCreateDealModal('Lead',null)" style="padding:9px 16px;background:var(--brand-accent);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">+ Add Deal</button>
     </div>
   </div>
-  <!-- Kanban board (desktop) -->
   <div class="kanban-board" id="kanban-board"></div>
-  <!-- List view (mobile) -->
   <div class="pipeline-list-view" id="pipeline-list-view" style="display:none">
-    <div class="pipeline-stage-filter" id="pipeline-stage-filter">
-      <button class="psf-btn active" onclick="plSetFilter(this,'all')">All</button>
-      <button class="psf-btn" onclick="plSetFilter(this,'Leads')">Leads</button>
-      <button class="psf-btn" onclick="plSetFilter(this,'Qualified')">Qualified</button>
-      <button class="psf-btn" onclick="plSetFilter(this,'Applied')">Applied</button>
-      <button class="psf-btn" onclick="plSetFilter(this,'Approved')">Approved</button>
-      <button class="psf-btn" onclick="plSetFilter(this,'Closed')">Closed</button>
-      <button class="psf-btn" onclick="plSetFilter(this,'Lost')">Lost</button>
-    </div>
+    <div class="pipeline-stage-pills" id="pipeline-stage-pills"></div>
     <div id="pipeline-list-cards"></div>
   </div>
+  <button class="pipeline-fab" id="pipeline-fab" onclick="openCreateDealModal('Lead',null)">+</button>
 </div>
 
 <!-- CREATE/EDIT DEAL MODAL -->
@@ -2469,15 +2498,18 @@ admin@loopenta.com</div>
     </div>
     <div class="deal-modal-body" id="deal-modal-body"></div>
     <div style="padding:12px 18px;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
-      <select id="deal-stage-select" style="padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;flex:1">
-        <option value="Leads">Leads</option>
-        <option value="Qualified">Qualified</option>
-        <option value="Applied">Applied</option>
+      <select id="deal-stage-select" style="padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;flex:1;font-family:inherit;min-height:44px">
+        <option value="Lead">Lead</option>
+        <option value="Pre-Qual">Pre-Qual</option>
+        <option value="Application">Application</option>
+        <option value="Processing">Processing</option>
+        <option value="Ready for Docs">Ready for Docs</option>
+        <option value="Docs Out">Docs Out</option>
         <option value="Approved">Approved</option>
-        <option value="Closed">Closed</option>
-        <option value="Lost">Lost</option>
+        <option value="Funded">Funded</option>
+        <option value="Dead/Lost">Dead/Lost</option>
       </select>
-      <button onclick="saveDeal()" style="flex:2;padding:9px;background:#1f2937;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Deal</button>
+      <button onclick="saveDeal()" style="flex:2;padding:11px;background:var(--brand-accent);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px">Save Deal</button>
     </div>
     <div id="deal-save-status" style="padding:6px 18px 10px;font-size:12px;text-align:center;display:none"></div>
   </div>
@@ -3611,6 +3643,15 @@ admin@loopenta.com</div>
         <button class="settings-save-btn" onclick="saveAdminPasswordFromSettings()">Reset Password</button>
       </div>
     </div>
+    <div class="settings-section">
+      <div class="settings-section-title">🎯 My Alert Preferences</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:13px;color:var(--text-secondary);font-weight:500">Flag deal as stuck after</label>
+        <input type="number" id="settings-stuck-threshold" min="1" max="30" value="3" style="width:60px;padding:8px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;text-align:center;font-family:inherit" />
+        <span style="font-size:13px;color:var(--text-muted)">days in same stage</span>
+        <button onclick="_saveStuckThreshold()" style="padding:8px 14px;background:var(--brand-accent);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Save</button>
+      </div>
+    </div>
     <div class="settings-section"><div class="settings-section-title">🎨 Preferences</div><div class="settings-coming-soon">More customization options coming in future updates.</div></div>
     <div class="settings-section">
       <div class="settings-section-title">🔔 Notification Preferences</div>
@@ -4451,6 +4492,36 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] notifications:', e); }
 
+  // 7. STUCK DEALS — deals sitting in same stage too long
+  try {
+    var stuckThreshold = 3;
+    try {
+      var prefDoc = await db.collection('users').doc(currentUser.id).get();
+      if (prefDoc.exists) stuckThreshold = (prefDoc.data().preferences || {}).stuckThresholdDays || 3;
+    } catch(e){}
+    var sDeals = await db.collection('deals').get();
+    sDeals.forEach(function(d){
+      var deal = d.data();
+      if (!deal.stageUpdatedAt) return;
+      if (deal.stage === 'Funded' || deal.stage === 'Dead/Lost') return;
+      if (deal.userId && deal.userId !== currentUser.id && !isAnyAdmin()) return;
+      var orgId = currentUser && currentUser.orgId;
+      if (orgId && deal.orgId && deal.orgId !== orgId && !isSuperAdmin()) return;
+      var updated = _toDateLocal(deal.stageUpdatedAt);
+      if (!updated) return;
+      var daysStuck = Math.floor((now - updated) / 86400000);
+      if (daysStuck >= stuckThreshold) {
+        actions.push({
+          p: daysStuck >= stuckThreshold * 2 ? 'high' : 'med',
+          title: (deal.borrowerName||'Deal') + ' stuck in ' + deal.stage + ' \u00b7 ' + daysStuck + 'd',
+          detail: deal.loanAmount ? '$' + Number(deal.loanAmount).toLocaleString() : '',
+          module: 'Deal Pipeline', tab: 'pipeline',
+          _dealId: d.id
+        });
+      }
+    });
+  } catch(e){ console.warn('[RequiredActions] stuck deals:', e); }
+
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
   actions.sort(function(a,b){ return (order[a.p]||9) - (order[b.p]||9); });
@@ -4506,7 +4577,7 @@ function renderHomeModules() {
 
   // ── Deals ─────────────────────────────────────────────────────
   var deals       = cachedDeals || [];
-  var activeDeals = deals.filter(function(d) { return d.stage !== 'Closed' && d.stage !== 'Lost'; });
+  var activeDeals = deals.filter(function(d) { return d.stage !== 'Funded' && d.stage !== 'Dead/Lost' && d.stage !== 'Closed' && d.stage !== 'Lost'; });
   var pipeValue   = activeDeals.reduce(function(s, d) { return s + (parseFloat(d.loanAmount) || 0); }, 0);
   var closingMo   = activeDeals.filter(function(d) {
     var cd = _toDate(d.expectedCloseDate);
@@ -4515,7 +4586,7 @@ function renderHomeModules() {
   // Deals sparkline: active deal count snapshotted by weekly creation date (last 10 weeks)
   var dealWeeks = new Array(10).fill(0);
   deals.forEach(function(d) {
-    if (d.stage === 'Closed' || d.stage === 'Lost') return;
+    if (d.stage === 'Funded' || d.stage === 'Dead/Lost' || d.stage === 'Closed' || d.stage === 'Lost') return;
     var dt = _toDate(d.createdAt || d.updatedAt);
     if (!dt) return;
     var idx = _weekBucket(dt.toISOString().slice(0, 10), 10);
@@ -4802,7 +4873,7 @@ function _renderHomeGlance() {
   }
   var deals = cachedDeals || [];
   if (deals.length) {
-    var active = deals.filter(function(d){return d.stage!=='Closed'&&d.stage!=='Lost';});
+    var active = deals.filter(function(d){return d.stage!=='Funded'&&d.stage!=='Dead/Lost'&&d.stage!=='Closed'&&d.stage!=='Lost';});
     var pipeV = active.reduce(function(s,d){return s+(parseFloat(d.loanAmount)||0);},0);
     pipeVal = fmtK(pipeV)||active.length+' active';
     pipeW = Math.min(100, active.length * 8); // scale: 12 deals ≈ 100%
@@ -6942,6 +7013,7 @@ function openSettings() {
   document.getElementById('settings-panel').classList.add('open');
   document.getElementById('settings-backdrop').classList.add('open');
   document.getElementById('settings-user-name').textContent = currentUser.name;
+  _loadStuckThreshold();
   var _roleLabel = isSuperAdmin() ? 'Super Admin' : isTenantAdmin() ? 'Admin' : isMLO() ? 'MLO' : 'User';
   document.getElementById('settings-user-meta').textContent = currentUser.email + ' · ' + _roleLabel + ' · ' + (currentUser.region || '');
   ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(function(id) { document.getElementById(id).value = ''; });
@@ -6980,6 +7052,34 @@ function openSettings() {
   } else { document.getElementById('admin-reset-section').style.display = 'none'; }
 }
 function closeSettings() { document.getElementById('settings-panel').classList.remove('open'); document.getElementById('settings-backdrop').classList.remove('open'); }
+
+async function _loadStuckThreshold() {
+  if (!db || !currentUser) return;
+  try {
+    var doc = await db.collection('users').doc(currentUser.id).get();
+    if (doc.exists) {
+      var prefs = doc.data().preferences || {};
+      var val = prefs.stuckThresholdDays || 3;
+      _stuckThreshold = val;
+      var el = document.getElementById('settings-stuck-threshold');
+      if (el) el.value = val;
+    }
+  } catch(e) {}
+}
+
+async function _saveStuckThreshold() {
+  if (!db || !currentUser) return;
+  var el = document.getElementById('settings-stuck-threshold');
+  if (!el) return;
+  var val = parseInt(el.value) || 3;
+  if (val < 1) val = 1; if (val > 30) val = 30;
+  el.value = val;
+  _stuckThreshold = val;
+  try {
+    await db.collection('users').doc(currentUser.id).set({ preferences: { stuckThresholdDays: val } }, { merge: true });
+    showToast('Stuck threshold saved: ' + val + ' days');
+  } catch(e) { console.error('Save stuck threshold:', e); }
+}
 
 async function saveSettingsPassword() {
   const current = document.getElementById('s-pw-current').value;
@@ -10752,16 +10852,17 @@ function exportContactsRealtors() {
 // PHASE 14 — DEAL PIPELINE
 // ════════════════════════════════════════════════════════════
 
-var PIPELINE_STAGES = ['Leads','Qualified','Applied','Approved','Closed','Lost'];
-var STAGE_COLORS = {Leads:'#94a3b8',Qualified:'#3b82f6',Applied:'#f59e0b',Approved:'#1B73E3',Closed:'#16a34a',Lost:'#ef4444'};
-var STAGE_PROB   = {Leads:10,Qualified:30,Applied:60,Approved:85,Closed:100,Lost:0};
+var PIPELINE_STAGES = ['Lead','Pre-Qual','Application','Processing','Ready for Docs','Docs Out','Approved','Funded','Dead/Lost'];
+var STAGE_COLORS = {'Lead':'#a0bcc8','Pre-Qual':'#7a9eaa','Application':'#c4943a','Processing':'#b07030','Ready for Docs':'#7c6a54','Docs Out':'#9e8e7a','Approved':'#5a8a6a','Funded':'#3a6a4a','Dead/Lost':'#c4b49a'};
+var STAGE_PROB   = {'Lead':5,'Pre-Qual':15,'Application':30,'Processing':50,'Ready for Docs':65,'Docs Out':75,'Approved':90,'Funded':100,'Dead/Lost':0};
 var cachedDeals  = [];
 var _dealForm    = {};
 var _editDealId  = null;
 var _currentDeal = null;
-var _plFilter    = 'all';
+var _plFilter    = 'Processing';
 var _lostResolve = null;
 var _dragDealId  = null;
+var _stuckThreshold = 3;
 
 function fmtK(n) {
   n = parseFloat(n)||0;
@@ -10778,6 +10879,16 @@ async function loadDeals() {
     var orgId = currentUser&&currentUser.orgId;
     if (orgId && !isSuperAdmin()) cachedDeals = cachedDeals.filter(function(d){ return d.orgId===orgId; });
     if (!isAnyAdmin()) cachedDeals = cachedDeals.filter(function(d){ return d.userId===currentUser.id; });
+    // Filter out archived deals
+    cachedDeals = cachedDeals.filter(function(d){ return d.trackingStatus !== 'archived'; });
+    // Load user stuck threshold
+    try {
+      var prefDoc = await db.collection('users').doc(currentUser.id).get();
+      if (prefDoc.exists) {
+        var prefs = prefDoc.data().preferences || {};
+        _stuckThreshold = prefs.stuckThresholdDays || 3;
+      }
+    } catch(e){}
   } catch(e){ cachedDeals=[]; }
 }
 
@@ -10787,30 +10898,39 @@ async function renderPipeline() {
   var isMobile = window.innerWidth < 768;
   var kb = document.getElementById('kanban-board');
   var lv = document.getElementById('pipeline-list-view');
+  var fab = document.getElementById('pipeline-fab');
   if (kb) kb.style.display = isMobile ? 'none' : 'flex';
   if (lv) lv.style.display = isMobile ? '' : 'none';
-  if (isMobile) renderPipelineList(); else renderKanban();
+  if (fab) fab.style.display = isMobile ? 'flex' : 'none';
+  if (isMobile) renderPipelineMobile(); else renderKanban();
 }
 
 function renderPipelineSummary() {
-  var active  = cachedDeals.filter(function(d){ return d.stage!=='Closed'&&d.stage!=='Lost'; });
-  var totVal  = active.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
-  var wtd     = active.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0)*(STAGE_PROB[d.stage]||0)/100; },0);
-  var now     = new Date();
-  var closedMoVal = cachedDeals.filter(function(d){
-    if (d.stage!=='Closed') return false;
-    var u=d.updatedAt?new Date(d.updatedAt):null;
-    return u&&u.getMonth()===now.getMonth()&&u.getFullYear()===now.getFullYear();
+  var active = cachedDeals.filter(function(d){ return d.stage!=='Funded'&&d.stage!=='Dead/Lost'; });
+  var totVal = active.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
+  var wtd    = active.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0)*(STAGE_PROB[d.stage]||0)/100; },0);
+  var now = new Date();
+  var fundedMoVal = cachedDeals.filter(function(d){
+    if (d.stage!=='Funded') return false;
+    var u = d.stageUpdatedAt ? new Date(d.stageUpdatedAt) : (d.updatedAt ? new Date(d.updatedAt) : null);
+    return u && u.getMonth()===now.getMonth() && u.getFullYear()===now.getFullYear();
   }).reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
-  var nClosed = cachedDeals.filter(function(d){ return d.stage==='Closed'; }).length;
-  var nLost   = cachedDeals.filter(function(d){ return d.stage==='Lost'; }).length;
-  var wr      = (nClosed+nLost)>0 ? Math.round(nClosed/(nClosed+nLost)*100) : 0;
+  var nFunded = cachedDeals.filter(function(d){ return d.stage==='Funded'; }).length;
+  var nLost   = cachedDeals.filter(function(d){ return d.stage==='Dead/Lost'; }).length;
+  var wr = (nFunded+nLost) > 0 ? Math.round(nFunded/(nFunded+nLost)*100) : 0;
   function sv(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
-  sv('psb-active',  active.length);
+  sv('psb-active', active.length);
   sv('psb-total-val', fmtK(totVal));
-  sv('psb-weighted',  fmtK(wtd));
-  sv('psb-closed-mo', fmtK(closedMoVal));
-  sv('psb-win-rate',  wr+'%');
+  sv('psb-weighted', fmtK(wtd));
+  sv('psb-funded-mo', fmtK(fundedMoVal));
+  sv('psb-win-rate', wr+'%');
+}
+
+function _dealDaysInStage(deal) {
+  var d = deal.stageUpdatedAt || deal.updatedAt || deal.createdAt;
+  if (!d) return 0;
+  var dt = (d && d.seconds) ? new Date(d.seconds*1000) : new Date(d);
+  return Math.max(0, Math.floor((new Date() - dt) / 86400000));
 }
 
 // ── KANBAN ───────────────────────────────────────────────────
@@ -10818,55 +10938,53 @@ function renderKanban() {
   var board = document.getElementById('kanban-board');
   if (!board) return;
   board.innerHTML = PIPELINE_STAGES.map(function(stage) {
+    var isDead = stage === 'Dead/Lost';
+    var sid = stage.replace(/[^a-zA-Z]/g,'');
     var deals = cachedDeals.filter(function(d){ return d.stage===stage; });
     var total = deals.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
     var c = STAGE_COLORS[stage];
-    return '<div class="kanban-col" id="kcol-'+stage+'"'
+    if (isDead && !deals.length) return '';
+    return '<div class="kanban-col'+(isDead?' dead-col':'')+'" id="kcol-'+sid+'"'
       +' ondragover="kDragOver(event,\''+stage+'\')"'
       +' ondragleave="kDragLeave(event,\''+stage+'\')"'
-      +' ondrop="kDrop(event,\''+stage+'\')">'
-      +'<div class="kanban-col-header" style="border-top-color:'+c+'">'
+      +' ondrop="kDrop(event,\''+stage+'\')"'
+      +(isDead?' onclick="this.classList.toggle(\'expanded\')"':'')+'>'
+      +'<div class="kanban-col-header" style="border-bottom-color:'+c+'">'
       +'<div style="display:flex;align-items:center;gap:6px">'
       +'<span class="kanban-col-title">'+stage+'</span>'
-      +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700">'+deals.length+'</span>'
+      +'<span style="background:'+c+'22;color:'+c+';padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700">'+deals.length+'</span>'
       +'</div>'
-      +'<div class="kanban-col-meta">'+(total?fmtK(total):'No deals')+'</div>'
+      +'<div class="kanban-col-meta">'+(total?fmtK(total):'—')+'</div>'
       +'</div>'
-      +'<div class="kanban-col-cards" id="kcards-'+stage+'">'
+      +'<div class="kanban-col-cards" id="kcards-'+sid+'">'
       +deals.map(function(d){ return buildDealCard(d); }).join('')
       +'</div>'
-      +'<button class="kanban-add-btn" onclick="openCreateDealModal(\''+stage+'\',null)">+ Add Deal</button>'
+      +(isDead?'':'<button class="kanban-add-btn" onclick="openCreateDealModal(\''+stage+'\',null)">+ Add</button>')
       +'</div>';
   }).join('');
 }
 
 function buildDealCard(deal) {
-  var c = STAGE_COLORS[deal.stage]||'#94a3b8';
-  var prob = STAGE_PROB[deal.stage]||deal.probability||0;
-  var pc = prob>=80?'#16a34a':prob>=50?'#d97706':'#94a3b8';
-  var amt = deal.loanAmount ? fmtK(deal.loanAmount) : '—';
-  var lmiColors = {'Low Income':'#dc2626','Moderate Income':'#d97706','Middle Income':'#3b82f6','Upper Income':'#6b7280'};
-  var lc = lmiColors[deal.borrowerCategory]||'#94a3b8';
-  var created = deal.createdAt ? new Date(deal.createdAt) : new Date();
-  var daysIn  = Math.max(0, Math.floor((new Date()-created)/86400000));
-  var lmiBadge = deal.borrowerCategory
-    ? '<span style="background:'+lc+'22;color:'+lc+';border:1px solid '+lc+'44;padding:1px 5px;border-radius:7px;font-size:10px;font-weight:700">'+deal.borrowerCategory.split(' ')[0]+'</span>' : '';
+  var c = STAGE_COLORS[deal.stage] || '#c4b49a';
+  var amt = deal.loanAmount ? '$'+Number(deal.loanAmount).toLocaleString() : '—';
+  var daysIn = _dealDaysInStage(deal);
+  var isStuck = daysIn >= _stuckThreshold && deal.stage !== 'Funded' && deal.stage !== 'Dead/Lost';
+  var lmiBadge = deal.lmiEligible ? '<span class="lmi-pill">LMI ✓</span>' : '';
+  var initials = (deal.userName || deal.assignedToName || '').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
   return '<div class="deal-card" id="dc-'+deal.id+'"'
     +' draggable="true"'
     +' ondragstart="kDragStart(event,\''+deal.id+'\')"'
     +' ondragend="kDragEnd(event)"'
     +' onclick="openDealDetail(\''+deal.id+'\')"'
     +' style="border-left-color:'+c+'">'
-    +'<div class="deal-card-name">'+( deal.borrowerName||'Unknown')+'</div>'
+    +'<div class="deal-card-name">'+(deal.borrowerName||'Unknown')+'</div>'
     +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
     +'<span class="deal-card-amount">'+amt+'</span>'+lmiBadge
     +'</div>'
-    +(deal.propertyZip||deal.propertyCity?'<div class="deal-card-meta">📍 '+(deal.propertyZip||'')+(deal.propertyCity?' '+deal.propertyCity:'')+'</div>':'')
-    +(deal.assignedRealtorName?'<div class="deal-card-meta">🤝 '+deal.assignedRealtorName+'</div>':'')
+    +(deal.assignedRealtorName?'<div class="deal-card-meta">'+(deal.assignedRealtorName)+'</div>':'')
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px">'
-    +'<span class="prob-pill" style="background:'+pc+'22;color:'+pc+';border:1px solid '+pc+'44">'+prob+'%</span>'
-    +'<span style="font-size:10px;color:#94a3b8">Day '+daysIn+'</span>'
-    +(deal.source?'<span style="font-size:10px;color:#94a3b8">'+deal.source.split(' ')[0]+'</span>':'')
+    +'<span style="font-size:10px;'+(isStuck?'color:#9a4a3a;font-weight:700':'color:var(--text-muted)')+'">'+daysIn+'d in stage'+(isStuck?' ⚠':'')+'</span>'
+    +(initials?'<span class="mlo-avatar">'+initials+'</span>':'')
     +'</div>'
     +'</div>';
 }
@@ -10884,32 +11002,36 @@ function kDragEnd() {
 function kDragOver(event, stage) {
   event.preventDefault();
   event.dataTransfer.dropEffect='move';
-  var col=document.getElementById('kcol-'+stage); if(col) col.classList.add('drag-over');
+  var sid = stage.replace(/[^a-zA-Z]/g,'');
+  var col=document.getElementById('kcol-'+sid); if(col) col.classList.add('drag-over');
 }
 function kDragLeave(event, stage) {
-  var col=document.getElementById('kcol-'+stage); if(col) col.classList.remove('drag-over');
+  var sid = stage.replace(/[^a-zA-Z]/g,'');
+  var col=document.getElementById('kcol-'+sid); if(col) col.classList.remove('drag-over');
 }
 async function kDrop(event, newStage) {
   event.preventDefault();
-  var col=document.getElementById('kcol-'+newStage); if(col) col.classList.remove('drag-over');
+  var sid = newStage.replace(/[^a-zA-Z]/g,'');
+  var col=document.getElementById('kcol-'+sid); if(col) col.classList.remove('drag-over');
   if (!_dragDealId) return;
   var deal=cachedDeals.find(function(d){ return d.id===_dragDealId; });
   if (!deal||deal.stage===newStage){ _dragDealId=null; return; }
-  if (newStage==='Lost') {
+  if (newStage==='Dead/Lost') {
     var reason=await promptLostReason();
     if (!reason){ _dragDealId=null; return; }
     deal.lostReason=reason.reason; deal.lostNotes=reason.notes||'';
   }
   var oldStage=deal.stage;
-  deal.stage=newStage; deal.probability=STAGE_PROB[newStage]; deal.updatedAt=new Date().toISOString();
-  var entry={event:'Moved from '+oldStage+' to '+newStage,date:deal.updatedAt,author:(currentUser&&currentUser.name)||''};
+  var nowStr = new Date().toISOString();
+  deal.stage=newStage; deal.probability=STAGE_PROB[newStage]; deal.updatedAt=nowStr; deal.stageUpdatedAt=nowStr;
+  var entry={event:'Moved from '+oldStage+' to '+newStage,date:nowStr,author:(currentUser&&currentUser.name)||''};
   deal.timeline=(deal.timeline||[]).concat([entry]);
   try {
-    var upd={stage:newStage,probability:deal.probability,updatedAt:deal.updatedAt,timeline:deal.timeline};
-    if (newStage==='Lost'){ upd.lostReason=deal.lostReason; upd.lostNotes=deal.lostNotes||''; }
+    var upd={stage:newStage,probability:deal.probability,updatedAt:nowStr,stageUpdatedAt:nowStr,timeline:deal.timeline};
+    if (newStage==='Dead/Lost'){ upd.lostReason=deal.lostReason; upd.lostNotes=deal.lostNotes||''; }
     await db.collection('deals').doc(_dragDealId).update(upd);
     renderKanban(); renderPipelineSummary();
-  } catch(e){ alert('Error: '+e.message); }
+  } catch(e){ console.error('Drag error:', e); }
   _dragDealId=null;
 }
 
@@ -10934,27 +11056,50 @@ function lostReasonCancel() {
   if (_lostResolve){ _lostResolve(null); _lostResolve=null; }
 }
 
-// ── MOBILE LIST VIEW ─────────────────────────────────────────
-function plSetFilter(btn, filter) {
-  _plFilter=filter;
-  document.querySelectorAll('.psf-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderPipelineList();
+// ── MOBILE STAGE SELECTOR VIEW ───────────────────────────────
+function plSetFilter(stage) {
+  _plFilter = stage;
+  renderPipelineMobile();
 }
-function renderPipelineList() {
-  var el=document.getElementById('pipeline-list-cards'); if(!el) return;
-  var deals=_plFilter==='all'?cachedDeals:cachedDeals.filter(function(d){ return d.stage===_plFilter; });
-  if (!deals.length){ el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8">No deals found.</div>'; return; }
-  el.innerHTML=deals.map(function(d){
-    var c=STAGE_COLORS[d.stage]||'#94a3b8';
+
+function renderPipelineMobile() {
+  // Render stage pills
+  var pillsEl = document.getElementById('pipeline-stage-pills');
+  if (pillsEl) {
+    pillsEl.innerHTML = PIPELINE_STAGES.map(function(s) {
+      return '<button class="psp-btn'+(s===_plFilter?' active':'')+'" onclick="plSetFilter(\''+s+'\')">'
+        + s + '</button>';
+    }).join('');
+    // Scroll active pill into view
+    setTimeout(function(){
+      var active = pillsEl.querySelector('.psp-btn.active');
+      if (active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    }, 50);
+  }
+  // Render cards for selected stage
+  var el = document.getElementById('pipeline-list-cards');
+  if (!el) return;
+  var deals = cachedDeals.filter(function(d){ return d.stage === _plFilter; });
+  if (!deals.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">No deals in ' + _plFilter + '</div>';
+    return;
+  }
+  el.innerHTML = deals.map(function(d) {
+    var c = STAGE_COLORS[d.stage] || '#c4b49a';
+    var daysIn = _dealDaysInStage(d);
+    var isStuck = daysIn >= _stuckThreshold && d.stage !== 'Funded' && d.stage !== 'Dead/Lost';
+    var lmiBadge = d.lmiEligible ? ' <span style="background:#eef4f0;color:#5a8a6a;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px">LMI ✓</span>' : '';
     return '<div class="deal-list-card" onclick="openDealDetail(\''+d.id+'\')" style="border-left-color:'+c+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-      +'<span style="font-size:14px;font-weight:700;color:#1f2937">'+(d.borrowerName||'Unknown')+'</span>'
-      +'<span style="font-size:13px;font-weight:800;color:#1558C0">'+(d.loanAmount?fmtK(d.loanAmount):'—')+'</span>'
+      +'<span style="font-size:15px;font-weight:700;color:var(--text-primary)">'+(d.borrowerName||'Unknown')+'</span>'
+      +'<span style="font-size:13px;font-weight:700;color:var(--text-secondary)">'+(d.loanAmount?'$'+Number(d.loanAmount).toLocaleString():'—')+'</span>'
       +'</div>'
-      +'<div style="font-size:12px;color:#6b7280">'
-      +'<span style="background:'+c+'22;color:'+c+';padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-right:6px">'+d.stage+'</span>'
-      +(d.propertyZip||'')+(d.assignedRealtorName?' · '+d.assignedRealtorName:'')
+      +'<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)">'
+      +lmiBadge
+      +(d.assignedRealtorName?' '+d.assignedRealtorName:'')
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:6px">'
+      +'<span style="font-size:11px;'+(isStuck?'color:#9a4a3a;font-weight:700':'color:var(--text-muted)')+'">'+daysIn+'d in stage'+(isStuck?' ⚠':'')+'</span>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -10964,7 +11109,7 @@ function renderPipelineList() {
 function openCreateDealModal(stage, prefill) {
   _editDealId=null; _dealForm=prefill?Object.assign({},prefill):{};
   document.getElementById('deal-modal-title').textContent='New Deal';
-  var stEl=document.getElementById('deal-stage-select'); if(stEl) stEl.value=stage||'Leads';
+  var stEl=document.getElementById('deal-stage-select'); if(stEl) stEl.value=stage||'Lead';
   var st=document.getElementById('deal-save-status'); if(st) st.style.display='none';
   document.getElementById('deal-modal-overlay').style.display='block';
   dmShowTab('borrower');
@@ -10980,6 +11125,8 @@ function dmShowTab(tab) {
   });
   var body=document.getElementById('deal-modal-body'); if(!body) return;
   var f=_dealForm;
+  var _s='width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;box-sizing:border-box;min-height:44px';
+  var _l='font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px';
   if (tab==='borrower') {
     var parts=(f.borrowerName||'').split(' ');
     var fn=parts[0]||'', ln=parts.slice(1).join(' ')||'';
@@ -10988,8 +11135,8 @@ function dmShowTab(tab) {
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">'
       +_dmF('Annual Income ($)','dm-income','number',f.borrowerIncome||'')
-      +'<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">LMI Category</label>'
-      +'<select id="dm-lmi-cat" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'
+      +'<div><label style="'+_l+'">LMI Category</label>'
+      +'<select id="dm-lmi-cat" style="'+_s+'">'
       +['','Low Income','Moderate Income','Middle Income','Upper Income'].map(function(c){ return '<option value="'+c+'" '+(f.borrowerCategory===c?'selected':'')+'>'+( c||'— Select —')+'</option>'; }).join('')
       +'</select></div>'
       +'</div>'
@@ -11000,37 +11147,67 @@ function dmShowTab(tab) {
       +_dmF('Expected Close Date','dm-close-date','date',f.expectedCloseDate||'')
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">'
-      +'<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Loan Type</label>'
-      +'<select id="dm-loan-type" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'
-      +['','FHA','Conventional','VA','USDA','Other'].map(function(t){ return '<option value="'+t+'" '+(f.loanType===t?'selected':'')+'>'+( t||'— Select —')+'</option>'; }).join('')
+      +'<div><label style="'+_l+'">Loan Type</label>'
+      +'<select id="dm-loan-type" style="'+_s+'">'
+      +['','Conventional','FHA','VA','USDA','Jumbo'].map(function(t){ return '<option value="'+t+'" '+(f.loanType===t?'selected':'')+'>'+( t||'— Select —')+'</option>'; }).join('')
       +'</select></div>'
-      +'<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Source</label>'
-      +'<select id="dm-source" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'
+      +'<div><label style="'+_l+'">Source</label>'
+      +'<select id="dm-source" style="'+_s+'">'
       +['','Realtor Referral','Open House','Direct','Marketing','Other'].map(function(s){ return '<option value="'+s+'" '+(f.source===s?'selected':'')+'>'+( s||'— Select —')+'</option>'; }).join('')
       +'</select></div>'
-      +'</div>';
+      +'</div>'
+      +'<div style="margin-top:10px">'+_dmF('Rate Lock Expiry','dm-rate-lock','date',f.rateLockExpiry||'')+'</div>';
   } else if (tab==='property') {
     body.innerHTML=_dmF('Street Address','dm-addr','text',f.propertyAddress||'')
+      +'<div id="dm-lmi-result" style="margin-top:6px"></div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px">'
       +_dmF('City','dm-city','text',f.propertyCity||'')
       +_dmF('State','dm-state','text',f.propertyState||'CA')
       +_dmF('ZIP','dm-zip','text',f.propertyZip||'')
       +'</div>';
+    // Auto-check LMI on ZIP blur
+    setTimeout(function(){
+      var zipEl=document.getElementById('dm-zip');
+      if(zipEl) zipEl.addEventListener('blur',function(){ _dmCheckLmi(zipEl.value); });
+      if(f.propertyZip) _dmCheckLmi(f.propertyZip);
+    },100);
   } else if (tab==='realtor') {
     var rOpts='<option value="">— None —</option>'
-      +(cachedRealtors||[]).map(function(r){ return '<option value="'+r.id+'" data-name="'+(r.name||'')+'" '+(f.assignedRealtorId===r.id?'selected':'')+'>'+( r.name||'')+(r.brokerage?' ('+r.brokerage+')':'')+'</option>'; }).join('');
-    body.innerHTML='<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Assign from contacts</label>'
-      +'<select id="dm-realtor" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">'+rOpts+'</select></div>'
+      +(cachedRealtors||[]).map(function(r){ return '<option value="'+(r.docId||r.id)+'" data-name="'+(r.name||'')+'" '+(f.assignedRealtorId===(r.docId||r.id)?'selected':'')+'>'+( r.name||'')+(r.brokerage?' ('+r.brokerage+')':'')+'</option>'; }).join('');
+    body.innerHTML='<div style="margin-bottom:12px"><label style="'+_l+'">Assign from contacts</label>'
+      +'<select id="dm-realtor" style="'+_s+'">'+rOpts+'</select></div>'
       +_dmF('Or type realtor name','dm-realtor-name','text',f.assignedRealtorName||'');
   } else if (tab==='notes') {
-    body.innerHTML='<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">Notes</label>'
-      +'<textarea id="dm-notes" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;resize:vertical;min-height:130px;box-sizing:border-box">'+(f.notes||'')+'</textarea>';
+    body.innerHTML='<label style="'+_l+'">Notes</label>'
+      +'<textarea id="dm-notes" style="'+_s+';resize:vertical;min-height:130px">'+(f.notes||'')+'</textarea>';
   }
 }
 
+async function _dmCheckLmi(zip) {
+  if (!zip || zip.length !== 5) return;
+  var el = document.getElementById('dm-lmi-result');
+  if (!el) return;
+  el.innerHTML='<span style="font-size:12px;color:var(--text-muted)">Checking LMI status...</span>';
+  try {
+    var resp = await fetch(PROXY_URL + '?zip=' + zip);
+    if (!resp.ok) throw new Error('API error');
+    var data = await resp.json();
+    if (!data || !data.length) { el.innerHTML=''; return; }
+    var tract = data[0];
+    var tractId = tract.tract_id || tract.census_tract || '';
+    var isLmi = tract.lmi_status === true || tract.income_ratio <= 80 || (tract.lmi_category && (tract.lmi_category.indexOf('Low')!==-1||tract.lmi_category.indexOf('Moderate')!==-1));
+    _dealForm.tractId = tractId;
+    _dealForm.lmiEligible = isLmi;
+    _dealForm.lmiIncomeRatio = tract.income_ratio || null;
+    el.innerHTML = isLmi
+      ? '<span style="background:#eef4f0;color:#5a8a6a;font-size:12px;font-weight:700;padding:3px 10px;border-radius:8px">✓ LMI Eligible · Tract '+tractId+'</span>'
+      : '<span style="background:#f5f0e8;color:var(--text-secondary);font-size:12px;font-weight:600;padding:3px 10px;border-radius:8px">Not LMI · Tract '+tractId+'</span>';
+  } catch(e) { el.innerHTML=''; }
+}
+
 function _dmF(label,id,type,val) {
-  return '<div><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">'+label+'</label>'
-    +'<input type="'+type+'" id="'+id+'" value="'+(val||'')+'" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;box-sizing:border-box" /></div>';
+  return '<div><label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">'+label+'</label>'
+    +'<input type="'+type+'" id="'+id+'" value="'+(val||'')+'" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;box-sizing:border-box;min-height:44px" /></div>';
 }
 
 function _dmCollect() {
@@ -11054,7 +11231,11 @@ function _dmCollect() {
     propertyZip: gv('dm-zip'),
     assignedRealtorId: rId,
     assignedRealtorName: rName,
-    notes: gv('dm-notes')
+    notes: gv('dm-notes'),
+    rateLockExpiry: gv('dm-rate-lock'),
+    tractId: _dealForm.tractId || null,
+    lmiEligible: _dealForm.lmiEligible || false,
+    lmiIncomeRatio: _dealForm.lmiIncomeRatio || null
   };
 }
 
@@ -11062,20 +11243,28 @@ async function saveDeal() {
   if (!db||!currentUser) return;
   var statusEl=document.getElementById('deal-save-status');
   Object.assign(_dealForm,_dmCollect());
-  var stage=(document.getElementById('deal-stage-select')||{}).value||'Leads';
+  var stage=(document.getElementById('deal-stage-select')||{}).value||'Lead';
   var now=new Date().toISOString();
+  var rateLockEl = document.getElementById('dm-rate-lock');
+  var rateLockExpiry = rateLockEl ? rateLockEl.value : (_dealForm.rateLockExpiry || '');
   var data=Object.assign({},_dealForm,{
-    stage:stage, probability:STAGE_PROB[stage]||10,
+    stage:stage, probability:STAGE_PROB[stage]||5,
     userId:currentUser.id, userName:currentUser.name||'',
+    assignedTo:currentUser.id, assignedToName:currentUser.name||'',
     userRegion:currentUser.region||'', orgId:currentUser.orgId||'golden1-org',
-    updatedAt:now
+    tenantId:currentUser.orgId||'golden1-org',
+    rateLockExpiry:rateLockExpiry,
+    updatedAt:now, stageUpdatedAt:now,
+    trackingStatus:'active'
   });
   if (!_editDealId){
     data.createdAt=now;
+    data.createdBy=currentUser.id;
     data.timeline=[{event:'Deal created in '+stage,date:now,author:currentUser.name||''}];
   }
   try {
     if (_editDealId){
+      delete data.createdAt; delete data.createdBy;
       await db.collection('deals').doc(_editDealId).update(data);
       var idx=cachedDeals.findIndex(function(d){ return d.id===_editDealId; });
       if (idx!==-1) cachedDeals[idx]=Object.assign({},cachedDeals[idx],data,{id:_editDealId});
@@ -11084,9 +11273,11 @@ async function saveDeal() {
       cachedDeals.push(Object.assign({},data,{id:ref.id}));
     }
     closeCreateDealModal();
-    renderKanban(); renderPipelineSummary();
+    var isMobile = window.innerWidth < 768;
+    if (isMobile) renderPipelineMobile(); else renderKanban();
+    renderPipelineSummary();
   } catch(e){
-    if (statusEl){ statusEl.textContent='❌ '+e.message; statusEl.style.color='#ef4444'; statusEl.style.display='block'; }
+    if (statusEl){ statusEl.textContent='Error: '+e.message; statusEl.style.color='#9a4a3a'; statusEl.style.display='block'; }
   }
 }
 
@@ -11185,7 +11376,7 @@ function openEditDeal(id) {
   if (!_currentDeal) return;
   _editDealId=id; _dealForm=Object.assign({},_currentDeal);
   document.getElementById('deal-modal-title').textContent='Edit Deal';
-  var stEl=document.getElementById('deal-stage-select'); if(stEl) stEl.value=_currentDeal.stage||'Leads';
+  var stEl=document.getElementById('deal-stage-select'); if(stEl) stEl.value=_currentDeal.stage||'Lead';
   closeDealDetail();
   document.getElementById('deal-modal-overlay').style.display='block';
   dmShowTab('borrower');

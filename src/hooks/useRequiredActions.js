@@ -134,6 +134,34 @@ export function useRequiredActions(uid) {
         }
       } catch (e) { console.warn("notifications", e); }
 
+      // 7. Stuck deals — deals sitting in same stage too long
+      try {
+        const prefsDoc = await getDocs(collection(db, "users"));
+        let threshold = 3;
+        prefsDoc.forEach(doc => {
+          if (doc.id === uid && doc.data()?.preferences?.stuckThresholdDays) {
+            threshold = doc.data().preferences.stuckThresholdDays;
+          }
+        });
+        const dealsSnap = await getDocs(collection(db, "deals"));
+        dealsSnap.forEach(doc => {
+          const d = doc.data();
+          if (!d.stageUpdatedAt) return;
+          if (d.stage === "Funded" || d.stage === "Dead/Lost") return;
+          const updated = d.stageUpdatedAt.toDate ? d.stageUpdatedAt.toDate() : new Date(d.stageUpdatedAt);
+          const daysStuck = Math.floor((new Date() - updated) / 86400000);
+          if (daysStuck >= threshold) {
+            results.push({
+              priority: daysStuck >= threshold * 2 ? "high" : "med",
+              label: `${d.borrowerName || "Deal"} stuck in ${d.stage} · ${daysStuck}d`,
+              detail: d.loanAmount ? `$${Number(d.loanAmount).toLocaleString()}` : "",
+              module: "Deal Pipeline", moduleIc: "pipe", moduleColor: "#7a9eaa",
+              navTarget: `/pipeline?deal=${doc.id}`, docId: doc.id,
+            });
+          }
+        });
+      } catch (e) { console.warn("stuck deals", e); }
+
       const order = { high: 0, med: 1, low: 2 };
       results.sort((a, b) => order[a.priority] - order[b.priority]);
       setActions(results);
