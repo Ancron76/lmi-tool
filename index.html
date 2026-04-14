@@ -2989,6 +2989,17 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
   </div>
 </div>
 
+<!-- PAST CUSTOMER FORM MODAL -->
+<div class="deal-modal-overlay" id="pastcust-form-overlay">
+  <div class="deal-modal-panel" style="max-width:520px">
+    <div class="deal-modal-hdr" style="background:#7a9eaa">
+      <div id="pc-form-title" style="font-size:16px;font-weight:800;color:white">Add Past Customer</div>
+      <button onclick="closePastCustForm()" style="background:rgba(255,255,255,.18);border:none;color:white;width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div style="padding:20px" id="pc-form-body"></div>
+  </div>
+</div>
+
 <!-- SMS COMPOSER MODAL -->
 <div class="deal-modal-overlay" id="sms-composer-overlay">
   <div class="deal-modal-panel" style="max-width:480px">
@@ -3098,6 +3109,7 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
     <div class="contacts-subtab-bar">
       <button class="contacts-subtab active" id="ctab-borrowers" onclick="contactsShowTab('borrowers')">👤 Borrowers</button>
       <button class="contacts-subtab" id="ctab-realtors" onclick="contactsShowTab('realtors')">🏠 Realtors</button>
+      <button class="contacts-subtab" id="ctab-pastcust" onclick="contactsShowTab('pastcust')">🏦 Past Customers</button>
     </div>
     <!-- Borrowers Panel -->
     <div id="contacts-borrowers-panel">
@@ -3146,6 +3158,14 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         <button class="cf-btn" onclick="crSetFilter(this,'low')">Needs Attention (&lt;30%)</button>
       </div>
       <div id="contacts-realtors-list"><div style="text-align:center;padding:40px;color:#94a3b8">Loading...</div></div>
+    </div>
+    <!-- Past Customers Panel -->
+    <div id="contacts-pastcust-panel" style="display:none">
+      <div class="contacts-toolbar">
+        <input type="text" class="contacts-search-inp" id="pc-search" placeholder="Search past customers..." oninput="renderPastCustomers()" />
+        <button onclick="openPastCustForm(null)" style="padding:8px 14px;background:var(--brand-accent);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">+ Add Customer</button>
+      </div>
+      <div id="past-cust-list"><div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div></div>
     </div>
   </div>
 </div>
@@ -4100,6 +4120,13 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         <div style="margin-top:14px"><button class="settings-save-btn" onclick="saveNotificationPrefs()">Save Preferences</button></div>
       </div>
     </div>
+    <div class="settings-section" id="rate-source-settings" style="display:none">
+      <div class="settings-section-title">📈 Current Mortgage Rates (Refi Engine)</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Enter today's rates. These are compared against past customers' locked rates to detect refi opportunities.</div>
+      <div id="rate-source-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+      <button onclick="_saveRates()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px;margin-top:12px">Save Rates</button>
+      <div id="rate-last-updated" style="font-size:11px;color:var(--text-muted);margin-top:8px"></div>
+    </div>
     <div class="settings-section" id="institution-settings" style="display:none">
       <div class="settings-section-title">🏛️ Institution Info (CRA Reports)</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -4737,6 +4764,9 @@ async function _postLoginSetup(user) {
   if (lbSettings) lbSettings.style.display = isAnyAdmin() ? '' : 'none';
   var instSettings = document.getElementById('institution-settings');
   if (instSettings) instSettings.style.display = isAnyAdmin() ? '' : 'none';
+  var rateSettings = document.getElementById('rate-source-settings');
+  if (rateSettings) rateSettings.style.display = isAnyAdmin() ? '' : 'none';
+  if (isAnyAdmin()) _renderRateSourceFields();
   if (_featureFlags.smsEnabled) _showSmsNumbersSection(); // SMS gated
   _applyFeatureFlags(); // hide/show SMS UI based on flag
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
@@ -5218,7 +5248,26 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] sms inbox:', e); }
 
-  // 14. QUARTERLY CRA REPORT REMINDER (admin)
+  // 14. REFI OPPORTUNITIES — past customers with rate drop
+  try {
+    await _loadCurrentRates();
+    if (_currentRates && Object.keys(_currentRates).length > 1) {
+      await loadPastCustomers();
+      cachedPastCustomers.forEach(function(c) {
+        var refi = _checkRefiForCustomer(c);
+        if (refi.met) {
+          actions.push({
+            p: 'med',
+            title: (c.borrowerName||'Customer') + ' \u2014 refi opportunity',
+            detail: (c.loanProgram||'') + ': ' + refi.drop.toFixed(3) + '% drop (threshold ' + refi.threshold + '%)',
+            module: 'Contacts', tab: 'contacts', _nav: 'contacts'
+          });
+        }
+      });
+    }
+  } catch(e){ console.warn('[RequiredActions] refi:', e); }
+
+  // 15. QUARTERLY CRA REPORT REMINDER (admin)
   try {
     if (isAnyAdmin()) {
       var qNow = new Date();
@@ -11365,12 +11414,15 @@ function renderTagPickerInline(addFn) {
 var _cbFilter='all', _crFilter='all';
 
 function contactsShowTab(tab) {
-  var isBorr = tab==='borrowers';
-  document.getElementById('ctab-borrowers').classList.toggle('active',isBorr);
-  document.getElementById('ctab-realtors').classList.toggle('active',!isBorr);
-  document.getElementById('contacts-borrowers-panel').style.display=isBorr?'':'none';
-  document.getElementById('contacts-realtors-panel').style.display=isBorr?'none':'';
-  if (isBorr) renderContactsBorrowers(); else renderContactsRealtors();
+  ['borrowers','realtors','pastcust'].forEach(function(t){
+    var btn = document.getElementById('ctab-'+t);
+    var panel = document.getElementById('contacts-'+(t==='pastcust'?'pastcust':t)+'-panel');
+    if (btn) btn.classList.toggle('active', t===tab);
+    if (panel) panel.style.display = t===tab ? '' : 'none';
+  });
+  if (tab==='borrowers') renderContactsBorrowers();
+  else if (tab==='realtors') renderContactsRealtors();
+  else if (tab==='pastcust') renderPastCustomers();
 }
 
 function cbSetFilter(btn,filter) {
@@ -12153,6 +12205,7 @@ async function kDrop(event, newStage) {
     if (newStage==='Dead/Lost'){ upd.lostReason=deal.lostReason; upd.lostNotes=deal.lostNotes||''; }
     await db.collection('deals').doc(_dragDealId).update(upd);
     checkAndEnroll('deal_stage_changed', { contactId: _dragDealId, contactName: deal.borrowerName||'', contactType: 'deal', toStage: newStage, fromStage: oldStage });
+    if (newStage === 'Funded') _autoCreatePastCustomer(Object.assign({id:_dragDealId},deal));
     renderKanban(); renderPipelineSummary();
   } catch(e){ console.error('Drag error:', e); }
   _dragDealId=null;
@@ -12531,7 +12584,7 @@ function ddShowTab(tab) {
     var rows=[
       ['Borrower',d.borrowerName],['LMI Category',d.borrowerCategory],
       ['% AMI',d.borrowerPctAmi?d.borrowerPctAmi+'%':'—'],['Annual Income',d.borrowerIncome?'$'+Number(d.borrowerIncome).toLocaleString():'—'],
-      ['Loan Amount',d.loanAmount?'$'+Number(d.loanAmount).toLocaleString():'—'],['Loan Type',d.loanType],
+      ['Loan Amount',d.loanAmount?'$'+Number(d.loanAmount).toLocaleString():'—'],['Loan Program',d.loanProgram||d.loanType||'—'],
       ['Property',d.propertyAddress||(d.propertyCity||'')+(d.propertyZip?' '+d.propertyZip:'')],
       ['Source',d.source],['Realtor',d.assignedRealtorName],['Expected Close',d.expectedCloseDate]
     ];
@@ -12620,9 +12673,11 @@ async function ddMoveStage() {
   var entry={event:'Moved from '+old+' to '+next,date:_currentDeal.updatedAt,author:(currentUser&&currentUser.name)||''};
   _currentDeal.timeline=(_currentDeal.timeline||[]).concat([entry]);
   try {
-    await db.collection('deals').doc(_currentDeal.id).update({stage:next,probability:_currentDeal.probability,updatedAt:_currentDeal.updatedAt,timeline:_currentDeal.timeline});
+    await db.collection('deals').doc(_currentDeal.id).update({stage:next,probability:_currentDeal.probability,updatedAt:_currentDeal.updatedAt,stageUpdatedAt:_currentDeal.updatedAt,timeline:_currentDeal.timeline});
     var i=cachedDeals.findIndex(function(d){ return d.id===_currentDeal.id; });
     if(i!==-1) Object.assign(cachedDeals[i],_currentDeal);
+    // Auto-create past customer when deal is funded
+    if (next === 'Funded') _autoCreatePastCustomer(Object.assign({id:_currentDeal.id},_currentDeal));
     document.getElementById('dd-sub').textContent=_currentDeal.stage+' · '+fmtK(_currentDeal.loanAmount);
     ddShowTab('overview'); renderKanban(); renderPipelineSummary();
   } catch(e){ alert('Error: '+e.message); }
@@ -14815,6 +14870,245 @@ function _showSmsNumbersSection() {
 }
 
 // ── END PHASE 22 ─────────────────────────────────────────────
+
+// ════════════════════════════════════════════════════════════
+// REFI ENGINE — Past Customers + Rate Source + Refi Alerts
+// ════════════════════════════════════════════════════════════
+
+var cachedPastCustomers = [];
+var _pcEditId = null;
+var _currentRates = null;
+
+var LOAN_PROGRAMS = ['30-Year Fixed','15-Year Fixed','30-Year Fixed FHA','30-Year Fixed VA','30-Year Fixed Jumbo','15-Year Fixed Jumbo','5-Year SOFR ARM','7-Year SOFR ARM','10-Year SOFR ARM','5-Year SOFR ARM Jumbo','7-Year SOFR ARM Jumbo','10-Year SOFR ARM Jumbo','HELOC Variable','Other'];
+
+var RATE_FIELD_MAP = {
+  '30-Year Fixed':'conventional30','15-Year Fixed':'conventional15',
+  '30-Year Fixed FHA':'fha30','30-Year Fixed VA':'va30',
+  '30-Year Fixed Jumbo':'jumbo30','15-Year Fixed Jumbo':'jumbo15',
+  '5-Year SOFR ARM':'arm5','7-Year SOFR ARM':'arm7','10-Year SOFR ARM':'arm10',
+  '5-Year SOFR ARM Jumbo':'arm5Jumbo','7-Year SOFR ARM Jumbo':'arm7Jumbo','10-Year SOFR ARM Jumbo':'arm10Jumbo',
+  'HELOC Variable':'heloc','Other':'conventional30'
+};
+
+// ── PAST CUSTOMERS CRUD ──────────────────────────────────────
+async function loadPastCustomers() {
+  if (!db || !currentUser) return;
+  try {
+    var snap = await db.collection('pastCustomers').get();
+    cachedPastCustomers = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    var orgId = currentUser.orgId || '';
+    if (orgId && !isSuperAdmin()) cachedPastCustomers = cachedPastCustomers.filter(function(c){ return c.tenantId === orgId; });
+    if (!isAnyAdmin()) cachedPastCustomers = cachedPastCustomers.filter(function(c){ return c.assignedTo === currentUser.id; });
+  } catch(e){ cachedPastCustomers = []; }
+}
+
+async function renderPastCustomers() {
+  await loadPastCustomers();
+  var el = document.getElementById('past-cust-list');
+  if (!el) return;
+  var q = ((document.getElementById('pc-search')||{}).value||'').toLowerCase();
+  var list = cachedPastCustomers;
+  if (q) list = list.filter(function(c){ return (c.borrowerName||'').toLowerCase().indexOf(q)!==-1 || (c.loanProgram||'').toLowerCase().indexOf(q)!==-1; });
+  if (!list.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">No past customers yet. Add one or fund a deal to auto-create.</div>'; return; }
+  // Load current rates for refi status
+  await _loadCurrentRates();
+  el.innerHTML = list.map(function(c) {
+    var refi = _checkRefiForCustomer(c);
+    var refiBadge = refi.met ? '<span style="background:#eef4f0;color:#5a8a6a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">Refi \u2713</span>' : '';
+    var catBadge = c.loanCategory ? '<span style="background:#f5f0e8;color:var(--text-secondary);font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px">'+c.loanCategory+'</span>' : '';
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer" onclick="openPastCustForm(\''+c.id+'\')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      +'<span style="font-size:15px;font-weight:700;color:var(--text-primary)">'+(c.borrowerName||'Unknown')+'</span>'
+      +'<span style="font-size:13px;font-weight:600;color:var(--text-secondary)">'+(c.lockedRate?c.lockedRate+'%':'—')+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-muted)">'
+      +'<span>'+(c.loanProgram||'—')+'</span>'
+      +catBadge+refiBadge
+      +(c.loanAmount?'<span>'+fmtK(c.loanAmount)+'</span>':'')
+      +'</div>'
+      +(refi.drop>0?'<div style="margin-top:4px;font-size:11px;color:'+(refi.met?'#5a8a6a':'var(--text-muted)')+'">Rate drop: '+refi.drop.toFixed(3)+'% '+(refi.met?'\u2713 threshold met':'· needs '+Math.max(0,refi.threshold-refi.drop).toFixed(3)+'% more')+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function openPastCustForm(id) {
+  _pcEditId = id;
+  var c = id ? cachedPastCustomers.find(function(x){ return x.id===id; }) : {};
+  if (!c) c = {};
+  document.getElementById('pc-form-title').textContent = id ? 'Edit Past Customer' : 'Add Past Customer';
+  var _l = 'font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px';
+  var _s = 'width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;min-height:44px';
+  var body = document.getElementById('pc-form-body');
+  body.innerHTML =
+    '<div class="goal-field"><label>Borrower Name</label><input type="text" id="pc-name" value="'+esc(c.borrowerName||'')+'" /></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div class="goal-field"><label>Phone</label><input type="tel" id="pc-phone" value="'+esc(c.phone||'')+'" /></div>'
+    +'<div class="goal-field"><label>Email</label><input type="email" id="pc-email" value="'+esc(c.email||'')+'" /></div>'
+    +'</div>'
+    +'<div class="goal-field"><label>Loan Program</label><select id="pc-program" style="'+_s+'" onchange="_pcUpdateCat()">'
+    +LOAN_PROGRAMS.map(function(p){ return '<option value="'+p+'" '+((c.loanProgram||'')=== p?'selected':'')+'>'+p+'</option>'; }).join('')
+    +'</select>'
+    +'<div id="pc-cat-badge" style="margin-top:4px">'+(_programToCategory(c.loanProgram||'')?'<span style="background:#f5f0e8;color:var(--text-secondary);font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px">'+_programToCategory(c.loanProgram||'')+'</span>':'')+'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div class="goal-field"><label>Locked Rate (%)</label><input type="number" step="0.001" id="pc-rate" value="'+(c.lockedRate||'')+'" placeholder="e.g. 7.250" /></div>'
+    +'<div class="goal-field"><label>Loan Amount ($)</label><input type="number" id="pc-amount" value="'+(c.loanAmount||'')+'" /></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div class="goal-field"><label>Close Date</label><input type="date" id="pc-close-date" value="'+(c.closeDate||'')+'" /></div>'
+    +'<div class="goal-field"><label>Property Address</label><input type="text" id="pc-address" value="'+esc(c.propertyAddress||'')+'" /></div>'
+    +'</div>'
+    +'<div class="goal-field"><label>Refi Threshold (%)</label><input type="number" step="0.125" id="pc-refi-threshold" value="'+(c.refiThreshold||0.75)+'" placeholder="0.75" /></div>'
+    +'<div style="display:flex;gap:8px;margin-top:14px">'
+    +'<button onclick="_savePastCust()" style="flex:2;background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px">Save</button>'
+    +'<button onclick="closePastCustForm()" style="flex:1;background:#f5f0e8;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:12px;font-size:14px;cursor:pointer;min-height:44px">Cancel</button>'
+    +'</div>';
+  document.getElementById('pastcust-form-overlay').style.display = 'block';
+}
+
+function closePastCustForm() {
+  document.getElementById('pastcust-form-overlay').style.display = 'none';
+  _pcEditId = null;
+}
+
+function _pcUpdateCat() {
+  var sel = document.getElementById('pc-program');
+  var badge = document.getElementById('pc-cat-badge');
+  if (!sel || !badge) return;
+  var cat = _programToCategory(sel.value);
+  badge.innerHTML = cat ? '<span style="background:#f5f0e8;color:var(--text-secondary);font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px">'+cat+'</span>' : '';
+}
+
+async function _savePastCust() {
+  if (!db || !currentUser) return;
+  var name = (document.getElementById('pc-name')||{}).value || '';
+  if (!name) { showToast('Name is required'); return; }
+  var program = (document.getElementById('pc-program')||{}).value || '30-Year Fixed';
+  var data = {
+    borrowerName: name,
+    phone: (document.getElementById('pc-phone')||{}).value || '',
+    email: (document.getElementById('pc-email')||{}).value || '',
+    loanProgram: program,
+    loanCategory: _programToCategory(program),
+    lockedRate: parseFloat((document.getElementById('pc-rate')||{}).value) || null,
+    loanAmount: parseFloat((document.getElementById('pc-amount')||{}).value) || null,
+    closeDate: (document.getElementById('pc-close-date')||{}).value || '',
+    propertyAddress: (document.getElementById('pc-address')||{}).value || '',
+    refiThreshold: parseFloat((document.getElementById('pc-refi-threshold')||{}).value) || 0.75,
+    assignedTo: currentUser.id,
+    tenantId: currentUser.orgId || 'golden1-org',
+    updatedAt: new Date().toISOString()
+  };
+  try {
+    if (_pcEditId) {
+      await db.collection('pastCustomers').doc(_pcEditId).update(data);
+    } else {
+      data.createdAt = new Date().toISOString();
+      data.createdBy = currentUser.id;
+      await db.collection('pastCustomers').add(data);
+    }
+    closePastCustForm();
+    showToast('Past customer saved');
+    renderPastCustomers();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+// ── AUTO-CREATE FROM FUNDED DEAL ─────────────────────────────
+async function _autoCreatePastCustomer(deal) {
+  if (!db || !currentUser || !deal) return;
+  var program = deal.loanProgram || _loanTypeToProgram(deal.loanType || 'Conventional');
+  var data = {
+    borrowerName: deal.borrowerName || '',
+    phone: deal.borrowerPhone || '',
+    email: deal.borrowerEmail || '',
+    loanProgram: program,
+    loanCategory: _programToCategory(program),
+    lockedRate: deal.lockedRate || null,
+    loanAmount: deal.loanAmount || null,
+    closeDate: deal.stageUpdatedAt || deal.updatedAt || new Date().toISOString(),
+    propertyAddress: deal.propertyAddress || '',
+    refiThreshold: 0.75,
+    linkedDealId: deal.id,
+    assignedTo: deal.assignedTo || deal.userId || currentUser.id,
+    tenantId: deal.tenantId || currentUser.orgId || 'golden1-org',
+    createdAt: new Date().toISOString(),
+    createdBy: currentUser.id,
+    autoCreated: true
+  };
+  try {
+    await db.collection('pastCustomers').add(data);
+    showToast('Past customer created for ' + (deal.borrowerName||'funded deal') + ' \u2014 verify loan program (defaulted to '+program+')');
+  } catch(e) { console.warn('Auto-create past customer error:', e); }
+}
+
+// ── RATE SOURCE MANAGEMENT ───────────────────────────────────
+var RATE_PROGRAMS_FOR_DISPLAY = ['30-Year Fixed','15-Year Fixed','30-Year Fixed FHA','30-Year Fixed VA','30-Year Fixed Jumbo','5-Year SOFR ARM','7-Year SOFR ARM','HELOC Variable'];
+
+function _renderRateSourceFields() {
+  var el = document.getElementById('rate-source-fields');
+  if (!el) return;
+  _loadCurrentRates().then(function() {
+    el.innerHTML = RATE_PROGRAMS_FOR_DISPLAY.map(function(p) {
+      var key = RATE_FIELD_MAP[p] || 'conventional30';
+      var val = _currentRates && _currentRates[key] ? _currentRates[key] : '';
+      return '<div class="goal-field"><label style="font-size:11px">'+p+'</label>'
+        +'<input type="number" step="0.001" id="rate-'+key+'" value="'+val+'" placeholder="e.g. 6.250" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;box-sizing:border-box" /></div>';
+    }).join('');
+    var lastUp = document.getElementById('rate-last-updated');
+    if (lastUp && _currentRates && _currentRates.updatedAt) {
+      lastUp.textContent = 'Last updated: ' + new Date(_currentRates.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+    }
+  });
+}
+
+async function _loadCurrentRates() {
+  if (_currentRates) return;
+  if (!db) return;
+  try {
+    var tenantId = currentUser.orgId || 'golden1-org';
+    var doc = await db.collection('tenants').doc(tenantId).get();
+    if (doc.exists && doc.data().currentRates) {
+      _currentRates = doc.data().currentRates;
+    } else {
+      _currentRates = {};
+    }
+  } catch(e) { _currentRates = {}; }
+}
+
+async function _saveRates() {
+  if (!db || !currentUser) return;
+  var rates = { updatedAt: new Date().toISOString(), updatedBy: currentUser.id };
+  Object.values(RATE_FIELD_MAP).forEach(function(key) {
+    var el = document.getElementById('rate-'+key);
+    if (el && el.value) rates[key] = parseFloat(el.value);
+  });
+  try {
+    var tenantId = currentUser.orgId || 'golden1-org';
+    await db.collection('tenants').doc(tenantId).set({ currentRates: rates }, { merge: true });
+    _currentRates = rates;
+    showToast('Rates saved');
+    _renderRateSourceFields();
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+// ── REFI DETECTION ───────────────────────────────────────────
+function _getRateForProgram(program) {
+  if (!_currentRates) return null;
+  var key = RATE_FIELD_MAP[program] || 'conventional30';
+  return _currentRates[key] || _currentRates.conventional30 || null;
+}
+
+function _checkRefiForCustomer(customer) {
+  var lockedRate = customer.lockedRate;
+  var program = customer.loanProgram || '30-Year Fixed';
+  var currentRate = _getRateForProgram(program);
+  var threshold = customer.refiThreshold || 0.75;
+  if (!lockedRate || !currentRate) return { met: false, drop: 0, threshold: threshold, currentRate: null };
+  var drop = lockedRate - currentRate;
+  return { met: drop >= threshold, drop: Math.max(0, drop), threshold: threshold, currentRate: currentRate, program: program };
+}
+
+// ── WIRE FUNDED DEAL → PAST CUSTOMER ─────────────────────────
+// Patch ddMoveStage to auto-create past customer when deal moves to Funded
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
