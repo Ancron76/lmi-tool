@@ -1358,6 +1358,7 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   animation: fadeIn 0.15s ease;
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes skeletonPulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
 
 /* Home screen welcome */
 .home-greeting { letter-spacing: -0.4px !important; }
@@ -4300,14 +4301,150 @@ var HOME_MODULES = [
   { tab:'marketing',   name:'Marketing',       color:'#6a5e50', spark:[1,1,2,2,2,3,3,3,3,3]          },
 ];
 
-var HOME_ACTIONS = [
-  { p:'high', title:'Rate lock expires in 3 days',    detail:'Deal: Smith, R. — $485,000 purchase',         module:'Deal Pipeline',  tab:'pipeline' },
-  { p:'high', title:'Pre-qual request pending review', detail:'Submitted by Realtor: Maria Gonzalez',        module:'Contacts',       tab:'contacts' },
-  { p:'med',  title:'Realtor follow-up overdue · 2d', detail:'Carlos Mendez — Elk Grove territory',         module:'Realtors',       tab:'realtors' },
-  { p:'med',  title:'Open house report not submitted', detail:'Event: Elk Grove OYZ — Apr 10',              module:'Open Houses',    tab:'oyz'      },
-  { p:'med',  title:'CRA activities unlogged',         detail:'3 qualifying activities need entry this week',module:'Activity Log',   tab:'activity' },
-  { p:'low',  title:'2 unread messages',               detail:'Communications inbox · oldest: 18hr ago',     module:'Communications', tab:'comms'    },
-];
+var _requiredActionsCache = [];
+
+async function useRequiredActions() {
+  var actions = [];
+  if (!db || !currentUser) return actions;
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var todayStr = today.toISOString().slice(0,10);
+
+  function _toDateLocal(v) {
+    if (!v) return null;
+    if (v && v.seconds) return new Date(v.seconds * 1000);
+    var d = new Date(v);
+    return isNaN(d) ? null : d;
+  }
+
+  // 1. DEAL PIPELINE — rateLockExpiry exists AND <= today + 7 days
+  try {
+    var sevenDaysOut = new Date(today.getTime() + 7 * 86400000);
+    var dealSnap = await db.collection('deals').get();
+    var dealDocs = dealSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    var orgId = currentUser && currentUser.orgId;
+    if (orgId && !isSuperAdmin()) dealDocs = dealDocs.filter(function(d){ return d.orgId===orgId; });
+    if (!isAnyAdmin()) dealDocs = dealDocs.filter(function(d){ return d.userId===currentUser.id; });
+    dealDocs.forEach(function(d){
+      if (!d.rateLockExpiry) return;
+      var exp = _toDateLocal(d.rateLockExpiry);
+      if (!exp) return;
+      if (exp <= sevenDaysOut) {
+        var daysLeft = Math.ceil((exp - today) / 86400000);
+        var label = daysLeft <= 0 ? 'Rate lock expired' : 'Rate lock expires in ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '');
+        actions.push({
+          p: daysLeft <= 1 ? 'high' : 'med',
+          title: label,
+          detail: 'Deal: ' + (d.borrowerName||'Unknown') + (d.loanAmount ? ' — $' + Number(d.loanAmount).toLocaleString() : ''),
+          module: 'Deal Pipeline', tab: 'pipeline',
+          _dealId: d.id
+        });
+      }
+    });
+  } catch(e){ console.error('[RequiredActions] deals:', e); }
+
+  // 2. PREQUAL REQUESTS — status == "pending"
+  try {
+    var pqSnap = await db.collection('prequal').get();
+    pqSnap.forEach(function(d){
+      var pq = d.data();
+      if (pq.status !== 'pending') return;
+      if (pq.mloUserId && pq.mloUserId !== currentUser.id && !isAnyAdmin()) return;
+      actions.push({
+        p: 'high',
+        title: 'Pre-qual request pending review',
+        detail: 'From: ' + (pq.realtorName || pq.borrowerName || 'Unknown'),
+        module: 'Contacts', tab: 'contacts',
+        _nav: 'contacts'
+      });
+    });
+  } catch(e){ console.error('[RequiredActions] prequal:', e); }
+
+  // 3. REALTORS — lastContact exists AND lastContact <= today - 14 days
+  try {
+    var fourteenDaysAgo = new Date(today.getTime() - 14 * 86400000);
+    var rSnap = await db.collection('realtors').where('userId','==',currentUser.id).get();
+    rSnap.forEach(function(d){
+      var r = Object.assign({id:d.id, docId:d.id}, d.data());
+      if (!r.lastContact) return;
+      var lc = _toDateLocal(r.lastContact);
+      if (!lc) return;
+      if (lc <= fourteenDaysAgo) {
+        var daysAgo = Math.floor((today - lc) / 86400000);
+        actions.push({
+          p: 'med',
+          title: 'Realtor follow-up overdue · ' + daysAgo + 'd',
+          detail: (r.name||'Unknown') + (r.area ? ' — ' + r.area + ' territory' : ''),
+          module: 'Realtors', tab: 'realtors',
+          _realtorId: r.docId
+        });
+      }
+    });
+  } catch(e){ console.error('[RequiredActions] realtors:', e); }
+
+  // 4. OPEN HOUSES — openHouseDate < today AND reportSubmitted != true
+  try {
+    var oyzSnap = await db.collection('oyz').get();
+    oyzSnap.forEach(function(d){
+      var e = Object.assign({id:d.id}, d.data());
+      if (!isAnyAdmin() && e.userId !== currentUser.id) return;
+      if (!e.openHouseDate) return;
+      if (e.openHouseDate >= todayStr) return;
+      if (e.reportSubmitted === true || e.status === 'complete') return;
+      actions.push({
+        p: 'med',
+        title: 'Open house report not submitted',
+        detail: (e.propertyAddress || e.streetAddress || 'Unknown') + ' — ' + e.openHouseDate,
+        module: 'Open Houses', tab: 'oyz',
+        _oyzId: e.id
+      });
+    });
+  } catch(e){ console.error('[RequiredActions] oyz:', e); }
+
+  // 5. ACTIVITY LOG — flagged == true AND logged != true
+  try {
+    var actSnap = await db.collection('activity').where('userId','==',currentUser.id).get();
+    var flaggedCount = 0;
+    actSnap.forEach(function(d){
+      var a = d.data();
+      if (a.flagged === true && a.logged !== true) flaggedCount++;
+    });
+    if (flaggedCount > 0) {
+      actions.push({
+        p: 'med',
+        title: flaggedCount + ' flagged activit' + (flaggedCount === 1 ? 'y' : 'ies') + ' unlogged',
+        detail: flaggedCount + ' qualifying activit' + (flaggedCount === 1 ? 'y needs' : 'ies need') + ' entry',
+        module: 'Activity Log', tab: 'activity',
+        _nav: 'activity'
+      });
+    }
+  } catch(e){ console.error('[RequiredActions] activity:', e); }
+
+  // 6. COMMUNICATIONS — notifications where read != true
+  try {
+    var nSnap = await db.collection('notifications').get();
+    var unread = 0;
+    nSnap.forEach(function(d){
+      var n = d.data();
+      if (n.userId !== currentUser.id) return;
+      if (n.read !== true) unread++;
+    });
+    if (unread > 0) {
+      actions.push({
+        p: 'low',
+        title: unread + ' unread message' + (unread !== 1 ? 's' : ''),
+        detail: 'Communications inbox',
+        module: 'Communications', tab: 'comms',
+        _nav: 'comms'
+      });
+    }
+  } catch(e){ console.error('[RequiredActions] notifications:', e); }
+
+  // Sort: high → med → low
+  var order = {high:0, med:1, low:2};
+  actions.sort(function(a,b){ return (order[a.p]||9) - (order[b.p]||9); });
+  return actions;
+}
 
 var _PA = {
   high: { dot:'#9a4a3a', bg:'#f8ecea', label:'Urgent'     },
@@ -4573,15 +4710,40 @@ function _modIcon(tab) {
   return icons[tab] || '<svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5"/></svg>';
 }
 
-function renderHomeActions() {
+async function renderHomeActions() {
   var list = document.getElementById('home-actions-list');
   var badge = document.getElementById('home-urgent-badge');
   if (!list) return;
-  var urgent = HOME_ACTIONS.filter(function(a){return a.p==='high';}).length;
-  if (badge && urgent > 0) { badge.textContent = urgent+' Urgent'; badge.style.display='inline'; }
-  list.innerHTML = HOME_ACTIONS.map(function(a,i) {
+  if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+
+  // Loading skeleton
+  var skelRow = '<div class="home-act-row" style="pointer-events:none"><div style="display:flex;gap:9px;align-items:flex-start">' +
+    '<div style="width:7px;height:7px;border-radius:50%;background:var(--border);margin-top:5px;animation:skeletonPulse 1.5s ease-in-out infinite"></div>' +
+    '<div style="flex:1">' +
+    '<div style="height:12px;width:70%;background:var(--border);border-radius:4px;margin-bottom:6px;animation:skeletonPulse 1.5s ease-in-out infinite"></div>' +
+    '<div style="height:10px;width:45%;background:var(--border);border-radius:4px;animation:skeletonPulse 1.5s ease-in-out infinite"></div>' +
+    '</div></div></div>';
+  list.innerHTML = skelRow + skelRow + skelRow;
+
+  var actions = await useRequiredActions();
+  _requiredActionsCache = actions;
+
+  // Empty state
+  if (!actions.length) {
+    list.innerHTML = '<div style="padding:32px 20px;text-align:center">' +
+      '<div style="width:40px;height:40px;border-radius:50%;background:var(--color-positive-bg);display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-positive)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+      '<div style="font-size:13px;font-weight:600;color:var(--color-positive)">No actions needed &middot; You\'re all caught up</div>' +
+      '</div>';
+    return;
+  }
+
+  var urgent = actions.filter(function(a){ return a.p==='high'; }).length;
+  if (badge && urgent > 0) { badge.textContent = urgent + ' Urgent'; badge.style.display = 'inline'; }
+
+  list.innerHTML = actions.map(function(a,i) {
     var pm = _PA[a.p];
-    return '<div class="home-act-row" onclick="showTab(\''+a.tab+'\')">'+
+    return '<div class="home-act-row" data-action-idx="'+i+'">'+
       '<div style="display:flex;gap:9px;align-items:flex-start">'+
         '<div class="home-act-dot" style="background:'+pm.dot+'"></div>'+
         '<div style="flex:1;min-width:0">'+
@@ -4596,6 +4758,18 @@ function renderHomeActions() {
       '</div>'+
     '</div>';
   }).join('');
+
+  // Bind click navigation
+  actions.forEach(function(a,i) {
+    var row = list.querySelector('[data-action-idx="'+i+'"]');
+    if (!row) return;
+    row.addEventListener('click', function() {
+      if (a._dealId) { showTab('pipeline'); setTimeout(function(){ openDealDetail(a._dealId); }, 400); }
+      else if (a._realtorId) { showTab('realtors'); setTimeout(function(){ openRealtorProfile(a._realtorId); }, 400); }
+      else if (a._oyzId) { showTab('oyz'); setTimeout(function(){ openPropDetail(a._oyzId); }, 400); }
+      else { showTab(a.tab); }
+    });
+  });
 }
 
 function _renderHomeGlance() {
