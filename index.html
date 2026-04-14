@@ -938,6 +938,31 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
   .realtor-profile-body { padding: 14px 12px; }
   .realtor-profile-header { padding: 16px 20px; }
 }
+/* Sequence cards */
+.seq-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:box-shadow .15s}
+.seq-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.seq-card-name{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:3px}
+.seq-card-desc{font-size:12px;color:var(--text-muted);margin-bottom:8px}
+.seq-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block}
+.seq-badge-draft{background:#f5f1ec;color:#9e8e7a}
+.seq-badge-pending{background:#faf0e4;color:#b07030}
+.seq-badge-approved{background:#eef4f0;color:#5a8a6a}
+.seq-badge-rejected{background:#f8ecea;color:#9a4a3a}
+.seq-trigger-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(122,158,170,.12);color:#5a8a9e}
+.seq-step-row{background:#f5f0e8;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.seq-step-num{width:24px;height:24px;border-radius:50%;background:var(--brand-accent);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.seq-step-body{flex:1;min-width:0}
+.seq-step-action{font-size:13px;font-weight:600;color:var(--text-primary)}
+.seq-step-delay{font-size:11px;color:var(--text-muted)}
+.seq-field label{font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px}
+.seq-field input,.seq-field select,.seq-field textarea{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;box-sizing:border-box;font-family:inherit;min-height:44px}
+.seq-field textarea{resize:vertical;min-height:80px}
+.seq-tpl-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.seq-tpl-card:hover{border-color:var(--brand-accent)}
+@media(max-width:640px){
+  .seq-card{padding:14px}
+  .seq-step-row{padding:10px 12px}
+}
 /* Print styles */
 @media print {
   body { background: white !important; }
@@ -1940,6 +1965,7 @@ admin@loopenta.com</div>
       <button class="sidebar-nav-item" id="sn-pipeline" onclick="showTab('pipeline');closeSidebar()"><span class="sn-icon">🎯</span>Deal Pipeline</button>
       <button class="sidebar-nav-item" id="sn-contacts" onclick="showTab('contacts');closeSidebar()"><span class="sn-icon">👥</span>Contacts</button>
       <button class="sidebar-nav-item" id="sn-comms" onclick="showTab('comms');closeSidebar()"><span class="sn-icon">💬</span>Communications</button>
+      <button class="sidebar-nav-item" id="sn-sequences" onclick="showTab('sequences');closeSidebar()"><span class="sn-icon">⚡</span>Sequences</button>
       <div class="sidebar-section-label">PROSPECTING</div>
       <button class="sidebar-nav-item" id="sn-search" onclick="showTab('search');closeSidebar()"><span class="sn-icon">🗺️</span>LMI Search</button>
       <button class="sidebar-nav-item" id="sn-realtors" onclick="showTab('realtors');closeSidebar()"><span class="sn-icon">🤝</span>Realtors</button>
@@ -2542,6 +2568,38 @@ admin@loopenta.com</div>
   </div>
   <button class="pipeline-fab" id="pipeline-fab" onclick="openCreateDealModal('Lead',null)">+</button>
 </div>
+
+  <!-- SEQUENCES TAB -->
+  <div id="tab-sequences-content" style="display:none">
+    <div style="max-width:900px;margin:0 auto;padding:20px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:20px;font-weight:800;color:var(--text-primary)">⚡ Sequences</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px">Automated follow-up workflows</div>
+        </div>
+        <button onclick="openSequenceBuilder(null)" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px">+ New Sequence</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto" id="seq-tabs">
+        <button class="psp-btn active" onclick="seqShowTab('mine')">My Sequences</button>
+        <button class="psp-btn" onclick="seqShowTab('global')">Global</button>
+        <button class="psp-btn" onclick="seqShowTab('pending')" id="seq-tab-pending" style="display:none">Pending Approval</button>
+        <button class="psp-btn" onclick="seqShowTab('templates')">Templates</button>
+      </div>
+      <div id="seq-list-body"><div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">Loading sequences...</div></div>
+    </div>
+  </div>
+
+  <!-- SEQUENCE BUILDER OVERLAY -->
+  <div class="deal-modal-overlay" id="seq-builder-overlay">
+    <div class="deal-modal-panel" style="max-width:680px">
+      <div class="deal-modal-hdr">
+        <div id="seq-builder-title" style="font-size:16px;font-weight:800;color:white">New Sequence</div>
+        <button onclick="closeSequenceBuilder()" style="background:rgba(255,255,255,.15);border:none;color:white;width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+      </div>
+      <div style="padding:20px" id="seq-builder-body"></div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end" id="seq-builder-footer"></div>
+    </div>
+  </div>
 
 <!-- CREATE/EDIT DEAL MODAL -->
 <div class="deal-modal-overlay" id="deal-modal-overlay">
@@ -4269,6 +4327,7 @@ async function _postLoginSetup(user) {
   loadProfileToSettings();
   generateNotifications();
   loadDashboardPrefs(); // load saved home screen layout prefs
+  runDueSequenceSteps(); // execute any pending sequence steps
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
 }
 
@@ -4604,6 +4663,42 @@ async function useRequiredActions() {
       }
     });
   } catch(e){ console.warn('[RequiredActions] cold realtors:', e); }
+
+  // 9. SEQUENCES PENDING APPROVAL (admin only)
+  try {
+    if (isAnyAdmin()) {
+      var seqSnap = await db.collection('sequences').where('status','==','pending_approval').get();
+      var pendingCount = 0;
+      seqSnap.forEach(function(d){
+        var s = d.data();
+        var orgId = currentUser.orgId || '';
+        if (s.tenantId === orgId || !s.tenantId) pendingCount++;
+      });
+      if (pendingCount > 0) {
+        actions.push({
+          p: 'med',
+          title: pendingCount + ' sequence' + (pendingCount!==1?'s':'') + ' awaiting approval',
+          detail: 'Review and approve MLO sequences',
+          module: 'Sequences', tab: 'sequences', _nav: 'sequences'
+        });
+      }
+    }
+  } catch(e){ console.warn('[RequiredActions] seq approval:', e); }
+
+  // 10. REJECTED SEQUENCES NEEDING REVISION
+  try {
+    var rejSnap = await db.collection('sequences').where('createdBy','==',currentUser.id).get();
+    rejSnap.forEach(function(d){
+      var s = d.data();
+      if (s.status !== 'rejected') return;
+      actions.push({
+        p: 'low',
+        title: 'Sequence needs revision: ' + (s.name||'Untitled'),
+        detail: s.rejectedReason || 'Admin requested changes',
+        module: 'Sequences', tab: 'sequences', _nav: 'sequences'
+      });
+    });
+  } catch(e){ console.warn('[RequiredActions] seq rejected:', e); }
 
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
@@ -4986,10 +5081,10 @@ var _tabTitles = {
   home: 'Home', search: 'LMI Search', dashboard: 'Dashboard',
   realtors: 'Realtors', activity: 'Activity Log', marketing: 'Marketing',
   oyz: 'Open Houses', analytics: 'Analytics', contacts: 'Contacts',
-  pipeline: 'Deal Pipeline', comms: 'Communications'
+  pipeline: 'Deal Pipeline', comms: 'Communications', sequences: 'Sequences'
 };
 function showTab(tab) {
-  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms'].forEach(function(t) {
+  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -5010,6 +5105,7 @@ function showTab(tab) {
   if (tab === 'contacts') renderContactsBorrowers();
   if (tab === 'pipeline') renderPipeline();
   if (tab === 'comms') renderCommsTab();
+  if (tab === 'sequences') renderSequencesTab();
   if (tab === 'home' && currentUser) {
     var h = document.getElementById('home-greeting');
     var hr = new Date().getHours();
@@ -5394,8 +5490,9 @@ async function submitOYZ() {
     savedAt: new Date().toISOString()
   };
 
-  db.collection('oyz').add(entry).then(function() {
+  db.collection('oyz').add(entry).then(function(ref) {
     showToast('✅ OYZ entry saved!');
+    checkAndEnroll('open_house_attended', { contactId: ref?ref.id:'', contactName: entry.realtorName || entry.propertyAddress || '', contactType: 'borrower', propertyAddress: entry.propertyAddress||'' });
     clearOYZForm();
     loadOYZ();
   }).catch(function(err) { console.error(err); showToast('Error saving entry.'); });
@@ -6749,6 +6846,7 @@ async function submitRealtor() {
       if (idx > -1) cachedRealtors[idx].docId = ref.id;
     } catch(e) {}
     showToast('✅ ' + name + ' added');
+    checkAndEnroll('new_realtor_added', { contactId: ref ? ref.id : tempId, contactName: name, contactType: 'realtor' });
   }
   clearRealtorForm(); renderRealtorStats(); renderRealtorList();
 }
@@ -11295,6 +11393,7 @@ async function kDrop(event, newStage) {
     var upd={stage:newStage,probability:deal.probability,updatedAt:nowStr,stageUpdatedAt:nowStr,timeline:deal.timeline};
     if (newStage==='Dead/Lost'){ upd.lostReason=deal.lostReason; upd.lostNotes=deal.lostNotes||''; }
     await db.collection('deals').doc(_dragDealId).update(upd);
+    checkAndEnroll('deal_stage_changed', { contactId: _dragDealId, contactName: deal.borrowerName||'', contactType: 'deal', toStage: newStage, fromStage: oldStage });
     renderKanban(); renderPipelineSummary();
   } catch(e){ console.error('Drag error:', e); }
   _dragDealId=null;
@@ -12647,6 +12746,465 @@ function _mobileScrollToActions() {
 }
 
 // ── END PHASE 15 ─────────────────────────────────────────────
+
+// ════════════════════════════════════════════════════════════
+// PHASE 18 — AUTOMATED FOLLOW-UP SEQUENCES
+// ════════════════════════════════════════════════════════════
+
+var cachedSequences = [];
+var _seqBuilderData = null;
+var _seqActiveTab = 'mine';
+
+var SEQ_TRIGGERS = {
+  'open_house_attended': 'Open House Attended',
+  'prequal_submitted':   'Pre-Qual Submitted',
+  'deal_stage_changed':  'Deal Stage Changed',
+  'new_realtor_added':   'New Realtor Added',
+  'rate_lock_warning':   'Rate Lock Warning',
+  'no_contact_x_days':   'No Contact X Days'
+};
+
+var SEQ_ACTIONS = {
+  'email':        'Send Email',
+  'task':         'Create Task',
+  'flag':         'Flag in Actions',
+  'sms':          'SMS (Manual)',
+  'cra_activity': 'Log CRA Activity'
+};
+
+var SEQ_TEMPLATES = [
+  { name:'Post Open House Follow-Up', trigger:'open_house_attended', description:'Nurture leads captured at open houses', steps:[
+    {stepId:'t1s1',order:1,delayDays:0,actionType:'email',actionConfig:{subject:'Great meeting you at {{propertyAddress}}!',body:'Hi {{contactName}},\n\nIt was great meeting you at the open house. I\'d love to help you explore your options.'}},
+    {stepId:'t1s2',order:2,delayDays:3,actionType:'task',actionConfig:{taskTitle:'Call {{contactName}} — open house follow-up',taskDescription:'Follow up on open house visit',dueInDays:1,priority:'med'}},
+    {stepId:'t1s3',order:3,delayDays:7,actionType:'email',actionConfig:{subject:'Still thinking about {{propertyAddress}}?',body:'Hi {{contactName}},\n\nJust checking in — happy to answer any questions about your home search.'}},
+    {stepId:'t1s4',order:4,delayDays:7,actionType:'flag',actionConfig:{label:'Follow up with {{contactName}} — 1 week post OYZ',detail:'Open house lead needs attention',priority:'med'}}
+  ]},
+  { name:'New Realtor Welcome', trigger:'new_realtor_added', description:'Onboard new realtor partners', steps:[
+    {stepId:'t2s1',order:1,delayDays:0,actionType:'email',actionConfig:{subject:'Welcome to our partner network!',body:'Hi {{contactName}},\n\nWelcome! I look forward to helping your clients with their mortgage needs.'}},
+    {stepId:'t2s2',order:2,delayDays:3,actionType:'task',actionConfig:{taskTitle:'Schedule intro call with {{contactName}}',taskDescription:'Get to know new realtor partner',dueInDays:2,priority:'med'}},
+    {stepId:'t2s3',order:3,delayDays:14,actionType:'email',actionConfig:{subject:'Checking in — how can we help your clients?',body:'Hi {{contactName}},\n\nJust wanted to check in and see if any of your clients need mortgage assistance.'}},
+    {stepId:'t2s4',order:4,delayDays:14,actionType:'cra_activity',actionConfig:{activityType:'lmi_outreach',description:'Realtor partner outreach — {{contactName}}',craQualifying:true}}
+  ]},
+  { name:'Pre-Qual Response', trigger:'prequal_submitted', description:'Quick response to pre-qual requests', steps:[
+    {stepId:'t3s1',order:1,delayDays:0,actionType:'flag',actionConfig:{label:'Review pre-qual: {{contactName}}',detail:'New pre-qualification request',priority:'high'}},
+    {stepId:'t3s2',order:2,delayDays:1,actionType:'task',actionConfig:{taskTitle:'Call {{contactName}} with pre-qual decision',taskDescription:'Respond to pre-qualification request',dueInDays:1,priority:'high'}},
+    {stepId:'t3s3',order:3,delayDays:3,actionType:'email',actionConfig:{subject:'Your pre-qualification update',body:'Hi {{contactName}},\n\nThank you for your pre-qualification request. Here\'s your update...'}}
+  ]},
+  { name:'Rate Lock Alert Series', trigger:'rate_lock_warning', triggerConfig:{daysBeforeExpiry:14}, description:'Countdown alerts for expiring rate locks', steps:[
+    {stepId:'t4s1',order:1,delayDays:0,actionType:'flag',actionConfig:{label:'Rate lock expires in 14 days: {{contactName}}',detail:'{{loanAmount}}',priority:'high'}},
+    {stepId:'t4s2',order:2,delayDays:7,actionType:'email',actionConfig:{subject:'Your rate lock expires in 7 days',body:'Hi {{contactName}},\n\nJust a reminder that your rate lock expires in 7 days. Let\'s make sure we\'re on track.'}},
+    {stepId:'t4s3',order:3,delayDays:7,actionType:'task',actionConfig:{taskTitle:'Call {{contactName}} — rate lock expiring soon',taskDescription:'Rate lock expires in 3 days',dueInDays:0,priority:'high'}},
+    {stepId:'t4s4',order:4,delayDays:4,actionType:'flag',actionConfig:{label:'URGENT: Rate lock expires in 3 days',detail:'{{contactName}} — {{loanAmount}}',priority:'high'}}
+  ]}
+];
+
+// ── SEQUENCES LIST ───────────────────────────────────────────
+async function loadSequences() {
+  if (!db || !currentUser) return;
+  try {
+    var snap = await db.collection('sequences').get();
+    cachedSequences = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    var orgId = currentUser.orgId || '';
+    cachedSequences = cachedSequences.filter(function(s){ return s.tenantId === orgId || s.scope === 'global'; });
+  } catch(e){ cachedSequences = []; }
+}
+
+function renderSequencesTab() {
+  loadSequences().then(function(){ renderSeqList(); });
+  // Show pending tab for admins
+  var pendTab = document.getElementById('seq-tab-pending');
+  if (pendTab) pendTab.style.display = isAnyAdmin() ? '' : 'none';
+}
+
+function seqShowTab(tab) {
+  _seqActiveTab = tab;
+  document.querySelectorAll('#seq-tabs .psp-btn').forEach(function(b){ b.classList.remove('active'); });
+  event.target.classList.add('active');
+  renderSeqList();
+}
+
+function renderSeqList() {
+  var el = document.getElementById('seq-list-body');
+  if (!el) return;
+
+  if (_seqActiveTab === 'templates') {
+    el.innerHTML = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">Start with a pre-built template and customize it for your workflow.</div>'
+      + SEQ_TEMPLATES.map(function(t){
+        return '<div class="seq-tpl-card">'
+          +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'
+          +'<div><div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:3px">'+esc(t.name)+'</div>'
+          +'<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">'+esc(t.description||'')+'</div>'
+          +'<span class="seq-trigger-pill">'+SEQ_TRIGGERS[t.trigger]+'</span>'
+          +' <span style="font-size:11px;color:var(--text-muted)">'+t.steps.length+' steps</span></div>'
+          +'<button onclick="useSeqTemplate(\''+t.name+'\')" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;min-height:44px">Use Template</button>'
+          +'</div></div>';
+      }).join('');
+    return;
+  }
+
+  var list = cachedSequences;
+  if (_seqActiveTab === 'mine') list = list.filter(function(s){ return s.createdBy === currentUser.id; });
+  else if (_seqActiveTab === 'global') list = list.filter(function(s){ return s.scope === 'global' && s.status === 'approved'; });
+  else if (_seqActiveTab === 'pending') list = list.filter(function(s){ return s.status === 'pending_approval'; });
+
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">'
+      + (_seqActiveTab === 'mine' ? 'No sequences yet. Create one or use a template!' : 'No sequences in this category.')
+      + '</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(function(s){
+    var sc = s.status === 'approved' ? 'approved' : s.status === 'pending_approval' ? 'pending' : s.status === 'rejected' ? 'rejected' : 'draft';
+    var scLabel = sc === 'approved' ? 'Approved' : sc === 'pending' ? 'Pending' : sc === 'rejected' ? 'Rejected' : 'Draft';
+    return '<div class="seq-card" onclick="openSequenceBuilder(\''+s.id+'\')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
+      +'<div style="flex:1;min-width:0"><div class="seq-card-name">'+esc(s.name||'Untitled')+'</div>'
+      +'<div class="seq-card-desc">'+esc(s.description||'')+'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+      +'<span class="seq-trigger-pill">'+(SEQ_TRIGGERS[s.trigger]||s.trigger)+'</span>'
+      +'<span class="seq-badge seq-badge-'+sc+'">'+scLabel+'</span>'
+      +'<span style="font-size:11px;color:var(--text-muted)">'+(s.steps||[]).length+' steps</span>'
+      +(s.enrollmentCount?'<span style="font-size:11px;color:var(--text-secondary)">'+s.enrollmentCount+' enrolled</span>':'')
+      +'</div></div>'
+      +(isAnyAdmin() && s.status==='pending_approval'
+        ? '<div style="display:flex;gap:6px;flex-shrink:0">'
+          +'<button onclick="event.stopPropagation();approveSeq(\''+s.id+'\')" style="background:#5a8a6a;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:44px">Approve</button>'
+          +'<button onclick="event.stopPropagation();rejectSeq(\''+s.id+'\')" style="background:transparent;border:1px solid var(--border);color:#9a4a3a;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;min-height:44px">Reject</button>'
+          +'</div>' : '')
+      +'</div></div>';
+  }).join('');
+}
+
+// ── SEQUENCE BUILDER ─────────────────────────────────────────
+function openSequenceBuilder(seqId) {
+  if (seqId) {
+    var existing = cachedSequences.find(function(s){ return s.id === seqId; });
+    _seqBuilderData = existing ? JSON.parse(JSON.stringify(existing)) : { steps: [] };
+    _seqBuilderData._editId = seqId;
+    document.getElementById('seq-builder-title').textContent = 'Edit Sequence';
+  } else {
+    _seqBuilderData = { name:'', description:'', trigger:'', triggerConfig:{}, steps:[], scope:'personal', status:'draft' };
+    document.getElementById('seq-builder-title').textContent = 'New Sequence';
+  }
+  document.getElementById('seq-builder-overlay').style.display = 'block';
+  renderSeqBuilder();
+}
+
+function useSeqTemplate(name) {
+  var tpl = SEQ_TEMPLATES.find(function(t){ return t.name === name; });
+  if (!tpl) return;
+  _seqBuilderData = {
+    name: tpl.name, description: tpl.description, trigger: tpl.trigger,
+    triggerConfig: tpl.triggerConfig || {},
+    steps: JSON.parse(JSON.stringify(tpl.steps)),
+    scope: 'personal', status: 'draft'
+  };
+  document.getElementById('seq-builder-title').textContent = 'New Sequence (from Template)';
+  document.getElementById('seq-builder-overlay').style.display = 'block';
+  renderSeqBuilder();
+}
+
+function closeSequenceBuilder() {
+  document.getElementById('seq-builder-overlay').style.display = 'none';
+  _seqBuilderData = null;
+}
+
+function renderSeqBuilder() {
+  var body = document.getElementById('seq-builder-body');
+  var footer = document.getElementById('seq-builder-footer');
+  if (!body || !_seqBuilderData) return;
+  var d = _seqBuilderData;
+  var triggers = Object.keys(SEQ_TRIGGERS).map(function(k){
+    return '<option value="'+k+'"'+(d.trigger===k?' selected':'')+'>'+SEQ_TRIGGERS[k]+'</option>';
+  }).join('');
+  var stepsHtml = (d.steps||[]).map(function(step, i) {
+    return '<div class="seq-step-row">'
+      +'<div class="seq-step-num">'+(i+1)+'</div>'
+      +'<div class="seq-step-body">'
+      +'<div class="seq-step-action">'+(SEQ_ACTIONS[step.actionType]||step.actionType)+'</div>'
+      +'<div class="seq-step-delay">Wait '+step.delayDays+' day'+(step.delayDays!==1?'s':'')+' after '+(i===0?'trigger':'step '+i)+'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted);margin-top:2px">'
+      +(step.actionConfig.subject||step.actionConfig.taskTitle||step.actionConfig.label||step.actionConfig.message||step.actionConfig.description||'')
+      +'</div></div>'
+      +'<button onclick="_seqRemoveStep('+i+')" style="background:none;border:none;color:#9a4a3a;cursor:pointer;font-size:16px;padding:4px;flex-shrink:0">✕</button>'
+      +'</div>';
+  }).join('');
+
+  body.innerHTML =
+    '<div class="seq-field" style="margin-bottom:12px"><label>Sequence Name</label>'
+    +'<input type="text" id="seq-name" value="'+esc(d.name||'')+'" placeholder="e.g. Post Open House Follow-Up" onchange="_seqBuilderData.name=this.value" /></div>'
+    +'<div class="seq-field" style="margin-bottom:12px"><label>Description</label>'
+    +'<textarea id="seq-desc" placeholder="What does this sequence do?" onchange="_seqBuilderData.description=this.value">'+esc(d.description||'')+'</textarea></div>'
+    +'<div class="seq-field" style="margin-bottom:12px"><label>Trigger</label>'
+    +'<select id="seq-trigger" onchange="_seqBuilderData.trigger=this.value"><option value="">— Select trigger —</option>'+triggers+'</select></div>'
+    +(d.trigger==='deal_stage_changed'?'<div class="seq-field" style="margin-bottom:12px"><label>To Stage</label><select id="seq-tc-stage" onchange="_seqBuilderData.triggerConfig.toStage=this.value">'
+      +'<option value="">Any</option>'+PIPELINE_STAGES.map(function(s){return '<option value="'+s+'"'+((d.triggerConfig||{}).toStage===s?' selected':'')+'>'+s+'</option>';}).join('')
+      +'</select></div>':'')
+    +(d.trigger==='no_contact_x_days'?'<div class="seq-field" style="margin-bottom:12px"><label>Days without contact</label><input type="number" value="'+((d.triggerConfig||{}).days||30)+'" onchange="_seqBuilderData.triggerConfig.days=parseInt(this.value)" /></div>':'')
+    +(d.trigger==='rate_lock_warning'?'<div class="seq-field" style="margin-bottom:12px"><label>Days before expiry</label><input type="number" value="'+((d.triggerConfig||{}).daysBeforeExpiry||7)+'" onchange="_seqBuilderData.triggerConfig.daysBeforeExpiry=parseInt(this.value)" /></div>':'')
+    +'<div style="margin-top:20px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px">Steps</div>'
+    +stepsHtml
+    +'<button onclick="_seqAddStep()" style="background:#f5f0e8;border:1px dashed var(--border);border-radius:10px;padding:10px;width:100%;font-size:13px;color:var(--text-secondary);cursor:pointer;font-family:inherit;min-height:44px">+ Add Step</button>';
+
+  var isEdit = !!d._editId;
+  var isDraft = !d.status || d.status === 'draft' || d.status === 'rejected';
+  footer.innerHTML =
+    '<button onclick="saveSequence(\'draft\')" style="background:#f5f0e8;border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;min-height:44px">Save Draft</button>'
+    +(isDraft?'<button onclick="saveSequence(\'pending_approval\')" style="background:#7a9eaa;color:white;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Submit for Approval</button>':'');
+}
+
+function _seqAddStep() {
+  if (!_seqBuilderData) return;
+  var steps = _seqBuilderData.steps || [];
+  var actionType = prompt('Action type: email, task, flag, sms, cra_activity');
+  if (!actionType || !SEQ_ACTIONS[actionType]) { showToast('Invalid action type'); return; }
+  var delay = parseInt(prompt('Delay days after previous step (0 = same day):')) || 0;
+  var config = {};
+  if (actionType === 'email') { config.subject = prompt('Email subject (use {{contactName}} for merge):') || ''; config.body = ''; }
+  else if (actionType === 'task') { config.taskTitle = prompt('Task title:') || ''; config.dueInDays = 1; config.priority = 'med'; }
+  else if (actionType === 'flag') { config.label = prompt('Flag label:') || ''; config.priority = 'med'; }
+  else if (actionType === 'sms') { config.message = prompt('SMS message (160 char max):') || ''; }
+  else if (actionType === 'cra_activity') { config.activityType = 'lmi_outreach'; config.description = prompt('Description:') || ''; config.craQualifying = true; }
+  steps.push({ stepId: 'step-'+Date.now(), order: steps.length+1, delayDays: delay, actionType: actionType, actionConfig: config });
+  _seqBuilderData.steps = steps;
+  renderSeqBuilder();
+}
+
+function _seqRemoveStep(idx) {
+  if (!_seqBuilderData) return;
+  _seqBuilderData.steps.splice(idx, 1);
+  _seqBuilderData.steps.forEach(function(s,i){ s.order = i+1; });
+  renderSeqBuilder();
+}
+
+async function saveSequence(status) {
+  if (!db || !currentUser || !_seqBuilderData) return;
+  var d = _seqBuilderData;
+  d.name = (document.getElementById('seq-name')||{}).value || d.name || 'Untitled';
+  d.description = (document.getElementById('seq-desc')||{}).value || d.description || '';
+  d.trigger = (document.getElementById('seq-trigger')||{}).value || d.trigger || '';
+  if (!d.name || !d.trigger) { showToast('Name and trigger are required'); return; }
+  var data = {
+    name: d.name, description: d.description, trigger: d.trigger,
+    triggerConfig: d.triggerConfig || {},
+    steps: d.steps || [],
+    scope: isAnyAdmin() ? 'global' : 'personal',
+    status: status,
+    createdBy: currentUser.id, createdByName: currentUser.name || '',
+    tenantId: currentUser.orgId || 'golden1-org',
+    isActive: status === 'approved',
+    updatedAt: new Date().toISOString(),
+    enrollmentCount: d.enrollmentCount || 0
+  };
+  try {
+    if (d._editId) {
+      await db.collection('sequences').doc(d._editId).update(data);
+    } else {
+      data.createdAt = new Date().toISOString();
+      if (isAnyAdmin() && status === 'pending_approval') { data.status = 'approved'; data.isActive = true; data.approvedBy = currentUser.id; data.approvedAt = data.createdAt; }
+      await db.collection('sequences').add(data);
+    }
+    if (status === 'pending_approval' && !isAnyAdmin()) {
+      try { await db.collection('notifications').add({ userId: '', type: 'seq-approval', title: 'Sequence awaiting approval: ' + data.name, message: (currentUser.name||'MLO') + ' submitted a sequence for review', read: false, tenantId: data.tenantId, createdAt: new Date().toISOString() }); } catch(e){}
+    }
+    closeSequenceBuilder();
+    showToast(status === 'pending_approval' ? 'Submitted for approval!' : 'Sequence saved');
+    renderSequencesTab();
+  } catch(e) { showToast('Error saving: ' + e.message); }
+}
+
+async function approveSeq(id) {
+  if (!db || !currentUser) return;
+  try {
+    await db.collection('sequences').doc(id).update({ status:'approved', isActive:true, approvedBy:currentUser.id, approvedAt:new Date().toISOString() });
+    var seq = cachedSequences.find(function(s){ return s.id===id; });
+    if (seq) {
+      try { await db.collection('notifications').add({ userId: seq.createdBy, type: 'seq-approved', title: 'Sequence approved: ' + (seq.name||''), message: 'Your sequence has been approved and is now active', read: false, createdAt: new Date().toISOString() }); } catch(e){}
+    }
+    showToast('Sequence approved');
+    renderSequencesTab();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function rejectSeq(id) {
+  var reason = prompt('Rejection reason:');
+  if (!reason) return;
+  if (!db) return;
+  try {
+    await db.collection('sequences').doc(id).update({ status:'rejected', rejectedReason:reason });
+    var seq = cachedSequences.find(function(s){ return s.id===id; });
+    if (seq) {
+      try { await db.collection('notifications').add({ userId: seq.createdBy, type: 'seq-rejected', title: 'Sequence needs changes: ' + (seq.name||''), message: reason, read: false, createdAt: new Date().toISOString() }); } catch(e){}
+    }
+    showToast('Sequence rejected');
+    renderSequencesTab();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ── MERGE FIELDS ─────────────────────────────────────────────
+function _seqMergeFields(text, data) {
+  if (!text) return '';
+  return text
+    .replace(/\{\{contactName\}\}/g, data.contactName || '')
+    .replace(/\{\{mloName\}\}/g, (currentUser && currentUser.name) || '')
+    .replace(/\{\{propertyAddress\}\}/g, data.propertyAddress || '')
+    .replace(/\{\{loanAmount\}\}/g, data.loanAmount ? '$'+Number(data.loanAmount).toLocaleString() : '')
+    .replace(/\{\{stageName\}\}/g, data.stageName || '')
+    .replace(/\{\{rateLockExpiry\}\}/g, data.rateLockExpiry || '')
+    .replace(/\{\{openHouseDate\}\}/g, data.openHouseDate || '')
+    .replace(/\{\{realtorName\}\}/g, data.realtorName || '');
+}
+
+// ── AUTO-ENROLLMENT ──────────────────────────────────────────
+async function checkAndEnroll(triggerType, triggerData) {
+  if (!db || !currentUser) return;
+  try {
+    var snap = await db.collection('sequences').where('status','==','approved').get();
+    var matches = [];
+    snap.forEach(function(d) {
+      var s = Object.assign({id:d.id}, d.data());
+      if (s.trigger !== triggerType) return;
+      if (!s.isActive) return;
+      var orgId = currentUser.orgId || '';
+      if (s.tenantId && s.tenantId !== orgId && s.scope !== 'global') return;
+      // Check trigger config
+      if (triggerType === 'deal_stage_changed' && s.triggerConfig && s.triggerConfig.toStage) {
+        if (s.triggerConfig.toStage !== triggerData.toStage) return;
+      }
+      matches.push(s);
+    });
+    for (var i = 0; i < matches.length; i++) {
+      var seq = matches[i];
+      var steps = seq.steps || [];
+      if (!steps.length) continue;
+      await db.collection('sequenceEnrollments').add({
+        sequenceId: seq.id, sequenceName: seq.name || '',
+        contactId: triggerData.contactId || '', contactName: triggerData.contactName || '',
+        contactType: triggerData.contactType || 'borrower',
+        enrolledBy: currentUser.id, tenantId: currentUser.orgId || '',
+        status: 'active', currentStep: 0,
+        nextRunAt: _addDays(new Date(), steps[0].delayDays || 0).toISOString(),
+        startedAt: new Date().toISOString(), stepLog: []
+      });
+      // Update enrollment count
+      try { await db.collection('sequences').doc(seq.id).update({ enrollmentCount: (seq.enrollmentCount||0)+1 }); } catch(e){}
+    }
+  } catch(e) { console.warn('checkAndEnroll error:', e); }
+}
+
+function _addDays(date, days) { var d = new Date(date); d.setDate(d.getDate() + days); return d; }
+
+// ── SEQUENCE RUNNER (client-side, on login) ──────────────────
+async function runDueSequenceSteps() {
+  if (!db || !currentUser) return;
+  var now = new Date();
+  var executed = 0;
+  try {
+    var snap = await db.collection('sequenceEnrollments').where('enrolledBy','==',currentUser.id).get();
+    var due = [];
+    snap.forEach(function(d) {
+      var e = Object.assign({id:d.id}, d.data());
+      if (e.status !== 'active') return;
+      if (!e.nextRunAt) return;
+      var nextRun = new Date(e.nextRunAt);
+      if (nextRun <= now) due.push(e);
+    });
+    for (var i = 0; i < due.length; i++) {
+      var enrollment = due[i];
+      try {
+        var seqDoc = await db.collection('sequences').doc(enrollment.sequenceId).get();
+        if (!seqDoc.exists) continue;
+        var seq = seqDoc.data();
+        var steps = seq.steps || [];
+        var stepIdx = enrollment.currentStep || 0;
+        if (stepIdx >= steps.length) {
+          await db.collection('sequenceEnrollments').doc(enrollment.id).update({ status:'completed', completedAt:now.toISOString() });
+          continue;
+        }
+        var step = steps[stepIdx];
+        var mergeData = { contactName: enrollment.contactName, mloName: (currentUser.name||'') };
+        var result = await _executeStep(step, enrollment, mergeData);
+        var logEntry = { stepId: step.stepId, actionType: step.actionType, executedAt: now.toISOString(), result: result, notes: '' };
+        var newLog = (enrollment.stepLog || []).concat([logEntry]);
+        var nextIdx = stepIdx + 1;
+        if (nextIdx >= steps.length) {
+          await db.collection('sequenceEnrollments').doc(enrollment.id).update({ currentStep: nextIdx, stepLog: newLog, status:'completed', completedAt: now.toISOString() });
+        } else {
+          var nextDelay = steps[nextIdx].delayDays || 0;
+          await db.collection('sequenceEnrollments').doc(enrollment.id).update({ currentStep: nextIdx, stepLog: newLog, nextRunAt: _addDays(now, nextDelay).toISOString() });
+        }
+        executed++;
+      } catch(e) { console.warn('Step execution error:', e); }
+    }
+    if (executed > 0) showToast(executed + ' sequence step' + (executed!==1?'s':'') + ' ran');
+  } catch(e) { console.warn('runDueSequenceSteps error:', e); }
+}
+
+async function _executeStep(step, enrollment, mergeData) {
+  var ac = step.actionConfig || {};
+  try {
+    if (step.actionType === 'email') {
+      var subject = _seqMergeFields(ac.subject, mergeData);
+      var body = _seqMergeFields(ac.body, mergeData);
+      // Use EmailJS
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_name: enrollment.contactName || '', to_email: '',
+          subject: subject, message: body, notes: body
+        });
+      } catch(e) { console.warn('EmailJS error:', e); }
+      return 'sent';
+    } else if (step.actionType === 'task') {
+      await db.collection('tasks').add({
+        title: _seqMergeFields(ac.taskTitle, mergeData),
+        description: _seqMergeFields(ac.taskDescription || '', mergeData),
+        dueDate: _addDays(new Date(), ac.dueInDays || 1).toISOString(),
+        priority: ac.priority || 'med',
+        assignedTo: enrollment.enrolledBy,
+        relatedContactId: enrollment.contactId, relatedContactName: enrollment.contactName,
+        relatedContactType: enrollment.contactType,
+        sequenceId: enrollment.sequenceId, stepId: step.stepId,
+        status: 'pending', tenantId: enrollment.tenantId || '', createdAt: new Date().toISOString()
+      });
+      return 'logged';
+    } else if (step.actionType === 'flag') {
+      await db.collection('notifications').add({
+        userId: enrollment.enrolledBy, type: 'sequence-flag',
+        title: _seqMergeFields(ac.label, mergeData),
+        message: _seqMergeFields(ac.detail || '', mergeData),
+        read: false, source: 'sequence', sequenceId: enrollment.sequenceId, stepId: step.stepId,
+        priority: ac.priority || 'med', createdAt: new Date().toISOString()
+      });
+      return 'flagged';
+    } else if (step.actionType === 'sms') {
+      // Stub — create manual task
+      await db.collection('tasks').add({
+        title: 'Send SMS: ' + _seqMergeFields(ac.message || '', mergeData).substring(0,80),
+        description: 'Full message: ' + _seqMergeFields(ac.message || '', mergeData),
+        dueDate: new Date().toISOString(), priority: 'med',
+        assignedTo: enrollment.enrolledBy, status: 'pending',
+        tenantId: enrollment.tenantId || '', createdAt: new Date().toISOString()
+      });
+      return 'sms_pending';
+    } else if (step.actionType === 'cra_activity') {
+      await db.collection('activity').add({
+        type: ac.activityType || 'lmi_outreach',
+        description: _seqMergeFields(ac.description || '', mergeData),
+        craQualifying: ac.craQualifying !== false,
+        logged: true, autoLogged: true,
+        sequenceId: enrollment.sequenceId, stepId: step.stepId,
+        relatedContactId: enrollment.contactId, relatedContactName: enrollment.contactName,
+        userId: enrollment.enrolledBy, tenantId: enrollment.tenantId || '',
+        date: new Date().toISOString().slice(0,10), loggedAt: new Date().toISOString()
+      });
+      return 'logged';
+    }
+  } catch(e) { console.warn('_executeStep error:', e); return 'failed'; }
+  return 'unknown';
+}
+
+// ── END PHASE 18 ─────────────────────────────────────────────
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->
