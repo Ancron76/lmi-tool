@@ -11836,7 +11836,8 @@ var _importType=null,_importRows=[],_importHeaders=[],_importFieldMap={};
 var _borrowerFields=[
   {key:'firstName',label:'First Name',required:true},{key:'lastName',label:'Last Name',required:true},
   {key:'annualIncome',label:'Annual Income',required:true},{key:'zip',label:'ZIP Code',required:true},
-  {key:'city',label:'City',required:false},{key:'tags',label:'Tags (comma-sep)',required:false}
+  {key:'city',label:'City',required:false},{key:'loanProgram',label:'Loan Program',required:false},
+  {key:'tags',label:'Tags (comma-sep)',required:false}
 ];
 var _realtorFields=[
   {key:'name',label:'Name',required:true},{key:'brokerage',label:'Brokerage',required:true},
@@ -12269,10 +12270,12 @@ function dmShowTab(tab) {
       +_dmF('Expected Close Date','dm-close-date','date',f.expectedCloseDate||'')
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">'
-      +'<div><label style="'+_l+'">Loan Type</label>'
-      +'<select id="dm-loan-type" style="'+_s+'">'
-      +['','Conventional','FHA','VA','USDA','Jumbo'].map(function(t){ return '<option value="'+t+'" '+(f.loanType===t?'selected':'')+'>'+( t||'— Select —')+'</option>'; }).join('')
-      +'</select></div>'
+      +'<div><label style="'+_l+'">Loan Program</label>'
+      +'<select id="dm-loan-program" style="'+_s+'" onchange="_dmUpdateLoanCategory()">'
+      +['','30-Year Fixed','15-Year Fixed','30-Year Fixed FHA','30-Year Fixed VA','30-Year Fixed Jumbo','15-Year Fixed Jumbo','5-Year SOFR ARM','7-Year SOFR ARM','10-Year SOFR ARM','5-Year SOFR ARM Jumbo','7-Year SOFR ARM Jumbo','10-Year SOFR ARM Jumbo','HELOC Variable','Other'].map(function(p){ return '<option value="'+p+'" '+((f.loanProgram||f.loanType||'')===p?'selected':'')+'>'+( p||'— Select —')+'</option>'; }).join('')
+      +'</select>'
+      +'<div id="dm-loan-cat-badge" style="margin-top:6px">'+(_programToCategory(f.loanProgram||f.loanType||'')?'<span style="background:#f5f0e8;color:var(--text-secondary);font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px">'+_programToCategory(f.loanProgram||f.loanType||'')+'</span>':'')+'</div>'
+      +'</div>'
       +'<div><label style="'+_l+'">Source</label>'
       +'<select id="dm-source" style="'+_s+'">'
       +['','Realtor Referral','Open House','Direct','Marketing','Other'].map(function(s){ return '<option value="'+s+'" '+(f.source===s?'selected':'')+'>'+( s||'— Select —')+'</option>'; }).join('')
@@ -12402,6 +12405,28 @@ function _lmiEnrollSeq() {
   showToast('Enrolled in ' + seq.name);
 }
 
+// ── LOAN PROGRAM → CATEGORY MAPPING ──────────────────────────
+var _PROGRAM_CATEGORY_MAP = {
+  '30-Year Fixed':'Conventional','15-Year Fixed':'Conventional',
+  '30-Year Fixed FHA':'FHA','30-Year Fixed VA':'VA',
+  '30-Year Fixed Jumbo':'Jumbo','15-Year Fixed Jumbo':'Jumbo',
+  '5-Year SOFR ARM':'ARM - Conventional','7-Year SOFR ARM':'ARM - Conventional','10-Year SOFR ARM':'ARM - Conventional',
+  '5-Year SOFR ARM Jumbo':'ARM - Jumbo','7-Year SOFR ARM Jumbo':'ARM - Jumbo','10-Year SOFR ARM Jumbo':'ARM - Jumbo',
+  'HELOC Variable':'HELOC','Other':'Other'
+};
+function _programToCategory(program) { return _PROGRAM_CATEGORY_MAP[program] || ''; }
+function _loanTypeToProgram(loanType) {
+  var map = {'Conventional':'30-Year Fixed','FHA':'30-Year Fixed FHA','VA':'30-Year Fixed VA','Jumbo':'30-Year Fixed Jumbo','USDA':'30-Year Fixed'};
+  return map[loanType] || '30-Year Fixed';
+}
+function _dmUpdateLoanCategory() {
+  var sel = document.getElementById('dm-loan-program');
+  var badge = document.getElementById('dm-loan-cat-badge');
+  if (!sel || !badge) return;
+  var cat = _programToCategory(sel.value);
+  badge.innerHTML = cat ? '<span style="background:#f5f0e8;color:var(--text-secondary);font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px">'+cat+'</span>' : '';
+}
+
 function _dmF(label,id,type,val) {
   return '<div><label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">'+label+'</label>'
     +'<input type="'+type+'" id="'+id+'" value="'+(val||'')+'" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;box-sizing:border-box;min-height:44px" /></div>';
@@ -12419,7 +12444,9 @@ function _dmCollect() {
     borrowerCategory: gv('dm-lmi-cat'),
     borrowerPctAmi: parseFloat(gv('dm-ami'))||null,
     loanAmount: parseFloat(gv('dm-loan-amt'))||null,
-    loanType: gv('dm-loan-type'),
+    loanProgram: gv('dm-loan-program'),
+    loanType: _programToCategory(gv('dm-loan-program')) || gv('dm-loan-program'),
+    loanCategory: _programToCategory(gv('dm-loan-program')),
     expectedCloseDate: gv('dm-close-date'),
     source: gv('dm-source'),
     propertyAddress: gv('dm-addr'),
