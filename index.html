@@ -938,6 +938,24 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
   .realtor-profile-body { padding: 14px 12px; }
   .realtor-profile-header { padding: 16px 20px; }
 }
+/* SMS Thread Bubbles */
+.sms-bubble{max-width:75%;padding:10px 14px;margin-bottom:8px;font-size:14px;line-height:1.5;word-wrap:break-word}
+.sms-outbound{margin-left:auto;background:#c4943a;color:white;border-radius:14px 14px 4px 14px}
+.sms-inbound{margin-right:auto;background:#f5f0e8;color:#1a1410;border-radius:14px 14px 14px 4px}
+.sms-system{margin:0 auto;background:transparent;color:var(--text-muted);font-size:12px;text-align:center;font-style:italic}
+.sms-ts{font-size:10px;color:var(--text-muted);margin-top:2px}
+.sms-contact-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.sms-contact-row:hover{background:#f5f0e8}
+.sms-contact-avatar{width:36px;height:36px;border-radius:50%;background:var(--border);font-size:13px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sms-contact-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+.sms-contact-preview{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.sms-unread-dot{width:8px;height:8px;border-radius:50%;background:#c4943a;flex-shrink:0}
+.sms-reply-bar{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--surface);position:sticky;bottom:0}
+.sms-reply-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;min-height:44px;resize:none;font-family:inherit;box-sizing:border-box}
+.sms-send-btn{background:#c4943a;color:white;border:none;border-radius:10px;padding:0 18px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px;flex-shrink:0}
+.sms-char-count{font-size:10px;color:var(--text-muted);text-align:right;margin-top:2px}
+.sms-char-count.over{color:#9a4a3a;font-weight:700}
+.sms-optin-warn{background:#faf0e4;border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#b07030}
 /* MLO Scorecard */
 .sc-ring-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:20px}
 .sc-ring-label{font-size:13px;font-weight:600;color:var(--text-secondary);margin-top:6px}
@@ -2766,6 +2784,7 @@ admin@loopenta.com</div>
       <button class="comm-tab-btn active" id="ctab-templates" onclick="commShowTab('templates')">📧 Templates</button>
       <button class="comm-tab-btn" id="ctab-drip" onclick="commShowTab('drip')">🔄 Drip Campaigns</button>
       <button class="comm-tab-btn" id="ctab-calllog" onclick="commShowTab('calllog')">📞 Call Log</button>
+      <button class="comm-tab-btn" id="ctab-sms" onclick="commShowTab('sms')">💬 SMS</button>
     </div>
   </div>
   <!-- TEMPLATES SUB-TAB -->
@@ -2814,6 +2833,27 @@ admin@loopenta.com</div>
       </select>
     </div>
     <div id="call-log-list" style="padding:0 16px 80px"></div>
+  </div>
+  <!-- SMS SUB-TAB -->
+  <div id="comm-sms-pane" style="display:none">
+    <div style="padding:16px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary)">SMS Messages</div>
+        <button onclick="_openSmsComposer()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">+ New SMS</button>
+      </div>
+      <div id="sms-thread-list"><div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">Loading SMS messages...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SMS COMPOSER MODAL -->
+<div class="deal-modal-overlay" id="sms-composer-overlay">
+  <div class="deal-modal-panel" style="max-width:480px">
+    <div class="deal-modal-hdr">
+      <div id="sms-composer-title" style="font-size:16px;font-weight:800;color:white">Send SMS</div>
+      <button onclick="_closeSmsComposer()" style="background:rgba(255,255,255,.15);border:none;color:white;width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+    </div>
+    <div style="padding:20px" id="sms-composer-body"></div>
   </div>
 </div>
 
@@ -4452,6 +4492,7 @@ async function _postLoginSetup(user) {
   runDueSequenceSteps(); // execute any pending sequence steps
   renderLeaderboard(); // show leaderboard if enabled
   _checkAndSendDigest(); // check if digest email is due
+  _checkRateLockSmsAlerts(); // check rate lock SMS alerts
   // Show admin-only settings sections
   var lbSettings = document.getElementById('leaderboard-settings');
   if (lbSettings) lbSettings.style.display = isAnyAdmin() ? '' : 'none';
@@ -4886,7 +4927,29 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] mlo goals:', e); }
 
-  // 13. QUARTERLY CRA REPORT REMINDER (admin)
+  // 13. UNREAD SMS REPLIES
+  try {
+    var smsSnap = await db.collection('communications').get();
+    var unreadSms = 0;
+    var firstSmsContact = '';
+    smsSnap.forEach(function(d){
+      var m = d.data();
+      if (m.type === 'sms_inbound' && m.read !== true && m.mloUid === currentUser.id) {
+        unreadSms++;
+        if (!firstSmsContact) firstSmsContact = m.contactName || m.from || 'Contact';
+      }
+    });
+    if (unreadSms > 0) {
+      actions.push({
+        p: 'med',
+        title: unreadSms + ' unread SMS repl' + (unreadSms === 1 ? 'y' : 'ies'),
+        detail: firstSmsContact + (unreadSms > 1 ? ' and others' : ''),
+        module: 'Communications', tab: 'comms', _nav: 'comms'
+      });
+    }
+  } catch(e){ console.warn('[RequiredActions] sms inbox:', e); }
+
+  // 14. QUARTERLY CRA REPORT REMINDER (admin)
   try {
     if (isAnyAdmin()) {
       var qNow = new Date();
@@ -12408,9 +12471,10 @@ function renderCommsTab() {
 }
 
 function commShowTab(tab) {
-  ['templates','drip','calllog'].forEach(function(t){
+  ['templates','drip','calllog','sms'].forEach(function(t){
     var btn=document.getElementById('ctab-'+t); if(btn) btn.classList.toggle('active',t===tab);
     var pane=document.getElementById('comm-'+t+'-pane'); if(pane) pane.style.display=t===tab?'block':'none';
+  if (tab === 'sms') _loadSmsThreads();
   });
 }
 
@@ -14078,6 +14142,316 @@ async function _checkAndSendDigest() {
 }
 
 // ── END PHASE 20 ─────────────────────────────────────────────
+
+// ════════════════════════════════════════════════════════════
+// PHASE 22 — TWILIO SMS INTEGRATION
+// ════════════════════════════════════════════════════════════
+
+var _smsComposerContact = null;
+var _smsActiveThread = null;
+
+// ── SEND SMS VIA CLOUDFLARE WORKER ───────────────────────────
+async function _sendSms(to, message, contactId, contactName, contactType) {
+  if (!db || !currentUser || !to || !message) return { success:false, error:'Missing data' };
+  // Get MLO's Twilio number
+  var fromNumber = '';
+  try {
+    var uDoc = await db.collection('users').doc(currentUser.id).get();
+    if (uDoc.exists) fromNumber = uDoc.data().twilioNumber || '';
+  } catch(e){}
+  if (!fromNumber) return { success:false, error:'No SMS number assigned. Ask admin to provision one.' };
+  try {
+    var resp = await fetch(PROXY_URL + '/sms/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: to, message: message, fromNumber: fromNumber,
+        mloUid: currentUser.id, tenantId: currentUser.orgId || '',
+        contactId: contactId || '', contactName: contactName || '', contactType: contactType || 'borrower'
+      })
+    });
+    var data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'Send failed');
+    // Log outbound to Firestore
+    await db.collection('communications').add({
+      type: 'sms_outbound', to: to, body: message,
+      messageSid: data.messageSid || '',
+      mloUid: currentUser.id, tenantId: currentUser.orgId || '',
+      contactId: contactId || '', contactName: contactName || '', contactType: contactType || '',
+      read: true, createdAt: new Date().toISOString()
+    });
+    return { success: true, messageSid: data.messageSid };
+  } catch(e) {
+    console.error('SMS send error:', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// ── SMS COMPOSER ─────────────────────────────────────────────
+function _openSmsComposer(contact) {
+  _smsComposerContact = contact || null;
+  document.getElementById('sms-composer-overlay').style.display = 'block';
+  _renderSmsComposer();
+}
+function _closeSmsComposer() {
+  document.getElementById('sms-composer-overlay').style.display = 'none';
+  _smsComposerContact = null;
+}
+
+function _renderSmsComposer() {
+  var body = document.getElementById('sms-composer-body');
+  if (!body) return;
+  var c = _smsComposerContact || {};
+  var hasOptIn = c.smsOptIn === true;
+  var hasOptOut = c.smsOptOut === true;
+  body.innerHTML =
+    (hasOptOut ? '<div style="background:#f8ecea;border:1px solid #e8c8c0;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#9a4a3a;font-weight:600">\u26D4 This contact has opted out of SMS. Cannot send.</div>' : '')
+    + '<div class="goal-field"><label>To (phone number)</label><input type="tel" id="sms-to" value="'+esc(c.phone||'')+'" placeholder="+15591234567" /></div>'
+    + '<div class="goal-field"><label>Contact Name</label><input type="text" id="sms-contact-name" value="'+esc(c.name||c.contactName||'')+'" /></div>'
+    + (!hasOptIn && !hasOptOut ? '<div class="sms-optin-warn">\u26A0 Confirm this contact has opted in to SMS before sending.<br><label style="margin-top:6px;display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="sms-optin-confirm" style="width:18px;height:18px"> I confirm they have consented</label></div>' : '')
+    + '<div class="goal-field"><label>Message</label><textarea id="sms-msg" style="min-height:100px" oninput="_smsUpdateCount()" placeholder="Type your message..."></textarea></div>'
+    + '<div class="sms-char-count" id="sms-char-count">0/160</div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<button onclick="_smsInsert(\'{{contactName}}\')" style="font-size:11px;padding:4px 8px;background:#f5f0e8;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-secondary)">{Name}</button>'
+    + '<button onclick="_smsInsert(\'{{mloName}}\')" style="font-size:11px;padding:4px 8px;background:#f5f0e8;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-secondary)">{MLO}</button>'
+    + '<button onclick="_smsInsert(\'{{propertyAddress}}\')" style="font-size:11px;padding:4px 8px;background:#f5f0e8;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-secondary)">{Address}</button>'
+    + '</div>'
+    + (hasOptOut ? '' : '<button onclick="_smsSend()" style="background:#c4943a;color:white;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;width:100%;min-height:48px"'+(hasOptOut?' disabled':'')+'>'+(hasOptOut?'Cannot Send':'Send SMS')+'</button>');
+}
+
+function _smsUpdateCount() {
+  var el = document.getElementById('sms-msg');
+  var countEl = document.getElementById('sms-char-count');
+  if (!el || !countEl) return;
+  var len = el.value.length;
+  countEl.textContent = len + '/160';
+  countEl.className = 'sms-char-count' + (len > 160 ? ' over' : '');
+}
+
+function _smsInsert(token) {
+  var el = document.getElementById('sms-msg');
+  if (!el) return;
+  var start = el.selectionStart || el.value.length;
+  el.value = el.value.substring(0, start) + token + el.value.substring(el.selectionEnd || start);
+  el.focus();
+  _smsUpdateCount();
+}
+
+async function _smsSend() {
+  var to = (document.getElementById('sms-to')||{}).value || '';
+  var msg = (document.getElementById('sms-msg')||{}).value || '';
+  var name = (document.getElementById('sms-contact-name')||{}).value || '';
+  if (!to || !msg) { showToast('Phone and message are required'); return; }
+  var c = _smsComposerContact || {};
+  if (!c.smsOptIn) {
+    var confirm = document.getElementById('sms-optin-confirm');
+    if (!confirm || !confirm.checked) { showToast('Please confirm opt-in consent'); return; }
+  }
+  // Merge fields
+  msg = msg.replace(/\{\{contactName\}\}/g, name)
+           .replace(/\{\{mloName\}\}/g, (currentUser&&currentUser.name)||'')
+           .replace(/\{\{propertyAddress\}\}/g, c.propertyAddress||'');
+  var result = await _sendSms(to, msg, c.id||c.docId||'', name, c.contactType||'borrower');
+  if (result.success) {
+    showToast('SMS sent \u2713');
+    _closeSmsComposer();
+    _loadSmsThreads();
+  } else {
+    showToast('SMS failed: ' + (result.error||'Unknown error'));
+  }
+}
+
+// ── SMS THREAD LIST ──────────────────────────────────────────
+async function _loadSmsThreads() {
+  var el = document.getElementById('sms-thread-list');
+  if (!el || !db) return;
+  try {
+    var snap = await db.collection('communications').get();
+    var msgs = [];
+    snap.forEach(function(d) {
+      var m = Object.assign({id:d.id}, d.data());
+      if ((m.type === 'sms_outbound' || m.type === 'sms_inbound' || m.type === 'sms_system') && m.mloUid === currentUser.id) msgs.push(m);
+    });
+    msgs.sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+    // Group by contact
+    var threads = {};
+    msgs.forEach(function(m) {
+      var key = m.contactId || m.to || m.from || 'unknown';
+      if (!threads[key]) threads[key] = { name: m.contactName || m.to || m.from || 'Unknown', msgs: [], unread: 0, lastMsg: m };
+      threads[key].msgs.push(m);
+      if (m.type === 'sms_inbound' && !m.read) threads[key].unread++;
+    });
+    var threadList = Object.entries(threads).sort(function(a,b){ return (b[1].lastMsg.createdAt||'').localeCompare(a[1].lastMsg.createdAt||''); });
+    if (!threadList.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">No SMS messages yet. Send your first message!</div>'; return; }
+    el.innerHTML = threadList.map(function(t) {
+      var key = t[0], data = t[1];
+      var initials = data.name.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+      var preview = data.lastMsg.body || '';
+      if (preview.length > 50) preview = preview.substring(0, 50) + '\u2026';
+      return '<div class="sms-contact-row" onclick="_openSmsThread(\''+esc(key)+'\',\''+esc(data.name)+'\')">'
+        + '<div class="sms-contact-avatar">'+initials+'</div>'
+        + '<div style="flex:1;min-width:0"><div class="sms-contact-name">'+esc(data.name)+'</div>'
+        + '<div class="sms-contact-preview">'+esc(preview)+'</div></div>'
+        + (data.unread > 0 ? '<div class="sms-unread-dot"></div>' : '')
+        + '<div style="font-size:10px;color:var(--text-muted)">'+(data.lastMsg.createdAt?new Date(data.lastMsg.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+'</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) { el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Error loading messages</div>'; }
+}
+
+function _openSmsThread(contactKey, contactName) {
+  _smsActiveThread = contactKey;
+  var el = document.getElementById('sms-thread-list');
+  if (!el || !db) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading\u2026</div>';
+  db.collection('communications').get().then(function(snap) {
+    var msgs = [];
+    snap.forEach(function(d) {
+      var m = Object.assign({id:d.id}, d.data());
+      if (m.mloUid !== currentUser.id) return;
+      var key = m.contactId || m.to || m.from || 'unknown';
+      if (key !== contactKey) return;
+      if (m.type==='sms_outbound'||m.type==='sms_inbound'||m.type==='sms_system') msgs.push(m);
+    });
+    msgs.sort(function(a,b){ return (a.createdAt||'').localeCompare(b.createdAt||''); });
+    // Mark inbound as read
+    msgs.forEach(function(m){ if(m.type==='sms_inbound'&&!m.read) db.collection('communications').doc(m.id).update({read:true}).catch(function(){}); });
+    var bubblesHtml = msgs.map(function(m) {
+      var cls = m.type==='sms_outbound'?'sms-outbound':m.type==='sms_system'?'sms-system':'sms-inbound';
+      return '<div class="sms-bubble '+cls+'">'+esc(m.body||'')
+        +'<div class="sms-ts">'+(m.createdAt?new Date(m.createdAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'')+'</div></div>';
+    }).join('');
+    el.innerHTML = '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">'
+      +'<button onclick="_loadSmsThreads()" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-secondary)">\u2190</button>'
+      +'<span style="font-size:15px;font-weight:700;color:var(--text-primary)">'+esc(contactName)+'</span></div>'
+      +'<div style="padding:16px;min-height:200px">'+bubblesHtml+'</div>'
+      +'<div class="sms-reply-bar">'
+      +'<textarea class="sms-reply-input" id="sms-reply-input" rows="1" placeholder="Reply\u2026" oninput="_smsReplyCount()"></textarea>'
+      +'<button class="sms-send-btn" onclick="_smsReply(\''+esc(contactKey)+'\',\''+esc(contactName)+'\')">Send</button>'
+      +'</div>'
+      +'<div class="sms-char-count" id="sms-reply-count" style="padding:0 16px 8px">0/160</div>';
+  });
+}
+
+function _smsReplyCount() {
+  var el = document.getElementById('sms-reply-input');
+  var ct = document.getElementById('sms-reply-count');
+  if (el && ct) { ct.textContent = el.value.length+'/160'; ct.className = 'sms-char-count'+(el.value.length>160?' over':''); }
+}
+
+async function _smsReply(contactKey, contactName) {
+  var el = document.getElementById('sms-reply-input');
+  if (!el || !el.value.trim()) return;
+  var msg = el.value.trim();
+  // Find the contact's phone from the last message
+  var phone = '';
+  try {
+    var snap = await db.collection('communications').get();
+    snap.forEach(function(d) {
+      var m = d.data();
+      if (m.mloUid !== currentUser.id) return;
+      var key = m.contactId || m.to || m.from || 'unknown';
+      if (key !== contactKey) return;
+      if (m.type === 'sms_inbound' && m.from) phone = m.from;
+      if (m.type === 'sms_outbound' && m.to) phone = m.to;
+    });
+  } catch(e){}
+  if (!phone) { showToast('Cannot find phone number for this contact'); return; }
+  el.value = '';
+  var result = await _sendSms(phone, msg, contactKey, contactName, 'borrower');
+  if (result.success) {
+    _openSmsThread(contactKey, contactName);
+  } else {
+    showToast('Send failed: '+(result.error||''));
+  }
+}
+
+// ── REPLACE SMS STUB IN SEQUENCE RUNNER ──────────────────────
+// Override _executeStep for sms action type (already defined in Phase 18)
+var _origExecuteStep = _executeStep;
+_executeStep = async function(step, enrollment, mergeData) {
+  if (step.actionType !== 'sms') return _origExecuteStep(step, enrollment, mergeData);
+  var ac = step.actionConfig || {};
+  try {
+    // Check opt-out/opt-in
+    var contactType = enrollment.contactType || 'borrower';
+    var colName = contactType === 'realtor' ? 'realtors' : (contactType === 'deal' ? 'deals' : 'activity');
+    var phone = '';
+    try {
+      if (enrollment.contactId) {
+        var cDoc = await db.collection(colName).doc(enrollment.contactId).get();
+        if (cDoc.exists) {
+          var cd = cDoc.data();
+          if (cd.smsOptOut === true) return 'skipped_optout';
+          if (cd.smsOptIn !== true) {
+            // Fall back to manual task
+            await db.collection('tasks').add({
+              title: 'Send SMS manually (no opt-in): ' + _seqMergeFields(ac.message||'', mergeData).substring(0,80),
+              description: 'Full message: ' + _seqMergeFields(ac.message||'', mergeData),
+              assignedTo: enrollment.enrolledBy, status: 'pending',
+              tenantId: enrollment.tenantId || '', createdAt: new Date().toISOString()
+            });
+            return 'manual_required';
+          }
+          phone = cd.phone || '';
+        }
+      }
+    } catch(e){}
+    if (!phone) {
+      await db.collection('tasks').add({
+        title: 'Send SMS (no phone): ' + _seqMergeFields(ac.message||'', mergeData).substring(0,80),
+        assignedTo: enrollment.enrolledBy, status: 'pending',
+        tenantId: enrollment.tenantId || '', createdAt: new Date().toISOString()
+      });
+      return 'manual_required';
+    }
+    var mergedMsg = _seqMergeFields(ac.message || '', mergeData);
+    var result = await _sendSms(phone, mergedMsg, enrollment.contactId, enrollment.contactName, enrollment.contactType);
+    return result.success ? 'sent' : 'failed';
+  } catch(e) { console.warn('SMS step error:', e); return 'failed'; }
+};
+
+// ── UNREAD SMS REQUIRED ACTIONS ──────────────────────────────
+// (Added inline to useRequiredActions — notifications query already covers sms_inbound with read!=true)
+
+// ── RATE LOCK SMS ALERTS ─────────────────────────────────────
+async function _checkRateLockSmsAlerts() {
+  if (!db || !currentUser) return;
+  try {
+    var now = new Date();
+    var in7 = new Date(now.getTime() + 7*86400000);
+    var in3 = new Date(now.getTime() + 3*86400000);
+    var deals = cachedDeals || [];
+    for (var i = 0; i < deals.length; i++) {
+      var d = deals[i];
+      if (!d.rateLockExpiry) continue;
+      var exp = new Date(d.rateLockExpiry);
+      if (isNaN(exp)) continue;
+      var daysLeft = Math.ceil((exp - now) / 86400000);
+      if (daysLeft !== 7 && daysLeft !== 3) continue;
+      // Check if already sent
+      var alreadySent = false;
+      try {
+        var chk = await db.collection('communications').get();
+        chk.forEach(function(cd) {
+          var cm = cd.data();
+          if (cm.type === 'sms_outbound' && cm.contactId === d.id && cm.body && cm.body.indexOf('rate lock') !== -1) alreadySent = true;
+        });
+      } catch(e){}
+      if (alreadySent) continue;
+      // Check borrower opt-in (would need borrowerId — skip if no phone data)
+      if (!d.borrowerPhone) continue;
+      var mloName = currentUser.name || 'your MLO';
+      var mloPhone = currentUser.phone || '';
+      var msg = daysLeft === 7
+        ? 'Hi ' + (d.borrowerName||'') + ', this is ' + mloName + ' from Golden 1. Your rate lock on ' + (d.propertyAddress||'your property') + ' expires in 7 days. Please call me at ' + mloPhone + ' to discuss next steps.'
+        : 'URGENT: Your rate lock expires in 3 days. Please call ' + mloName + ' at ' + mloPhone + ' immediately.';
+      await _sendSms(d.borrowerPhone, msg, d.id, d.borrowerName||'', 'deal');
+    }
+  } catch(e) { console.warn('Rate lock SMS check:', e); }
+}
+
+// ── END PHASE 22 ─────────────────────────────────────────────
 </script>
 
 <!-- BOTTOM NAVIGATION BAR (mobile only) -->

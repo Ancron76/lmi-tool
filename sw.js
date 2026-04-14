@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loopenta-v12';
+const CACHE_NAME = 'loopenta-v13';
 const PRECACHE = ['/'];
 
 self.addEventListener('install', function(e) {
