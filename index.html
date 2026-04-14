@@ -4095,8 +4095,23 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         </div>
       </div>
     </div>
+    <div class="settings-section" id="feature-flags-section" style="display:none">
+      <div style="font-size:10px;font-weight:700;color:#a89880;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Feature Flags (Superadmin)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+        <span style="font-size:11px;color:#a89880">SMS Messaging</span>
+        <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer">
+          <input type="checkbox" id="ff-sms-toggle" onchange="_toggleFeatureFlag('smsEnabled',this.checked)" style="opacity:0;width:0;height:0">
+          <span style="position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;transition:background .2s"></span>
+          <span style="position:absolute;top:2px;left:2px;width:18px;height:18px;background:white;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)" id="ff-sms-knob"></span>
+        </label>
+      </div>
+    </div>
   </div>
 </div>
+<style>
+#ff-sms-toggle:checked + span { background: #5a8a6a; }
+#ff-sms-toggle:checked ~ #ff-sms-knob { transform: translateX(18px); }
+</style>
 
 <!-- NOTIFICATION DRAWER -->
 <div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
@@ -4597,10 +4612,77 @@ async function fetchOyzEntries(isAdmin) {
   } catch(e) { console.error('fetchOyzEntries error', e); return []; }
 }
 
+// ── FEATURE FLAGS ────────────────────────────────────────────
+var _featureFlags = { smsEnabled: false };
+
+async function _loadFeatureFlags() {
+  if (!db || !currentUser) return;
+  try {
+    var tenantId = currentUser.orgId || 'golden1-org';
+    var tDoc = await db.collection('tenants').doc(tenantId).get();
+    if (tDoc.exists && tDoc.data().features) {
+      _featureFlags = Object.assign({ smsEnabled: false }, tDoc.data().features);
+    } else {
+      // Seed default flags if none exist
+      try { await db.collection('tenants').doc(tenantId).set({ features: { smsEnabled: false } }, { merge: true }); } catch(e){}
+    }
+  } catch(e) { console.warn('Feature flags load error:', e); }
+}
+
+function _applyFeatureFlags() {
+  // SMS UI visibility — hide everything SMS-related when flag is off
+  var smsEls = [
+    'ctab-sms',              // Communications SMS tab
+    'comm-sms-pane',         // SMS pane content
+    'sms-composer-overlay',  // SMS composer modal
+    'sms-setup-overlay',     // SMS setup instructions modal
+    'sms-numbers-section'    // Admin SMS numbers settings
+  ];
+  smsEls.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      if (!_featureFlags.smsEnabled) {
+        el.style.display = 'none';
+        el.setAttribute('data-sms-hidden', 'true');
+      } else {
+        // Only restore if we hid it
+        if (el.getAttribute('data-sms-hidden')) {
+          el.removeAttribute('data-sms-hidden');
+          // Don't auto-show overlays — they start hidden
+          if (id !== 'sms-composer-overlay' && id !== 'sms-setup-overlay' && id !== 'comm-sms-pane') {
+            el.style.display = '';
+          }
+        }
+      }
+    }
+  });
+  // Superadmin feature flags toggle
+  var ffSection = document.getElementById('feature-flags-section');
+  if (ffSection) ffSection.style.display = isSuperAdmin() ? '' : 'none';
+  // Update superadmin toggle state
+  var smsToggle = document.getElementById('ff-sms-toggle');
+  if (smsToggle) smsToggle.checked = _featureFlags.smsEnabled;
+}
+
+async function _toggleFeatureFlag(flag, value) {
+  if (!db || !currentUser) return;
+  var tenantId = currentUser.orgId || 'golden1-org';
+  var update = {};
+  update['features.' + flag] = value;
+  try {
+    await db.collection('tenants').doc(tenantId).set({ features: update }, { merge: true });
+    _featureFlags[flag] = value;
+    _applyFeatureFlags();
+    showToast(flag + ' is now ' + (value ? 'ON' : 'OFF'));
+  } catch(e) { showToast('Error updating flag: ' + e.message); }
+}
+
 // ── AUTH ──────────────────────────────────────────────────────
 async function _postLoginSetup(user) {
   // Shared post-login initialization for MLO/Admin/SuperAdmin
   await loadCurrentOrg();
+  // Load feature flags from tenant doc
+  await _loadFeatureFlags();
   document.getElementById('app-screen').style.display = 'block';
   if (isAnyAdmin()) {
     document.getElementById('admin-nav-btn').style.display = 'inline-block';
@@ -4622,13 +4704,14 @@ async function _postLoginSetup(user) {
   runDueSequenceSteps(); // execute any pending sequence steps
   renderLeaderboard(); // show leaderboard if enabled
   _checkAndSendDigest(); // check if digest email is due
-  _checkRateLockSmsAlerts(); // check rate lock SMS alerts
+  if (_featureFlags.smsEnabled) _checkRateLockSmsAlerts(); // SMS gated
   // Show admin-only settings sections
   var lbSettings = document.getElementById('leaderboard-settings');
   if (lbSettings) lbSettings.style.display = isAnyAdmin() ? '' : 'none';
   var instSettings = document.getElementById('institution-settings');
   if (instSettings) instSettings.style.display = isAnyAdmin() ? '' : 'none';
-  _showSmsNumbersSection();
+  if (_featureFlags.smsEnabled) _showSmsNumbersSection(); // SMS gated
+  _applyFeatureFlags(); // hide/show SMS UI based on flag
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
 }
 
@@ -5058,8 +5141,8 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] mlo goals:', e); }
 
-  // 13. UNREAD SMS REPLIES
-  try {
+  // 13. UNREAD SMS REPLIES (gated by feature flag)
+  if (_featureFlags.smsEnabled) try {
     var smsSnap = await db.collection('communications').get();
     var unreadSms = 0;
     var firstSmsContact = '';
@@ -12605,7 +12688,7 @@ function commShowTab(tab) {
   ['templates','drip','calllog','sms'].forEach(function(t){
     var btn=document.getElementById('ctab-'+t); if(btn) btn.classList.toggle('active',t===tab);
     var pane=document.getElementById('comm-'+t+'-pane'); if(pane) pane.style.display=t===tab?'block':'none';
-  if (tab === 'sms') _loadSmsThreads();
+  if (tab === 'sms' && _featureFlags.smsEnabled) _loadSmsThreads();
   });
 }
 
@@ -14502,6 +14585,16 @@ async function _smsReply(contactKey, contactName) {
 var _origExecuteStep = _executeStep;
 _executeStep = async function(step, enrollment, mergeData) {
   if (step.actionType !== 'sms') return _origExecuteStep(step, enrollment, mergeData);
+  // If SMS feature is off, fall back to manual task
+  if (!_featureFlags.smsEnabled) {
+    await db.collection('tasks').add({
+      title: 'Send SMS manually: ' + _seqMergeFields((step.actionConfig||{}).message||'', mergeData).substring(0,80),
+      description: 'SMS feature not enabled. Full message: ' + _seqMergeFields((step.actionConfig||{}).message||'', mergeData),
+      assignedTo: enrollment.enrolledBy, status: 'pending',
+      tenantId: enrollment.tenantId || '', createdAt: new Date().toISOString()
+    });
+    return 'sms_pending';
+  }
   var ac = step.actionConfig || {};
   try {
     // Check opt-out/opt-in
