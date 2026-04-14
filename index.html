@@ -2517,26 +2517,38 @@ admin@loopenta.com</div>
       </div>
 
       <!-- CRA COMPLIANCE REPORT -->
-      <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:24px;border-top:4px solid #2563eb">
-        <div class="analytics-section-title">📋 CRA Compliance Report</div>
-        <div class="analytics-section-sub">Generate a printable CRA activity report for any date range</div>
-        <div class="cra-range-btns">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:24px">
+        <div class="analytics-section-title">📋 CRA Performance Report</div>
+        <div class="analytics-section-sub">Full CRA report with lending data, activities, open houses, and realtor partnerships</div>
+        <div class="cra-range-btns" style="margin-top:14px">
           <button class="cra-range-btn active" onclick="setCraRange('month',this)">This Month</button>
           <button class="cra-range-btn" onclick="setCraRange('lastmonth',this)">Last Month</button>
           <button class="cra-range-btn" onclick="setCraRange('quarter',this)">This Quarter</button>
           <button class="cra-range-btn" onclick="setCraRange('lastquarter',this)">Last Quarter</button>
+          <button class="cra-range-btn" onclick="setCraRange('annual',this)">This Year</button>
           <button class="cra-range-btn" onclick="setCraRange('custom',this)">Custom</button>
         </div>
         <div id="cra-custom-dates" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-          <div style="display:flex;align-items:center;gap:6px"><label style="font-size:12px;font-weight:700;color:#64748b">From</label><input type="date" class="date-input" id="cra-from" /></div>
-          <div style="display:flex;align-items:center;gap:6px"><label style="font-size:12px;font-weight:700;color:#64748b">To</label><input type="date" class="date-input" id="cra-to" /></div>
+          <div style="display:flex;align-items:center;gap:6px"><label style="font-size:12px;font-weight:700;color:var(--text-secondary)">From</label><input type="date" class="date-input" id="cra-from" /></div>
+          <div style="display:flex;align-items:center;gap:6px"><label style="font-size:12px;font-weight:700;color:var(--text-secondary)">To</label><input type="date" class="date-input" id="cra-to" /></div>
         </div>
-        <button class="cra-gen-btn" onclick="generateCraReport()">Generate Report</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px" id="cra-scope-row">
+          <select id="cra-scope" style="padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;min-height:44px;font-family:inherit">
+            <option value="personal">My Data Only</option>
+            <option value="team">Full Team Report</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+          <button class="cra-gen-btn" onclick="generateCraReport()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px">Generate Report</button>
+          <button onclick="downloadCraReport()" style="background:#f5f0e8;border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;min-height:44px">⬇ PDF</button>
+          <button onclick="downloadCraExcel()" style="background:#f5f0e8;border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;min-height:44px">📊 Excel</button>
+          <button onclick="_saveCraToHistory()" style="background:#f5f0e8;border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;min-height:44px">💾 Save</button>
+        </div>
         <div class="cra-report-output" id="cra-report-output">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-            <button class="cra-download-btn" onclick="downloadCraReport()">⬇ Download PDF</button>
-          </div>
           <div class="cra-doc" id="cra-doc"></div>
+        </div>
+        <!-- Report History -->
+        <div id="cra-history" style="margin-top:20px"></div>
         </div>
       </div>
 
@@ -3891,6 +3903,18 @@ admin@loopenta.com</div>
         <div style="margin-top:14px"><button class="settings-save-btn" onclick="saveNotificationPrefs()">Save Preferences</button></div>
       </div>
     </div>
+    <div class="settings-section" id="institution-settings" style="display:none">
+      <div class="settings-section-title">🏛️ Institution Info (CRA Reports)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="goal-field"><label>Institution Name</label><input type="text" id="inst-name" value="Golden 1 Credit Union" /></div>
+        <div class="goal-field"><label>Charter Type</label><input type="text" id="inst-charter" value="Federal Credit Union" /></div>
+        <div class="goal-field"><label>RSSD ID / Charter #</label><input type="text" id="inst-rssd" /></div>
+        <div class="goal-field"><label>Assessment Area</label><input type="text" id="inst-area" value="Central Valley and Los Angeles MSA" /></div>
+        <div class="goal-field"><label>Compliance Officer</label><input type="text" id="inst-officer" /></div>
+        <div class="goal-field"><label>Regulator</label><select id="inst-regulator"><option value="NCUA">NCUA</option><option value="OCC">OCC</option><option value="Federal Reserve">Federal Reserve</option><option value="FDIC">FDIC</option></select></div>
+      </div>
+      <button onclick="_saveInstitutionInfo()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px;margin-top:10px">Save Institution Info</button>
+    </div>
     <div class="settings-section" id="billing-settings-section">
       <div class="settings-section-title">💳 Account &amp; Billing</div>
       <div class="settings-item">
@@ -4431,6 +4455,8 @@ async function _postLoginSetup(user) {
   // Show admin-only settings sections
   var lbSettings = document.getElementById('leaderboard-settings');
   if (lbSettings) lbSettings.style.display = isAnyAdmin() ? '' : 'none';
+  var instSettings = document.getElementById('institution-settings');
+  if (instSettings) instSettings.style.display = isAnyAdmin() ? '' : 'none';
   if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
 }
 
@@ -4859,6 +4885,30 @@ async function useRequiredActions() {
       });
     }
   } catch(e){ console.warn('[RequiredActions] mlo goals:', e); }
+
+  // 13. QUARTERLY CRA REPORT REMINDER (admin)
+  try {
+    if (isAnyAdmin()) {
+      var qNow = new Date();
+      var qMonth = qNow.getMonth();
+      var qDay = qNow.getDate();
+      var isQuarterEnd = (qMonth===2||qMonth===5||qMonth===8||qMonth===11) && qDay >= 15;
+      if (isQuarterEnd) {
+        var qLabel = qNow.getFullYear()+'-Q'+Math.ceil((qMonth+1)/3);
+        var crSnap = await db.collection('craReports').get();
+        var hasReport = false;
+        crSnap.forEach(function(d){ if(d.data().period===qLabel) hasReport=true; });
+        if (!hasReport) {
+          actions.push({
+            p: qDay >= 25 ? 'high' : 'med',
+            title: 'Quarterly CRA report not yet generated',
+            detail: qLabel + ' report due end of month',
+            module: 'Analytics', tab: 'analytics', _nav: 'analytics'
+          });
+        }
+      }
+    }
+  } catch(e){ console.warn('[RequiredActions] cra report:', e); }
 
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
@@ -8508,6 +8558,9 @@ function setCraRange(type, btn) {
     if (lq < 0) { lq = 3; ly--; }
     from = new Date(ly, lq * 3, 1).toISOString().split('T')[0];
     to   = new Date(ly, lq * 3 + 3, 0).toISOString().split('T')[0];
+  } else if (type === 'annual') {
+    from = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+    to   = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
   }
   var customEl = document.getElementById('cra-custom-dates');
   if (type === 'custom') {
@@ -8517,96 +8570,271 @@ function setCraRange(type, btn) {
   }
   if (customEl) customEl.style.display = 'none';
   craDateRange = { type: type, from: from, to: to };
+  // Show scope selector for admins
+  var scopeRow = document.getElementById('cra-scope-row');
+  if (scopeRow) scopeRow.style.display = isAnyAdmin() ? 'flex' : 'none';
 }
 
-function generateCraReport() {
+async function generateCraReport() {
   var from = craDateRange.from, to = craDateRange.to;
   if (craDateRange.type === 'custom') {
     from = document.getElementById('cra-from').value;
     to   = document.getElementById('cra-to').value;
-    if (!from || !to) { showToast('⚠️ Please select both From and To dates'); return; }
+    if (!from || !to) { showToast('Please select both From and To dates'); return; }
   }
-  var srcActs = (isAnyAdmin() && allTeamActivities.length) ? allTeamActivities : cachedActivities;
-  var acts = srcActs.filter(function(a) { return a.date && a.date >= from && a.date <= to; });
-  var total = acts.length;
-  var applications = acts.filter(function(a) { return a.type && a.type.toLowerCase().includes('application'); }).length;
-  var loans        = acts.filter(function(a) { return a.type && a.type.toLowerCase().includes('loan'); }).length;
-  var lmiEligible  = acts.filter(function(a) { return a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income'; }).length;
-  var totalLoan    = acts.reduce(function(s, a) { return s + (parseInt(a.loanAmount) || 0); }, 0);
-  function fmtAmt(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? Math.round(n/1000)+'K' : String(n); }
-  var typeMap = {}, lmiMap = {}, zipMap = {};
-  acts.forEach(function(a) {
-    var t = a.type || 'Other'; typeMap[t] = (typeMap[t] || 0) + 1;
-    var c = a.lmiCategory || 'Unknown'; lmiMap[c] = (lmiMap[c] || 0) + 1;
-    if (a.zip) zipMap[a.zip] = (zipMap[a.zip] || 0) + 1;
-  });
-  var topZips = Object.entries(zipMap).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
-  function tableRows(map) {
-    return Object.entries(map).sort(function(a,b){return b[1]-a[1];}).map(function(e) {
-      return '<tr><td>' + e[0] + '</td><td><strong>' + e[1] + '</strong></td><td>' + (total ? Math.round((e[1]/total)*100) : 0) + '%</td></tr>';
-    }).join('');
-  }
-  var mloHtml = '';
-  if (currentUser.role === 'admin') {
-    var mloMap = {};
-    acts.forEach(function(a) {
-      var n = a.userName || 'Unknown';
-      if (!mloMap[n]) mloMap[n] = { total:0, apps:0, loans:0, lmi:0 };
-      mloMap[n].total++;
-      if (a.type && a.type.toLowerCase().includes('application')) mloMap[n].apps++;
-      if (a.type && a.type.toLowerCase().includes('loan')) mloMap[n].loans++;
-      if (a.lmiCategory === 'Low Income' || a.lmiCategory === 'Moderate Income') mloMap[n].lmi++;
-    });
-    mloHtml = '<div class="cra-section-head">MLO Activity Breakdown</div>'
-      + '<table class="cra-table"><thead><tr><th>MLO Name</th><th>Total</th><th>Applications</th><th>Loans</th><th>LMI Eligible</th></tr></thead><tbody>'
-      + Object.entries(mloMap).sort(function(a,b){return b[1].total-a[1].total;}).map(function(e){
-          return '<tr><td>'+e[0]+'</td><td><strong>'+e[1].total+'</strong></td><td>'+e[1].apps+'</td><td>'+e[1].loans+'</td><td>'+e[1].lmi+'</td></tr>';
-        }).join('')
-      + '</tbody></table>';
-  }
-  var genDate  = new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
-  var fromLbl  = new Date(from+'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  var toLbl    = new Date(to+'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  document.getElementById('cra-doc').innerHTML =
-    '<div class="cra-doc-header">'
-    + '<div class="cra-doc-title">Loopenta — CRA Activity Report</div>'
-    + '<div class="cra-doc-org">Loopenta</div>'
-    + '<div class="cra-doc-meta">Date Range: '+fromLbl+' – '+toLbl+' &nbsp;|&nbsp; Generated: '+genDate+'</div>'
-    + '</div><div class="cra-doc-body">'
-    + '<div class="cra-summary-cards">'
-    + '<div class="cra-sum-card"><div class="cra-sum-num">'+total+'</div><div class="cra-sum-label">Total Activities</div></div>'
-    + '<div class="cra-sum-card"><div class="cra-sum-num">'+applications+'</div><div class="cra-sum-label">Applications</div></div>'
-    + '<div class="cra-sum-card"><div class="cra-sum-num">'+loans+'</div><div class="cra-sum-label">Loans Closed</div></div>'
-    + '<div class="cra-sum-card"><div class="cra-sum-num">'+lmiEligible+'</div><div class="cra-sum-label">LMI Eligible</div></div>'
-    + '<div class="cra-sum-card"><div class="cra-sum-num">'+(totalLoan > 0 ? '$'+fmtAmt(totalLoan) : '—')+'</div><div class="cra-sum-label">Loan Amount</div></div>'
-    + '</div>'
-    + '<div class="cra-section-head">Activity Type Breakdown</div>'
-    + '<table class="cra-table"><thead><tr><th>Activity Type</th><th>Count</th><th>% of Total</th></tr></thead><tbody>'+tableRows(typeMap)+'</tbody></table>'
-    + '<div class="cra-section-head">LMI Category Breakdown</div>'
-    + '<table class="cra-table"><thead><tr><th>LMI Category</th><th>Count</th><th>% of Total</th></tr></thead><tbody>'+tableRows(lmiMap)+'</tbody></table>'
-    + (topZips.length ? '<div class="cra-section-head">Top ZIP Codes by Activity</div>'
-      + '<table class="cra-table"><thead><tr><th>ZIP Code</th><th>Count</th><th>% of Total</th></tr></thead><tbody>'
-      + topZips.map(function(e){return '<tr><td>'+e[0]+'</td><td><strong>'+e[1]+'</strong></td><td>'+(total?Math.round((e[1]/total)*100):0)+'%</td></tr>';}).join('')
-      + '</tbody></table>' : '')
-    + mloHtml
-    + '<div class="cra-disclaimer">This report is generated for internal CRA tracking purposes only. Data accuracy is the responsibility of the submitting MLO.</div>'
-    + '</div>';
+  if (!from || !to) { showToast('Please select a date range first'); return; }
+  var scope = isAnyAdmin() ? ((document.getElementById('cra-scope')||{}).value||'personal') : 'personal';
+  var docEl = document.getElementById('cra-doc');
+  if (docEl) docEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Generating report\u2026</div>';
   var out = document.getElementById('cra-report-output');
   if (out) out.classList.add('show');
-  window._craReportMeta = { from: from, to: to };
+
+  // Load institution info
+  var inst = { name:'Golden 1 Credit Union', charter:'Federal Credit Union', area:'Central Valley and Los Angeles MSA' };
+  try {
+    var tDoc = await db.collection('tenants').doc(currentUser.orgId||'golden1-org').get();
+    if (tDoc.exists && tDoc.data().institutionInfo) Object.assign(inst, tDoc.data().institutionInfo);
+  } catch(e){}
+
+  // ── SECTION B1: DEALS ──────────────────────
+  var allDeals = cachedDeals || [];
+  if (scope === 'personal') allDeals = allDeals.filter(function(d){ return d.userId===currentUser.id||d.assignedTo===currentUser.id; });
+  var deals = allDeals.filter(function(d){ return d.createdAt && d.createdAt>=from && d.createdAt<=to; });
+  var totalLoans = deals.length;
+  var fundedLoans = deals.filter(function(d){ return d.stage==='Funded'||d.stage==='Closed'; }).length;
+  var lmiLoans = deals.filter(function(d){ return d.lmiEligible===true; }).length;
+  var lmiPct = totalLoans>0?Math.round(lmiLoans/totalLoans*100):0;
+  var totalVol = deals.reduce(function(s,d){return s+(parseFloat(d.loanAmount)||0);},0);
+  var lmiVol = deals.filter(function(d){return d.lmiEligible===true;}).reduce(function(s,d){return s+(parseFloat(d.loanAmount)||0);},0);
+  var typeMap = {}; deals.forEach(function(d){ var t=d.loanType||'Other'; typeMap[t]=(typeMap[t]||0)+1; });
+  var tractMap = {}; deals.forEach(function(d){ if(d.tractId){ if(!tractMap[d.tractId]) tractMap[d.tractId]={count:0,vol:0,lmi:0}; tractMap[d.tractId].count++; tractMap[d.tractId].vol+=parseFloat(d.loanAmount)||0; if(d.lmiEligible) tractMap[d.tractId].lmi++; }});
+
+  // ── SECTION B2: CRA ACTIVITIES ─────────────
+  var srcActs = (isAnyAdmin()&&scope==='team'&&allTeamActivities.length)?allTeamActivities:cachedActivities;
+  var acts = srcActs.filter(function(a){ return a.date&&a.date>=from&&a.date<=to&&a.craQualifying===true; });
+  var cdTotal = acts.length;
+  var actTypeMap = {}; acts.forEach(function(a){ var t=a.type||'Other'; actTypeMap[t]=(actTypeMap[t]||0)+1; });
+
+  // ── SECTION B3: OYZ ────────────────────────
+  var oyzAll = cachedOYZ||cachedOyzEntries||[];
+  if (scope==='personal') oyzAll = oyzAll.filter(function(e){return e.userId===currentUser.id;});
+  var oyzPeriod = oyzAll.filter(function(e){return e.openHouseDate&&e.openHouseDate>=from&&e.openHouseDate<=to;});
+  var oyzLmi = oyzPeriod.filter(function(e){return e.lmiEligible===true;}).length;
+
+  // ── SECTION B4: REALTOR PARTNERSHIPS ───────
+  var realtorMap = {};
+  deals.forEach(function(d){
+    var rid=d.realtorId||d.assignedRealtorId; if(!rid) return;
+    if(!realtorMap[rid]) realtorMap[rid]={name:d.realtorName||d.assignedRealtorName||'Unknown',refs:0,lmi:0,funded:0};
+    realtorMap[rid].refs++; if(d.lmiEligible) realtorMap[rid].lmi++; if(d.stage==='Funded'||d.stage==='Closed') realtorMap[rid].funded++;
+  });
+  var topRealtors = Object.values(realtorMap).sort(function(a,b){return b.lmi-a.lmi;}).slice(0,5);
+
+  // ── SECTION B5: ASSESSMENT AREA ────────────
+  var uniqueTracts = Object.keys(tractMap);
+  var zipSet = {};
+  deals.forEach(function(d){ if(d.propertyZip) zipSet[d.propertyZip]=true; });
+  oyzPeriod.forEach(function(e){ if(e.propertyZip) zipSet[e.propertyZip]=true; });
+  var zipList = Object.keys(zipSet).sort().join(', ');
+
+  // ── SECTION B6: MLO BREAKDOWN ──────────────
+  var mloMap = {};
+  if (scope==='team') {
+    deals.forEach(function(d){
+      var n=d.userName||d.assignedToName||'Unknown';
+      if(!mloMap[n]) mloMap[n]={loans:0,lmi:0,vol:0,acts:0};
+      mloMap[n].loans++; if(d.lmiEligible) mloMap[n].lmi++; mloMap[n].vol+=parseFloat(d.loanAmount)||0;
+    });
+    acts.forEach(function(a){ var n=a.userName||'Unknown'; if(!mloMap[n]) mloMap[n]={loans:0,lmi:0,vol:0,acts:0}; mloMap[n].acts++; });
+  }
+
+  // ── BUILD REPORT HTML ──────────────────────
+  function fA(n){return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+Math.round(n/1e3)+'K':'$'+Math.round(n);}
+  function tR(map){return Object.entries(map).sort(function(a,b){return b[1]-a[1];}).map(function(e){return '<tr><td>'+e[0]+'</td><td><strong>'+e[1]+'</strong></td></tr>';}).join('');}
+  var genDate = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  var fromLbl = new Date(from+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var toLbl = new Date(to+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var goalMet = lmiPct>=40;
+
+  docEl.innerHTML =
+    '<div class="cra-doc-header"><div class="cra-doc-title">'+esc(inst.name)+' — CRA Performance Report</div>'
+    +'<div class="cra-doc-org">'+esc(inst.charter||'')+'</div>'
+    +'<div class="cra-doc-meta">Period: '+fromLbl+' \u2013 '+toLbl+' | Generated: '+genDate+'</div></div>'
+    +'<div class="cra-doc-body">'
+    // §1 Executive Summary
+    +'<div class="cra-section-head">1. Executive Summary</div>'
+    +'<p style="font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:16px">'
+    +'During this period, '+esc(inst.name)+' originated '+totalLoans+' mortgage loans totaling '+fA(totalVol)
+    +' in the '+esc(inst.area||'assessment area')+'. Of these, '+lmiLoans+' loans ('+lmiPct+'%) were made to borrowers in Low-to-Moderate Income census tracts, representing '+fA(lmiVol)+' in LMI lending volume. '
+    +'The institution conducted '+cdTotal+' community development activities and participated in '+oyzPeriod.length+' open house events.</p>'
+    +'<div class="cra-summary-cards">'
+    +'<div class="cra-sum-card"><div class="cra-sum-num">'+totalLoans+'</div><div class="cra-sum-label">Total Loans</div></div>'
+    +'<div class="cra-sum-card"><div class="cra-sum-num">'+lmiLoans+'</div><div class="cra-sum-label">LMI Loans</div></div>'
+    +'<div class="cra-sum-card"><div class="cra-sum-num" style="color:'+(goalMet?'#5a8a6a':'#b07030')+'">'+lmiPct+'%</div><div class="cra-sum-label">LMI Rate</div></div>'
+    +'<div class="cra-sum-card"><div class="cra-sum-num">'+fA(totalVol)+'</div><div class="cra-sum-label">Total Volume</div></div>'
+    +'<div class="cra-sum-card"><div class="cra-sum-num">'+cdTotal+'</div><div class="cra-sum-label">CD Activities</div></div>'
+    +'</div>'
+    // §2 Assessment Area
+    +'<div class="cra-section-head">2. Assessment Area</div>'
+    +'<p style="font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:12px">The assessment area encompasses '+esc(inst.area||'the region')+', covering '+uniqueTracts.length+' census tracts across ZIP codes '+esc(zipList||'(various)')+'.</p>'
+    // §3 LMI Lending
+    +'<div class="cra-section-head">3. LMI Lending Performance</div>'
+    +'<p style="font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:12px">'
+    +'LMI lending represented '+lmiPct+'% of total originations during the period'+(goalMet?', exceeding':', approaching')+' the 40% institution goal. '
+    +(goalMet?'This performance demonstrates strong commitment to serving LMI communities.':'The institution is actively working to increase LMI lending through targeted outreach.')+'</p>'
+    +'<table class="cra-table"><thead><tr><th>Category</th><th>Loans</th><th>Volume</th></tr></thead><tbody>'
+    +'<tr><td>LMI Loans</td><td><strong>'+lmiLoans+'</strong></td><td>'+fA(lmiVol)+'</td></tr>'
+    +'<tr><td>Non-LMI Loans</td><td>'+(totalLoans-lmiLoans)+'</td><td>'+fA(totalVol-lmiVol)+'</td></tr>'
+    +'<tr style="font-weight:700"><td>Total</td><td>'+totalLoans+'</td><td>'+fA(totalVol)+'</td></tr>'
+    +'</tbody></table>'
+    +(Object.keys(typeMap).length?'<div class="cra-section-head" style="font-size:12px;margin-top:14px">Loans by Type</div><table class="cra-table"><thead><tr><th>Loan Type</th><th>Count</th></tr></thead><tbody>'+tR(typeMap)+'</tbody></table>':'')
+    // §4 CD Activities
+    +'<div class="cra-section-head">4. Community Development Activities</div>'
+    +'<p style="font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:12px">Staff conducted '+cdTotal+' qualifying community development activities during the period.</p>'
+    +(Object.keys(actTypeMap).length?'<table class="cra-table"><thead><tr><th>Activity Type</th><th>Count</th></tr></thead><tbody>'+tR(actTypeMap)+'</tbody></table>':'')
+    // §5 Open Houses
+    +'<div class="cra-section-head">5. Open House Outreach</div>'
+    +'<p style="font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:12px">The institution participated in '+oyzPeriod.length+' open house events, of which '+oyzLmi+' ('+(oyzPeriod.length?Math.round(oyzLmi/oyzPeriod.length*100):0)+'%) were in LMI census tracts.</p>'
+    // §6 Realtor Partnerships
+    +(topRealtors.length?'<div class="cra-section-head">6. Realtor Partnerships</div>'
+    +'<p style="font-size:13px;color:var(--text-primary);line-height:1.6;margin-bottom:12px">Active partnerships with '+Object.keys(realtorMap).length+' real estate professionals generated '+Object.values(realtorMap).reduce(function(s,r){return s+r.lmi;},0)+' LMI referrals.</p>'
+    +'<table class="cra-table"><thead><tr><th>Realtor</th><th>Referrals</th><th>LMI</th><th>Funded</th></tr></thead><tbody>'
+    +topRealtors.map(function(r){return '<tr><td>'+esc(r.name)+'</td><td>'+r.refs+'</td><td>'+r.lmi+'</td><td>'+r.funded+'</td></tr>';}).join('')
+    +'</tbody></table>':'')
+    // §7 Geographic / MLO
+    +(scope==='team'&&Object.keys(mloMap).length?'<div class="cra-section-head">7. MLO Performance Breakdown</div>'
+    +'<table class="cra-table"><thead><tr><th>MLO</th><th>Loans</th><th>LMI</th><th>LMI%</th><th>Volume</th><th>CD Acts</th></tr></thead><tbody>'
+    +Object.entries(mloMap).sort(function(a,b){return b[1].loans-a[1].loans;}).map(function(e){var m=e[1];return '<tr><td>'+e[0]+'</td><td>'+m.loans+'</td><td>'+m.lmi+'</td><td>'+(m.loans?Math.round(m.lmi/m.loans*100):0)+'%</td><td>'+fA(m.vol)+'</td><td>'+m.acts+'</td></tr>';}).join('')
+    +'</tbody></table>':'')
+    +'<div class="cra-disclaimer">This report is generated for internal CRA tracking purposes. Data accuracy is the responsibility of the submitting MLO. Confidential \u2014 '+esc(inst.name)+'</div>'
+    +'</div>';
+
+  window._craReportMeta = { from:from, to:to, scope:scope, inst:inst, totalLoans:totalLoans, lmiLoans:lmiLoans, lmiPct:lmiPct, totalVol:totalVol, cdTotal:cdTotal, oyzCount:oyzPeriod.length };
+  _renderCraHistory();
 }
 
 function downloadCraReport() {
   var doc = document.getElementById('cra-doc');
   if (!doc) return;
   var meta = window._craReportMeta || {};
-  var filename = 'CRA-Report-' + (meta.from || '') + '-to-' + (meta.to || '') + '-' + new Date().toISOString().split('T')[0] + '.pdf';
-  html2pdf().set({
-    margin: 0.5, filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-  }).from(doc).save();
+  var origTitle = document.title;
+  document.title = 'CRA Report ' + (meta.from||'') + ' to ' + (meta.to||'') + ' - ' + (meta.inst?meta.inst.name:'');
+  if (typeof html2pdf !== 'undefined') {
+    var filename = 'CRA_Report_' + (meta.from||'') + '_' + (meta.to||'') + '.pdf';
+    html2pdf().set({
+      margin: 0.5, filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).from(doc).save().then(function(){ document.title = origTitle; });
+  } else {
+    window.print();
+    setTimeout(function(){ document.title = origTitle; }, 1000);
+  }
+}
+
+function downloadCraExcel() {
+  if (!window.XLSX) { showToast('Excel library not loaded'); return; }
+  var meta = window._craReportMeta || {};
+  var from = meta.from||'', to = meta.to||'', scope = meta.scope||'personal';
+  var allDeals = cachedDeals || [];
+  if (scope==='personal') allDeals = allDeals.filter(function(d){return d.userId===currentUser.id||d.assignedTo===currentUser.id;});
+  var deals = allDeals.filter(function(d){return d.createdAt&&d.createdAt>=from&&d.createdAt<=to;});
+  var srcActs = (isAnyAdmin()&&scope==='team'&&allTeamActivities.length)?allTeamActivities:cachedActivities;
+  var acts = srcActs.filter(function(a){return a.date&&a.date>=from&&a.date<=to&&a.craQualifying===true;});
+  var oyzAll = cachedOYZ||[];
+  if (scope==='personal') oyzAll = oyzAll.filter(function(e){return e.userId===currentUser.id;});
+  var oyzP = oyzAll.filter(function(e){return e.openHouseDate&&e.openHouseDate>=from&&e.openHouseDate<=to;});
+
+  var wb = XLSX.utils.book_new();
+  // Sheet 1: Summary
+  var sumRows = [['CRA Performance Report Summary'],['Period',from+' to '+to],[''],
+    ['Metric','Value'],['Total Loans',deals.length],['LMI Loans',deals.filter(function(d){return d.lmiEligible;}).length],
+    ['LMI %',meta.lmiPct+'%'],['Total Volume','$'+Math.round((meta.totalVol||0)).toLocaleString()],
+    ['CD Activities',meta.cdTotal||0],['Open Houses',meta.oyzCount||0]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'Summary');
+  // Sheet 2: Deals
+  var dealRows = [['Borrower ID','Loan Amount','Tract ID','LMI','Loan Type','Stage','Date']].concat(
+    deals.map(function(d,i){return ['B-'+(i+1),d.loanAmount||'',d.tractId||'',d.lmiEligible?'Yes':'No',d.loanType||'',d.stage||'',d.createdAt||''];})
+  );
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dealRows),'LMI Lending');
+  // Sheet 3: Activities
+  var actRows = [['Date','Type','Description','MLO','CRA Qualifying']].concat(
+    acts.map(function(a){return [a.date||'',a.type||'',a.description||'',a.userName||'',a.craQualifying?'Yes':'No'];})
+  );
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(actRows),'CD Activities');
+  // Sheet 4: Open Houses
+  var oyzRows = [['Date','Address','Tract ID','LMI']].concat(
+    oyzP.map(function(e){return [e.openHouseDate||'',e.propertyAddress||'',e.tractId||'',e.lmiEligible?'Yes':'No'];})
+  );
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(oyzRows),'Open Houses');
+  // Sheet 5: Tracts
+  var tractMap = {};
+  deals.forEach(function(d){if(d.tractId){if(!tractMap[d.tractId])tractMap[d.tractId]={count:0,vol:0,lmi:0};tractMap[d.tractId].count++;tractMap[d.tractId].vol+=parseFloat(d.loanAmount)||0;if(d.lmiEligible)tractMap[d.tractId].lmi++;}});
+  var tractRows = [['Tract ID','Loan Count','Volume','LMI Count']].concat(
+    Object.entries(tractMap).map(function(e){return [e[0],e[1].count,'$'+Math.round(e[1].vol).toLocaleString(),e[1].lmi];})
+  );
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(tractRows),'Tract Analysis');
+  XLSX.writeFile(wb,'CRA_Report_'+from+'_'+to+'.xlsx');
+  showToast('Excel report downloaded');
+}
+
+async function _saveCraToHistory() {
+  if (!db||!currentUser) return;
+  var meta = window._craReportMeta;
+  if (!meta) { showToast('Generate a report first'); return; }
+  var now = new Date();
+  var q = Math.ceil((now.getMonth()+1)/3);
+  var periodLabel = craDateRange.type==='annual'?now.getFullYear().toString():craDateRange.type==='quarter'||craDateRange.type==='lastquarter'?now.getFullYear()+'-Q'+q:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  try {
+    await db.collection('craReports').add({
+      tenantId: currentUser.orgId||'', generatedBy: currentUser.id, generatedByName: currentUser.name||'',
+      scope: meta.scope||'personal', period: periodLabel,
+      periodType: craDateRange.type==='annual'?'annual':(craDateRange.type==='quarter'||craDateRange.type==='lastquarter')?'quarterly':'monthly',
+      startDate: meta.from, endDate: meta.to,
+      summary: { totalLoans:meta.totalLoans||0, lmiLoans:meta.lmiLoans||0, lmiPct:meta.lmiPct||0, totalLoanVolume:meta.totalVol||0, cdActivities:meta.cdTotal||0, openHousesCount:meta.oyzCount||0 },
+      status: 'final', createdAt: now.toISOString()
+    });
+    showToast('Report saved to history');
+    _renderCraHistory();
+  } catch(e){ showToast('Error saving: '+e.message); }
+}
+
+async function _renderCraHistory() {
+  var el = document.getElementById('cra-history');
+  if (!el||!db) return;
+  try {
+    var snap = await db.collection('craReports').get();
+    var reports = [];
+    snap.forEach(function(d){ var r=Object.assign({id:d.id},d.data()); if(r.generatedBy===currentUser.id||isAnyAdmin()) reports.push(r); });
+    reports.sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'');});
+    if (!reports.length) { el.innerHTML=''; return; }
+    el.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px">Report History</div>'
+      + reports.slice(0,10).map(function(r){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">'
+          +'<div><span style="font-weight:600;color:var(--text-primary)">'+esc(r.period||'')+'</span>'
+          +' <span style="color:var(--text-muted)">'+esc(r.scope||'')+'</span>'
+          +' <span style="color:var(--text-muted);font-size:11px">by '+esc(r.generatedByName||'')+'</span></div>'
+          +'<span style="font-size:11px;color:var(--text-muted)">'+(r.createdAt?new Date(r.createdAt).toLocaleDateString():'')+'</span>'
+          +'</div>';
+      }).join('');
+  } catch(e){}
+}
+
+async function _saveInstitutionInfo() {
+  if (!db||!currentUser) return;
+  var info = {
+    name: (document.getElementById('inst-name')||{}).value||'Golden 1 Credit Union',
+    charter: (document.getElementById('inst-charter')||{}).value||'',
+    rssdId: (document.getElementById('inst-rssd')||{}).value||'',
+    area: (document.getElementById('inst-area')||{}).value||'',
+    complianceOfficer: (document.getElementById('inst-officer')||{}).value||'',
+    regulator: (document.getElementById('inst-regulator')||{}).value||'NCUA'
+  };
+  try {
+    await db.collection('tenants').doc(currentUser.orgId||'golden1-org').set({institutionInfo:info},{merge:true});
+    showToast('Institution info saved');
+  } catch(e){ showToast('Error: '+e.message); }
 }
 
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
