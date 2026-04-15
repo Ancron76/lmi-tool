@@ -2135,12 +2135,19 @@ admin@loopenta.com</div>
               </div>
               <div class="home-glance-bar"><div class="home-glance-fill" id="hg-lmi-bar" style="background:var(--color-positive);width:0%"></div></div>
             </div>
-            <div class="home-glance-row">
+            <div class="home-glance-row" id="hg-pipe-row">
               <div class="home-glance-label">
                 <span style="color:var(--text-secondary);font-weight:500">Pipeline to Close</span>
                 <span id="hg-pipe-val" style="font-weight:600;color:var(--text-primary)">—</span>
               </div>
               <div class="home-glance-bar"><div class="home-glance-fill" id="hg-pipe-bar" style="background:var(--color-sand);width:0%"></div></div>
+            </div>
+            <div class="home-glance-row" id="hg-oyz-row" style="display:none">
+              <div class="home-glance-label">
+                <span style="color:var(--text-secondary);font-weight:500">Open Houses MTD</span>
+                <span id="hg-oyz-val" style="font-weight:600;color:var(--text-primary)">—</span>
+              </div>
+              <div class="home-glance-bar"><div class="home-glance-fill" id="hg-oyz-bar" style="background:var(--color-sand);width:0%"></div></div>
             </div>
           </div>
           <!-- Leaderboard Widget -->
@@ -4754,12 +4761,142 @@ async function _toggleFeatureFlag(flag, value) {
   } catch(e) { showToast('Error updating flag: ' + e.message); }
 }
 
+// ══════════════════════════════════════════════════════════════
+// ── DOMAIN DETECTION & BRANDING ──────────────────────────────
+// ══════════════════════════════════════════════════════════════
+var _hostname = window.location.hostname;
+var DOMAIN_CONFIG = {
+  isLoopenta: _hostname.indexOf('loopenta.com') !== -1 || _hostname.indexOf('loopenta') !== -1,
+  isLmiTool:  _hostname.indexOf('lmitool.com') !== -1 || _hostname.indexOf('lmi-tool') !== -1 || _hostname.indexOf('localhost') !== -1,
+  appName:    _hostname.indexOf('loopenta') !== -1 ? 'Loopenta' : 'LMI Prospect Finder',
+  appTagline: _hostname.indexOf('loopenta') !== -1 ? 'Mortgage CRM' : 'LMI Compliance Tool',
+  logoLetter: 'L',
+  primaryColor: '#c4943a',
+  defaultTier: _hostname.indexOf('loopenta') !== -1 ? 'full' : 'lmi_only',
+};
+// TODO Phase 24: Loopenta gets distinct branding (color scheme, logo asset, landing page)
+
+// ══════════════════════════════════════════════════════════════
+// ── TIER FEATURES & GATING ───────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+var TIER_FEATURES = {
+  lmi_only: ['lmi_search','oyz_open_houses','analytics','cra_reports','activity_log','dashboard','marketing','realtor_basic','notifications'],
+  full: ['deal_pipeline','borrowers','contacts_full','communications','realtor_scorecard','sequences','past_customers','refi_alerts','mlo_scorecards','leaderboard','lmi_auto_screen'],
+};
+function hasFeature(tier, feature) {
+  if (tier === 'full') return TIER_FEATURES.lmi_only.indexOf(feature) !== -1 || TIER_FEATURES.full.indexOf(feature) !== -1;
+  return TIER_FEATURES.lmi_only.indexOf(feature) !== -1;
+}
+window.hasFeature = hasFeature; // expose for React components
+
+// Map sidebar tab names to tier features
+var TAB_TIER_MAP = {
+  pipeline:  'deal_pipeline',
+  contacts:  'contacts_full',
+  comms:     'communications',
+  sequences: 'sequences',
+  scorecard: 'mlo_scorecards',
+};
+// Tabs that are always available (lmi_only tier)
+var ALWAYS_TABS = ['home','search','realtors','oyz','activity','analytics','dashboard','marketing'];
+
+var _currentTier = 'lmi_only'; // safe default, loaded from tenant doc
+
+async function _loadTier() {
+  if (!db || !currentUser) return;
+  try {
+    var tenantId = currentUser.orgId || 'golden1-org';
+    var tDoc = await db.collection('tenants').doc(tenantId).get();
+    if (tDoc.exists && tDoc.data().tier) {
+      _currentTier = tDoc.data().tier;
+    } else {
+      // Seed default tier from domain config
+      _currentTier = DOMAIN_CONFIG.defaultTier;
+      try {
+        await db.collection('tenants').doc(tenantId).set({
+          tier: _currentTier,
+          tierLabel: _currentTier === 'full' ? 'Loopenta' : 'LMI Tool',
+        }, { merge: true });
+      } catch(e){}
+    }
+  } catch(e) { console.warn('Tier load error:', e); }
+}
+
+function _applyTierGating() {
+  // Sidebar: hide full-tier nav items for lmi_only
+  var fullTierSidebarIds = ['sn-pipeline','sn-contacts','sn-comms','sn-sequences','sn-scorecard'];
+  fullTierSidebarIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = hasFeature(_currentTier, TAB_TIER_MAP[id.replace('sn-','')]) ? '' : 'none';
+  });
+
+  // Bottom nav: hide Pipeline and Comms for lmi_only
+  var bnPipeline = document.getElementById('bn-pipeline');
+  var bnComms = document.getElementById('bn-comms');
+  if (bnPipeline) bnPipeline.style.display = hasFeature(_currentTier, 'deal_pipeline') ? '' : 'none';
+  if (bnComms) bnComms.style.display = hasFeature(_currentTier, 'communications') ? '' : 'none';
+
+  // App mobile nav: hide Pipeline for lmi_only, show Reports instead
+  var amnPipeline = document.getElementById('amn-pipeline');
+  if (amnPipeline) amnPipeline.style.display = hasFeature(_currentTier, 'deal_pipeline') ? '' : 'none';
+
+  // Home sub-text for lmi_only
+  var homeSub = document.getElementById('home-date-line');
+  if (homeSub && _currentTier === 'lmi_only') {
+    // Will be set properly in showTab('home'), but set flag
+  }
+}
+
+function _applyDomainBranding() {
+  // Update sidebar logo text based on domain
+  var logoText = document.querySelector('.sidebar-logo-text');
+  var logoSub = document.querySelector('.sidebar-logo-sub');
+  if (logoText) logoText.textContent = DOMAIN_CONFIG.appName;
+  if (logoSub) logoSub.textContent = DOMAIN_CONFIG.appTagline.toUpperCase();
+  // Update browser tab title
+  document.title = DOMAIN_CONFIG.appName;
+}
+
+function _isTabLocked(tab) {
+  if (ALWAYS_TABS.indexOf(tab) !== -1) return false;
+  var feature = TAB_TIER_MAP[tab];
+  if (!feature) return false;
+  return !hasFeature(_currentTier, feature);
+}
+
+function _showUpgradePrompt(tab) {
+  var tabNames = {
+    pipeline: 'Deal Pipeline', contacts: 'Contacts CRM', comms: 'Communications',
+    sequences: 'Sequences', scorecard: 'MLO Scorecards',
+  };
+  var featureName = tabNames[tab] || tab;
+  // Find the tab content area and show upgrade prompt there
+  var el = document.getElementById('tab-' + tab + '-content');
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:60vh;padding:20px">'
+    + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px 40px;text-align:center;max-width:440px;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.06)">'
+    + '<div style="width:56px;height:56px;border-radius:50%;background:#f5f0e8;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:24px">'
+    + '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4943a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
+    + '</div>'
+    + '<div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text-primary);margin:0 0 10px">This feature is part of Loopenta</div>'
+    + '<div style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin:0 0 24px">' + esc(featureName) + ', Borrower Profiles, and the full CRM suite are available in the Loopenta tier. Contact your administrator to upgrade.</div>'
+    + '<a href="https://loopenta.com" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#c4943a;color:white;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer">Learn about Loopenta →</a>'
+    + '<div style="margin-top:16px;font-size:12px;color:var(--text-muted)">Already upgraded? Contact admin@lmitool.com</div>'
+    + '</div></div>';
+}
+
 // ── AUTH ──────────────────────────────────────────────────────
 async function _postLoginSetup(user) {
   // Shared post-login initialization for MLO/Admin/SuperAdmin
   await loadCurrentOrg();
   // Load feature flags from tenant doc
   await _loadFeatureFlags();
+  // Load product tier from tenant doc
+  await _loadTier();
+  _applyTierGating();
+  // Apply domain branding
+  _applyDomainBranding();
   document.getElementById('app-screen').style.display = 'block';
   if (isAnyAdmin()) {
     document.getElementById('admin-nav-btn').style.display = 'inline-block';
@@ -4995,6 +5132,8 @@ async function useRequiredActions() {
   }
 
   // 1. DEAL PIPELINE — active deals with rateLockExpiry within 7 days
+  // (full tier only)
+  if (hasFeature(_currentTier, 'deal_pipeline')) {
   try {
     var dealSnap = await db.collection('deals').get();
     var dealDocs = dealSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
@@ -5018,8 +5157,11 @@ async function useRequiredActions() {
       }
     });
   } catch(e){ console.warn('[RequiredActions] deals:', e); }
+  } // end deal_pipeline tier gate
 
   // 2. PREQUAL REQUESTS — status == "pending"
+  // (full tier only — contacts CRM)
+  if (hasFeature(_currentTier, 'contacts_full')) {
   try {
     var pqSnap = await db.collection('prequal').where('status','==','pending').get();
     pqSnap.forEach(function(d){
@@ -5033,6 +5175,7 @@ async function useRequiredActions() {
       });
     });
   } catch(e){ console.warn('[RequiredActions] prequal:', e); }
+  } // end contacts_full tier gate
 
   // 3. REALTORS — lastContact exists AND lastContact <= 14 days ago
   try {
@@ -5093,6 +5236,8 @@ async function useRequiredActions() {
   } catch(e){ console.warn('[RequiredActions] activity:', e); }
 
   // 6. COMMUNICATIONS — notifications where read != true
+  // (full tier only)
+  if (hasFeature(_currentTier, 'communications')) {
   try {
     var nSnap = await db.collection('notifications').get();
     var unread = 0;
@@ -5112,8 +5257,11 @@ async function useRequiredActions() {
       });
     }
   } catch(e){ console.warn('[RequiredActions] notifications:', e); }
+  } // end communications tier gate
 
   // 7. STUCK DEALS — deals sitting in same stage too long
+  // (full tier only)
+  if (hasFeature(_currentTier, 'deal_pipeline')) {
   try {
     var stuckThreshold = 3;
     try {
@@ -5142,6 +5290,7 @@ async function useRequiredActions() {
       }
     });
   } catch(e){ console.warn('[RequiredActions] stuck deals:', e); }
+  } // end deal_pipeline tier gate
 
   // 8. COLD REALTORS — no contact in 60+ days
   try {
@@ -5165,7 +5314,8 @@ async function useRequiredActions() {
     });
   } catch(e){ console.warn('[RequiredActions] cold realtors:', e); }
 
-  // 9. SEQUENCES PENDING APPROVAL (admin only)
+  // 9. SEQUENCES PENDING APPROVAL (admin only, full tier only)
+  if (hasFeature(_currentTier, 'sequences')) {
   try {
     if (isAnyAdmin()) {
       var seqSnap = await db.collection('sequences').where('status','==','pending_approval').get();
@@ -5200,6 +5350,7 @@ async function useRequiredActions() {
       });
     });
   } catch(e){ console.warn('[RequiredActions] seq rejected:', e); }
+  } // end sequences tier gate
 
   // 11. LMI RATE BELOW GOAL
   try {
@@ -5229,7 +5380,8 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] lmi rate:', e); }
 
-  // 12. MLO BEHIND ON GOALS (admin only, mid-month+)
+  // 12. MLO BEHIND ON GOALS (admin only, mid-month+, full tier only)
+  if (hasFeature(_currentTier, 'mlo_scorecards')) {
   try {
     if (isAnyAdmin() && new Date().getDate() >= 15) {
       var snapSnap = await db.collection('scorecardSnapshots').get();
@@ -5257,8 +5409,9 @@ async function useRequiredActions() {
       });
     }
   } catch(e){ console.warn('[RequiredActions] mlo goals:', e); }
+  } // end mlo_scorecards tier gate
 
-  // 13. UNREAD SMS REPLIES (gated by feature flag)
+  // 13. UNREAD SMS REPLIES (gated by feature flag + tier)
   if (_featureFlags.smsEnabled) try {
     var smsSnap = await db.collection('communications').get();
     var unreadSms = 0;
@@ -5280,7 +5433,8 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] sms inbox:', e); }
 
-  // 14. REFI OPPORTUNITIES — past customers with rate drop
+  // 14. REFI OPPORTUNITIES — past customers with rate drop (full tier only)
+  if (hasFeature(_currentTier, 'past_customers')) {
   try {
     await _loadCurrentRates();
     if (_currentRates && Object.keys(_currentRates).length > 1) {
@@ -5298,6 +5452,7 @@ async function useRequiredActions() {
       });
     }
   } catch(e){ console.warn('[RequiredActions] refi:', e); }
+  } // end past_customers tier gate
 
   // 15. QUARTERLY CRA REPORT REMINDER (admin)
   try {
@@ -5554,8 +5709,16 @@ function renderHomeModules() {
     },
   };
 
-  // ── Filter visibility & render ────────────────────────────────
+  // ── Filter by tier then visibility ─────────────────────────────
+  // Map module tabs to tier features for filtering
+  var _modTierMap = {
+    pipeline: 'deal_pipeline', contacts: 'contacts_full', comms: 'communications',
+    sequences: 'sequences', scorecard: 'mlo_scorecards',
+  };
   var visible = HOME_MODULES.filter(function(m) {
+    // Tier gating: hide full-tier modules for lmi_only
+    var feat = _modTierMap[m.tab];
+    if (feat && !hasFeature(_currentTier, feat)) return false;
     return _dashPrefs.visibility[m.tab] !== false;
   });
 
@@ -5711,6 +5874,31 @@ function _renderHomeGlance() {
   if (lb) lb.style.width = lmiW+'%';
   if (pv) pv.textContent = pipeVal;
   if (pb) pb.style.width = pipeW+'%';
+
+  // ── Tier-aware glance rows ──
+  var pipeRow = document.getElementById('hg-pipe-row');
+  var oyzRow = document.getElementById('hg-oyz-row');
+  if (_currentTier === 'lmi_only') {
+    // Hide pipeline, show open houses
+    if (pipeRow) pipeRow.style.display = 'none';
+    if (oyzRow) {
+      oyzRow.style.display = '';
+      var oyzAll = cachedOYZ || cachedOyzEntries || [];
+      var mo3 = new Date(); mo3.setDate(1); mo3.setHours(0,0,0,0);
+      var oyzMtd = oyzAll.filter(function(e) {
+        var dt = e.openHouseDate ? new Date(e.openHouseDate) : null;
+        return dt && dt >= mo3;
+      }).length;
+      var oyzGoal = 8;
+      var oyzW = Math.min(100, Math.round(oyzMtd / oyzGoal * 100));
+      var ov = document.getElementById('hg-oyz-val'), ob = document.getElementById('hg-oyz-bar');
+      if (ov) ov.textContent = oyzMtd + ' of ' + oyzGoal;
+      if (ob) ob.style.width = oyzW + '%';
+    }
+  } else {
+    if (pipeRow) pipeRow.style.display = '';
+    if (oyzRow) oyzRow.style.display = 'none';
+  }
 }
 
 // ── TAB NAV ───────────────────────────────────────────────────
@@ -5722,6 +5910,19 @@ var _tabTitles = {
   scorecard: 'Scorecard'
 };
 function showTab(tab) {
+  // ── Tier gating: show upgrade prompt for locked tabs ──
+  if (_isTabLocked(tab)) {
+    ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences','scorecard'].forEach(function(t) {
+      var el = document.getElementById('tab-' + t + '-content');
+      if (el) el.style.display = 'none';
+    });
+    var title = document.getElementById('topbar-page-title');
+    if (title) title.textContent = _tabTitles[tab] || '';
+    _showUpgradePrompt(tab);
+    if (typeof updateBottomNav === 'function') updateBottomNav(tab);
+    return;
+  }
+
   ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences','scorecard'].forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
@@ -5751,8 +5952,13 @@ function showTab(tab) {
     if (h) h.textContent = (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', ' + (currentUser.name ? currentUser.name.split(' ')[0] : 'there');
     var dl = document.getElementById('home-date-line');
     if (dl) {
-      var d = new Date();
-      dl.textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+      // Tier-aware sub-text
+      if (_currentTier === 'lmi_only') {
+        dl.textContent = 'Central Valley & Los Angeles \u00b7 CRA Compliance Dashboard';
+      } else {
+        var d = new Date();
+        dl.textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+      }
     }
     renderHomeTab();
   }
@@ -9806,6 +10012,19 @@ async function renderSAOrgs() {
     var snap = await db.collection('organizations').get();
     cachedAllOrgs = [];
     snap.forEach(function(d) { cachedAllOrgs.push(Object.assign({ id: d.id }, d.data())); });
+    // Merge tier data from tenants collection (authoritative source)
+    var tenantSnap = await db.collection('tenants').get();
+    var tenantTiers = {};
+    tenantSnap.forEach(function(d) { var td = d.data(); if (td.tier) tenantTiers[d.id] = td; });
+    cachedAllOrgs.forEach(function(org) {
+      var td = tenantTiers[org.id];
+      if (td) {
+        org.tier = td.tier || org.tier;
+        org.tierSetBy = td.tierSetBy || org.tierSetBy;
+        org.tierSetAt = td.tierSetAt || org.tierSetAt;
+        org.dpaSignedDate = td.dpaSignedDate || org.dpaSignedDate;
+      }
+    });
     // Also get all users for member counts
     var userSnap = await db.collection('users').get();
     var allUsers = []; userSnap.forEach(function(d) { allUsers.push(Object.assign({ id: d.id }, d.data())); });
@@ -9828,11 +10047,16 @@ async function renderSAOrgs() {
     }
     var rows = cachedAllOrgs.map(function(org) {
       var memberCount = allUsers.filter(function(u) { return u.orgId === org.id || (!u.orgId && org.id === 'golden1-org'); }).length;
-      var tier = org.subscriptionTier || 'trial';
+      var subTier = org.subscriptionTier || 'trial';
       var status = org.subscriptionStatus || 'trial';
       var statusBadge = status === 'active' ? '<span style="background:#f0fdf4;color:#059669;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Active</span>'
         : status === 'suspended' ? '<span style="background:#faf5ff;color:#7c3aed;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Suspended</span>'
         : '<span style="background:#fffbeb;color:#d97706;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Trial</span>';
+      // Product tier badge (lmi_only vs full)
+      var productTier = org.tier || 'lmi_only';
+      var tierBadge = productTier === 'full'
+        ? '<span style="background:#f5f0e8;color:#c4943a;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">Loopenta Full</span>'
+        : '<span style="background:#eef4f0;color:#5a8a6a;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700">LMI Tool</span>';
       var daysLeft = '';
       if (org.trialEndDate) { var d = Math.max(0, Math.ceil((new Date(org.trialEndDate) - Date.now()) / 86400000)); daysLeft = d + 'd'; }
       return '<tr style="border-bottom:1px solid #f1f5f9">'
@@ -9841,9 +10065,9 @@ async function renderSAOrgs() {
         + org.name + '</div></td>'
         + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (org.adminEmail || '—') + '</td>'
         + '<td style="padding:10px 12px;font-size:13px;text-align:center">' + memberCount + '</td>'
-        + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + tier + '</td>'
+        + '<td style="padding:10px 12px">' + tierBadge + '<button onclick="openTierChangeModal(\'' + org.id + '\',\'' + (org.name||'').replace(/'/g,"\\'") + '\',\'' + productTier + '\')" style="margin-left:6px;font-size:10px;padding:2px 6px;border:1px solid #ddd4c0;border-radius:4px;background:#faf8f4;color:#7a6a58;cursor:pointer">Change</button></td>'
+        + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + subTier + '</td>'
         + '<td style="padding:10px 12px">' + statusBadge + '</td>'
-        + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (daysLeft || '—') + '</td>'
         + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + (org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '—') + '</td>'
         + '<td style="padding:10px 12px">'
         + '<button onclick="openSAViewOrg(\'' + org.id + '\')" style="background:#7f1d1d;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-right:4px">View</button>'
@@ -9854,7 +10078,7 @@ async function renderSAOrgs() {
     }).join('');
     tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse">'
       + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">'
-      + ['Organization','Admin Email','Members','Tier','Status','Trial Days','Created','Actions'].map(function(h) {
+      + ['Organization','Admin Email','Members','Product Tier','Billing Tier','Status','Created','Actions'].map(function(h) {
           return '<th style="padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;text-align:left">' + h + '</th>';
         }).join('')
       + '</tr></thead><tbody>' + rows + '</tbody></table>';
@@ -9966,6 +10190,143 @@ async function saResetOrgTrial(orgId) {
   await db.collection('organizations').doc(orgId).update({ subscriptionStatus: 'trial', subscriptionTier: 'trial', trialEndDate: trialEnd.toISOString() });
   showToast('🔄 Trial reset (30 days)');
   renderSABilling();
+}
+
+// ── TIER CHANGE MODAL ──────────────────────────────────────────
+var _tcmOrgId = null, _tcmOrgName = '', _tcmCurrentTier = '', _tcmSelectedTier = '';
+
+function openTierChangeModal(orgId, orgName, currentTier) {
+  _tcmOrgId = orgId;
+  _tcmOrgName = orgName;
+  _tcmCurrentTier = currentTier || 'lmi_only';
+  _tcmSelectedTier = _tcmCurrentTier;
+  var modal = document.getElementById('tier-change-modal');
+  if (modal) modal.style.display = 'block';
+  var title = document.getElementById('tcm-title');
+  if (title) title.textContent = 'Change Tier for ' + orgName;
+  // Reset checkboxes
+  var dpa = document.getElementById('tcm-dpa-check');
+  var down = document.getElementById('tcm-down-check');
+  if (dpa) dpa.checked = false;
+  if (down) down.checked = false;
+  _tcmSelect(_tcmCurrentTier);
+}
+
+function closeTierChangeModal() {
+  var modal = document.getElementById('tier-change-modal');
+  if (modal) modal.style.display = 'none';
+  _tcmOrgId = null;
+}
+
+function _tcmSelect(tier) {
+  _tcmSelectedTier = tier;
+  var lmiCard = document.getElementById('tcm-card-lmi');
+  var fullCard = document.getElementById('tcm-card-full');
+  if (lmiCard) {
+    lmiCard.style.borderColor = tier === 'lmi_only' ? '#5a8a6a' : '#ddd4c0';
+    lmiCard.style.background = tier === 'lmi_only' ? '#f6faf8' : '';
+  }
+  if (fullCard) {
+    fullCard.style.borderColor = tier === 'full' ? '#c4943a' : '#ddd4c0';
+    fullCard.style.background = tier === 'full' ? '#fdfbf7' : '';
+  }
+  // Show/hide warnings
+  var upgradeWarn = document.getElementById('tcm-upgrade-warn');
+  var downgradeWarn = document.getElementById('tcm-downgrade-warn');
+  var isUpgrade = _tcmCurrentTier === 'lmi_only' && tier === 'full';
+  var isDowngrade = _tcmCurrentTier === 'full' && tier === 'lmi_only';
+  if (upgradeWarn) upgradeWarn.style.display = isUpgrade ? '' : 'none';
+  if (downgradeWarn) downgradeWarn.style.display = isDowngrade ? '' : 'none';
+  _tcmValidate();
+}
+
+function _tcmValidate() {
+  var btn = document.getElementById('tcm-save-btn');
+  if (!btn) return;
+  var isUpgrade = _tcmCurrentTier === 'lmi_only' && _tcmSelectedTier === 'full';
+  var isDowngrade = _tcmCurrentTier === 'full' && _tcmSelectedTier === 'lmi_only';
+  var noChange = _tcmSelectedTier === _tcmCurrentTier;
+  var valid = true;
+  if (noChange) valid = false;
+  if (isUpgrade) {
+    var dpa = document.getElementById('tcm-dpa-check');
+    if (!dpa || !dpa.checked) valid = false;
+  }
+  if (isDowngrade) {
+    var down = document.getElementById('tcm-down-check');
+    if (!down || !down.checked) valid = false;
+  }
+  btn.disabled = !valid;
+  btn.style.opacity = valid ? '1' : '0.5';
+}
+
+async function _tcmSave() {
+  if (!_tcmOrgId || !db) return;
+  var btn = document.getElementById('tcm-save-btn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+  try {
+    var tierLabel = _tcmSelectedTier === 'full' ? 'Loopenta' : 'LMI Tool';
+    // Update tenants collection
+    await db.collection('tenants').doc(_tcmOrgId).set({
+      tier: _tcmSelectedTier,
+      tierLabel: tierLabel,
+      tierSetBy: currentUser ? currentUser.id : '',
+      tierSetAt: new Date().toISOString(),
+    }, { merge: true });
+    // Also store tier on organizations doc for easy SA table display
+    await db.collection('organizations').doc(_tcmOrgId).update({
+      tier: _tcmSelectedTier,
+      tierLabel: tierLabel,
+    });
+    // Audit log
+    _auditLog('tier_change', 'tenant', _tcmOrgId, _tcmOrgName, {
+      from: _tcmCurrentTier, to: _tcmSelectedTier, tierLabel: tierLabel
+    });
+    showToast('Tier updated for ' + _tcmOrgName + ' → ' + tierLabel);
+    closeTierChangeModal();
+    renderSAOrgs();
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+  if (btn) { btn.textContent = 'Save Tier Change'; btn.disabled = false; }
+}
+
+async function _loadTierHistory(orgId) {
+  var container = document.getElementById('savo-tier-history');
+  if (!container || !db) return;
+  try {
+    var snap = await db.collection('auditLog').where('action','==','tier_change').where('resourceId','==',orgId).get();
+    var entries = [];
+    snap.forEach(function(d) { entries.push(d.data()); });
+    entries.sort(function(a,b) { return (b.timestamp||'').localeCompare(a.timestamp||''); });
+    if (!entries.length) {
+      container.innerHTML = '<div style="color:#94a3b8;font-size:12px;padding:8px 0">No tier changes recorded yet.</div>';
+      return;
+    }
+    container.innerHTML = entries.map(function(e) {
+      var details = e.details || {};
+      var fromLabel = details.from === 'full' ? 'Loopenta Full' : 'LMI Tool';
+      var toLabel = details.to === 'full' ? 'Loopenta Full' : 'LMI Tool';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9">'
+        + '<div>'
+        + '<span style="font-size:12px;color:#374151;font-weight:600">' + fromLabel + ' → ' + toLabel + '</span>'
+        + '<span style="font-size:11px;color:#94a3b8;margin-left:8px">by ' + (e.userName || e.userId || '—') + '</span>'
+        + '</div>'
+        + '<div style="font-size:11px;color:#94a3b8">' + (e.timestamp ? new Date(e.timestamp).toLocaleString() : '—') + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) { container.innerHTML = '<div style="color:#ef4444;font-size:12px">Error loading history.</div>'; }
+}
+
+async function _savoDpaSave() {
+  if (!_savoOrgId || !db) return;
+  var dateInput = document.getElementById('savo-dpa-date');
+  var dpaDate = dateInput ? dateInput.value.trim() : '';
+  try {
+    await db.collection('organizations').doc(_savoOrgId).update({ dpaSignedDate: dpaDate });
+    await db.collection('tenants').doc(_savoOrgId).set({ dpaSignedDate: dpaDate }, { merge: true });
+    showToast('DPA date saved');
+  } catch(e) { showToast('Error: ' + e.message); }
 }
 
 function openCreateOrgModal() {
@@ -10254,10 +10615,25 @@ async function openSAViewOrg(orgId) {
   try {
     var doc = await db.collection('organizations').doc(orgId).get();
     _savoOrg = doc.exists ? Object.assign({ id: doc.id }, doc.data()) : { id: orgId, name: orgId };
+    // Merge tier data from tenants collection
+    try {
+      var tDoc = await db.collection('tenants').doc(orgId).get();
+      if (tDoc.exists) {
+        var td = tDoc.data();
+        if (td.tier) _savoOrg.tier = td.tier;
+        if (td.tierSetBy) _savoOrg.tierSetBy = td.tierSetBy;
+        if (td.tierSetAt) _savoOrg.tierSetAt = td.tierSetAt;
+        if (td.dpaSignedDate) _savoOrg.dpaSignedDate = td.dpaSignedDate;
+      }
+    } catch(e) {}
     var nameEl2 = document.getElementById('savo-org-name');
     if (nameEl2) nameEl2.textContent = _savoOrg.name || orgId;
     var subEl = document.getElementById('savo-org-sub');
-    if (subEl) subEl.textContent = 'Tier: ' + (_savoOrg.subscriptionTier || 'trial') + ' · Status: ' + (_savoOrg.subscriptionStatus || 'trial');
+    var productTier = _savoOrg.tier || 'lmi_only';
+    var tierLabel = productTier === 'full' ? 'Loopenta Full' : 'LMI Tool';
+    var tierBadgeColor = productTier === 'full' ? 'background:#f5f0e8;color:#c4943a' : 'background:#eef4f0;color:#5a8a6a';
+    if (subEl) subEl.innerHTML = '<span style="' + tierBadgeColor + ';padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;margin-right:8px">' + tierLabel + '</span>'
+      + 'Billing: ' + (_savoOrg.subscriptionTier || 'trial') + ' · Status: ' + (_savoOrg.subscriptionStatus || 'trial');
     savoShowTab('branding');
   } catch(e) {
     var b = document.getElementById('savo-body');
@@ -10273,7 +10649,7 @@ function closeSAViewOrg() {
 }
 
 function savoShowTab(tab) {
-  ['branding','billing','settings','users','activity'].forEach(function(t) {
+  ['branding','tier','billing','settings','users','activity'].forEach(function(t) {
     var btn = document.getElementById('savo-tab-' + t);
     if (btn) {
       btn.style.borderBottomColor = t === tab ? '#7f1d1d' : 'transparent';
@@ -10283,6 +10659,43 @@ function savoShowTab(tab) {
   var body = document.getElementById('savo-body');
   if (!body || !_savoOrg) return;
   var org = _savoOrg;
+
+  if (tab === 'tier') {
+    var productTier = org.tier || 'lmi_only';
+    var tierLabel = productTier === 'full' ? 'Loopenta Full' : 'LMI Tool';
+    var tierBadgeStyle = productTier === 'full' ? 'background:#f5f0e8;color:#c4943a' : 'background:#eef4f0;color:#5a8a6a';
+    body.innerHTML = '<div style="margin-bottom:24px">'
+      + '<div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px">Current Product Tier</div>'
+      + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+      + '<span style="' + tierBadgeStyle + ';padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700">' + tierLabel + '</span>'
+      + '<button onclick="openTierChangeModal(\'' + org.id + '\',\'' + (org.name||'').replace(/'/g,"\\'") + '\',\'' + productTier + '\')" style="font-size:12px;padding:6px 14px;border:1px solid #ddd4c0;border-radius:8px;background:#faf8f4;color:#7a6a58;cursor:pointer;font-weight:600">Change Tier</button>'
+      + '</div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">'
+      + '<div style="background:#f8f6f2;border-radius:10px;padding:14px">'
+      + '<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Tier Set By</div>'
+      + '<div style="font-size:13px;color:#374151">' + (org.tierSetBy || '—') + '</div>'
+      + '</div>'
+      + '<div style="background:#f8f6f2;border-radius:10px;padding:14px">'
+      + '<div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Tier Set At</div>'
+      + '<div style="font-size:13px;color:#374151">' + (org.tierSetAt ? new Date(org.tierSetAt).toLocaleString() : '—') + '</div>'
+      + '</div>'
+      + '</div>'
+      + '<div style="margin-bottom:24px">'
+      + '<div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:8px">DPA Status</div>'
+      + '<div style="display:flex;gap:10px;align-items:center">'
+      + '<input type="text" id="savo-dpa-date" value="' + (org.dpaSignedDate || '') + '" placeholder="e.g. 2025-01-15" style="flex:1;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px" />'
+      + '<button onclick="_savoDpaSave()" style="padding:8px 16px;background:#7f1d1d;color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Save DPA Date</button>'
+      + '</div>'
+      + '</div>'
+      + '<div>'
+      + '<div style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px">Tier Change History</div>'
+      + '<div id="savo-tier-history" style="color:#94a3b8;font-size:12px">Loading...</div>'
+      + '</div>';
+    // Load tier change history from audit log
+    _loadTierHistory(org.id);
+    return;
+  }
 
   if (tab === 'branding') {
     var primary = org.primaryColor || '#1f2937';
@@ -15398,6 +15811,77 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<!-- TIER CHANGE MODAL -->
+<div id="tier-change-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.85);z-index:9500;overflow-y:auto">
+  <div style="max-width:680px;margin:60px auto;background:var(--surface,#faf8f4);border-radius:16px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4)">
+    <div style="background:linear-gradient(135deg,#1c1812,#2a2218);padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:17px;font-weight:800;color:white" id="tcm-title">Change Tier</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px" id="tcm-sub">Select product tier for this organization</div>
+      </div>
+      <button onclick="closeTierChangeModal()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <!-- LMI Tool card -->
+        <div id="tcm-card-lmi" onclick="_tcmSelect('lmi_only')" style="border:2px solid #ddd4c0;border-radius:12px;padding:20px;cursor:pointer;transition:border-color 0.2s">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span style="background:#eef4f0;color:#5a8a6a;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700">LMI Tool</span>
+          </div>
+          <div style="font-size:13px;color:#7a6a58;margin-bottom:14px">CRA compliance and LMI prospecting only</div>
+          <div style="font-size:12px;line-height:2">
+            <div style="color:#5a8a6a">&#10003; LMI Search</div>
+            <div style="color:#5a8a6a">&#10003; Open House OYZ</div>
+            <div style="color:#5a8a6a">&#10003; CRA Reports</div>
+            <div style="color:#5a8a6a">&#10003; Analytics</div>
+            <div style="color:#a89880">&#10007; Deal Pipeline</div>
+            <div style="color:#a89880">&#10007; Borrower Profiles</div>
+            <div style="color:#a89880">&#10007; Sequences</div>
+            <div style="color:#a89880">&#10007; Past Customers / Refi Alerts</div>
+          </div>
+          <div style="margin-top:12px;font-size:11px;color:#7a6a58;font-style:italic">Best for: Institutions with strict data policies</div>
+        </div>
+        <!-- Loopenta Full card -->
+        <div id="tcm-card-full" onclick="_tcmSelect('full')" style="border:2px solid #ddd4c0;border-radius:12px;padding:20px;cursor:pointer;transition:border-color 0.2s">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span style="background:#f5f0e8;color:#c4943a;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700">Loopenta Full</span>
+          </div>
+          <div style="font-size:13px;color:#7a6a58;margin-bottom:14px">Full mortgage CRM suite</div>
+          <div style="font-size:12px;line-height:2">
+            <div style="color:#5a8a6a">&#10003; Everything in LMI Tool</div>
+            <div style="color:#5a8a6a">&#10003; Deal Pipeline</div>
+            <div style="color:#5a8a6a">&#10003; Borrower Profiles + PII encryption</div>
+            <div style="color:#5a8a6a">&#10003; Automated Sequences</div>
+            <div style="color:#5a8a6a">&#10003; Past Customers + Refi Alerts</div>
+            <div style="color:#5a8a6a">&#10003; Realtor Scorecards</div>
+            <div style="color:#5a8a6a">&#10003; MLO Performance Scorecards</div>
+          </div>
+          <div style="margin-top:12px;font-size:11px;color:#7a6a58;font-style:italic">Best for: Organizations with approved data agreements</div>
+        </div>
+      </div>
+      <!-- Warnings -->
+      <div id="tcm-upgrade-warn" style="display:none;background:#faf0e4;border:1px solid #e8d5b8;border-radius:10px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#b07030;margin-bottom:8px">&#9888; Upgrading enables storage of borrower PII</div>
+        <div style="font-size:12px;color:#7a6a58;margin-bottom:10px">Ensure this organization has a signed Data Processing Agreement before proceeding.</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#1a1410">
+          <input type="checkbox" id="tcm-dpa-check" onchange="_tcmValidate()" style="width:15px;height:15px" />
+          DPA is on file for this organization
+        </label>
+      </div>
+      <div id="tcm-downgrade-warn" style="display:none;background:#f8ecea;border:1px solid #e8c5c0;border-radius:10px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:#9a4a3a;margin-bottom:8px">&#9888; Downgrading will hide CRM features</div>
+        <div style="font-size:12px;color:#7a6a58;margin-bottom:10px">Existing data will NOT be deleted. Borrower records will be preserved but inaccessible until re-upgraded.</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#1a1410">
+          <input type="checkbox" id="tcm-down-check" onchange="_tcmValidate()" style="width:15px;height:15px" />
+          I understand existing data will be hidden
+        </label>
+      </div>
+      <!-- Save -->
+      <button id="tcm-save-btn" onclick="_tcmSave()" disabled style="width:100%;padding:12px;background:#c4943a;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;opacity:0.5;transition:opacity 0.2s">Save Tier Change</button>
+    </div>
+  </div>
+</div>
+
 <div id="sa-view-org-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.85);z-index:9000;overflow-y:auto">
   <div style="max-width:900px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4)">
     <!-- Header -->
@@ -15411,6 +15895,7 @@ if ('serviceWorker' in navigator) {
     <!-- Tabs -->
     <div style="display:flex;border-bottom:2px solid #f1f5f9;background:#f8fafc">
       <button class="savo-tab-btn" id="savo-tab-branding" onclick="savoShowTab('branding')" style="flex:1;padding:12px 8px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent">🎨 Branding</button>
+      <button class="savo-tab-btn" id="savo-tab-tier" onclick="savoShowTab('tier')" style="flex:1;padding:12px 8px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent">🏷️ Tier</button>
       <button class="savo-tab-btn" id="savo-tab-billing" onclick="savoShowTab('billing')" style="flex:1;padding:12px 8px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent">💳 Billing</button>
       <button class="savo-tab-btn" id="savo-tab-settings" onclick="savoShowTab('settings')" style="flex:1;padding:12px 8px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent">⚙️ Settings</button>
       <button class="savo-tab-btn" id="savo-tab-users" onclick="savoShowTab('users')" style="flex:1;padding:12px 8px;border:none;background:transparent;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;border-bottom:3px solid transparent">👥 Users</button>
