@@ -10021,18 +10021,20 @@ async function renderSAOrgs() {
     cachedAllOrgs = [];
     snap.forEach(function(d) { cachedAllOrgs.push(Object.assign({ id: d.id }, d.data())); });
     // Merge tier data from tenants collection (authoritative source)
-    var tenantSnap = await db.collection('tenants').get();
+    // Fetch individually per org to avoid collection-level permission issues
     var tenantTiers = {};
-    tenantSnap.forEach(function(d) { var td = d.data(); if (td.tier) tenantTiers[d.id] = td; });
-    cachedAllOrgs.forEach(function(org) {
-      var td = tenantTiers[org.id];
-      if (td) {
-        org.tier = td.tier || org.tier;
-        org.tierSetBy = td.tierSetBy || org.tierSetBy;
-        org.tierSetAt = td.tierSetAt || org.tierSetAt;
-        org.dpaSignedDate = td.dpaSignedDate || org.dpaSignedDate;
-      }
-    });
+    await Promise.all(cachedAllOrgs.map(async function(org) {
+      try {
+        var tDoc = await db.collection('tenants').doc(org.id).get();
+        if (tDoc.exists) {
+          var td = tDoc.data();
+          if (td.tier) org.tier = td.tier;
+          if (td.tierSetBy) org.tierSetBy = td.tierSetBy;
+          if (td.tierSetAt) org.tierSetAt = td.tierSetAt;
+          if (td.dpaSignedDate) org.dpaSignedDate = td.dpaSignedDate;
+        }
+      } catch(e) { /* tenant doc may not exist or permissions may block */ }
+    }));
     // Also get all users for member counts
     var userSnap = await db.collection('users').get();
     var allUsers = []; userSnap.forEach(function(d) { allUsers.push(Object.assign({ id: d.id }, d.data())); });
