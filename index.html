@@ -3633,6 +3633,14 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
           <option value="team">Team ($199/mo)</option>
         </select>
       </div>
+      <div class="rp-form-group">
+        <label>Product Tier</label>
+        <select id="co-product-tier" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;font-family:inherit">
+          <option value="lmi_only">LMI Tool — CRA compliance only</option>
+          <option value="full">Loopenta Full — Complete CRM suite</option>
+        </select>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">LMI Tool = compliance features only. Loopenta Full = pipeline, borrowers, sequences, and more.</div>
+      </div>
       <div style="color:#dc2626;font-size:12px;margin-top:4px;display:none" id="co-error"></div>
       <button onclick="createOrganization()" style="width:100%;padding:12px;background:linear-gradient(135deg,#7f1d1d,#991b1b);color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px" id="co-submit-btn">🏢 Create Organization</button>
     </div>
@@ -10333,6 +10341,8 @@ function openCreateOrgModal() {
   ['co-org-name','co-admin-fname','co-admin-lname','co-admin-email','co-admin-password'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
+  var coTier = document.getElementById('co-tier'); if (coTier) coTier.value = 'trial';
+  var coProd = document.getElementById('co-product-tier'); if (coProd) coProd.value = 'lmi_only';
   document.getElementById('co-error').style.display = 'none';
   document.getElementById('co-submit-btn').textContent = '🏢 Create Organization';
   document.getElementById('co-submit-btn').disabled = false;
@@ -10349,6 +10359,7 @@ async function createOrganization() {
   var primary   = document.getElementById('co-primary-color').value || '#1f2937';
   var accent    = document.getElementById('co-accent-color').value || '#1B73E3';
   var tier      = document.getElementById('co-tier').value || 'trial';
+  var productTier = document.getElementById('co-product-tier').value || 'lmi_only';
   var errEl     = document.getElementById('co-error');
   var btn       = document.getElementById('co-submit-btn');
   errEl.style.display = 'none';
@@ -10362,14 +10373,23 @@ async function createOrganization() {
     var orgId = 'org-' + Date.now();
     var trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     var isActive = (tier === 'individual' || tier === 'team');
+    var productTierLabel = productTier === 'full' ? 'Loopenta' : 'LMI Tool';
     var orgData = {
       name: orgName, adminEmail: adminEmail,
       primaryColor: primary, accentColor: accent,
       subscriptionTier: tier, subscriptionStatus: isActive ? 'active' : 'trial',
       trialEndDate: isActive ? null : trialEnd.toISOString(),
-      createdAt: now.toISOString(), memberCount: 1
+      createdAt: now.toISOString(), memberCount: 1,
+      tier: productTier, tierLabel: productTierLabel
     };
     await db.collection('organizations').doc(orgId).set(orgData);
+    // Save product tier to tenants collection (authoritative source for tier gating)
+    await db.collection('tenants').doc(orgId).set({
+      tier: productTier,
+      tierLabel: productTierLabel,
+      tierSetBy: currentUser ? currentUser.id : '',
+      tierSetAt: now.toISOString(),
+    }, { merge: true });
     var adminUser = {
       id: 'u-' + Date.now(), name: fname + ' ' + lname, email: adminEmail, password: adminPass,
       role: 'admin', type: 'N/A', region: 'Central Valley', active: true, branches: [],
