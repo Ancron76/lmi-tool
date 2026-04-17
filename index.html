@@ -4843,8 +4843,11 @@ async function _loadTier() {
     if (tDoc.exists && tDoc.data().tier) {
       _currentTier = tDoc.data().tier;
     } else {
-      // Seed default tier from domain config
-      _currentTier = DOMAIN_CONFIG.defaultTier;
+      // Seed default tier. Golden 1 Credit Union is the LMI-only
+      // customer and is pinned regardless of which domain the
+      // super admin signs in from; other tenants fall back to the
+      // domain default (loopenta.com → full, lmitool.com → lmi_only).
+      _currentTier = tenantId === 'golden1-org' ? 'lmi_only' : DOMAIN_CONFIG.defaultTier;
       try {
         await db.collection('tenants').doc(tenantId).set({
           tier: _currentTier,
