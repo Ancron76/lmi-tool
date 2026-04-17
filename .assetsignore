@@ -1,0 +1,14 @@
+node_modules/
+.github/
+.claude/
+.git/
+.wrangler/
+firestore.rules
+wrangler.jsonc
+package.json
+package-lock.json
+.gitignore
+.assetsignore
+.dev.vars*
+.env*
+CNAME
