@@ -633,8 +633,8 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 .tos-footer { flex-shrink: 0; padding: 20px 32px; border-top: 1px solid #f1f5f9; background: white; }
 .tos-scroll-hint { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 12px; transition: opacity 0.3s; }
 .tos-scroll-hint.hidden { opacity: 0; pointer-events: none; }
-.tos-agree-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: not-allowed; background: #e2e8f0; color: #94a3b8; transition: all 0.3s; }
-.tos-agree-btn.enabled { background: linear-gradient(135deg, #1B73E3, #1558C0); color: white; cursor: pointer; }
+.tos-agree-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: not-allowed; background: #ddd4c0; color: #a89880; transition: all 0.3s; }
+.tos-agree-btn.enabled { background: #c4943a; color: white; cursor: pointer; }
 .tos-agree-btn.enabled:hover { opacity: 0.9; }
 
 @media (max-width: 768px) {
@@ -1890,92 +1890,75 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   </div>
 </div>
 
-<!-- TOS MODAL -->
+<!-- AGREEMENT MODAL -->
 <div class="tos-overlay" id="tos-modal">
-  <div class="tos-box">
-    <div class="tos-header">
+  <div class="tos-box" style="max-width:600px">
+    <div class="tos-header" style="background:linear-gradient(135deg,#1c1812 0%,#2a2218 100%)">
       <div class="tos-logo">
-        <svg width="48" height="48" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-          <rect width="180" height="180" rx="40" fill="#1B73E3"/>
-          <path d="M90 18C64 18 42 40 42 66c0 38 48 96 48 96s48-58 48-96c0-26-22-48-48-48zm0 66a22 22 0 1 1 0-44 22 22 0 0 1 0 44z" fill="#1f2937"/>
-        </svg>
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(140deg,#c4943a,#b07030);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:22px;color:white;letter-spacing:-0.02em">L</div>
       </div>
-      <div class="tos-title">Terms of Service &amp; End User License Agreement</div>
-      <div class="tos-subtitle">Loopenta · Please read and accept to continue</div>
+      <div class="tos-title" style="font-family:'Cormorant Garamond',serif">Terms of Service &amp; User Agreement</div>
+      <div class="tos-subtitle">Please read and accept before continuing</div>
     </div>
-    <div class="tos-scroll-area" id="tos-scroll-area">
-      <div class="tos-text">LMI PROSPECT FINDER — TERMS OF SERVICE &amp; END USER LICENSE AGREEMENT
-
-Last Updated: April 10, 2026
-
-PLEASE READ THESE TERMS CAREFULLY BEFORE USING THIS APPLICATION. BY CLICKING "I AGREE" OR ACCESSING THIS APPLICATION, YOU AGREE TO BE BOUND BY THESE TERMS.
+    <div class="tos-scroll-area" id="tos-scroll-area" style="background:#f5f0e8;border:1px solid #ddd4c0;margin:20px 24px 0;border-radius:10px;padding:16px;min-height:200px;max-height:300px;font-size:12px;line-height:1.7;color:#1a1410">
+      <div class="tos-text" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#1a1410">LMI PROSPECT FINDER / LOOPENTA
+TERMS OF SERVICE AND USER AGREEMENT
+Version 1.0
 
 1. ACCEPTANCE OF TERMS
-These Terms of Service constitute a legally binding agreement between you ("User") and Aaron Simonson ("Owner") governing your use of the Loopenta application ("Application"). If you do not agree to these Terms, you may not access or use the Application.
+By accessing or using LMI Prospect Finder or Loopenta ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Platform.
 
-2. INTELLECTUAL PROPERTY OWNERSHIP
-2.1 The Application, including but not limited to its source code, design, user interface, features, functionality, data structures, workflows, algorithms, marketing materials, and all content contained therein, is the exclusive intellectual property of Aaron Simonson.
-2.2 The name "Loopenta," "Loopenta," "loopenta.com," and all associated logos, branding, and trade dress are the exclusive property of Aaron Simonson.
-2.3 All rights, title, and interest in and to the Application not expressly granted in these Terms are reserved by the Owner.
-2.4 Nothing in these Terms shall be construed as transferring any intellectual property rights to any User.
+2. AUTHORIZED USE
+The Platform is licensed for use by authorized mortgage professionals and financial institution employees only. You may not share your credentials or permit unauthorized access.
 
-3. LICENSE GRANT AND RESTRICTIONS
-3.1 Subject to these Terms, Owner grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Application solely for your authorized internal business purposes as an employee or contractor of Loopenta.
-3.2 You may NOT:
-- Copy, reproduce, distribute, or create derivative works of the Application
-- Reverse engineer, decompile, or disassemble any part of the Application
-- Sell, sublicense, rent, lease, or transfer the Application or your access to it
-- Use the Application for any purpose outside your authorized role
-- Share your login credentials with any unauthorized person
-- Remove or alter any proprietary notices or labels on the Application
-- Use the Application to develop a competing product or service
-- Disclose the Application's features, design, or functionality to any third party without written consent from the Owner
+3. DATA PRIVACY AND CONFIDENTIALITY
+You agree to handle all borrower and customer data in accordance with applicable federal and state privacy laws including GLBA, CCPA, and your institution's data policies.
 
-4. CONFIDENTIALITY
-4.1 The Application and all information related to its design, functionality, and operation constitute confidential and proprietary information of the Owner.
-4.2 You agree to maintain the confidentiality of the Application and not to disclose any information about it to any third party without the prior written consent of the Owner.
+4. CUSTOMER INFORMATION
+You acknowledge that customer PII entered into the Platform is encrypted and stored securely. You are responsible for obtaining proper consent from customers before entering their information.
 
-5. DATA AND PRIVACY
-5.1 Data entered into the Application, including borrower information, realtor contacts, and CRA activity logs, remains the property of the entering User and Loopenta.
-5.2 The Owner does not sell, rent, or share user data with third parties except as required by law.
-5.3 Users are responsible for ensuring that any borrower or client data entered into the Application complies with applicable privacy laws including but not limited to GLBA, CCPA, and applicable CFPB regulations.
+5. INTELLECTUAL PROPERTY
+The Platform, including all features, designs, and content, is the exclusive property of LMI Prospect Finder LLC. Unauthorized reproduction or distribution is prohibited.
 
-6. PROHIBITED USES
-You agree not to use the Application:
-- In any way that violates applicable federal, state, or local law
-- To transmit any unauthorized advertising or promotional material
-- To impersonate any person or entity
-- To engage in any conduct that restricts or inhibits anyone's use of the Application
-- In any manner that could disable, overburden, or impair the Application
+6. ACCEPTABLE USE
+You agree not to use the Platform for any unlawful purpose, to misrepresent data, or to violate any applicable mortgage lending regulations including RESPA, ECOA, and CRA guidelines.
 
 7. TERMINATION
-7.1 The Owner reserves the right to terminate or suspend your access to the Application immediately, without prior notice, for any violation of these Terms.
-7.2 Upon termination, your right to use the Application ceases immediately.
-7.3 All provisions of these Terms that by their nature should survive termination shall survive, including intellectual property provisions, disclaimers, and limitations of liability.
+Access may be terminated at any time for violation of these terms. All data will be retained per applicable regulations.
 
-8. DISCLAIMER OF WARRANTIES
-THE APPLICATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. THE OWNER EXPRESSLY DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+8. LIMITATION OF LIABILITY
+The Platform is provided "as is." We are not liable for any damages arising from your use of the Platform.
 
-9. LIMITATION OF LIABILITY
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE OWNER SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATED TO YOUR USE OF THE APPLICATION.
+9. GOVERNING LAW
+These terms are governed by the laws of the State of California.
 
-10. GOVERNING LAW
-These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in Sacramento County, California.
+10. CONTACT
+Questions: admin@lmitool.com
 
-11. ENTIRE AGREEMENT
-These Terms constitute the entire agreement between you and the Owner regarding the Application and supersede all prior agreements and understandings.
-
-12. AMENDMENTS
-The Owner reserves the right to modify these Terms at any time. Users will be notified of material changes and continued use of the Application constitutes acceptance of the modified Terms.
-
-13. CONTACT
-For questions regarding these Terms, contact:
-Admin
-admin@loopenta.com</div>
+By typing your name and clicking "I Agree," you are providing a legally binding digital signature confirming you have read, understood, and agree to these terms.</div>
     </div>
-    <div class="tos-footer">
-      <div class="tos-scroll-hint" id="tos-scroll-hint">↓ Scroll to bottom to enable agreement</div>
-      <button class="tos-agree-btn" id="tos-agree-btn" disabled onclick="acceptTOS()">I Agree</button>
+    <div class="tos-footer" style="padding:16px 24px 24px">
+      <div class="tos-scroll-hint" id="tos-scroll-hint" style="text-align:center;font-size:12px;color:#a89880;margin-bottom:12px">↓ Please scroll to read the full agreement</div>
+      <!-- Checkbox -->
+      <label id="tos-agree-label" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:not-allowed;opacity:0.5;transition:opacity 0.3s">
+        <input type="checkbox" id="tos-agree-check" disabled onchange="_tosValidateForm()" style="width:18px;height:18px;margin-top:2px;flex-shrink:0" />
+        <span style="font-size:13px;color:#1a1410;line-height:1.5">I have read and agree to the Terms of Service and User Agreement</span>
+      </label>
+      <!-- Signature -->
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Type your full name as your digital signature</label>
+        <input type="text" id="tos-sig-name" placeholder="Your full name" disabled oninput="_tosValidateForm()" style="width:100%;padding:12px 14px;border:2px solid #ddd4c0;border-radius:10px;font-size:16px;outline:none;font-family:inherit;box-sizing:border-box;background:#faf8f4" />
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Date</label>
+        <input type="text" id="tos-sig-date" readonly style="width:100%;padding:12px 14px;border:2px solid #ddd4c0;border-radius:10px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box;background:#f5f0e8;color:#7a6a58" />
+      </div>
+      <!-- Accept -->
+      <button class="tos-agree-btn" id="tos-agree-btn" disabled onclick="acceptAgreement()" style="width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:not-allowed;background:#ddd4c0;color:#a89880;transition:all 0.3s;font-family:inherit;min-height:48px">I Agree &amp; Continue</button>
+      <!-- Decline -->
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="_declineAgreement()" style="background:none;border:none;color:#a89880;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Decline — I do not agree</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3510,11 +3493,19 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
   <div class="sa-header header">
     <div class="header-left">
       <div class="header-icon" style="background:#c53030">⚡</div>
-      <div><div class="header-title">Super Admin</div><div class="header-sub">Loopenta — Platform Management</div></div>
+      <div><div class="header-title">Super Admin</div><div class="header-sub" id="sa-header-sub">All Products — Platform Management</div></div>
     </div>
-    <div class="header-actions">
-      <button class="hdr-btn" onclick="goApp()">← Back to Tool</button>
-      <button class="hdr-btn" onclick="logout()">Sign Out</button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <!-- Product Switcher -->
+      <div id="sa-product-switcher" style="display:inline-flex;background:#f5f0e8;border-radius:99px;padding:3px;gap:2px">
+        <button onclick="_saSetProduct('all')" id="sa-ps-all" style="padding:6px 14px;border:none;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;background:#c4943a;color:white;font-family:inherit;min-height:32px">All</button>
+        <button onclick="_saSetProduct('lmi_only')" id="sa-ps-lmi" style="padding:6px 14px;border:none;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#7a6a58;font-family:inherit;min-height:32px">LMI Tool</button>
+        <button onclick="_saSetProduct('full')" id="sa-ps-full" style="padding:6px 14px;border:none;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#7a6a58;font-family:inherit;min-height:32px">Loopenta</button>
+      </div>
+      <div class="header-actions">
+        <button class="hdr-btn" onclick="goApp()">← Back to Tool</button>
+        <button class="hdr-btn" onclick="logout()">Sign Out</button>
+      </div>
     </div>
   </div>
   <div style="max-width:1100px;margin:0 auto;padding:28px 20px">
@@ -3542,7 +3533,7 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
     </div>
     <!-- USERS TAB -->
     <div class="sa-tab-content" id="sa-content-users">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
         <select id="sa-filter-org" onchange="renderSAUsers()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none"><option value="all">All Organizations</option></select>
         <select id="sa-filter-role" onchange="renderSAUsers()" style="padding:9px 14px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none">
           <option value="all">All Roles</option>
@@ -3556,6 +3547,10 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#7a6a58;font-weight:600;margin-left:4px;white-space:nowrap">
+          <input type="checkbox" id="sa-filter-unsigned" onchange="renderSAUsers()" style="width:16px;height:16px" />
+          Unsigned only
+        </label>
       </div>
       <div id="sa-users-table" style="overflow-x:auto"></div>
     </div>
@@ -3596,6 +3591,36 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         </div>
         <button onclick="savePlatformSettings()" style="background:#7f1d1d;color:white;border:none;border-radius:9px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:10px">Save Platform Settings</button>
         <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:8px">
+          <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:16px">📜 Legal — User Agreement</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Current Version</label>
+              <input type="text" id="sa-legal-version" value="1.0" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box" />
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Effective Date</label>
+              <input type="date" id="sa-legal-date" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box" />
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Agreement Text</label>
+            <textarea id="sa-legal-text" rows="6" placeholder="Full Terms of Service text..." style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer">
+            <input type="checkbox" id="sa-legal-resign" style="width:16px;height:16px" />
+            <span style="font-size:13px;color:#1a1410;font-weight:600">Require all users to re-sign</span>
+          </label>
+          <button onclick="_saveLegalSettings()" style="background:#7f1d1d;color:white;border:none;border-radius:9px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:10px">Save Agreement Settings</button>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-size:13px;font-weight:700;color:#1f2937">Agreement Log</div>
+              <button onclick="_exportAgreementLog()" style="font-size:11px;padding:5px 12px;border:1px solid #ddd4c0;border-radius:6px;background:#faf8f4;color:#7a6a58;cursor:pointer;font-weight:600">Export CSV</button>
+            </div>
+            <div id="sa-agreement-log" style="max-height:200px;overflow-y:auto;font-size:12px;color:#64748b">Click to load...</div>
+            <button onclick="_loadAgreementLogTable()" style="font-size:11px;padding:5px 12px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;cursor:pointer;margin-top:6px">Load Agreement Log</button>
+          </div>
+        </div>
+        <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:16px">
           <div style="font-size:13px;font-weight:700;color:#1f2937;margin-bottom:8px">🔧 Data Migration</div>
           <div style="font-size:12px;color:#64748b;margin-bottom:10px">Backfill orgId: "golden1-org" onto all existing users, OYZ entries, activities, and realtors that don't have an orgId yet.</div>
           <button onclick="runDataMigration()" style="background:#374151;color:white;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">▶ Run Migration</button>
@@ -4941,7 +4966,9 @@ async function _postLoginSetup(user) {
   if (isAnyAdmin()) _renderRateSourceFields();
   if (_featureFlags.smsEnabled) _showSmsNumbersSection(); // SMS gated
   _applyFeatureFlags(); // hide/show SMS UI based on flag
-  if (user.tosAccepted) { showTab('home'); } else { showTOSModal(); }
+  // Agreement version check — re-show modal if version changed and re-sign required
+  var agrOk = await _checkAgreementVersion();
+  if (agrOk) { showTab('home'); } else { showTOSModal(); }
 }
 
 async function tryLogin() {
@@ -4960,7 +4987,8 @@ async function tryLogin() {
     document.getElementById('login-screen').style.display = 'none';
     if (user.role === 'realtor') {
       console.log('[tryLogin] Realtor login — id:', user.id, '| realtorDocId:', user.realtorDocId || '(not set)');
-      if (user.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
+      var rLoginAgrOk = await _checkAgreementVersion();
+      if (rLoginAgrOk) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
     await _postLoginSetup(user);
@@ -5085,7 +5113,8 @@ window.onload = async function() {
     currentUser = cachedUsers.find(function(u) { return u.id === saved.id; }) || saved;
     document.getElementById('login-screen').style.display = 'none';
     if (currentUser.role === 'realtor') {
-      if (currentUser.tosAccepted) { await showRealtorPortal(); } else { showTOSModal(); }
+      var rAgrOk = await _checkAgreementVersion();
+      if (rAgrOk) { await showRealtorPortal(); } else { showTOSModal(); }
       return;
     }
     await _postLoginSetup(currentUser);
@@ -6026,42 +6055,110 @@ document.addEventListener('click', function() {
 });
 
 // ── TERMS OF SERVICE ──────────────────────────────────────────
+var _tosScrolledToBottom = false;
+
 function showTOSModal() {
-  document.getElementById('tos-modal').classList.add('open');
-  // Set up scroll listener
+  var modal = document.getElementById('tos-modal');
+  modal.classList.add('open');
+  _tosScrolledToBottom = false;
+  // Reset form state
   var area = document.getElementById('tos-scroll-area');
-  area.scrollTop = 0;
-  area.addEventListener('scroll', onTOSScroll);
+  var check = document.getElementById('tos-agree-check');
+  var sigName = document.getElementById('tos-sig-name');
+  var sigDate = document.getElementById('tos-sig-date');
+  var label = document.getElementById('tos-agree-label');
+  var hint = document.getElementById('tos-scroll-hint');
+  var btn = document.getElementById('tos-agree-btn');
+  if (area) area.scrollTop = 0;
+  if (check) { check.checked = false; check.disabled = true; }
+  if (sigName) { sigName.value = ''; sigName.disabled = true; }
+  if (sigDate) sigDate.value = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  if (label) { label.style.opacity = '0.5'; label.style.cursor = 'not-allowed'; }
+  if (hint) { hint.style.display = ''; hint.classList.remove('hidden'); }
+  if (btn) { btn.disabled = true; btn.classList.remove('enabled'); btn.textContent = 'I Agree & Continue'; }
+  // Set up scroll listener
+  if (area) area.addEventListener('scroll', _onAgreementScroll);
 }
 
-function onTOSScroll() {
+function _onAgreementScroll() {
   var area = document.getElementById('tos-scroll-area');
-  var btn  = document.getElementById('tos-agree-btn');
-  var hint = document.getElementById('tos-scroll-hint');
-  // Consider "at bottom" when within 40px of the bottom
-  var atBottom = area.scrollTop + area.clientHeight >= area.scrollHeight - 40;
-  if (atBottom) {
-    btn.disabled = false;
-    btn.classList.add('enabled');
-    hint.classList.add('hidden');
-    area.removeEventListener('scroll', onTOSScroll);
+  if (!area) return;
+  // Require 90% scroll
+  var scrollPct = (area.scrollTop + area.clientHeight) / area.scrollHeight;
+  if (scrollPct >= 0.9) {
+    _tosScrolledToBottom = true;
+    var check = document.getElementById('tos-agree-check');
+    var sigName = document.getElementById('tos-sig-name');
+    var label = document.getElementById('tos-agree-label');
+    var hint = document.getElementById('tos-scroll-hint');
+    if (check) check.disabled = false;
+    if (sigName) sigName.disabled = false;
+    if (label) { label.style.opacity = '1'; label.style.cursor = 'pointer'; }
+    if (hint) hint.classList.add('hidden');
+    area.removeEventListener('scroll', _onAgreementScroll);
+    _tosValidateForm();
   }
 }
 
-async function acceptTOS() {
+function _tosValidateForm() {
+  var check = document.getElementById('tos-agree-check');
+  var sigName = document.getElementById('tos-sig-name');
+  var btn = document.getElementById('tos-agree-btn');
+  if (!btn) return;
+  var valid = _tosScrolledToBottom && check && check.checked && sigName && sigName.value.trim().length >= 2;
+  btn.disabled = !valid;
+  if (valid) { btn.classList.add('enabled'); } else { btn.classList.remove('enabled'); }
+}
+
+function _declineAgreement() {
+  document.getElementById('tos-modal').classList.remove('open');
+  showToast('You must accept the Terms of Service to use this platform.');
+  setTimeout(logout, 1500);
+}
+
+async function acceptAgreement() {
   if (!currentUser || !db) return;
   var btn = document.getElementById('tos-agree-btn');
+  var sigName = document.getElementById('tos-sig-name');
+  var enteredName = sigName ? sigName.value.trim() : '';
+  if (!enteredName) return;
   btn.textContent = 'Saving...';
   btn.disabled = true;
+  var now = new Date();
+  var version = _currentAgreementVersion || '1.0';
+  var product = DOMAIN_CONFIG.isLoopenta ? 'loopenta' : 'lmi_tool';
   try {
-    var tosData = { tosAccepted: true, tosAcceptedAt: new Date().toISOString(), tosVersion: '1.0' };
-    await db.collection('users').doc(currentUser.id).update(tosData);
-    Object.assign(currentUser, tosData);
+    // 1. Update user doc
+    var agrData = {
+      tosAccepted: true, tosAcceptedAt: now.toISOString(), tosVersion: version,
+      agreementSigned: true, agreementSignedAt: now.toISOString(),
+      agreementSignedName: enteredName, agreementVersion: version,
+      agreementUserAgent: navigator.userAgent, agreementProduct: product
+    };
+    await db.collection('users').doc(currentUser.id).update(agrData);
+    Object.assign(currentUser, agrData);
     sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
-  } catch(e) { console.error('TOS save error', e); }
+    // 2. Write to agreementLog collection
+    try {
+      await db.collection('agreementLog').add({
+        uid: currentUser.id, email: currentUser.email || '',
+        displayName: currentUser.name || '', signedName: enteredName,
+        tenantId: currentUser.orgId || '', role: currentUser.role || '',
+        version: version, signedAt: now.toISOString(),
+        userAgent: navigator.userAgent, product: product
+      });
+    } catch(e) { console.warn('agreementLog write error', e); }
+    // 3. Audit log
+    _auditLog('agreement_signed', 'user_agreement', currentUser.id, currentUser.name || currentUser.email, {
+      version: version, signedName: enteredName
+    });
+  } catch(e) { console.error('Agreement save error', e); }
   document.getElementById('tos-modal').classList.remove('open');
   if (currentUser && currentUser.role === 'realtor') { showRealtorPortal(); } else { showTab('home'); }
 }
+
+// Backward compat alias
+function acceptTOS() { acceptAgreement(); }
 
 // ── OYZ ───────────────────────────────────────────────────────
 var cachedOYZ = [];
@@ -9995,6 +10092,9 @@ async function goSuperAdmin() {
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('superadmin-screen').style.display = 'block';
+  // Initialize product switcher UI from saved state
+  _saActiveProduct = localStorage.getItem('sa_activeProduct') || 'all';
+  _saSetProduct(_saActiveProduct);
   saShowTab('orgs');
 }
 
@@ -10008,6 +10108,7 @@ function saShowTab(tab) {
   if (tab === 'orgs') renderSAOrgs();
   if (tab === 'users') renderSAUsers();
   if (tab === 'billing') renderSABilling();
+  if (tab === 'settings') _loadLegalSettings();
   if (tab === 'auditlog') _renderAuditLogViewer();
 }
 
@@ -10039,23 +10140,51 @@ async function renderSAOrgs() {
     var userSnap = await db.collection('users').get();
     var allUsers = []; userSnap.forEach(function(d) { allUsers.push(Object.assign({ id: d.id }, d.data())); });
     var totalUsers = allUsers.length;
-    var activeOrgs = cachedAllOrgs.filter(function(o) { return o.subscriptionStatus === 'active'; }).length;
-    var trialOrgs  = cachedAllOrgs.filter(function(o) { return o.subscriptionStatus === 'trial' || o.subscriptionTier === 'trial'; }).length;
-    statsEl.innerHTML = [
-      { label: 'Total Orgs',     val: cachedAllOrgs.length, color: '#7f1d1d' },
-      { label: 'Active Subs',    val: activeOrgs,           color: '#059669' },
-      { label: 'On Trial',       val: trialOrgs,            color: '#d97706' },
-      { label: 'Platform Users', val: totalUsers,           color: '#2563eb' }
-    ].map(function(s) {
-      return '<div class="sa-stat-card"><div class="sa-stat-num" style="color:' + s.color + '">' + s.val + '</div><div class="sa-stat-label">' + s.label + '</div></div>';
-    }).join('');
     if (!cachedAllOrgs.length) { tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No organizations yet.</div>'; return; }
     // Populate org filter in Users tab
     var orgFilter = document.getElementById('sa-filter-org');
     if (orgFilter) {
       orgFilter.innerHTML = '<option value="all">All Organizations</option>' + cachedAllOrgs.map(function(o) { return '<option value="' + o.id + '">' + o.name + '</option>'; }).join('');
     }
-    var rows = cachedAllOrgs.map(function(org) {
+    // Filter by active product
+    var filteredOrgs = cachedAllOrgs;
+    if (_saActiveProduct !== 'all') {
+      filteredOrgs = cachedAllOrgs.filter(function(o) { return (o.tier || 'lmi_only') === _saActiveProduct; });
+    }
+    // Update stats to reflect filter
+    var fActiveOrgs = filteredOrgs.filter(function(o) { return o.subscriptionStatus === 'active'; }).length;
+    var fTrialOrgs = filteredOrgs.filter(function(o) { return o.subscriptionStatus === 'trial' || o.subscriptionTier === 'trial'; }).length;
+    var fUsers = allUsers.filter(function(u) {
+      if (_saActiveProduct === 'all') return true;
+      var uOrg = cachedAllOrgs.find(function(o) { return o.id === u.orgId || (!u.orgId && o.id === 'golden1-org'); });
+      return uOrg && (uOrg.tier || 'lmi_only') === _saActiveProduct;
+    }).length;
+    statsEl.innerHTML = [
+      { label: 'Total Orgs',     val: filteredOrgs.length, color: '#7f1d1d' },
+      { label: 'Active Subs',    val: fActiveOrgs,         color: '#059669' },
+      { label: 'On Trial',       val: fTrialOrgs,          color: '#d97706' },
+      { label: 'Platform Users', val: fUsers,              color: '#2563eb' }
+    ].map(function(s) {
+      return '<div class="sa-stat-card"><div class="sa-stat-num" style="color:' + s.color + '">' + s.val + '</div><div class="sa-stat-label">' + s.label + '</div></div>';
+    }).join('');
+    // Unsigned agreement warning banner
+    var unsignedCount = allUsers.filter(function(u) { return u.agreementSigned !== true && u.tosAccepted !== true && u.active !== false; }).length;
+    var bannerEl = document.getElementById('sa-unsigned-banner');
+    if (!bannerEl) {
+      var bannerWrap = document.createElement('div');
+      bannerWrap.id = 'sa-unsigned-banner';
+      statsEl.parentNode.insertBefore(bannerWrap, statsEl.nextSibling);
+      bannerEl = bannerWrap;
+    }
+    if (unsignedCount > 0) {
+      bannerEl.innerHTML = '<div style="background:#faf0e4;border:1px solid #ddd4c0;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+        + '<span style="font-size:13px;color:#b07030;font-weight:600">⚠ ' + unsignedCount + ' user' + (unsignedCount !== 1 ? 's have' : ' has') + ' not signed the User Agreement</span>'
+        + '<div style="display:flex;gap:8px"><button onclick="saShowTab(\'users\');setTimeout(function(){var t=document.getElementById(\'sa-filter-unsigned\');if(t)t.checked=true;renderSAUsers()},300)" style="font-size:11px;padding:5px 12px;border:1px solid #ddd4c0;border-radius:6px;background:#faf8f4;color:#7a6a58;cursor:pointer;font-weight:600">View unsigned users</button></div>'
+        + '</div>';
+    } else {
+      bannerEl.innerHTML = '';
+    }
+    var rows = filteredOrgs.map(function(org) {
       var memberCount = allUsers.filter(function(u) { return u.orgId === org.id || (!u.orgId && org.id === 'golden1-org'); }).length;
       var subTier = org.subscriptionTier || 'trial';
       var status = org.subscriptionStatus || 'trial';
@@ -10075,7 +10204,7 @@ async function renderSAOrgs() {
         + org.name + '</div></td>'
         + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (org.adminEmail || '—') + '</td>'
         + '<td style="padding:10px 12px;font-size:13px;text-align:center">' + memberCount + '</td>'
-        + '<td style="padding:10px 12px">' + tierBadge + '<button onclick="openTierChangeModal(\'' + org.id + '\',\'' + (org.name||'').replace(/'/g,"\\'") + '\',\'' + productTier + '\')" style="margin-left:6px;font-size:10px;padding:2px 6px;border:1px solid #ddd4c0;border-radius:4px;background:#faf8f4;color:#7a6a58;cursor:pointer">Change</button></td>'
+        + '<td style="padding:10px 12px"><button data-tier="' + productTier + '" onclick="_saInlineTierToggle(\'' + org.id + '\',\'' + (org.name||'').replace(/'/g,"\\'") + '\',event)" style="border:none;cursor:pointer;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;font-family:inherit;' + (productTier === 'full' ? 'background:#f5f0e8;color:#c4943a' : 'background:#eef4f0;color:#5a8a6a') + '">' + (productTier === 'full' ? 'Loopenta Full' : 'LMI Tool') + ' ▾</button></td>'
         + '<td style="padding:10px 12px;font-size:12px;text-transform:capitalize">' + subTier + '</td>'
         + '<td style="padding:10px 12px">' + statusBadge + '</td>'
         + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + (org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '—') + '</td>'
@@ -10105,27 +10234,60 @@ async function renderSAUsers() {
     var orgFilter  = (document.getElementById('sa-filter-org')    || {}).value || 'all';
     var roleFilter = (document.getElementById('sa-filter-role')   || {}).value || 'all';
     var statFilter = (document.getElementById('sa-filter-status') || {}).value || 'all';
+    var unsignedOnly = (document.getElementById('sa-filter-unsigned') || {}).checked || false;
     if (orgFilter  !== 'all') users = users.filter(function(u) { return u.orgId === orgFilter || (!u.orgId && orgFilter === 'golden1-org'); });
     if (roleFilter !== 'all') users = users.filter(function(u) { return u.role === roleFilter; });
     if (statFilter !== 'all') users = users.filter(function(u) { return statFilter === 'active' ? u.active !== false : u.active === false; });
+    // Filter by product switcher
+    if (_saActiveProduct !== 'all') {
+      var orgTierMap = {};
+      (cachedAllOrgs||[]).forEach(function(o) { orgTierMap[o.id] = o.tier || 'lmi_only'; });
+      users = users.filter(function(u) {
+        var oid = u.orgId || 'golden1-org';
+        return (orgTierMap[oid] || 'lmi_only') === _saActiveProduct;
+      });
+    }
+    // Filter unsigned only
+    if (unsignedOnly) {
+      users = users.filter(function(u) { return u.agreementSigned !== true && u.tosAccepted !== true; });
+    }
     if (!users.length) { tableEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No users found.</div>'; return; }
     var orgMap = {};
-    cachedAllOrgs.forEach(function(o) { orgMap[o.id] = o.name; });
+    (cachedAllOrgs||[]).forEach(function(o) { orgMap[o.id] = o.name; });
     var rows = users.map(function(u) {
       var orgName = orgMap[u.orgId] || (u.orgId === 'golden1-org' ? 'Loopenta' : u.orgId || '—');
       var roleBadge = '<span style="font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;background:#f1f5f9;color:#374151">' + (u.role || '—') + '</span>';
+      // Agreement status
+      var signed = u.agreementSigned === true || u.tosAccepted === true;
+      var signedVersion = u.agreementVersion || u.tosVersion || null;
+      var versionCurrent = signedVersion === _currentAgreementVersion;
+      var agrBadge, agrSignedName, agrDate, agrVer;
+      if (signed && versionCurrent) {
+        agrBadge = '<span style="background:#f0fdf4;color:#059669;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700" title="Signed ' + (u.agreementSignedAt || u.tosAcceptedAt || '') + '">Signed ✓</span>';
+      } else if (signed && !versionCurrent) {
+        agrBadge = '<span style="background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700">Update Required</span>';
+      } else {
+        agrBadge = '<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700">Not Signed</span>';
+      }
+      agrSignedName = u.agreementSignedName || '—';
+      var rawDate = u.agreementSignedAt || u.tosAcceptedAt;
+      agrDate = rawDate ? new Date(rawDate).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+      agrVer = signedVersion ? 'v' + signedVersion : '—';
       return '<tr style="border-bottom:1px solid #f1f5f9">'
         + '<td style="padding:10px 12px;font-size:13px;font-weight:600">' + (u.name || '—') + '</td>'
         + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + (u.email || '—') + '</td>'
         + '<td style="padding:10px 12px">' + roleBadge + '</td>'
         + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + orgName + '</td>'
+        + '<td style="padding:10px 12px">' + agrBadge + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#64748b">' + agrSignedName + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + agrDate + '</td>'
+        + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + agrVer + '</td>'
         + '<td style="padding:10px 12px"><span style="font-size:11px;padding:2px 8px;border-radius:5px;font-weight:700;background:' + (u.active !== false ? '#f0fdf4' : '#fef2f2') + ';color:' + (u.active !== false ? '#059669' : '#dc2626') + '">' + (u.active !== false ? 'Active' : 'Inactive') + '</span></td>'
-        + '<td style="padding:10px 12px;font-size:12px;color:#94a3b8">' + (u.created || '—') + '</td>'
         + '</tr>';
     }).join('');
     tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse">'
       + '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0">'
-      + ['Name','Email','Role','Organization','Status','Joined'].map(function(h) {
+      + ['Name','Email','Role','Organization','Agreement','Signed Name','Signed Date','Ver','Status'].map(function(h) {
           return '<th style="padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;text-align:left">' + h + '</th>';
         }).join('')
       + '</tr></thead><tbody>' + rows + '</tbody></table>';
@@ -10337,6 +10499,211 @@ async function _savoDpaSave() {
     await db.collection('tenants').doc(_savoOrgId).set({ dpaSignedDate: dpaDate }, { merge: true });
     showToast('DPA date saved');
   } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── PRODUCT SWITCHER ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+var _saActiveProduct = localStorage.getItem('sa_activeProduct') || 'all';
+
+function _saSetProduct(product) {
+  _saActiveProduct = product;
+  localStorage.setItem('sa_activeProduct', product);
+  // Update toggle UI
+  ['all','lmi_only','full'].forEach(function(p) {
+    var btn = document.getElementById('sa-ps-' + (p === 'lmi_only' ? 'lmi' : p));
+    if (btn) {
+      btn.style.background = p === product ? '#c4943a' : 'transparent';
+      btn.style.color = p === product ? 'white' : '#7a6a58';
+    }
+  });
+  // Update header subtitle
+  var sub = document.getElementById('sa-header-sub');
+  if (sub) {
+    var labels = { all: 'All Products', lmi_only: 'LMI Tool', full: 'Loopenta' };
+    sub.textContent = (labels[product] || 'All Products') + ' — Platform Management';
+  }
+  // Re-render active tab
+  var activeTab = document.querySelector('.sa-tab.active');
+  if (activeTab) {
+    var tabId = activeTab.id.replace('sa-tab-','');
+    if (tabId === 'orgs') renderSAOrgs();
+    if (tabId === 'users') renderSAUsers();
+  }
+}
+
+// ── INLINE TIER CHANGE (quick switch from org row) ───────────
+function _saInlineTierToggle(orgId, orgName, evt) {
+  evt.stopPropagation();
+  // Remove any existing dropdown
+  var existing = document.getElementById('sa-tier-dropdown');
+  if (existing) existing.remove();
+  var btn = evt.currentTarget;
+  var rect = btn.getBoundingClientRect();
+  var currentTier = btn.getAttribute('data-tier') || 'lmi_only';
+  var dd = document.createElement('div');
+  dd.id = 'sa-tier-dropdown';
+  dd.style.cssText = 'position:fixed;top:' + (rect.bottom + 4) + 'px;left:' + rect.left + 'px;background:white;border:1px solid #ddd4c0;border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:9999;min-width:160px';
+  dd.innerHTML = ['lmi_only','full'].map(function(t) {
+    var label = t === 'full' ? 'Loopenta Full' : 'LMI Tool';
+    var checked = t === currentTier ? 'checked' : '';
+    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:6px;font-size:13px;color:#1a1410" onmouseover="this.style.background=\'#f5f0e8\'" onmouseout="this.style.background=\'\'">'
+      + '<input type="radio" name="sa-tier-radio" value="' + t + '" ' + checked + ' onchange="_saInlineTierSave(\'' + orgId + '\',\'' + orgName.replace(/'/g,"\\'") + '\',\'' + t + '\')" style="width:16px;height:16px" />'
+      + label + '</label>';
+  }).join('');
+  document.body.appendChild(dd);
+  // Close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', function _closeTierDD() {
+      var el = document.getElementById('sa-tier-dropdown');
+      if (el) el.remove();
+      document.removeEventListener('click', _closeTierDD);
+    });
+  }, 50);
+}
+
+async function _saInlineTierSave(orgId, orgName, newTier) {
+  if (!db) return;
+  var tierLabel = newTier === 'full' ? 'Loopenta' : 'LMI Tool';
+  try {
+    await db.collection('tenants').doc(orgId).set({
+      tier: newTier, tierLabel: tierLabel,
+      tierSetBy: currentUser ? currentUser.id : '',
+      tierSetAt: new Date().toISOString(),
+    }, { merge: true });
+    await db.collection('organizations').doc(orgId).update({ tier: newTier, tierLabel: tierLabel });
+    _auditLog('tier_change', 'tenant', orgId, orgName, { to: newTier, tierLabel: tierLabel });
+  } catch(e) { showToast('Error: ' + e.message); return; }
+  // Close dropdown
+  var dd = document.getElementById('sa-tier-dropdown');
+  if (dd) {
+    dd.innerHTML = '<div style="padding:6px 12px;font-size:12px;color:#5a8a6a;font-weight:600">Saved ✓</div>';
+    setTimeout(function() { dd.remove(); renderSAOrgs(); }, 1200);
+  }
+}
+
+// ── AGREEMENT VERSION CHECK ──────────────────────────────────
+var _currentAgreementVersion = '1.0';
+var _currentAgreementRequiresResign = false;
+
+async function _checkAgreementVersion() {
+  if (!db || !currentUser) return;
+  try {
+    var doc = await db.collection('agreements').doc('current').get();
+    if (doc.exists) {
+      var data = doc.data();
+      _currentAgreementVersion = data.version || '1.0';
+      _currentAgreementRequiresResign = data.requiresResign === true;
+    }
+  } catch(e) { /* agreements doc may not exist yet, use defaults */ }
+  // Check if user needs to re-sign
+  var userVersion = currentUser.agreementVersion || currentUser.tosVersion || null;
+  var signed = currentUser.agreementSigned === true || currentUser.tosAccepted === true;
+  if (!signed) return false; // not signed at all
+  if (_currentAgreementRequiresResign && userVersion !== _currentAgreementVersion) return false; // version mismatch
+  return true; // agreement is current
+}
+
+// TODO: Floating product indicator for impersonation mode (future feature)
+
+// ── LEGAL SETTINGS ───────────────────────────────────────────
+async function _saveLegalSettings() {
+  if (!db) return;
+  var version = (document.getElementById('sa-legal-version') || {}).value || '1.0';
+  var dateVal = (document.getElementById('sa-legal-date') || {}).value || '';
+  var text = (document.getElementById('sa-legal-text') || {}).value || '';
+  var resign = (document.getElementById('sa-legal-resign') || {}).checked || false;
+  try {
+    await db.collection('agreements').doc('current').set({
+      version: version,
+      effectiveDate: dateVal || new Date().toISOString(),
+      text: text,
+      requiresResign: resign,
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentUser ? currentUser.id : ''
+    });
+    _currentAgreementVersion = version;
+    _currentAgreementRequiresResign = resign;
+    // If re-sign required, reset all users
+    if (resign) {
+      var snap = await db.collection('users').get();
+      var batch = [];
+      snap.forEach(function(d) {
+        if (d.data().agreementSigned === true || d.data().tosAccepted === true) {
+          batch.push(db.collection('users').doc(d.id).update({ agreementSigned: false }));
+        }
+      });
+      await Promise.all(batch);
+      showToast('Agreement v' + version + ' saved — all users must re-sign');
+    } else {
+      showToast('Agreement v' + version + ' saved');
+    }
+    _auditLog('agreement_updated', 'user_agreement', null, null, { version: version, requiresResign: resign });
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function _loadAgreementLogTable() {
+  var el = document.getElementById('sa-agreement-log');
+  if (!el || !db) return;
+  el.innerHTML = '<div style="text-align:center;padding:8px;color:#94a3b8">Loading...</div>';
+  try {
+    var snap = await db.collection('agreementLog').get();
+    var entries = [];
+    snap.forEach(function(d) { entries.push(d.data()); });
+    entries.sort(function(a, b) { return (b.signedAt || '').localeCompare(a.signedAt || ''); });
+    if (!entries.length) { el.innerHTML = '<div style="color:#94a3b8;padding:8px">No agreements signed yet.</div>'; return; }
+    window._agrLogData = entries; // cache for CSV export
+    el.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      + '<thead><tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">'
+      + ['User','Email','Signed Name','Date','Ver','Product'].map(function(h) {
+        return '<th style="padding:6px 8px;text-align:left;font-weight:700;color:#64748b;font-size:10px;text-transform:uppercase">' + h + '</th>';
+      }).join('') + '</tr></thead><tbody>'
+      + entries.map(function(e) {
+        return '<tr style="border-bottom:1px solid #f1f5f9">'
+          + '<td style="padding:6px 8px">' + (e.displayName || '—') + '</td>'
+          + '<td style="padding:6px 8px;color:#64748b">' + (e.email || '—') + '</td>'
+          + '<td style="padding:6px 8px">' + (e.signedName || '—') + '</td>'
+          + '<td style="padding:6px 8px;color:#94a3b8">' + (e.signedAt ? new Date(e.signedAt).toLocaleDateString() : '—') + '</td>'
+          + '<td style="padding:6px 8px">v' + (e.version || '—') + '</td>'
+          + '<td style="padding:6px 8px">' + (e.product || '—') + '</td>'
+          + '</tr>';
+      }).join('') + '</tbody></table>';
+  } catch(e) { el.innerHTML = '<div style="color:#dc2626;padding:8px">Error loading log.</div>'; }
+}
+
+function _exportAgreementLog() {
+  var data = window._agrLogData;
+  if (!data || !data.length) { showToast('Load the agreement log first'); return; }
+  var csv = 'User,Email,Signed Name,Date,Version,Product,Role,Tenant\n'
+    + data.map(function(e) {
+      return [e.displayName, e.email, e.signedName, e.signedAt, e.version, e.product, e.role, e.tenantId]
+        .map(function(v) { return '"' + (v || '').replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'agreement-log-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('CSV downloaded');
+}
+
+// Load legal settings into SA form when settings tab opens
+async function _loadLegalSettings() {
+  if (!db) return;
+  try {
+    var doc = await db.collection('agreements').doc('current').get();
+    if (doc.exists) {
+      var d = doc.data();
+      var vEl = document.getElementById('sa-legal-version');
+      var dEl = document.getElementById('sa-legal-date');
+      var tEl = document.getElementById('sa-legal-text');
+      var rEl = document.getElementById('sa-legal-resign');
+      if (vEl) vEl.value = d.version || '1.0';
+      if (dEl) dEl.value = (d.effectiveDate || '').split('T')[0];
+      if (tEl) tEl.value = d.text || '';
+      if (rEl) rEl.checked = d.requiresResign === true;
+    }
+  } catch(e) { /* agreements doc may not exist yet */ }
 }
 
 function openCreateOrgModal() {
