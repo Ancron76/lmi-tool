@@ -5,6 +5,7 @@ node_modules/
 .wrangler/
 firestore.rules
 wrangler.jsonc
+worker.js
 package.json
 package-lock.json
 .gitignore

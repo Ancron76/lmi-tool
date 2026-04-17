@@ -1835,6 +1835,112 @@ h1,h2,h3 { letter-spacing: -0.3px; }
   #dash-settings-panel { width: 100%; border-left: none; transform: translateY(110%); top: auto; border-radius: 20px 20px 0 0; max-height: 88vh; }
   #dash-settings-panel.open { transform: translateY(0); }
 }
+
+/* ── PROPERTY INTELLIGENCE ──────────────────────────────── */
+.prop-intel-view { display: none; }
+.prop-intel-view.active { display: block; }
+.prop-intel-back { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 0; font-family: var(--font-body); }
+.prop-intel-back:hover { color: var(--brand-accent); }
+.prop-intel-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 4px 0 2px; }
+.prop-intel-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+
+/* Summary stat pills */
+.prop-intel-summary { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.prop-intel-summary::-webkit-scrollbar { display: none; }
+.prop-intel-pill { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.prop-intel-pill strong { color: var(--brand-accent); }
+
+/* HMDA insight banner */
+.prop-intel-hmda-banner { border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-size: 13px; line-height: 1.5; color: var(--text-primary); }
+.prop-intel-hmda-banner.high { background: var(--color-positive-bg); border: 1px solid #c4deca; }
+.prop-intel-hmda-banner.neutral { background: #f5f0e8; border: 1px solid var(--border); }
+
+/* View switcher */
+.prop-intel-switcher { display: flex; gap: 6px; margin-bottom: 14px; }
+.prop-intel-switcher button { flex: 1; padding: 10px 8px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; font-family: var(--font-body); cursor: pointer; background: #f5f0e8; color: var(--text-secondary); transition: all 0.15s; min-height: 44px; }
+.prop-intel-switcher button.active { background: var(--brand-accent); color: white; border-color: var(--brand-accent); }
+
+/* Property card */
+.prop-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.prop-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.prop-card-addr { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; margin-right: 8px; }
+.prop-score-badge { flex-shrink: 0; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+.prop-score-high { background: var(--color-positive-bg); color: var(--color-positive); }
+.prop-score-med  { background: var(--color-warning-bg); color: var(--color-warning); }
+.prop-score-low  { background: #f5f1ec; color: var(--color-stone); }
+
+/* Photo */
+.prop-card-photo { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: #e8e2d8; }
+
+/* Data row */
+.prop-card-data { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.6; }
+.prop-card-data strong { color: var(--text-primary); }
+.prop-card-price { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.prop-card-dom { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+/* Source badges */
+.prop-card-badges { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.prop-card-badges::-webkit-scrollbar { display: none; }
+.prop-source-pill { flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+.prop-source-gov  { background: var(--color-positive-bg); color: var(--color-positive); }
+.prop-source-zillow { background: #f0f4ff; color: #2563eb; }
+.prop-source-transfer { background: var(--color-warning-bg); color: var(--color-warning); }
+.prop-source-cl { background: #f5f1ec; color: var(--color-stone); }
+
+/* Agent row */
+.prop-card-agent { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; padding: 8px 10px; background: var(--body-bg); border-radius: 8px; }
+.prop-card-agent strong { color: var(--text-primary); }
+
+/* Action buttons */
+.prop-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.prop-card-actions button { flex: 1; min-width: 0; min-height: 44px; padding: 10px 6px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; font-weight: 600; font-family: var(--font-body); cursor: pointer; background: var(--surface); color: var(--text-primary); transition: all 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prop-card-actions button:hover { border-color: var(--brand-accent); color: var(--brand-accent); }
+
+/* HMDA insights panel */
+.hmda-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-top: 16px; overflow: hidden; }
+.hmda-panel-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.hmda-panel-toggle .arrow { transition: transform 0.2s; font-size: 12px; color: var(--text-muted); }
+.hmda-panel-toggle.open .arrow { transform: rotate(180deg); }
+.hmda-panel-body { display: none; padding: 0 16px 16px; }
+.hmda-panel-body.open { display: block; }
+.hmda-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.hmda-stat { text-align: center; padding: 10px 8px; background: var(--body-bg); border-radius: 10px; }
+.hmda-stat-val { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.hmda-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.hmda-bar-wrap { margin-top: 8px; }
+.hmda-bar-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.hmda-bar-track { height: 10px; background: var(--body-bg); border-radius: 5px; overflow: hidden; }
+.hmda-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease-out; }
+
+/* Loading skeleton */
+.prop-intel-skeleton { margin-bottom: 12px; }
+.prop-skel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.prop-skel-line { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #e8e2d8 25%, #f2ede4 50%, #e8e2d8 75%); background-size: 200% 100%; animation: propSkelShimmer 1.5s ease-in-out infinite; margin-bottom: 8px; }
+.prop-skel-line.w60 { width: 60%; }
+.prop-skel-line.w40 { width: 40%; }
+.prop-skel-line.w80 { width: 80%; }
+.prop-skel-line.w100 { width: 100%; height: 100px; border-radius: 8px; }
+@keyframes propSkelShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.prop-intel-status { text-align: center; font-size: 13px; color: var(--text-muted); padding: 8px 0; }
+
+/* View Properties button in tract results */
+.view-props-btn { background: var(--brand-accent); color: white; border: none; border-radius: 10px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-body); white-space: nowrap; min-height: 36px; transition: opacity 0.15s; }
+.view-props-btn:hover { opacity: 0.88; }
+
+/* Prop intel empty state */
+.prop-intel-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+
+/* RapidAPI setup modal */
+.rapidapi-setup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 8900; display: none; justify-content: center; align-items: flex-start; padding: 40px 16px; overflow-y: auto; }
+.rapidapi-setup-overlay.open { display: flex; }
+
+@media (max-width: 640px) {
+  .prop-intel-switcher button { font-size: 12px; padding: 10px 4px; }
+  .prop-card-actions { flex-direction: column; }
+  .prop-card-actions button { flex: none; width: 100%; }
+  .hmda-grid { grid-template-columns: repeat(2, 1fr); }
+  .rapidapi-setup-overlay { padding: 0; }
+}
 </style>
 </head>
 <body>
@@ -2214,6 +2320,116 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
         <div class="qualifier-result" id="qualifier-result"></div>
       </div>
       <div id="results"></div>
+
+      <!-- Property Intelligence sub-view (hidden by default) -->
+      <div class="prop-intel-view" id="prop-intel-view">
+        <button class="prop-intel-back" onclick="hidePropertyIntelligence()">&larr; Back to Search Results</button>
+        <div class="prop-intel-title" id="prop-intel-title">Properties</div>
+        <div class="prop-intel-sub" id="prop-intel-sub"></div>
+
+        <!-- Summary pills -->
+        <div class="prop-intel-summary" id="prop-intel-summary"></div>
+
+        <!-- HMDA insight banner -->
+        <div id="prop-intel-hmda-banner"></div>
+
+        <!-- View switcher -->
+        <div class="prop-intel-switcher" id="prop-intel-switcher">
+          <button class="active" onclick="_propIntelSetView('all')">All Properties</button>
+          <button onclick="_propIntelSetView('likely')">Likely to List</button>
+          <button onclick="_propIntelSetView('active')">Active Listings</button>
+        </div>
+
+        <!-- Property cards list -->
+        <div id="prop-intel-cards"></div>
+
+        <!-- HMDA insights panel (collapsible) -->
+        <div id="prop-intel-hmda-panel"></div>
+
+        <!-- Loading state -->
+        <div id="prop-intel-loading" style="display:none">
+          <div class="prop-intel-status" id="prop-intel-status">Checking county assessor records...</div>
+          <div class="prop-intel-skeleton">
+            <div class="prop-skel-card"><div class="prop-skel-line w60"></div><div class="prop-skel-line w100"></div><div class="prop-skel-line w80"></div><div class="prop-skel-line w40"></div></div>
+            <div class="prop-skel-card"><div class="prop-skel-line w60"></div><div class="prop-skel-line w100"></div><div class="prop-skel-line w80"></div><div class="prop-skel-line w40"></div></div>
+            <div class="prop-skel-card"><div class="prop-skel-line w60"></div><div class="prop-skel-line w100"></div><div class="prop-skel-line w80"></div><div class="prop-skel-line w40"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RapidAPI Setup Modal -->
+  <div class="rapidapi-setup-overlay" id="rapidapi-setup-overlay">
+    <div class="deal-modal-panel" style="max-width:520px">
+      <div class="deal-modal-hdr" style="background:var(--brand-accent)">
+        <div><div style="font-size:16px;font-weight:800;color:white">Property Intelligence Setup</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px">One-time setup &middot; Takes about 5 minutes</div></div>
+        <button onclick="_closeRapidApiSetup()" style="background:rgba(255,255,255,.18);border:none;color:white;width:36px;height:36px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">&#215;</button>
+      </div>
+      <div style="padding:20px;overflow-y:auto;max-height:calc(100vh - 160px)">
+        <div style="background:var(--color-warning-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--text-secondary);line-height:1.6">
+          <strong>Note:</strong> Property Intelligence works without RapidAPI &mdash; you get assessor, HUD, HMDA, and deed data for free. RapidAPI adds Zillow enrichment (photos, Zestimates, listing agents). Free tier: 20 lookups/day.
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--brand-accent);color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Sign Up for RapidAPI</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              1. Go to <strong>rapidapi.com</strong> and create a free account<br>
+              2. Search for <strong>"Zillow Com"</strong> API<br>
+              3. Subscribe to the <strong>Basic plan</strong> (free: 20 requests/day)
+            </div></div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--brand-accent);color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Copy Your API Key</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              On your RapidAPI dashboard, find your <strong>API Key</strong> and copy it.
+            </div></div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--brand-accent);color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Add to Cloudflare Worker</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              1. Go to <strong>dash.cloudflare.com</strong><br>
+              2. Click <strong>Workers &amp; Pages</strong> &rarr; click <strong>lmi-tool</strong><br>
+              3. Click <strong>Settings</strong> &rarr; <strong>Variables</strong><br>
+              4. Add variable:
+            </div>
+            <div style="background:#1c1812;color:#e8e0d4;font-family:monospace;font-size:11.5px;border-radius:8px;padding:10px 14px;margin-top:8px;position:relative;white-space:pre-wrap">Variable name:   RAPIDAPI_KEY
+Value:           (paste your API key)<button onclick="_rapidApiCopy(this)" style="position:absolute;top:8px;right:8px;background:var(--brand-accent);color:white;border:none;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer">Copy</button></div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:6px">5. Click <strong>Save and Deploy</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--brand-accent);color:white;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">Set Up KV Cache (Recommended)</div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin-top:8px">
+              1. In Cloudflare dashboard &rarr; <strong>Workers &amp; Pages</strong> &rarr; <strong>KV</strong><br>
+              2. Click <strong>Create namespace</strong> &rarr; name it <strong>LMI_PROPERTY_CACHE</strong><br>
+              3. Go to Worker Settings &rarr; <strong>Variables</strong> &rarr; <strong>KV Namespace Bindings</strong><br>
+              4. Add binding: <strong>KV_NAMESPACE</strong> &rarr; <strong>LMI_PROPERTY_CACHE</strong>
+            </div>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px">Free: 100,000 reads/day, 1,000 writes/day. Caches results to minimize API calls.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--text-muted)">Need help? Email admin@lmitool.com</span>
+        <button onclick="_closeRapidApiSetup()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px">Close</button>
+      </div>
     </div>
   </div>
 
@@ -5693,7 +5909,7 @@ function renderHomeModules() {
     },
     search: {
       metric: prospects.length ? prospects.length+' Saved Search'+(prospects.length !== 1 ? 'es' : '') : 'No Searches Yet',
-      sub:    searchesMtd.length ? searchesMtd.length+' new this month' : lmiSrchPct ? lmiSrchPct+'% LMI searches overall' : 'Search a ZIP code to start',
+      sub:    searchesMtd.length ? searchesMtd.length+' new this month' : lmiSrchPct ? lmiSrchPct+'% LMI \u00b7 Property Intelligence' : 'Find properties in LMI tracts',
       spark:  prospWeeks,
     },
     realtors: (function(){
@@ -9604,12 +9820,13 @@ function renderResults(zip, tracts) {
     const cat = getCategory(t.tract_md_fam_income, t.area_md_fam_income);
     const pct = Math.round((t.tract_md_fam_income / t.area_md_fam_income) * 100);
     const tractNum = t.county_name ? t.county_name.split(';')[0].replace('Census Tract ','') : t.tract_id;
+    var countyName = t.county_name ? t.county_name.split(';')[0].replace(/Census Tract.*/i,'').replace(/County/i,'').trim().toLowerCase() : '';
     return '<tr>'
       + '<td><span style="font-size:12px;color:#64748b">Tract ' + tractNum + '</span></td>'
       + '<td><span class="lmi-badge" style="background:' + cat.bg + ';color:' + cat.color + '">' + cat.label + '</span></td>'
       + '<td><strong>$' + t.tract_md_fam_income.toLocaleString() + '</strong></td>'
       + '<td class="bar-cell"><span class="pct-label" style="color:' + cat.color + '">' + pct + '%</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(pct,100) + '%;background:' + cat.color + '"></div></div></td>'
-      + '<td style="font-size:11px;color:#94a3b8">' + t.tract_id + '</td>'
+      + '<td><button class="view-props-btn" onclick="showPropertyIntelligence(\'' + t.tract_id + '\',\'' + zip + '\',\'' + countyName + '\')">View Properties &rarr;</button></td>'
       + '</tr>';
   }).join('');
 
@@ -9619,17 +9836,371 @@ function renderResults(zip, tracts) {
     + '<button class="save-btn" onclick="saveZip(\'' + zip + '\',\'' + city + '\')">+ Save to Prospect List</button>'
     + '<button style="background:#f0f4ff;color:#4f46e5;border:2px solid #c7d2fe;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer" onclick="generateAreaFlyerFromSearch(\'' + zip + '\',\'' + city + '\')">🖨 Area Flyer</button>'
     + '</div></div>'
-    + '<div class="result-meta">Area Median Income (AMI): <strong>$' + ami.toLocaleString() + '</strong> · Source: US Census Bureau ACS 2022 · Showing all LMI tracts in county</div>'
+    + '<div class="result-meta">Area Median Income (AMI): <strong>$' + ami.toLocaleString() + '</strong> &middot; Source: US Census Bureau ACS 2022 &middot; Showing all LMI tracts in county</div>'
     + '<div class="summary-grid">'
     + '<div class="summary-card"><div class="summary-num">' + tracts.length + '</div><div class="summary-label">Total LMI Tracts</div></div>'
     + '<div class="summary-card"><div class="summary-num" style="color:#dc2626">' + low + '</div><div class="summary-label">Low Income (&lt;50% AMI)</div></div>'
-    + '<div class="summary-card"><div class="summary-num" style="color:#d97706">' + moderate + '</div><div class="summary-label">Moderate (50–80% AMI)</div></div>'
+    + '<div class="summary-card"><div class="summary-num" style="color:#d97706">' + moderate + '</div><div class="summary-label">Moderate (50\u201380% AMI)</div></div>'
     + '</div>'
-    + '<div class="tract-table-wrap"><table class="tract-table"><thead><tr><th>Census Tract</th><th>LMI Category</th><th>Tract Median Income</th><th>% of AMI</th><th>Tract ID</th></tr></thead><tbody>' + tractHTML + '</tbody></table></div>'
+    + '<div class="tract-table-wrap"><table class="tract-table"><thead><tr><th>Census Tract</th><th>LMI Category</th><th>Tract Median Income</th><th>% of AMI</th><th>Properties</th></tr></thead><tbody>' + tractHTML + '</tbody></table></div>'
     + '<div class="card"><div class="links-title">Verify Individual Properties</div><div class="links-row">'
-    + '<a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">📋 FFIEC Tract Lookup</a>'
-    + '<a class="link-btn hud" href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>'
+    + '<a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">\ud83d\udccb FFIEC Tract Lookup</a>'
+    + '<a class="link-btn hud" href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">\ud83c\udfdb HUD Map</a>'
     + '</div></div>';
+}
+
+// ── PROPERTY INTELLIGENCE ENGINE ──────────────────────────────
+var _propIntelData = null;
+var _propIntelView = 'all'; // 'all' | 'likely' | 'active'
+var _propIntelTractId = '';
+var _propIntelZip = '';
+var _propIntelCounty = '';
+
+var _propIntelStatusMessages = [
+  'Checking county assessor records...',
+  'Searching government listings...',
+  'Analyzing lending patterns...',
+  'Scanning deed recordings...',
+  'Checking Craigslist listings...',
+  'Enriching with market data...',
+  'Scoring properties...',
+];
+
+function showPropertyIntelligence(tractId, zip, county) {
+  _propIntelTractId = tractId;
+  _propIntelZip = zip;
+  _propIntelCounty = county || '';
+  _propIntelData = null;
+  _propIntelView = 'all';
+
+  // Hide main search content, show property intel view
+  var mainEls = document.querySelectorAll('#tab-search-content > .main > *');
+  mainEls.forEach(function(el) {
+    if (el.id !== 'prop-intel-view') el.style.display = 'none';
+  });
+  var view = document.getElementById('prop-intel-view');
+  view.classList.add('active');
+
+  // Set header
+  var tractShort = tractId.length > 5 ? tractId.substring(5) : tractId;
+  document.getElementById('prop-intel-title').textContent = 'Properties \u00b7 Tract ' + tractShort;
+  document.getElementById('prop-intel-sub').textContent = 'ZIP ' + zip + (county ? ' \u00b7 ' + county.charAt(0).toUpperCase() + county.slice(1) + ' County' : '');
+
+  // Show loading
+  document.getElementById('prop-intel-loading').style.display = 'block';
+  document.getElementById('prop-intel-cards').innerHTML = '';
+  document.getElementById('prop-intel-summary').innerHTML = '';
+  document.getElementById('prop-intel-hmda-banner').innerHTML = '';
+  document.getElementById('prop-intel-hmda-panel').innerHTML = '';
+
+  // Reset switcher
+  var btns = document.querySelectorAll('#prop-intel-switcher button');
+  btns.forEach(function(b, i) { b.classList.toggle('active', i === 0); });
+
+  // Cycle loading status messages
+  var msgIdx = 0;
+  var statusEl = document.getElementById('prop-intel-status');
+  var statusTimer = setInterval(function() {
+    msgIdx = (msgIdx + 1) % _propIntelStatusMessages.length;
+    if (statusEl) statusEl.textContent = _propIntelStatusMessages[msgIdx];
+  }, 2200);
+
+  // Build Worker URL — same origin for deployed, proxy URL for dev
+  var workerBase = window.location.origin;
+  var apiUrl = workerBase + '/property-intelligence?tractId=' + encodeURIComponent(tractId)
+    + '&zip=' + encodeURIComponent(zip)
+    + '&county=' + encodeURIComponent(county || '');
+
+  fetch(apiUrl)
+    .then(function(r) { if (!r.ok) throw new Error('API error ' + r.status); return r.json(); })
+    .then(function(data) {
+      clearInterval(statusTimer);
+      _propIntelData = data;
+      document.getElementById('prop-intel-loading').style.display = 'none';
+      renderPropIntelSummary(data.summary);
+      renderPropIntelHmdaBanner(data.hmdaInsights);
+      renderPropertyCards(data.properties, 'all');
+      renderHmdaPanel(data.hmdaInsights);
+    })
+    .catch(function(err) {
+      clearInterval(statusTimer);
+      document.getElementById('prop-intel-loading').style.display = 'none';
+      document.getElementById('prop-intel-cards').innerHTML =
+        '<div class="prop-intel-empty">'
+        + '<div style="font-size:32px;margin-bottom:10px">&#128269;</div>'
+        + '<div style="font-weight:600;color:var(--text-primary);margin-bottom:6px">Could not load property data</div>'
+        + '<div>' + (err.message || 'Check your connection and try again.') + '</div>'
+        + '<div style="margin-top:12px"><button class="view-props-btn" onclick="_openRapidApiSetup()">Setup Instructions</button></div>'
+        + '</div>';
+    });
+}
+
+function hidePropertyIntelligence() {
+  document.getElementById('prop-intel-view').classList.remove('active');
+  var mainEls = document.querySelectorAll('#tab-search-content > .main > *');
+  mainEls.forEach(function(el) {
+    if (el.id !== 'prop-intel-view') el.style.display = '';
+  });
+}
+
+function renderPropIntelSummary(summary) {
+  if (!summary) return;
+  var el = document.getElementById('prop-intel-summary');
+  el.innerHTML =
+    '<div class="prop-intel-pill"><strong>' + summary.confirmedListings + '</strong> Active Listings</div>'
+    + '<div class="prop-intel-pill"><strong>' + summary.likelyToListCount + '</strong> Likely to List</div>'
+    + '<div class="prop-intel-pill"><strong>' + summary.governmentOwned + '</strong> Gov. Owned</div>'
+    + '<div class="prop-intel-pill">CRA Score: <strong>' + summary.craOpportunityScore + '/100</strong></div>';
+}
+
+function renderPropIntelHmdaBanner(hmda) {
+  if (!hmda || !hmda.tractId) return;
+  var el = document.getElementById('prop-intel-hmda-banner');
+  if (hmda.craOpportunityScore > 60) {
+    el.innerHTML = '<div class="prop-intel-hmda-banner high">'
+      + '\ud83c\udfaf <strong>High CRA Opportunity</strong> \u2014 only ' + hmda.approvalRate + '% approval rate in this tract with ' + hmda.lenders + ' active lender' + (hmda.lenders !== 1 ? 's' : '')
+      + '</div>';
+  } else {
+    el.innerHTML = '<div class="prop-intel-hmda-banner neutral">'
+      + 'This tract has ' + hmda.approvalRate + '% approval rate with ' + hmda.lenders + ' active lender' + (hmda.lenders !== 1 ? 's' : '')
+      + '</div>';
+  }
+}
+
+function _propIntelSetView(view) {
+  _propIntelView = view;
+  var btns = document.querySelectorAll('#prop-intel-switcher button');
+  btns.forEach(function(b) {
+    var v = b.textContent.toLowerCase().indexOf('likely') >= 0 ? 'likely'
+      : b.textContent.toLowerCase().indexOf('active') >= 0 ? 'active' : 'all';
+    b.classList.toggle('active', v === view);
+  });
+  if (_propIntelData) renderPropertyCards(_propIntelData.properties, view);
+}
+
+function renderPropertyCards(properties, filter) {
+  var el = document.getElementById('prop-intel-cards');
+  var filtered = properties;
+  if (filter === 'likely') {
+    filtered = properties.filter(function(p) { return p.isLikelyToList; });
+  } else if (filter === 'active') {
+    filtered = properties.filter(function(p) { return p.isConfirmed; });
+  }
+
+  if (!filtered.length) {
+    el.innerHTML = '<div class="prop-intel-empty">'
+      + '<div style="font-size:32px;margin-bottom:8px">' + (filter === 'active' ? '\ud83c\udfe0' : '\ud83d\udd0d') + '</div>'
+      + '<div style="font-weight:600;color:var(--text-primary)">No ' + (filter === 'likely' ? 'likely-to-list' : filter === 'active' ? 'active listing' : '') + ' properties found</div>'
+      + '<div style="margin-top:4px">Try the "All Properties" view for the full list</div>'
+      + '</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(function(prop, idx) { return renderPropertyCard(prop, idx); }).join('');
+}
+
+function renderPropertyCard(prop, idx) {
+  var scoreClass = prop.score >= 80 ? 'prop-score-high' : prop.score >= 50 ? 'prop-score-med' : 'prop-score-low';
+  var price = prop.zillowData?.listPrice || prop.govListing?.price || prop.price || prop.assessedValue;
+  var priceLabel = price ? '$' + Number(price).toLocaleString() : '';
+  var beds = prop.beds || prop.zillowData?.beds || '';
+  var baths = prop.baths || prop.zillowData?.baths || '';
+  var sqft = prop.sqft || prop.zillowData?.sqft || '';
+  var yearBuilt = prop.yearBuilt || prop.zillowData?.yearBuilt || '';
+  var photo = prop.zillowData?.photos?.[0] || '';
+  var dom = prop.zillowData?.daysOnMarket;
+
+  var html = '<div class="prop-card">';
+
+  // Top row: address + score
+  html += '<div class="prop-card-top">'
+    + '<div class="prop-card-addr">' + escHtml(prop.address || 'Unknown address') + '</div>'
+    + '<span class="prop-score-badge ' + scoreClass + '">Score: ' + prop.score + '</span>'
+    + '</div>';
+
+  // Photo
+  if (photo) {
+    html += '<img class="prop-card-photo" src="' + escHtml(photo) + '" alt="Property photo" loading="lazy" onerror="this.style.display=\'none\'" />';
+  }
+
+  // Data row
+  var details = [];
+  if (beds) details.push(beds + ' bed');
+  if (baths) details.push(baths + ' bath');
+  if (sqft) details.push(Number(sqft).toLocaleString() + ' sqft');
+  if (yearBuilt) details.push('Built ' + yearBuilt);
+  if (details.length) {
+    html += '<div class="prop-card-data">' + details.join(' \u00b7 ') + '</div>';
+  }
+
+  // Price
+  if (priceLabel) {
+    html += '<div class="prop-card-price">' + priceLabel + '</div>';
+  }
+
+  // Days on market
+  if (dom !== null && dom !== undefined) {
+    html += '<div class="prop-card-dom">' + dom + ' days on market</div>';
+  }
+
+  // Source badges
+  var badges = [];
+  if (prop.govListing) {
+    var src = prop.govListing.source;
+    var srcLabel = src === 'hud' ? 'HUD' : src === 'homepath' ? 'HomePath' : src === 'homesteps' ? 'HomeSteps' : src;
+    badges.push('<span class="prop-source-pill prop-source-gov">' + srcLabel + '</span>');
+  }
+  if (prop.zillowData?.isForSale) {
+    badges.push('<span class="prop-source-pill prop-source-zillow">Zillow: For Sale</span>');
+  }
+  if (prop.zillowData && !prop.zillowData.isForSale && prop.zillowData.zestimate) {
+    badges.push('<span class="prop-source-pill prop-source-zillow">Zillow</span>');
+  }
+  if (prop.deedInfo) {
+    badges.push('<span class="prop-source-pill prop-source-transfer">Recent Transfer</span>');
+  }
+  if (prop.craigslistListing) {
+    badges.push('<span class="prop-source-pill prop-source-cl">Craigslist</span>');
+  }
+  prop.signals?.forEach(function(s) {
+    if (s.type === 'investor_buyer') badges.push('<span class="prop-source-pill prop-source-transfer">Investor Buyer</span>');
+    if (s.type === 'long_term_owner') badges.push('<span class="prop-source-pill prop-source-cl">Long-term Owner</span>');
+    if (s.type === 'significant_appreciation') badges.push('<span class="prop-source-pill prop-source-transfer">High Appreciation</span>');
+  });
+  if (badges.length) {
+    html += '<div class="prop-card-badges">' + badges.join('') + '</div>';
+  }
+
+  // Agent row
+  if (prop.listingAgent) {
+    html += '<div class="prop-card-agent">'
+      + '\ud83d\udc64 <strong>' + escHtml(prop.listingAgent) + '</strong>'
+      + (prop.brokerage ? ' \u00b7 ' + escHtml(prop.brokerage) : '')
+      + (prop.agentPhone ? '<br/>' + escHtml(prop.agentPhone) : '')
+      + '</div>';
+  }
+
+  // Zestimate note
+  if (prop.zillowData?.zestimate && !prop.zillowData?.isForSale) {
+    html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Zestimate: $' + Number(prop.zillowData.zestimate).toLocaleString() + '</div>';
+  }
+
+  // Action buttons — store prop data in a global array for handlers
+  var pidx = _propIntelCardData.length;
+  _propIntelCardData.push(prop);
+  html += '<div class="prop-card-actions">'
+    + '<button onclick="propIntelAddRealtor(' + pidx + ')">+ Add Agent</button>'
+    + '<button onclick="propIntelScheduleOYZ(' + pidx + ')">Schedule Open House</button>'
+    + '<button onclick="propIntelPreScreen(' + pidx + ', this)">LMI Pre-Screen</button>'
+    + '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// Store card data for action handlers
+var _propIntelCardData = [];
+
+function propIntelAddRealtor(idx) {
+  var prop = _propIntelCardData[idx];
+  if (!prop) return;
+
+  // Switch to realtors tab and pre-fill form
+  showTab('realtors');
+  setTimeout(function() {
+    var nameEl = document.getElementById('r-name');
+    var phoneEl = document.getElementById('r-phone');
+    var emailEl = document.getElementById('r-email');
+    var brokerEl = document.getElementById('r-brokerage');
+    var areaEl = document.getElementById('r-area');
+    if (nameEl && prop.listingAgent) nameEl.value = prop.listingAgent;
+    if (phoneEl && prop.agentPhone) phoneEl.value = prop.agentPhone;
+    if (emailEl && prop.agentEmail) emailEl.value = prop.agentEmail;
+    if (brokerEl && prop.brokerage) brokerEl.value = prop.brokerage;
+    if (areaEl) areaEl.value = _propIntelZip;
+    // Scroll to form
+    var form = document.getElementById('realtor-form-card');
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+function propIntelScheduleOYZ(idx) {
+  var prop = _propIntelCardData[idx];
+  if (!prop) return;
+
+  showTab('oyz');
+  setTimeout(function() {
+    var streetEl = document.getElementById('oyz-street');
+    var cityEl = document.getElementById('oyz-city-field');
+    var zipEl = document.getElementById('oyz-zip-field');
+    if (streetEl && prop.address) streetEl.value = prop.address;
+    if (cityEl && prop.city) cityEl.value = prop.city;
+    if (zipEl) zipEl.value = _propIntelZip;
+    var form = document.querySelector('.oyz-form-card');
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+function propIntelPreScreen(idx, btn) {
+  var prop = _propIntelCardData[idx];
+  if (!prop) return;
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+
+  // Since property is from an LMI tract search, it's already LMI eligible
+  setTimeout(function() {
+    btn.style.background = 'var(--color-positive-bg)';
+    btn.style.color = 'var(--color-positive)';
+    btn.style.borderColor = '#c4deca';
+    btn.textContent = '\u2713 LMI Eligible';
+  }, 600);
+}
+
+function renderHmdaPanel(hmda) {
+  if (!hmda || !hmda.tractId) return;
+  var el = document.getElementById('prop-intel-hmda-panel');
+  el.innerHTML = '<div class="hmda-panel">'
+    + '<button class="hmda-panel-toggle" onclick="_toggleHmdaPanel(this)">'
+    + 'Lending Intelligence for This Tract <span class="arrow">\u25bc</span></button>'
+    + '<div class="hmda-panel-body">'
+    + '<div class="hmda-grid">'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.totalApplications || 0) + '</div><div class="hmda-stat-label">Applications</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.approvalRate || 0) + '%</div><div class="hmda-stat-label">Approval Rate</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.lenders || 0) + '</div><div class="hmda-stat-label">Active Lenders</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.avgLoanAmount ? '$' + Number(hmda.avgLoanAmount).toLocaleString() : 'N/A') + '</div><div class="hmda-stat-label">Avg Loan Amount</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.minorityPct || 'N/A') + (hmda.minorityPct ? '%' : '') + '</div><div class="hmda-stat-label">Minority Pop.</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.craOpportunityScore || 0) + '/100</div><div class="hmda-stat-label">CRA Score</div></div>'
+    + '</div>'
+    + '<div class="hmda-bar-wrap">'
+    + '<div class="hmda-bar-label">Approval rate: <strong>' + (hmda.approvalRate || 0) + '%</strong> this tract vs <strong>73%</strong> CA average</div>'
+    + '<div class="hmda-bar-track"><div class="hmda-bar-fill" style="width:' + Math.min(hmda.approvalRate || 0, 100) + '%;background:' + ((hmda.approvalRate || 0) < 50 ? 'var(--color-negative)' : 'var(--color-positive)') + '"></div></div>'
+    + '</div>'
+    + '</div></div>';
+}
+
+function _toggleHmdaPanel(btn) {
+  btn.classList.toggle('open');
+  var body = btn.nextElementSibling;
+  if (body) body.classList.toggle('open');
+}
+
+function _openRapidApiSetup() {
+  document.getElementById('rapidapi-setup-overlay').classList.add('open');
+}
+function _closeRapidApiSetup() {
+  document.getElementById('rapidapi-setup-overlay').classList.remove('open');
+}
+function _rapidApiCopy(btn) {
+  var text = 'RAPIDAPI_KEY';
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── REALTOR PORTAL ────────────────────────────────────────────
