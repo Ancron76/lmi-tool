@@ -2158,6 +2158,25 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
     </div>
   </div>
 
+  <!-- PROPERTY INTELLIGENCE (sub-page of LMI Search) -->
+  <div id="tab-propintel-content" style="display:none">
+    <div style="max-width:640px;margin:0 auto;padding:12px 14px 28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <button onclick="hidePropertyIntelligence()" aria-label="Back to search" style="min-width:44px;min-height:44px;border:none;background:transparent;color:var(--text-primary);font-size:22px;cursor:pointer">←</button>
+        <div style="flex:1;min-width:0">
+          <div id="pi-title" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.2">Properties</div>
+          <div id="pi-sub" style="font-size:12px;color:var(--text-secondary)"></div>
+        </div>
+      </div>
+      <div id="pi-summary" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch"></div>
+      <div id="pi-banner"></div>
+      <div id="pi-view-switcher" style="display:none"></div>
+      <div id="pi-status" style="display:none;font-size:13px;color:var(--text-secondary);margin-bottom:10px;text-align:center"></div>
+      <div id="pi-list"></div>
+      <div id="pi-hmda"></div>
+    </div>
+  </div>
+
   <!-- SEARCH TAB -->
   <div id="tab-search-content">
     <div class="main">
@@ -2176,6 +2195,15 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
           <span onclick="quickSearch('93301')">93301 Bakersfield</span>
         </div>
         <div id="branch-shortcuts-container"></div>
+        <div style="margin-top:14px;padding:12px 14px;background:#f5f0e8;border:1px solid #ddd4c0;border-radius:12px;display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#c4943a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1V9.5z"/><circle cx="17.5" cy="6.5" r="2.5"/><path d="M19.3 8.3L21 10"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#1a1410">Find Properties in LMI Tracts</div>
+            <div style="font-size:12px;color:#7a6a58;line-height:1.4">Search a ZIP, then tap "View Properties" on any tract to see likely-to-list homes, government listings, and lending intel.</div>
+          </div>
+        </div>
       </div>
       <div class="card">
         <div class="card-title">📌 Saved Prospect ZIPs</div>
@@ -5694,11 +5722,15 @@ function renderHomeModules() {
       sub:    pipeValue ? fmtK(pipeValue)+' total value' : closingMo.length ? closingMo.length+' closing this month' : 'Add deals to get started',
       spark:  dealWeeks,
     },
-    search: {
-      metric: prospects.length ? prospects.length+' Saved Search'+(prospects.length !== 1 ? 'es' : '') : 'No Searches Yet',
-      sub:    searchesMtd.length ? searchesMtd.length+' new this month' : lmiSrchPct ? lmiSrchPct+'% LMI searches overall' : 'Search a ZIP code to start',
-      spark:  prospWeeks,
-    },
+    search: (function(){
+      // Tract-level compliance: share of saved searches that landed in LMI tracts.
+      var tractCount = new Set(prospects.map(function(p){ return p.tractId || p.tract_id; }).filter(Boolean)).size;
+      return {
+        metric: (prospects.length ? lmiSrchPct : 0) + '% Compliance \u00b7 ' + tractCount + ' Tract' + (tractCount === 1 ? '' : 's') + ' Searched',
+        sub:    'Tap to find properties in LMI tracts',
+        spark:  prospWeeks,
+      };
+    })(),
     realtors: (function(){
       var refsMtd = (cachedDeals||[]).filter(function(d){
         var rid = d.realtorId || d.assignedRealtorId;
@@ -5947,12 +5979,15 @@ var _tabTitles = {
   realtors: 'Realtors', activity: 'Activity Log', marketing: 'Marketing',
   oyz: 'Open Houses', analytics: 'Analytics', contacts: 'Contacts',
   pipeline: 'Deal Pipeline', comms: 'Communications', sequences: 'Sequences',
-  scorecard: 'Scorecard'
+  scorecard: 'Scorecard', propintel: 'Property Intelligence'
 };
+// Tab list including hidden sub-views (propintel = Property Intelligence
+// sub-page of LMI Search; has no sidebar/mobile-nav entry).
+var _ALL_TAB_IDS = ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences','scorecard','propintel'];
 function showTab(tab) {
   // ── Tier gating: show upgrade prompt for locked tabs ──
   if (_isTabLocked(tab)) {
-    ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences','scorecard'].forEach(function(t) {
+    _ALL_TAB_IDS.forEach(function(t) {
       var el = document.getElementById('tab-' + t + '-content');
       if (el) el.style.display = 'none';
     });
@@ -5963,7 +5998,7 @@ function showTab(tab) {
     return;
   }
 
-  ['home','search','dashboard','realtors','activity','marketing','oyz','analytics','contacts','pipeline','comms','sequences','scorecard'].forEach(function(t) {
+  _ALL_TAB_IDS.forEach(function(t) {
     var el = document.getElementById('tab-' + t + '-content');
     if (el) el.style.display = t === tab ? 'block' : 'none';
     var btn = document.getElementById('tab-' + t);
@@ -9607,12 +9642,16 @@ function renderResults(zip, tracts) {
     const cat = getCategory(t.tract_md_fam_income, t.area_md_fam_income);
     const pct = Math.round((t.tract_md_fam_income / t.area_md_fam_income) * 100);
     const tractNum = t.county_name ? t.county_name.split(';')[0].replace('Census Tract ','') : t.tract_id;
+    const tractId = String(t.tract_id || '').replace(/'/g, "\\'");
+    const safeZip = String(zip).replace(/'/g, "\\'");
+    const safeCity = String(t.city || city || '').replace(/'/g, "\\'");
     return '<tr>'
       + '<td><span style="font-size:12px;color:#64748b">Tract ' + tractNum + '</span></td>'
       + '<td><span class="lmi-badge" style="background:' + cat.bg + ';color:' + cat.color + '">' + cat.label + '</span></td>'
       + '<td><strong>$' + t.tract_md_fam_income.toLocaleString() + '</strong></td>'
       + '<td class="bar-cell"><span class="pct-label" style="color:' + cat.color + '">' + pct + '%</span><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(pct,100) + '%;background:' + cat.color + '"></div></div></td>'
       + '<td style="font-size:11px;color:#94a3b8">' + t.tract_id + '</td>'
+      + '<td><button onclick="showPropertyIntelligence(\'' + tractId + '\',\'' + safeZip + '\',\'' + safeCity + '\')" style="min-height:36px;background:#c4943a;color:white;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">View Properties →</button></td>'
       + '</tr>';
   }).join('');
 
@@ -9628,11 +9667,373 @@ function renderResults(zip, tracts) {
     + '<div class="summary-card"><div class="summary-num" style="color:#dc2626">' + low + '</div><div class="summary-label">Low Income (&lt;50% AMI)</div></div>'
     + '<div class="summary-card"><div class="summary-num" style="color:#d97706">' + moderate + '</div><div class="summary-label">Moderate (50–80% AMI)</div></div>'
     + '</div>'
-    + '<div class="tract-table-wrap"><table class="tract-table"><thead><tr><th>Census Tract</th><th>LMI Category</th><th>Tract Median Income</th><th>% of AMI</th><th>Tract ID</th></tr></thead><tbody>' + tractHTML + '</tbody></table></div>'
+    + '<div class="tract-table-wrap"><table class="tract-table"><thead><tr><th>Census Tract</th><th>LMI Category</th><th>Tract Median Income</th><th>% of AMI</th><th>Tract ID</th><th>Properties</th></tr></thead><tbody>' + tractHTML + '</tbody></table></div>'
     + '<div class="card"><div class="links-title">Verify Individual Properties</div><div class="links-row">'
     + '<a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">📋 FFIEC Tract Lookup</a>'
     + '<a class="link-btn hud" href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">🏛 HUD Map</a>'
     + '</div></div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── PROPERTY INTELLIGENCE (sub-page of LMI Search) ───────────
+// ══════════════════════════════════════════════════════════════
+// Calls the Cloudflare Worker orchestrator, which correlates
+// county assessor parcels with government REO listings, deed
+// transfers, HMDA lending data, Craigslist FSBO and Zillow
+// enrichment. Mobile-first render — no framework, raw DOM.
+
+var _piState = {
+  tractId: null, zip: null, city: null,
+  data: null, view: 'all',
+  statusTimer: null, statusIdx: 0,
+  lmiOverrides: {},      // key → { eligible, tractId }
+};
+var _PI_STATUS = [
+  'Checking county assessor records\u2026',
+  'Searching government listings\u2026',
+  'Analyzing lending patterns\u2026',
+  'Enriching with market data\u2026',
+];
+var _PI_SOURCE_STYLE = {
+  hud:                { label: 'HUD',              bg: '#eef4f0', fg: '#5a8a6a' },
+  homepath:           { label: 'HomePath',         bg: '#eef4f0', fg: '#5a8a6a' },
+  homesteps:          { label: 'HomeSteps',        bg: '#eef4f0', fg: '#5a8a6a' },
+  zillow_for_sale:    { label: 'Zillow: For Sale', bg: '#f0f4ff', fg: '#2563eb' },
+  deed_recording:     { label: 'Recent Transfer',  bg: '#faf0e4', fg: '#b07030' },
+  craigslist:         { label: 'Craigslist',       bg: '#f5f1ec', fg: '#9e8e7a' },
+  ca_assessor:        { label: 'Assessor',         bg: '#f5f1ec', fg: '#9e8e7a' },
+  la_county_assessor: { label: 'LA Assessor',      bg: '#f5f1ec', fg: '#9e8e7a' },
+};
+
+function _piScoreStyle(score) {
+  if (score >= 80) return { bg: '#eef4f0', fg: '#5a8a6a' };
+  if (score >= 50) return { bg: '#faf0e4', fg: '#b07030' };
+  return               { bg: '#f5f1ec', fg: '#9e8e7a' };
+}
+
+function _piFmtPrice(n) {
+  n = Number(n) || 0;
+  if (!n) return '';
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(2) + 'M';
+  if (n >= 1000)    return '$' + Math.round(n / 1000) + 'K';
+  return '$' + n.toLocaleString();
+}
+
+function showPropertyIntelligence(tractId, zip, city) {
+  if (!tractId || !zip) { showToast('Missing tract or ZIP'); return; }
+  // Hide all other tab content and show the propintel pane.
+  _ALL_TAB_IDS.forEach(function(t) {
+    var el = document.getElementById('tab-' + t + '-content');
+    if (el) el.style.display = t === 'propintel' ? 'block' : 'none';
+  });
+  var title = document.getElementById('topbar-page-title');
+  if (title) title.textContent = 'Property Intelligence';
+
+  _piState.tractId = tractId;
+  _piState.zip = zip;
+  _piState.city = city || '';
+  _piState.data = null;
+  _piState.view = 'all';
+
+  document.getElementById('pi-title').textContent = 'Properties \u00b7 Tract ' + tractId;
+  document.getElementById('pi-sub').textContent = 'ZIP ' + zip + (city ? ' \u00b7 ' + city : '');
+  document.getElementById('pi-summary').innerHTML = '';
+  document.getElementById('pi-banner').innerHTML = '';
+  document.getElementById('pi-view-switcher').style.display = 'none';
+  document.getElementById('pi-list').innerHTML = _piSkeletonHtml();
+  document.getElementById('pi-hmda').innerHTML = '';
+
+  // Rotating status line
+  var statusEl = document.getElementById('pi-status');
+  statusEl.style.display = 'block';
+  _piState.statusIdx = 0;
+  statusEl.textContent = _PI_STATUS[0];
+  if (_piState.statusTimer) clearInterval(_piState.statusTimer);
+  _piState.statusTimer = setInterval(function() {
+    _piState.statusIdx = (_piState.statusIdx + 1) % _PI_STATUS.length;
+    statusEl.textContent = _PI_STATUS[_piState.statusIdx];
+  }, 1400);
+
+  var url = PROXY_URL + '/property-intelligence?tractId=' + encodeURIComponent(tractId)
+          + '&zip=' + encodeURIComponent(zip);
+  fetch(url)
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(json) { _piState.data = json; _piRender(); })
+    .catch(function(e) { _piRenderError(e.message || 'Request failed'); });
+}
+
+function hidePropertyIntelligence() {
+  if (_piState.statusTimer) { clearInterval(_piState.statusTimer); _piState.statusTimer = null; }
+  showTab('search');
+}
+
+function _piSkeletonHtml() {
+  var row = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">'
+    + '<div style="height:14px;width:65%;background:#efe9dd;border-radius:4px;margin-bottom:10px;animation:skeletonPulse 1.5s ease-in-out infinite"></div>'
+    + '<div style="height:120px;background:#efe9dd;border-radius:8px;margin-bottom:10px;animation:skeletonPulse 1.5s ease-in-out infinite"></div>'
+    + '<div style="height:12px;width:45%;background:#efe9dd;border-radius:4px;animation:skeletonPulse 1.5s ease-in-out infinite"></div>'
+    + '</div>';
+  return row + row + row;
+}
+
+function _piRenderError(msg) {
+  if (_piState.statusTimer) { clearInterval(_piState.statusTimer); _piState.statusTimer = null; }
+  document.getElementById('pi-status').style.display = 'none';
+  document.getElementById('pi-list').innerHTML =
+    '<div style="background:#faf0e4;color:#b07030;padding:14px;border-radius:12px;font-size:13px">'
+    + '\u26a0 Could not load property intelligence: ' + esc(msg)
+    + '<div style="font-size:12px;color:#7a6a58;margin-top:6px">If the Worker route isn\u2019t deployed yet, ask Aaron to paste <code>worker/property-intelligence.js</code> into the Cloudflare project.</div>'
+    + '</div>';
+}
+
+function _piRender() {
+  if (_piState.statusTimer) { clearInterval(_piState.statusTimer); _piState.statusTimer = null; }
+  document.getElementById('pi-status').style.display = 'none';
+  var d = _piState.data || {};
+  var s = d.summary || {};
+  var hmda = d.hmdaInsights || {};
+
+  // Summary pills
+  var pills = [
+    { n: s.confirmedListings || 0, label: 'Active Listings', color: '#5a8a6a' },
+    { n: s.likelyToListCount || 0, label: 'Likely to List',  color: '#c4943a' },
+    { n: s.governmentOwned   || 0, label: 'Gov. Owned',      color: '#7a9eaa' },
+    { n: (s.craOpportunityScore || 0) + '/100', label: 'CRA Score', color: 'var(--text-primary)' },
+  ];
+  document.getElementById('pi-summary').innerHTML = pills.map(function(p) {
+    return '<div style="flex:0 0 auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:110px">'
+      + '<div style="font-family:\'Cormorant Garamond\',serif;font-size:18px;font-weight:800;color:' + p.color + '">' + esc(String(p.n)) + '</div>'
+      + '<div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px">' + esc(p.label) + '</div>'
+      + '</div>';
+  }).join('');
+
+  // HMDA banner
+  var cra = s.craOpportunityScore || 0;
+  var banner = '';
+  if (cra > 60) {
+    banner = '<div style="background:#eef4f0;color:#5a8a6a;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.45;margin-bottom:12px;font-weight:600">\uD83C\uDFAF High CRA Opportunity \u2014 only ' + (s.approvalRate || 0) + '% approval rate in this tract with ' + (s.activeLenders || 0) + ' active lenders</div>';
+  } else if (cra < 30 && s.totalHmdaLoans > 0) {
+    banner = '<div style="background:#f5f0e8;color:#7a6a58;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.45;margin-bottom:12px;font-weight:600">This tract has ' + (s.approvalRate || 0) + '% approval rate with ' + (s.activeLenders || 0) + ' active lenders</div>';
+  }
+  document.getElementById('pi-banner').innerHTML = banner;
+
+  // View switcher
+  _piRenderSwitcher();
+
+  // Property list
+  _piRenderList();
+
+  // HMDA panel
+  if (s.totalHmdaLoans > 0) _piRenderHmda(hmda);
+}
+
+function _piRenderSwitcher() {
+  var props = (_piState.data && _piState.data.properties) || [];
+  var counts = {
+    all:       props.length,
+    likely:    props.filter(function(p){ return p.isLikelyToList; }).length,
+    confirmed: props.filter(function(p){ return p.isConfirmed;    }).length,
+  };
+  var views = [
+    { id: 'all',       label: 'All Properties'  },
+    { id: 'likely',    label: 'Likely to List'  },
+    { id: 'confirmed', label: 'Active Listings' },
+  ];
+  var wrap = document.getElementById('pi-view-switcher');
+  wrap.style.display = 'flex';
+  wrap.style.cssText = 'display:flex;gap:6px;padding:4px;background:#f5f0e8;border-radius:10px;margin-bottom:14px;overflow-x:auto';
+  wrap.innerHTML = views.map(function(v) {
+    var active = _piState.view === v.id;
+    return '<button onclick="_piSetView(\'' + v.id + '\')" style="min-height:36px;flex:1 1 auto;white-space:nowrap;background:' + (active ? '#c4943a' : 'transparent') + ';color:' + (active ? 'white' : '#7a6a58') + ';border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">'
+      + esc(v.label) + ' <span style="opacity:0.75;font-size:11px;margin-left:4px">(' + counts[v.id] + ')</span>'
+      + '</button>';
+  }).join('');
+}
+
+function _piSetView(view) {
+  _piState.view = view;
+  _piRenderSwitcher();
+  _piRenderList();
+}
+
+function _piRenderList() {
+  var listEl = document.getElementById('pi-list');
+  var props = (_piState.data && _piState.data.properties) || [];
+  var filtered = props;
+  if (_piState.view === 'confirmed') filtered = props.filter(function(p){ return p.isConfirmed; });
+  if (_piState.view === 'likely')    filtered = props.filter(function(p){ return p.isLikelyToList; });
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;text-align:center;color:var(--text-secondary);font-size:13px">No properties in this view yet. The engine is still gathering data for this tract \u2014 try again in a few hours.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(function(p, i) {
+    return _piPropertyCard(p, i);
+  }).join('');
+}
+
+function _piPropertyCard(p, idx) {
+  var z = p.zillowData || {};
+  var score = Math.round(p.score || 0);
+  var sStyle = _piScoreStyle(score);
+  var price = z.listPrice || (p.govListing && p.govListing.price) || p.assessedValue || p.lastSalePrice;
+  var photo = (z.photos && z.photos[0]) || '';
+  var sources = [];
+  if (p.govListing && p.govListing.source && _PI_SOURCE_STYLE[p.govListing.source]) sources.push(_PI_SOURCE_STYLE[p.govListing.source]);
+  if (z.isForSale) sources.push(_PI_SOURCE_STYLE.zillow_for_sale);
+  if (p.deedInfo)  sources.push(_PI_SOURCE_STYLE.deed_recording);
+  if (p.source && _PI_SOURCE_STYLE[p.source] && !sources.some(function(s){ return s.label === _PI_SOURCE_STYLE[p.source].label; })) {
+    sources.push(_PI_SOURCE_STYLE[p.source]);
+  }
+
+  var facts = [];
+  if (z.beds      || p.beds)      facts.push((z.beds || p.beds) + ' bd');
+  if (z.baths     || p.baths)     facts.push((z.baths || p.baths) + ' ba');
+  if (z.sqft      || p.sqft)      facts.push(Number(z.sqft || p.sqft).toLocaleString() + ' sqft');
+  if (z.yearBuilt || p.yearBuilt) facts.push('Built ' + (z.yearBuilt || p.yearBuilt));
+
+  var hasAgent = !!p.listingAgent;
+  var addr = p.address || '(no address on record)';
+  var addrKey = 'p' + idx;
+  var lmiOverride = _piState.lmiOverrides[addrKey];
+
+  var agentBlock = hasAgent
+    ? '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;padding:8px 10px;background:#f5f0e8;border-radius:8px">'
+      + '<div style="font-weight:700;color:var(--text-primary)">\uD83D\uDC64 ' + esc(p.listingAgent) + '</div>'
+      + (z.brokerage ? '<div>' + esc(z.brokerage) + '</div>' : '')
+      + (p.agentPhone ? '<a href="tel:' + esc(p.agentPhone) + '" style="color:#7a9eaa;text-decoration:none">' + esc(p.agentPhone) + '</a>' : '')
+      + '</div>'
+    : '';
+
+  var lmiBlock = lmiOverride
+    ? '<div style="margin-bottom:10px">' + _piLmiBadgeHtml(lmiOverride) + '</div>'
+    : '';
+
+  return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px">'
+    +   '<div style="font-size:14px;font-weight:700;color:var(--text-primary);flex:1;min-width:0;word-break:break-word">' + esc(addr) + '</div>'
+    +   '<span style="background:' + sStyle.bg + ';color:' + sStyle.fg + ';padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap">Score: ' + score + '</span>'
+    + '</div>'
+    + (photo ? '<img src="' + esc(photo) + '" alt="" loading="lazy" style="width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;background:#eee" />' : '')
+    + (facts.length ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">' + esc(facts.join(' \u00b7 ')) + '</div>' : '')
+    + (price ? '<div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px">' + esc(_piFmtPrice(price)) + '</div>' : '')
+    + (z.daysOnMarket != null ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">' + z.daysOnMarket + ' days on market</div>' : '')
+    + (sources.length ? '<div style="margin-bottom:10px;overflow-x:auto;white-space:nowrap">' + sources.map(function(s) {
+        return '<span style="display:inline-block;background:' + s.bg + ';color:' + s.fg + ';padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;margin-right:6px;margin-bottom:4px">' + esc(s.label) + '</span>';
+      }).join('') + '</div>' : '')
+    + agentBlock
+    + lmiBlock
+    + '<div style="display:grid;grid-template-columns:1fr;gap:6px">'
+    +   '<button ' + (hasAgent ? '' : 'disabled') + ' onclick="_piAddAgent(' + idx + ')" style="min-height:44px;background:' + (hasAgent ? '#c4943a' : '#d6cfc3') + ';color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:' + (hasAgent ? 'pointer' : 'not-allowed') + ';font-family:inherit">+ Add Agent as Realtor</button>'
+    +   '<button onclick="_piScheduleOpenHouse(' + idx + ')" style="min-height:44px;background:#7a9eaa;color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">\uD83D\uDCC5 Schedule Open House</button>'
+    +   '<button onclick="_piLmiPreScreen(' + idx + ')" style="min-height:44px;background:#5a8a6a;color:white;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">\uD83C\uDFE0 LMI Pre-Screen</button>'
+    + '</div>'
+    + '</div>';
+}
+
+function _piGetProperty(idx) {
+  var props = (_piState.data && _piState.data.properties) || [];
+  var filtered = props;
+  if (_piState.view === 'confirmed') filtered = props.filter(function(p){ return p.isConfirmed; });
+  if (_piState.view === 'likely')    filtered = props.filter(function(p){ return p.isLikelyToList; });
+  return filtered[idx];
+}
+
+function _piAddAgent(idx) {
+  var p = _piGetProperty(idx);
+  if (!p || !p.listingAgent) return;
+  var z = p.zillowData || {};
+  // Plumb to existing Add Realtor flow via global prefill object the
+  // realtor modal already reads (matches the pattern used elsewhere).
+  window._pendingRealtorPrefill = {
+    name:       p.listingAgent || '',
+    phone:      p.agentPhone   || '',
+    email:      p.agentEmail   || '',
+    brokerage:  z.brokerage    || '',
+    source:     'property_intelligence',
+    territory:  _piState.zip   || '',
+  };
+  if (typeof openAddRealtorModal === 'function') {
+    openAddRealtorModal();
+  } else if (typeof addRealtor === 'function') {
+    addRealtor();
+  } else {
+    showTab('realtors');
+    showToast('Realtor details pre-filled \u2014 scroll to Add Realtor');
+  }
+}
+
+function _piScheduleOpenHouse(idx) {
+  var p = _piGetProperty(idx);
+  if (!p) return;
+  var z = p.zillowData || {};
+  window._pendingOyzPrefill = {
+    propertyAddress: p.address || '',
+    tractId:         _piState.tractId || '',
+    lmiEligible:     true,
+    mlsNumber:       z.mlsId || '',
+    listPrice:       z.listPrice || (p.govListing && p.govListing.price) || '',
+  };
+  showTab('oyz');
+  setTimeout(function() {
+    if (typeof openOYZForm === 'function') openOYZForm();
+    else showToast('Open house details pre-filled');
+  }, 250);
+}
+
+function _piLmiPreScreen(idx) {
+  var p = _piGetProperty(idx);
+  if (!p) return;
+  // Since the MLO searched this census tract, confirm LMI in-place.
+  var addrKey = 'p' + idx;
+  _piState.lmiOverrides[addrKey] = {
+    eligible: true,
+    tractId:  _piState.tractId,
+  };
+  _piRenderList();
+  showToast('LMI confirmed \u2014 tract ' + _piState.tractId);
+}
+
+function _piLmiBadgeHtml(lmi) {
+  if (lmi.eligible) {
+    return '<div style="background:#eef4f0;border-radius:8px;padding:8px 10px;border-left:3px solid #5a8a6a">'
+      + '<div style="font-size:13px;font-weight:700;color:#3a6a4a">\u2713 LMI Eligible \u00b7 Tract ' + esc(lmi.tractId) + '</div>'
+      + '</div>';
+  }
+  return '<div style="background:#f5f1ec;border-radius:8px;padding:8px 10px">'
+    + '<span style="font-size:12px;font-weight:600;color:var(--text-secondary)">\u25CB Not LMI \u00b7 Tract ' + esc(lmi.tractId) + '</span>'
+    + '</div>';
+}
+
+function _piRenderHmda(h) {
+  var rate = Math.round(h.approvalRate || 0);
+  var caBenchmark = 65;
+  var diff = rate - caBenchmark;
+  var barColor = diff >= 0 ? '#5a8a6a' : '#b07030';
+
+  function row(label, value) {
+    return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #efe9dd;font-size:13px">'
+      + '<span style="color:var(--text-secondary)">' + esc(label) + '</span>'
+      + '<span style="color:var(--text-primary);font-weight:700">' + esc(String(value)) + '</span>'
+      + '</div>';
+  }
+
+  document.getElementById('pi-hmda').innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:16px">'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:10px">\uD83D\uDCCA Lending Intelligence for This Tract</div>'
+    + row('Loan applications last year', (h.totalApplications || 0).toLocaleString())
+    + row('Approval rate', rate + '%')
+    + row('Active lenders', (h.lenders || 0).toLocaleString())
+    + row('Avg loan amount', h.avgLoanAmount ? '$' + Number(h.avgLoanAmount).toLocaleString() : '\u2014')
+    + row('Minority population', h.minorityPct != null ? Math.round(h.minorityPct) + '%' : '\u2014')
+    + row('CRA opportunity score', (h.craOpportunityScore || 0) + '/100')
+    + '<div style="margin-top:14px;font-size:12px;color:var(--text-secondary)">This tract\u2019s approval rate is ' + rate + '% vs CA avg ' + caBenchmark + '%</div>'
+    + '<div style="position:relative;height:10px;background:#efe9dd;border-radius:99px;margin-top:8px;overflow:hidden">'
+    +   '<div style="width:' + Math.min(100, rate) + '%;height:100%;background:' + barColor + ';border-radius:99px;transition:width .4s"></div>'
+    +   '<div style="position:absolute;top:-3px;bottom:-3px;left:calc(' + Math.min(100, caBenchmark) + '% - 1px);width:2px;background:var(--text-primary);opacity:0.55"></div>'
+    + '</div>'
+    + '</div>';
 }
 
 // ── REALTOR PORTAL ────────────────────────────────────────────
