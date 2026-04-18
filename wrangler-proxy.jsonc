@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lmi-proxy",
+  "main": "lmi-proxy-worker.js",
+  "compatibility_date": "2026-04-17",
+  "observability": {
+    "enabled": true
+  }
+  // Environment variables — set in Cloudflare dashboard:
+  // Workers & Pages → lmi-proxy → Settings → Variables
+  //   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
+  //   RAPIDAPI_KEY
+  // KV binding: KV_NAMESPACE → LMI_PROPERTY_CACHE
+}
