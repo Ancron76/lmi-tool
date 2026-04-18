@@ -9789,13 +9789,29 @@ async function doSearch() {
   res.innerHTML = '<div class="loader">🔍 Looking up live census tract data...</div>';
   try {
     const response = await fetch(PROXY_URL + '?zip=' + zip);
-    if (!response.ok) throw new Error('API error');
+    if (!response.ok) {
+      // Surface the Worker's failure reason so ops issues are self-diagnosing
+      // instead of always reading "Could not reach census data".
+      const denyReason = response.headers.get('x-deny-reason') || '';
+      let bodyText = '';
+      try { bodyText = (await response.text() || '').slice(0, 140); } catch(_) {}
+      const err = new Error('HTTP ' + response.status + (denyReason ? ' · ' + denyReason : '') + (bodyText ? ' · ' + bodyText : ''));
+      err.status = response.status;
+      err.denyReason = denyReason;
+      throw err;
+    }
     const data = await response.json();
     if (!data || !data.length || data.error) { renderNotFound(zip); return; }
     renderFarmCard(zip, data[0].city || zip, data[0].area_md_fam_income || 0);
     renderResults(zip, data);
   } catch(err) {
-    res.innerHTML = '<div class="api-error"><h3>⚠️ Could not reach census data</h3><p>Check your connection or try again.<br/>You can also look up at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">FFIEC.gov →</a></p></div>';
+    console.warn('[doSearch]', err);
+    const isHostAllowlist = err && (err.denyReason === 'host_not_allowed' || (err.message || '').indexOf('host_not_allowed') !== -1);
+    const detail = isHostAllowlist
+      ? '<strong>Worker is rejecting this origin.</strong><br/>The <code>lmi-proxy</code> Worker\'s host allowlist needs <code>' + esc(location.origin) + '</code>. Redeploy the Worker from this repo (<code>npx wrangler deploy -c wrangler-proxy.jsonc</code>) to pick up the latest allowlist.'
+      : 'Check your connection or try again.<br/>You can also look up at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">FFIEC.gov →</a>';
+    const techDetail = err && err.message ? '<div style="font-size:11px;color:#94a3b8;margin-top:8px;font-family:monospace">' + esc(err.message) + '</div>' : '';
+    res.innerHTML = '<div class="api-error"><h3>⚠️ Could not reach census data</h3><p>' + detail + '</p>' + techDetail + '</div>';
   }
 }
 
@@ -9905,14 +9921,44 @@ function showPropertyIntelligence(tractId, zip, county) {
     if (statusEl) statusEl.textContent = _propIntelStatusMessages[msgIdx];
   }, 2200);
 
-  // Build Worker URL — same origin for deployed, proxy URL for dev
-  var workerBase = window.location.origin;
-  var apiUrl = workerBase + '/property-intelligence?tractId=' + encodeURIComponent(tractId)
+  // Build Worker URL. Try same-origin first (if a route binding maps the
+  // custom domain to the worker), then fall back to the canonical proxy
+  // URL. The same-origin path returns HTML 200 when no route is bound,
+  // so we also guard on content-type to fall through to the proxy.
+  var qs = 'tractId=' + encodeURIComponent(tractId)
     + '&zip=' + encodeURIComponent(zip)
     + '&county=' + encodeURIComponent(county || '');
+  var sameOriginUrl = window.location.origin + '/property-intelligence?' + qs;
+  var proxyUrl      = PROXY_URL + '/property-intelligence?' + qs;
 
-  fetch(apiUrl)
-    .then(function(r) { if (!r.ok) throw new Error('API error ' + r.status); return r.json(); })
+  async function fetchPropertyIntel(primary, fallback) {
+    async function tryOne(url) {
+      var r = await fetch(url);
+      var ct = r.headers.get('content-type') || '';
+      if (r.ok && ct.indexOf('json') !== -1) return r.json();
+      // Collect diagnostics so we can tell the ops issue from a 500.
+      var denyReason = r.headers.get('x-deny-reason') || '';
+      var body = '';
+      try { body = (await r.text() || '').slice(0, 160); } catch(_) {}
+      var err = new Error('HTTP ' + r.status
+        + (denyReason ? ' · ' + denyReason : '')
+        + (ct && ct.indexOf('json') === -1 ? ' · ' + ct : '')
+        + (body ? ' · ' + body : ''));
+      err.status = r.status; err.denyReason = denyReason; err.url = url;
+      throw err;
+    }
+    try { return await tryOne(primary); }
+    catch (primaryErr) {
+      if (!fallback) throw primaryErr;
+      try { return await tryOne(fallback); }
+      catch (fallbackErr) {
+        fallbackErr.primaryError = primaryErr;
+        throw fallbackErr;
+      }
+    }
+  }
+
+  fetchPropertyIntel(sameOriginUrl, proxyUrl)
     .then(function(data) {
       clearInterval(statusTimer);
       _propIntelData = data;
@@ -9924,12 +9970,22 @@ function showPropertyIntelligence(tractId, zip, county) {
     })
     .catch(function(err) {
       clearInterval(statusTimer);
+      console.warn('[showPropertyIntelligence]', err);
       document.getElementById('prop-intel-loading').style.display = 'none';
+      var isHostAllowlist = err && (err.denyReason === 'host_not_allowed' || (err.message || '').indexOf('host_not_allowed') !== -1);
+      var isRouteMissing  = err && (err.status === 404 || (err.message || '').indexOf('text/html') !== -1);
+      var hint = isHostAllowlist
+        ? 'The <code>lmi-proxy</code> Worker\'s host allowlist needs <code>' + esc(location.origin) + '</code>. Redeploy: <code>npx wrangler deploy -c wrangler-proxy.jsonc</code>.'
+        : isRouteMissing
+        ? 'The <code>/property-intelligence</code> route isn\'t bound to this domain. The current Worker source has it — redeploy: <code>npx wrangler deploy -c wrangler-proxy.jsonc</code>.'
+        : 'Check your connection and try again.';
+      var techDetail = err && err.message ? '<div style="font-size:11px;color:#94a3b8;margin-top:8px;font-family:monospace;word-break:break-all">' + esc(err.message) + '</div>' : '';
       document.getElementById('prop-intel-cards').innerHTML =
         '<div class="prop-intel-empty">'
         + '<div style="font-size:32px;margin-bottom:10px">&#128269;</div>'
         + '<div style="font-weight:600;color:var(--text-primary);margin-bottom:6px">Could not load property data</div>'
-        + '<div>' + (err.message || 'Check your connection and try again.') + '</div>'
+        + '<div>' + hint + '</div>'
+        + techDetail
         + '<div style="margin-top:12px"><button class="view-props-btn" onclick="_openRapidApiSetup()">Setup Instructions</button></div>'
         + '</div>';
     });
