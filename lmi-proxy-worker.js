@@ -91,79 +91,165 @@ export default {
 };
 
 // ═══════════════════════════════════════════════════════════
-// LMI TRACT LOOKUP (FFIEC proxy)
+// LMI TRACT LOOKUP (Census Bureau ACS API)
 // ═══════════════════════════════════════════════════════════
+
+// CA ZIP prefix → county FIPS (state FIPS 06 + county code)
+const ZIP_TO_COUNTY = {
+  '900': '06037', '901': '06037', '902': '06037', '903': '06037', '904': '06037',
+  '905': '06037', '906': '06037', '907': '06037', '908': '06037',
+  '910': '06037', '911': '06037', '912': '06037', '913': '06037', '914': '06037',
+  '915': '06037', '916': '06037', '917': '06037', '918': '06037',
+  '919': '06111', // Ventura
+  '920': '06073', '921': '06073', // San Diego
+  '922': '06025', // Imperial
+  '923': '06065', '924': '06065', '925': '06065', // Riverside
+  '926': '06059', '927': '06059', '928': '06059', // Orange
+  '930': '06083', '931': '06083', // Santa Barbara
+  '932': '06029', '933': '06029', // Kern
+  '934': '06079', // San Luis Obispo
+  '935': '06029', // Kern (Mojave area)
+  '936': '06019', '937': '06019', // Fresno
+  '938': '06019', // Fresno
+  '939': '06107', // Tulare
+  '940': '06081', // San Mateo
+  '941': '06075', // San Francisco
+  '942': '06081', // San Mateo
+  '943': '06001', // Alameda
+  '944': '06075', // San Francisco
+  '945': '06001', // Alameda
+  '946': '06001', // Alameda
+  '947': '06013', // Contra Costa
+  '948': '06097', // Sonoma
+  '949': '06041', // Marin
+  '950': '06085', // Santa Clara
+  '951': '06085', // Santa Clara
+  '952': '06087', // Santa Cruz
+  '953': '06069', // San Benito
+  '954': '06085', // Santa Clara
+  '955': '06077', // San Joaquin
+  '956': '06077', // San Joaquin
+  '957': '06039', // Madera
+  '958': '06067', // Sacramento
+  '959': '06067', // Sacramento
+  '960': '06089', // Shasta
+  '961': '06007', // Butte
+  '962': '06007', // Butte
+  '930': '06083', '931': '06111',
+  '935': '06071', // San Bernardino
+};
+
+// MSA codes for CA counties (for AMI lookup)
+const COUNTY_TO_MSA = {
+  '06037': '31080', '06059': '31080', // LA-Long Beach-Anaheim
+  '06073': '41740', // San Diego
+  '06065': '40140', '06071': '40140', // Riverside-San Bernardino
+  '06019': '23420', // Fresno
+  '06077': '44700', // Stockton
+  '06067': '40900', // Sacramento
+  '06085': '41940', '06081': '41940', '06075': '41940', '06001': '41940', '06013': '41940', '06041': '41940', // SF Bay Area
+  '06029': '12540', // Bakersfield (Kern)
+  '06111': '37100', // Ventura (Oxnard)
+  '06107': '47300', // Visalia (Tulare)
+  '06083': '42200', // Santa Barbara (Santa Maria)
+  '06025': '20940', // El Centro (Imperial)
+  '06089': '39820', // Redding (Shasta)
+  '06007': '17020', // Chico (Butte)
+  '06039': '31460', // Madera
+  '06079': '42020', // San Luis Obispo
+  '06087': '42100', // Santa Cruz
+  '06069': '41940', // San Benito (part of SJ-SF-Oakland)
+  '06097': '42220', // Santa Rosa (Sonoma)
+};
+
 async function handleLmiLookup(zip, request) {
   if (!/^\d{5}$/.test(zip)) {
     return jsonResp({ error: 'Invalid zip code' }, request, 400);
   }
 
-  // FFIEC data lags ~1-2 years; try most recent first, then fall back
-  const currentYear = new Date().getFullYear();
-  const yearsToTry = [currentYear - 1, currentYear - 2, currentYear - 3];
+  const prefix = zip.substring(0, 3);
+  const countyFips = ZIP_TO_COUNTY[prefix];
+  if (!countyFips) {
+    return jsonResp({ error: 'ZIP code not in coverage area' }, request, 400);
+  }
+
+  const stateCode = countyFips.substring(0, 2);
+  const countyCode = countyFips.substring(2);
+  const msaCode = COUNTY_TO_MSA[countyFips] || '';
 
   try {
-    let response;
-    for (const year of yearsToTry) {
-      response = await fetch(
-        'https://ffiec.cfpb.gov/v2/data-browser-api/view/nationwide/csv?' +
-        'years=' + year + '&actions_taken=1,2,3&' +
-        'fields=census_tract,tract_population,tract_minority_population_percent,' +
-        'ffiec_msa_md_median_family_income,tract_to_msa_income_percentage,' +
-        'county_code,state_code&' +
-        'msa_mds=&' +
-        'zip_codes=' + encodeURIComponent(zip),
-        { headers: { Accept: 'application/json' } }
-      );
-      if (response.ok) break;
+    // Fetch tract-level data and MSA AMI in parallel
+    const acsYear = 2022; // Most recent stable ACS 5-year
+    const [tractRes, amiRes] = await Promise.all([
+      // B19113_001E = Median family income, B01003_001E = Population
+      fetch(
+        'https://api.census.gov/data/' + acsYear + '/acs/acs5' +
+        '?get=NAME,B19113_001E,B01003_001E' +
+        '&for=tract:*&in=state:' + stateCode + '+county:' + countyCode
+      ),
+      // MSA-level AMI
+      msaCode
+        ? fetch(
+            'https://api.census.gov/data/' + acsYear + '/acs/acs5' +
+            '?get=B19113_001E' +
+            '&for=metropolitan%20statistical%20area/micropolitan%20statistical%20area:' + msaCode
+          )
+        : Promise.resolve(null),
+    ]);
+
+    if (!tractRes.ok) {
+      return jsonResp({ error: 'Census API error' }, request, 502);
     }
 
-    if (!response || !response.ok) {
-      // Fallback: try the aggregation endpoint
-      const fallback = await fetch(
-        'https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?' +
-        'years=' + yearsToTry[0] + '&actions_taken=1,2,3&loan_purposes=1&' +
-        'census_tracts=&fields=census_tract&' +
-        'msa_mds=&zip_codes=' + encodeURIComponent(zip)
-      );
-      if (!fallback.ok) return jsonResp({ error: 'FFIEC API error' }, request, 502);
-      const data = await fallback.json();
-      return jsonResp(data.aggregations || [], request);
+    const tractData = await tractRes.json();
+    let ami = 0;
+    if (amiRes && amiRes.ok) {
+      const amiData = await amiRes.json();
+      ami = parseInt(amiData[1]?.[0]) || 0;
+    }
+    // Fallback: use county median if MSA unavailable
+    if (!ami) {
+      const countyIncomes = tractData.slice(1)
+        .map(r => parseInt(r[1]) || 0)
+        .filter(v => v > 0);
+      ami = countyIncomes.length > 0
+        ? Math.round(countyIncomes.reduce((s, v) => s + v, 0) / countyIncomes.length)
+        : 80000;
     }
 
-    // Parse CSV response into JSON
-    const text = await response.text();
-    const lines = text.trim().split('\n');
-    if (lines.length < 2) return jsonResp([], request);
+    // Parse tract data: [NAME, B19113_001E, B01003_001E, state, county, tract]
+    const tracts = [];
+    const countyName = (tractData[1]?.[0] || '').replace(/Census Tract [\d.]+;\s*/, '').replace(/;\s*California$/, '');
 
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const tracts = new Map();
+    for (let i = 1; i < tractData.length; i++) {
+      const row = tractData[i];
+      const tractName = row[0] || '';
+      const tractIncome = parseInt(row[1]) || 0;
+      const population = parseInt(row[2]) || 0;
+      const tractNum = row[5] || '';
+      const tractId = stateCode + countyCode + tractNum;
 
-    for (let i = 1; i < lines.length; i++) {
-      const vals = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-      const row = {};
-      headers.forEach((h, j) => { row[h] = vals[j] || ''; });
+      if (tractIncome <= 0) continue;
 
-      const tractId = row.census_tract;
-      if (!tractId || tracts.has(tractId)) continue;
+      const incomeRatio = ami > 0 ? Math.round((tractIncome / ami) * 100) : 0;
 
-      const ami = parseFloat(row.ffiec_msa_md_median_family_income) || 0;
-      const tractPct = parseFloat(row.tract_to_msa_income_percentage) || 0;
-      const tractIncome = Math.round(ami * tractPct / 100);
-
-      tracts.set(tractId, {
+      // Only include LMI tracts (income ratio <= 80%) and borderline (<=120%)
+      tracts.push({
         tract_id: tractId,
         tract_md_fam_income: tractIncome,
         area_md_fam_income: ami,
-        income_ratio: tractPct,
-        county_name: row.county_code || '',
+        income_ratio: incomeRatio,
+        county_name: countyName,
         city: '',
-        population: parseInt(row.tract_population) || 0,
-        minority_pct: parseFloat(row.tract_minority_population_percent) || 0,
+        population,
+        minority_pct: 0,
       });
     }
 
-    return jsonResp(Array.from(tracts.values()), request);
+    // Sort: LMI tracts first (lowest income ratio), then others
+    tracts.sort((a, b) => a.income_ratio - b.income_ratio);
+
+    return jsonResp(tracts, request);
   } catch (e) {
     return jsonResp({ error: 'Census API unreachable' }, request, 502);
   }
