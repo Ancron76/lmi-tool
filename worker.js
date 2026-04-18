@@ -2,20 +2,48 @@
 // LMI Property Intelligence Engine — Cloudflare Worker
 // ═══════════════════════════════════════════════════════════
 
+const ALLOWED_ORIGINS = [
+  'https://lmitool.com',
+  'https://www.lmitool.com',
+  'https://loopenta.com',
+  'https://www.loopenta.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+function getAllowedOrigin(request) {
+  const origin = request.headers.get('Origin') || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  // Also allow same-origin requests (no Origin header) and the worker's own domain
+  if (!origin) return '*';
+  return null;
+}
+
+function corsHeaders(request) {
+  const origin = getAllowedOrigin(request);
+  if (!origin) return {};
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+  };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
     // CORS preflight
     if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
+      return new Response(null, { headers: corsHeaders(request) });
+    }
+
+    // LMI census tract lookup: GET /?zip=XXXXX
+    const zip = url.searchParams.get('zip');
+    if (zip && url.pathname === '/') {
+      return handleLmiLookup(zip, request);
     }
 
     // Property Intelligence API route
@@ -31,13 +59,118 @@ export default {
 // ─────────────────────────────────────────
 // CORS headers helper
 // ─────────────────────────────────────────
-const CORS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-};
+function jsonResponse(data, request, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders(request),
+    },
+  });
+}
 
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: CORS });
+// ─────────────────────────────────────────
+// LMI Census tract lookup (FFIEC proxy)
+// ─────────────────────────────────────────
+async function handleLmiLookup(zip, request) {
+  if (!/^\d{5}$/.test(zip)) {
+    return jsonResponse({ error: 'Invalid zip code' }, request, 400);
+  }
+
+  // FFIEC data lags ~1-2 years; try last year first, then fall back
+  const currentYear = new Date().getFullYear();
+  const yearsToTry = [currentYear - 1, currentYear - 2, currentYear - 3];
+
+  try {
+    let res;
+    for (const year of yearsToTry) {
+      const ffiecUrl =
+        'https://ffiec.cfpb.gov/v2/data-browser-api/view/nationwide/csv' +
+        '?years=' + year +
+        '&msa_md=&state=&county=&census_tract=' +
+        '&fields=census_tract,tract_population,' +
+        'tract_minority_population_percent,' +
+        'ffiec_msa_md_median_family_income,' +
+        'tract_to_msa_income_percentage' +
+        '&zip_codes=' + zip;
+
+      res = await fetch(ffiecUrl, {
+        headers: { 'User-Agent': 'LMI-Tool/1.0' },
+      });
+
+      if (res.ok) break;
+    }
+
+    if (!res || !res.ok) {
+      // Fallback: try the aggregations endpoint
+      const aggUrl =
+        'https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations' +
+        '?years=' + yearsToTry[0] +
+        '&actions_taken=1,2,3' +
+        '&loan_purposes=1' +
+        '&zip_codes=' + zip;
+
+      const aggRes = await fetch(aggUrl, {
+        headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' },
+      });
+
+      if (!aggRes.ok) {
+        return jsonResponse({ error: 'FFIEC API error' }, request, 502);
+      }
+
+      const aggData = await aggRes.json();
+      return jsonResponse(aggData.aggregations || [], request);
+    }
+
+    // Parse CSV response
+    const csv = await res.text();
+    const lines = csv.trim().split('\n');
+    if (lines.length < 2) {
+      return jsonResponse([], request);
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const results = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = values[idx]; });
+
+      const incomeRatio = parseFloat(row.tract_to_msa_income_percentage) || null;
+
+      results.push({
+        tract_id: row.census_tract || '',
+        census_tract: row.census_tract || '',
+        tract_population: parseInt(row.tract_population) || 0,
+        minority_pct: parseFloat(row.tract_minority_population_percent) || 0,
+        median_family_income: parseInt(row.ffiec_msa_md_median_family_income) || 0,
+        income_ratio: incomeRatio,
+        lmi_status: incomeRatio !== null && incomeRatio <= 80,
+        lmi_category: incomeRatio === null
+          ? 'Unknown'
+          : incomeRatio <= 50
+            ? 'Low'
+            : incomeRatio <= 80
+              ? 'Moderate'
+              : incomeRatio <= 120
+                ? 'Middle'
+                : 'Upper',
+      });
+    }
+
+    // Deduplicate by tract ID
+    const seen = new Set();
+    const unique = results.filter(r => {
+      if (seen.has(r.tract_id)) return false;
+      seen.add(r.tract_id);
+      return true;
+    });
+
+    return jsonResponse(unique, request);
+  } catch (e) {
+    return jsonResponse({ error: 'Census API unreachable' }, request, 502);
+  }
 }
 
 // ─────────────────────────────────────────
@@ -51,7 +184,7 @@ async function handlePropertyIntelligence(request, env) {
   const state = 'CA';
 
   if (!tractId || !zip) {
-    return jsonResponse({ error: 'tractId and zip are required' }, 400);
+    return jsonResponse({ error: 'tractId and zip are required' }, request, 400);
   }
 
   // Check KV cache first (6 hours)
@@ -60,7 +193,7 @@ async function handlePropertyIntelligence(request, env) {
     try {
       const cached = await env.KV_NAMESPACE.get(cacheKey, 'json');
       if (cached) {
-        return jsonResponse({ ...cached, fromCache: true });
+        return jsonResponse({ ...cached, fromCache: true }, request);
       }
     } catch (e) { /* KV not configured — continue without cache */ }
   }
@@ -142,7 +275,7 @@ async function handlePropertyIntelligence(request, env) {
     } catch (e) { /* KV write failed — non-critical */ }
   }
 
-  return jsonResponse(result);
+  return jsonResponse(result, request);
 }
 
 // ─────────────────────────────────────────
