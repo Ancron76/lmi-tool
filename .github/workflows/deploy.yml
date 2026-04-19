@@ -1,0 +1,83 @@
+name: Deploy Workers
+
+# Deploys both Cloudflare Workers in this repo:
+#   • lmi-tool  (main worker + static assets, config: wrangler.jsonc)
+#   • lmi-proxy (FFIEC CORS/API proxy,       config: wrangler-proxy.jsonc)
+#
+# Triggers:
+#   • push to main (auto-deploy any merged change)
+#   • workflow_dispatch (manual "Run workflow" button in GitHub UI)
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   • CLOUDFLARE_API_TOKEN  — create at dash.cloudflare.com → My Profile →
+#     API Tokens → "Edit Cloudflare Workers" template. The token must
+#     have Account scope: Workers Scripts Edit, Workers KV Storage Edit,
+#     and Account Settings Read.
+#   • CLOUDFLARE_ACCOUNT_ID — visible on the Workers & Pages page of the
+#     Cloudflare dashboard (right sidebar).
+
+on:
+  push:
+    branches: [main]
+    # Skip deploy when only docs/meta files change.
+    paths-ignore:
+      - "**/*.md"
+      - ".gitignore"
+      - ".github/workflows/monday-reminder.yml"
+  workflow_dispatch:
+
+# Cancel an in-flight deploy if another push lands on main.
+concurrency:
+  group: deploy-workers
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          # No package-lock.json in repo, so no cache key to provide.
+
+      - name: Install dependencies
+        # Installs the devDependency `wrangler` declared in package.json.
+        run: npm install --no-audit --no-fund
+
+      - name: Syntax-check workers
+        # Cheap guard — catches typos before we burn a deploy slot.
+        run: |
+          node --check worker.js
+          node --check lmi-proxy-worker.js
+
+      - name: Deploy lmi-tool (main worker + assets)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config wrangler.jsonc
+
+      - name: Deploy lmi-proxy (FFIEC proxy)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config wrangler-proxy.jsonc
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy result"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Triggered by: ${{ github.event_name }}"
+            echo "- Status: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
