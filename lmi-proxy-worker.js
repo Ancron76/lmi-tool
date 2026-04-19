@@ -105,10 +105,11 @@ const ZIP_TO_COUNTY = {
   '922': '06025', // Imperial
   '923': '06065', '924': '06065', '925': '06065', // Riverside
   '926': '06059', '927': '06059', '928': '06059', // Orange
-  '930': '06083', '931': '06083', // Santa Barbara
+  '930': '06111', // Ventura (Oxnard, Thousand Oaks, Simi Valley)
+  '931': '06083', // Santa Barbara (Santa Barbara, Goleta, Lompoc)
   '932': '06029', '933': '06029', // Kern
   '934': '06079', // San Luis Obispo
-  '935': '06029', // Kern (Mojave area)
+  '935': '06029', // Kern (Mojave, Tehachapi, Ridgecrest)
   '936': '06019', '937': '06019', // Fresno
   '938': '06019', // Fresno
   '939': '06107', // Tulare
@@ -135,8 +136,6 @@ const ZIP_TO_COUNTY = {
   '960': '06089', // Shasta
   '961': '06007', // Butte
   '962': '06007', // Butte
-  '930': '06083', '931': '06111',
-  '935': '06071', // San Bernardino
 };
 
 // MSA codes for CA counties (for AMI lookup)

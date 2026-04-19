@@ -8,8 +8,27 @@
   },
   "assets": {
     "directory": "."
-  }
-  // KV binding — configure in Cloudflare dashboard:
-  // Workers & Pages → lmi-tool → Settings → Variables → KV Namespace Bindings
-  // Variable name: KV_NAMESPACE  →  Namespace: LMI_PROPERTY_CACHE
+  },
+  "triggers": {
+    // Run daily at 09:00 UTC (= 02:00 PDT / 01:00 PST). The scheduled()
+    // handler in worker.js checks the admin-configured scheduledDay and
+    // only runs the actual RentCast refresh when today's UTC day matches.
+    // That lets the admin change the refresh day without redeploying.
+    "crons": ["0 9 * * *"]
+  },
+  // KV binding — same namespace used by the proxy worker.
+  "kv_namespaces": [
+    {
+      "binding": "KV_NAMESPACE",
+      "id": "64716877818a49e19fcf711f975ba669"
+    }
+  ]
+  // RentCast API key — set as a secret from CLI:
+  //   npx wrangler secret put RENTCAST_API_KEY
+  // (then paste key from rentcast.io dashboard when prompted)
+  //
+  // Admin password (gates /admin/rentcast-* endpoints):
+  //   npx wrangler secret put ADMIN_PASSWORD
+  // (pick a long random string — type it into the admin page once per
+  //  browser session; stored only in sessionStorage.)
 }

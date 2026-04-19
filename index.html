@@ -2274,13 +2274,21 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
           <input type="text" id="zip-input" maxlength="5" placeholder="e.g. 93701" oninput="this.value=this.value.replace(/\D/g,'')" onkeydown="if(event.key==='Enter') doSearch()" />
           <button class="search-btn" onclick="doSearch()">Search</button>
         </div>
-        <div class="examples">Try:
+        <div id="cached-zip-picker-wrap" style="display:none;margin-top:12px">
+          <label for="cached-zip-picker" style="display:block;font-size:12px;font-weight:700;color:#7a6a58;margin-bottom:4px;letter-spacing:0.3px;text-transform:uppercase">Pick a ZIP with homes for sale already loaded</label>
+          <select id="cached-zip-picker" onchange="_onCachedZipPicked(this.value)" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;background:white">
+            <option value="">— Select a ZIP —</option>
+          </select>
+        </div>
+        <div id="examples-fallback" class="examples">Try:
           <span onclick="quickSearch('93701')">93701 Fresno</span>
           <span onclick="quickSearch('93650')">93650 Clovis</span>
           <span onclick="quickSearch('90011')">90011 LA</span>
           <span onclick="quickSearch('95206')">95206 Stockton</span>
           <span onclick="quickSearch('93301')">93301 Bakersfield</span>
         </div>
+        <div id="for-sale-btn-container" style="display:none"></div>
+        <div id="for-sale-results" style="display:none;margin-top:14px"></div>
         <div id="branch-shortcuts-container"></div>
       </div>
       <div class="card">
@@ -3735,6 +3743,7 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
       <button class="sa-tab active" id="sa-tab-orgs" onclick="saShowTab('orgs')">🏢 Organizations</button>
       <button class="sa-tab" id="sa-tab-users" onclick="saShowTab('users')">👥 All Users</button>
       <button class="sa-tab" id="sa-tab-billing" onclick="saShowTab('billing')">💳 Billing Overview</button>
+      <button class="sa-tab" id="sa-tab-rentcast" onclick="saShowTab('rentcast')">🏘 RentCast Data</button>
       <button class="sa-tab" id="sa-tab-settings" onclick="saShowTab('settings')">⚙️ Platform Settings</button>
       <button class="sa-tab" id="sa-tab-auditlog" onclick="saShowTab('auditlog')">🔒 Audit Log</button>
     </div>
@@ -3775,6 +3784,12 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
       <div class="sa-stat-grid" id="sa-billing-stats"></div>
       <div style="font-size:15px;font-weight:800;color:#1f2937;margin-bottom:16px">💳 Organization Billing</div>
       <div id="sa-billing-table" style="overflow-x:auto"></div>
+    </div>
+    <!-- RENTCAST DATA TAB -->
+    <div class="sa-tab-content" id="sa-content-rentcast">
+      <div id="sa-rc-body">
+        <div style="text-align:center;padding:40px;color:#7a6a58">Loading RentCast status...</div>
+      </div>
     </div>
     <!-- SETTINGS TAB -->
     <div class="sa-tab-content" id="sa-content-auditlog">
@@ -5154,6 +5169,7 @@ async function _postLoginSetup(user) {
     document.getElementById('superadmin-nav-btn').style.display = 'inline-block';
   }
   renderBranchShortcuts();
+  loadCachedZipPicker(); // populate LMI-search ZIP dropdown (non-blocking)
   cachedProspects = await fetchMyProspects(); renderSaved();
   cachedRealtors = await fetchMyRealtors();
   cachedActivities = await fetchMyActivities();
@@ -9779,6 +9795,48 @@ async function _saveInstitutionInfo() {
 
 function quickSearch(z) { document.getElementById('zip-input').value = z; doSearch(); }
 
+// Populates the cached-ZIP dropdown from the worker's /priority-zips endpoint.
+// Replaces the "Try:" examples row when ZIPs with cached listings exist.
+async function loadCachedZipPicker() {
+  var wrap = document.getElementById('cached-zip-picker-wrap');
+  var select = document.getElementById('cached-zip-picker');
+  var fallback = document.getElementById('examples-fallback');
+  if (!wrap || !select) return;
+  try {
+    var res = await fetch(window.location.origin + '/priority-zips', { method: 'GET' });
+    if (!res.ok) throw new Error('bad_status');
+    var data = await res.json();
+    var zips = (data && Array.isArray(data.zips)) ? data.zips : [];
+    if (!zips.length) {
+      // No cached ZIPs — hide dropdown, keep "Try:" examples visible.
+      wrap.style.display = 'none';
+      if (fallback) fallback.style.display = '';
+      return;
+    }
+    var opts = ['<option value="">\u2014 Select a ZIP with homes already loaded \u2014</option>'];
+    zips.forEach(function(z) {
+      var label = z.zip + (z.city ? ' \u2014 ' + z.city : '') + (typeof z.total === 'number' ? ' (' + z.total + ' listings)' : '');
+      opts.push('<option value="' + z.zip + '">' + label + '</option>');
+    });
+    select.innerHTML = opts.join('');
+    wrap.style.display = 'block';
+    if (fallback) fallback.style.display = 'none'; // dropdown replaces "Try:"
+  } catch (e) {
+    wrap.style.display = 'none';
+    if (fallback) fallback.style.display = '';
+  }
+}
+
+function _onCachedZipPicked(z) {
+  if (!z) return;
+  var input = document.getElementById('zip-input');
+  if (input) input.value = z;
+  // Reset select so the same value can be picked again later
+  var sel = document.getElementById('cached-zip-picker');
+  if (sel) sel.value = '';
+  doSearch();
+}
+
 async function doSearch() {
   const zip = document.getElementById('zip-input').value.trim();
   if (zip.length !== 5) return;
@@ -9846,6 +9904,17 @@ function renderResults(zip, tracts) {
       + '</tr>';
   }).join('');
 
+  // Render the "Show all homes for sale" button into its dedicated container
+  // directly below the search input card (not inside the results block).
+  var fsBtnBox = document.getElementById('for-sale-btn-container');
+  if (fsBtnBox) {
+    fsBtnBox.style.display = 'block';
+    fsBtnBox.innerHTML = '<button id="for-sale-btn" onclick="loadForSaleListings(\'' + zip + '\')" style="display:block;width:100%;margin:14px 0 0;padding:14px 18px;background:var(--color-positive);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.2px;box-shadow:var(--shadow-sm);transition:background 0.15s, transform 0.1s;">\ud83c\udfd8 Show all homes for sale in ZIP ' + zip + '</button>';
+  }
+  // Clear any previous for-sale results from a prior search.
+  var fsResults = document.getElementById('for-sale-results');
+  if (fsResults) { fsResults.style.display = 'none'; fsResults.innerHTML = ''; }
+
   document.getElementById('results').innerHTML =
     '<div class="result-header"><div><span class="result-city">' + city + '</span><span class="result-zip">ZIP ' + zip + '</span></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
@@ -9863,6 +9932,687 @@ function renderResults(zip, tracts) {
     + '<a class="link-btn ffiec" href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">\ud83d\udccb FFIEC Tract Lookup</a>'
     + '<a class="link-btn hud" href="https://hudgis-hud.opendata.arcgis.com/" target="_blank">\ud83c\udfdb HUD Map</a>'
     + '</div></div>';
+}
+
+// ── FOR-SALE LISTINGS (HUD / Fannie / Freddie / Craigslist) ────
+function _forSaleSourceMeta(src) {
+  var s = String(src || '').toLowerCase();
+  if (s === 'hud') return { label: 'HUD', bg: '#e6efe8', color: '#2d5a3a' };
+  if (s === 'homepath') return { label: 'Fannie', bg: '#e4ecf6', color: '#2a4f8a' };
+  if (s === 'homesteps') return { label: 'Freddie', bg: '#f0e4ef', color: '#6b2f6a' };
+  if (s === 'craigslist') return { label: 'Craigslist', bg: '#faf0e4', color: '#8a4a20' };
+  return { label: src || 'Listing', bg: 'var(--body-bg)', color: 'var(--text-secondary)' };
+}
+
+function _forSaleEscapeAttr(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function _forSaleFormatPrice(p) {
+  var n = Number(p);
+  if (!isFinite(n) || n <= 0) return 'Contact for price';
+  return '$' + n.toLocaleString();
+}
+
+// Builds a Zillow for-sale deep-link URL. Using "/homes/for_sale/..." forces
+// Zillow to filter to active listings (instead of defaulting to the
+// off-market / Zestimate page for the address). If Zillow has indexed the
+// listing, the user lands on it; otherwise Zillow shows nearby for-sale
+// matches — which is still more useful than the off-market page.
+//
+// Note: RentCast and Zillow subscribe to different MLS feeds, so RentCast can
+// legitimately surface listings Zillow has not indexed. There's nothing the
+// client can do about that — the for-sale filter is the best guaranteed URL.
+//
+// Redfin and Realtor.com were removed — neither offers a reliable public
+// address-search URL, and ZIP-level fallbacks were too weak to justify the UI.
+function _forSaleRealtyLinks(l) {
+  var fullParts = [l.address, l.city, l.state, l.zip].filter(function(x) { return !!x; });
+  var full = fullParts.join(', ');
+  var zillowQ = full.replace(/,/g, '').replace(/\s+/g, '-');
+  return {
+    zillow: 'https://www.zillow.com/homes/for_sale/' + encodeURIComponent(zillowQ) + '_rb/',
+  };
+}
+
+function _forSaleRealtyButtons(l) {
+  var urls = _forSaleRealtyLinks(l);
+  var base = 'display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 12px;font-size:12px;font-weight:700;text-decoration:none;border-radius:6px;border:1.5px solid transparent;gap:4px;';
+
+  // Prefer RentCast's own url (points to the actual active MLS/broker/portal
+  // listing). Only fall back to the generated Zillow for-sale search URL when
+  // no direct link is available.
+  var direct = l.link || l.url || '';
+  var href = direct || urls.zillow;
+  var label = direct ? 'View listing' : 'Show on Zillow';
+  var tip = direct
+    ? ('Open ' + (l.address || 'this listing') + ' on the source site (' + _forSaleHostFromUrl(direct) + ')')
+    : ('Search Zillow for-sale listings near ' + (l.address || 'this address'));
+
+  return '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'
+    + '<a href="' + _forSaleEscapeAttr(href) + '" target="_blank" rel="noopener" title="' + escHtml(tip) + '" style="' + base + 'background:#006AFF;color:#fff">' + escHtml(label) + '</a>'
+    + '</div>';
+}
+
+// Pulls the hostname from a URL for display purposes. Returns '' if the URL
+// is malformed. Used only for tooltip text — never for building links.
+function _forSaleHostFromUrl(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ''); }
+  catch (e) { return ''; }
+}
+
+// ── For-sale result sorting ─────────────────────────────────────
+// Kept on window so it survives re-renders and is easy to read/set from the
+// dropdown onchange handler. Default 'price-asc' matches how the backend
+// already pre-sorts listings (cheapest first, unpriced last).
+window._forSaleState = window._forSaleState || {
+  listings: [],
+  zip: '',
+  summary: '',
+  sortKey: 'price-asc',
+  // Whether the cached data went through CRA tract enrichment. Older
+  // cached blobs (pre-enrichment deploy) lack this flag, in which case the
+  // client shows a banner directing the user to refresh the ZIP.
+  enriched: false,
+  // Filter state. null / '' means "no filter" for that field.
+  // Default income filter is 'lmi' — this is the CRA tool's whole purpose.
+  // Users can switch to 'any' if they want to see the full inventory.
+  filters: {
+    city: '',          // exact city match (case-insensitive); '' = any
+    priceMin: null,
+    priceMax: null,
+    minBeds: null,
+    minBaths: null,
+    sqftMin: null,
+    sqftMax: null,
+    // CRA-specific filter. 'any' = show all, 'lmi' = Low + Moderate only,
+    // 'low' | 'moderate' | 'middle' | 'upper' = single-bucket.
+    incomeLevel: 'lmi',
+  },
+};
+
+// Parses a number from a form value. Returns null for empty / invalid so
+// callers can cleanly treat it as "no filter on this field".
+function _forSaleParseNum(v) {
+  if (v === null || v === undefined) return null;
+  var s = String(v).replace(/[,$\s]/g, '').trim();
+  if (s === '') return null;
+  var n = Number(s);
+  return isFinite(n) ? n : null;
+}
+
+// Returns only the listings that pass the current filter state. Missing
+// numeric fields on a listing mean "we don't know" — we keep those rows
+// UNLESS the user has explicitly narrowed that dimension (e.g. sqft range
+// or min beds), in which case they're excluded. That matches how real estate
+// search usually behaves: filters are predicates; no-data rows don't satisfy
+// a predicate.
+function _forSaleFilterListings(listings, f) {
+  f = f || {};
+  var city = (f.city || '').trim().toLowerCase();
+  var pMin = _forSaleParseNum(f.priceMin);
+  var pMax = _forSaleParseNum(f.priceMax);
+  var minBd = _forSaleParseNum(f.minBeds);
+  var minBa = _forSaleParseNum(f.minBaths);
+  var sMin = _forSaleParseNum(f.sqftMin);
+  var sMax = _forSaleParseNum(f.sqftMax);
+  var income = (f.incomeLevel || 'any').toLowerCase();
+
+  return listings.filter(function(l) {
+    if (city) {
+      if ((l.city || '').toLowerCase() !== city) return false;
+    }
+    var price = _forSaleParseNum(l.price);
+    if (pMin !== null) { if (price === null || price < pMin) return false; }
+    if (pMax !== null) { if (price === null || price > pMax) return false; }
+
+    var beds = _forSaleParseNum(l.beds);
+    if (minBd !== null) { if (beds === null || beds < minBd) return false; }
+
+    var baths = _forSaleParseNum(l.baths);
+    if (minBa !== null) { if (baths === null || baths < minBa) return false; }
+
+    var sqft = _forSaleParseNum(l.sqft);
+    if (sMin !== null) { if (sqft === null || sqft < sMin) return false; }
+    if (sMax !== null) { if (sqft === null || sqft > sMax) return false; }
+
+    // CRA income-level predicate. Unknown-income listings are excluded from
+    // any specific-level filter (we can't confirm they qualify), but show
+    // through when income filter is 'any'.
+    if (income !== 'any') {
+      var lvl = (l.tractIncomeLevel || 'Unknown').toLowerCase();
+      if (income === 'lmi') {
+        if (lvl !== 'low' && lvl !== 'moderate') return false;
+      } else if (income !== lvl) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+// Reads current filter inputs from the DOM into state, then re-renders.
+// Called from every input's onchange/oninput.
+function _forSaleApplyFilters() {
+  var g = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
+  window._forSaleState.filters = {
+    city: g('fs-f-city'),
+    priceMin: g('fs-f-price-min'),
+    priceMax: g('fs-f-price-max'),
+    minBeds: g('fs-f-min-beds'),
+    minBaths: g('fs-f-min-baths'),
+    sqftMin: g('fs-f-sqft-min'),
+    sqftMax: g('fs-f-sqft-max'),
+    incomeLevel: g('fs-f-income') || 'any',
+  };
+  _forSaleRepaintPanel();
+}
+
+function _forSaleClearFilters() {
+  // "Clear" returns to the CRA-focused default (LMI-only), not to
+  // "show everything" — matches the tool's stated purpose.
+  window._forSaleState.filters = { city: '', priceMin: null, priceMax: null, minBeds: null, minBaths: null, sqftMin: null, sqftMax: null, incomeLevel: 'lmi' };
+  _forSaleRepaintPanel();
+}
+
+// CSV export — what's currently visible (after filters). Bank LOs and CRA
+// officers need to import listings into pipelines/CRMs; this avoids copy-
+// pasting. Columns chosen for CRA relevance: tract ID + income level first,
+// then address + price + basics.
+function _forSaleExportCsv() {
+  var s = window._forSaleState;
+  if (!s || !s.listings || !s.listings.length) { alert('No listings to export.'); return; }
+  var filtered = _forSaleFilterListings(s.listings, s.filters);
+  var sorted = _forSaleSortListings(filtered, s.sortKey);
+  if (!sorted.length) { alert('Current filters match zero listings. Clear filters first.'); return; }
+
+  var cols = [
+    'tract_id', 'income_level', 'income_ratio_pct', 'lmi_qualifying',
+    'address', 'city', 'state', 'zip',
+    'price', 'beds', 'baths', 'sqft', 'year_built',
+    'property_type', 'days_on_market', 'listed_date',
+    'latitude', 'longitude', 'source_url',
+  ];
+  function csvCell(v) {
+    if (v === null || v === undefined) return '';
+    var s = String(v);
+    if (/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  var rows = sorted.map(function(l) {
+    var lmiQ = (l.tractIncomeLevel === 'Low' || l.tractIncomeLevel === 'Moderate') ? 'Yes' : (l.tractIncomeLevel === 'Unknown' ? 'Unknown' : 'No');
+    return [
+      l.tractId || '',
+      l.tractIncomeLevel || 'Unknown',
+      (l.tractIncomeRatio !== null && l.tractIncomeRatio !== undefined) ? Math.round(Number(l.tractIncomeRatio)) : '',
+      lmiQ,
+      l.address || '',
+      l.city || '',
+      l.state || '',
+      l.zip || '',
+      l.price || '',
+      l.beds || '',
+      l.baths || '',
+      l.sqft || '',
+      l.yearBuilt || '',
+      l.propertyType || '',
+      l.daysOnMarket || '',
+      l.listedDate || '',
+      l.latitude || '',
+      l.longitude || '',
+      l.link || l.url || '',
+    ].map(csvCell).join(',');
+  });
+  var csv = cols.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var ts = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'lmi-listings-zip-' + (s.zip || 'unknown') + '-' + ts + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+// Build a fresh, stable-sorted copy of the listings for the given sort key.
+// Missing / non-numeric values always sink to the bottom so real data surfaces
+// first. For city we treat missing city as 'zzz' so blanks land at the end.
+function _forSaleSortListings(listings, sortKey) {
+  var copy = listings.slice();
+  function n(v) { var x = Number(v); return (isFinite(x) && x > 0) ? x : null; }
+  switch (sortKey) {
+    case 'city-asc':
+      copy.sort(function(a, b) {
+        var ac = (a.city || 'zzz').toLowerCase();
+        var bc = (b.city || 'zzz').toLowerCase();
+        if (ac !== bc) return ac < bc ? -1 : 1;
+        // secondary sort by price asc so "same city" cards are ordered sensibly
+        var ap = n(a.price), bp = n(b.price);
+        if (ap !== null && bp !== null) return ap - bp;
+        if (ap !== null) return -1;
+        if (bp !== null) return 1;
+        return 0;
+      });
+      break;
+    case 'price-asc':
+      copy.sort(function(a, b) {
+        var ap = n(a.price), bp = n(b.price);
+        if (ap !== null && bp !== null) return ap - bp;
+        if (ap !== null) return -1;
+        if (bp !== null) return 1;
+        return 0;
+      });
+      break;
+    case 'price-desc':
+      copy.sort(function(a, b) {
+        var ap = n(a.price), bp = n(b.price);
+        if (ap !== null && bp !== null) return bp - ap;
+        if (ap !== null) return -1;
+        if (bp !== null) return 1;
+        return 0;
+      });
+      break;
+    case 'beds-desc':
+      copy.sort(function(a, b) {
+        var ab = n(a.beds), bb = n(b.beds);
+        if (ab !== null && bb !== null) return bb - ab;
+        if (ab !== null) return -1;
+        if (bb !== null) return 1;
+        return 0;
+      });
+      break;
+    case 'baths-desc':
+      copy.sort(function(a, b) {
+        var ab = n(a.baths), bb = n(b.baths);
+        if (ab !== null && bb !== null) return bb - ab;
+        if (ab !== null) return -1;
+        if (bb !== null) return 1;
+        return 0;
+      });
+      break;
+    case 'sqft-desc':
+      copy.sort(function(a, b) {
+        var as = n(a.sqft), bs = n(b.sqft);
+        if (as !== null && bs !== null) return bs - as;
+        if (as !== null) return -1;
+        if (bs !== null) return 1;
+        return 0;
+      });
+      break;
+  }
+  return copy;
+}
+
+// Onchange handler for the dropdown. Re-sorts the cached listings in-place
+// and repaints the grid — no network, no RentCast call, no quota cost.
+function _forSaleApplySort(sortKey) {
+  window._forSaleState.sortKey = sortKey || 'price-asc';
+  _forSaleRepaintPanel();
+}
+
+function _forSaleRepaintPanel() {
+  var panel = document.getElementById('for-sale-results');
+  if (!panel) return;
+  var s = window._forSaleState;
+  if (!s.listings || !s.listings.length) return;
+  panel.innerHTML = _forSaleBuildPanelHtml(s.listings, s.zip, s.summary, s.sortKey);
+}
+
+// Builds the full inner HTML for the results panel — filter panel + summary
+// row (with the sort dropdown) + card grid. Factored out so initial render
+// and re-sort/re-filter share the same markup.
+function _forSaleBuildPanelHtml(listings, zip, summary, sortKey) {
+  var filters = window._forSaleState.filters || {};
+  var filtered = _forSaleFilterListings(listings, filters);
+  var sorted = _forSaleSortListings(filtered, sortKey || 'price-asc');
+
+  // If the cached data for this ZIP was produced before the current
+  // enrichment pipeline, classifications may be wrong (e.g. the v1 pipeline
+  // missed tracts that straddled ZIPs). Super-admins can fix this by running
+  // "Re-enrich cache" — no RentCast quota consumed.
+  var needsRefreshBanner = '';
+  var ver = Number(window._forSaleState.enrichmentVersion || 0);
+  if (!window._forSaleState.enriched) {
+    var verLabel = ver ? ('v' + ver) : 'none';
+    needsRefreshBanner =
+      '<div style="background:#fef3c7;border:1px solid #fde68a;color:#78350f;border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;font-size:13px;line-height:1.5">'
+      + '<strong>Cache needs re-enrichment.</strong> ZIP ' + escHtml(zip) + ' was cached with enrichment ' + escHtml(verLabel)
+      + '; the current authoritative pipeline is v2 (Census Geocoder + tract-direct CFPB lookup). '
+      + 'A super-admin can fix this instantly by running <em>Re-enrich cache</em> in the RentCast Data page &mdash; it '
+      + '<strong>does not consume any RentCast quota</strong> (it re-classifies listings that are already cached). '
+      + 'Until then, CRA filtering may hide listings that actually qualify.'
+      + '</div>';
+  }
+
+  // Unique city list for the city dropdown — pulled from the full (unfiltered)
+  // listings so changing the city doesn't remove options.
+  var citySet = {};
+  listings.forEach(function(l) { if (l.city) citySet[l.city] = true; });
+  var cities = Object.keys(citySet).sort(function(a, b) { return a.localeCompare(b); });
+
+  var sortOpts = [
+    { v: 'city-asc',   t: 'City (A\u2192Z)' },
+    { v: 'price-asc',  t: 'Price (Low\u2192High)' },
+    { v: 'price-desc', t: 'Price (High\u2192Low)' },
+    { v: 'beds-desc',  t: 'Bedrooms (most first)' },
+    { v: 'baths-desc', t: 'Bathrooms (most first)' },
+    { v: 'sqft-desc',  t: 'Sqft (largest first)' },
+  ];
+  var sortHtml = '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);font-weight:600">'
+    + 'Sort: '
+    + '<select onchange="_forSaleApplySort(this.value)" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer">'
+    + sortOpts.map(function(o) {
+        return '<option value="' + o.v + '"' + (o.v === sortKey ? ' selected' : '') + '>' + o.t + '</option>';
+      }).join('')
+    + '</select>'
+    + '</label>';
+
+  // ── Filter panel ────────────────────────────────────────────────
+  // Uses onchange (not oninput) so the re-render fires only after the user
+  // commits a value (blur / Enter / dropdown select). This sidesteps the
+  // "losing focus while typing" problem that oninput would cause.
+  var inputStyle = 'padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text-primary);font-size:12px;width:100%;box-sizing:border-box;';
+  var labelStyle = 'display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.3px;min-width:0;';
+  var v = function(x) { return (x === null || x === undefined) ? '' : _forSaleEscapeAttr(String(x)); };
+
+  var cityOptions = '<option value="">Any city</option>'
+    + cities.map(function(c) {
+        var sel = (filters.city || '').toLowerCase() === c.toLowerCase() ? ' selected' : '';
+        return '<option value="' + _forSaleEscapeAttr(c) + '"' + sel + '>' + escHtml(c) + '</option>';
+      }).join('');
+
+  // CRA income-level filter. LMI (Low+Moderate) is the default *suggestion*
+  // for bank users — it's the core CRA-qualifying bucket — but we don't
+  // auto-apply it so loan officers can also browse non-LMI inventory when
+  // sourcing community-lending pipeline comps.
+  var incomeOpts = [
+    { v: 'any',      t: 'Any income level' },
+    { v: 'lmi',      t: 'LMI only (CRA-qualifying)' },
+    { v: 'low',      t: 'Low only (\u2264 50%)' },
+    { v: 'moderate', t: 'Moderate only (51\u201380%)' },
+    { v: 'middle',   t: 'Middle (81\u2013120%)' },
+    { v: 'upper',    t: 'Upper (> 120%)' },
+  ];
+  var incomeSelected = filters.incomeLevel || 'any';
+  var incomeOptionsHtml = incomeOpts.map(function(o) {
+    return '<option value="' + o.v + '"' + (o.v === incomeSelected ? ' selected' : '') + '>' + o.t + '</option>';
+  }).join('');
+
+  var filtersHtml =
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end">'
+    +   '<label style="' + labelStyle + '">CRA tract income<select id="fs-f-income" onchange="_forSaleApplyFilters()" style="' + inputStyle + '">' + incomeOptionsHtml + '</select></label>'
+    +   '<label style="' + labelStyle + '">City<select id="fs-f-city" onchange="_forSaleApplyFilters()" style="' + inputStyle + '">' + cityOptions + '</select></label>'
+    +   '<label style="' + labelStyle + '">Price min<input id="fs-f-price-min" type="number" inputmode="numeric" placeholder="$0" value="' + v(filters.priceMin) + '" onchange="_forSaleApplyFilters()" style="' + inputStyle + '"></label>'
+    +   '<label style="' + labelStyle + '">Price max<input id="fs-f-price-max" type="number" inputmode="numeric" placeholder="any" value="' + v(filters.priceMax) + '" onchange="_forSaleApplyFilters()" style="' + inputStyle + '"></label>'
+    +   '<label style="' + labelStyle + '">Min beds<input id="fs-f-min-beds" type="number" inputmode="numeric" min="0" placeholder="any" value="' + v(filters.minBeds) + '" onchange="_forSaleApplyFilters()" style="' + inputStyle + '"></label>'
+    +   '<label style="' + labelStyle + '">Min baths<input id="fs-f-min-baths" type="number" inputmode="decimal" step="0.5" min="0" placeholder="any" value="' + v(filters.minBaths) + '" onchange="_forSaleApplyFilters()" style="' + inputStyle + '"></label>'
+    +   '<label style="' + labelStyle + '">Sqft min<input id="fs-f-sqft-min" type="number" inputmode="numeric" placeholder="0" value="' + v(filters.sqftMin) + '" onchange="_forSaleApplyFilters()" style="' + inputStyle + '"></label>'
+    +   '<label style="' + labelStyle + '">Sqft max<input id="fs-f-sqft-max" type="number" inputmode="numeric" placeholder="any" value="' + v(filters.sqftMax) + '" onchange="_forSaleApplyFilters()" style="' + inputStyle + '"></label>'
+    +   '<button onclick="_forSaleClearFilters()" type="button" style="padding:8px 10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-primary);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;height:34px">Clear filters</button>'
+    + '</div>'
+    + '</div>';
+
+  // Count the bucket distribution across the CURRENTLY SORTED (post-filter)
+  // set — helps bank users see at a glance how much of the visible inventory
+  // qualifies for CRA credit.
+  var bucket = { Low: 0, Moderate: 0, Middle: 0, Upper: 0, Unknown: 0 };
+  sorted.forEach(function(l) { var lvl = l.tractIncomeLevel || 'Unknown'; if (bucket[lvl] !== undefined) bucket[lvl]++; else bucket.Unknown++; });
+  var lmiShown = bucket.Low + bucket.Moderate;
+  var totalLmi = listings.filter(function(l) { return l.isLMI === true; }).length;
+
+  var anyFilter = !!(filters.city || filters.priceMin || filters.priceMax || filters.minBeds || filters.minBaths || filters.sqftMin || filters.sqftMax || (filters.incomeLevel && filters.incomeLevel !== 'any'));
+  var countLabel = anyFilter
+    ? ('<strong style="color:var(--text-primary)">' + sorted.length + '</strong> of ' + listings.length + ' home' + (listings.length === 1 ? '' : 's') + ' shown')
+    : ('<strong style="color:var(--text-primary)">' + listings.length + '</strong> home' + (listings.length === 1 ? '' : 's') + ' for sale');
+  countLabel += ' in ZIP ' + escHtml(zip);
+  // LMI breakdown — the main CRA-relevant indicator. Always visible.
+  countLabel += '<span style="margin-left:8px;display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;border:1px solid #86efac;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px" title="Listings in low- or moderate-income census tracts (CRA-qualifying)">CRA-LMI: ' + lmiShown + (anyFilter && lmiShown !== totalLmi ? ' / ' + totalLmi : '') + '</span>';
+
+  var exportBtnHtml = '<button onclick="_forSaleExportCsv()" type="button" title="Export current view as CSV (for loan-pipeline / CRA records)" style="padding:6px 10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-primary);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">\u2b07\ufe0f Export CSV</button>';
+
+  // ── Runtime verification banner ─────────────────────────────────
+  // When the LMI filter is active, verify every visible listing really has
+  // tractIncomeLevel ∈ {Low, Moderate} after enrichment. This is a live
+  // audit — it proves the filter is honoring FFIEC classification, not just
+  // trusting that it works. If anything leaks through (bug, race condition,
+  // bad data) it flashes red and names the tract + level so you can file a
+  // bug.
+  var verifyBannerHtml = '';
+  if ((filters.incomeLevel || '').toLowerCase() === 'lmi' && sorted.length > 0) {
+    var leaks = sorted.filter(function(l) {
+      var lvl = (l.tractIncomeLevel || 'Unknown').toLowerCase();
+      return lvl !== 'low' && lvl !== 'moderate';
+    });
+    if (leaks.length === 0) {
+      verifyBannerHtml =
+        '<div style="background:#dcfce7;border:1px solid #86efac;color:#166534;border-radius:var(--radius);padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">'
+        + '<span style="font-size:16px">\u2705</span>'
+        + '<span>Verified: all <strong>' + sorted.length + '</strong> home' + (sorted.length === 1 ? '' : 's')
+        +   ' shown are in an FFIEC '
+        +   '<span style="background:#fff;border:1px solid #86efac;border-radius:4px;padding:1px 6px;font-weight:800">Low</span>'
+        +   ' or '
+        +   '<span style="background:#fff;border:1px solid #bef264;border-radius:4px;padding:1px 6px;font-weight:800">Moderate</span>'
+        +   ' income census tract (CRA-qualifying).</span>'
+        + '</div>';
+    } else {
+      // Leak case — should never trigger, but if it does show tract IDs so
+      // the bug is immediately actionable.
+      var leakDetail = leaks.slice(0, 5).map(function(l) {
+        return escHtml((l.address || '(no address)') + ' — tract ' + (l.tractId || '?') + ' — ' + (l.tractIncomeLevel || 'Unknown'));
+      }).join('<br>');
+      verifyBannerHtml =
+        '<div style="background:#fee2e2;border:1px solid #fca5a5;color:#7f1d1d;border-radius:var(--radius);padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:600">'
+        + '\u26a0\ufe0f <strong>Filter leak detected</strong> — ' + leaks.length + ' non-LMI listing' + (leaks.length === 1 ? '' : 's') + ' slipped through:<br><span style="font-weight:500;font-family:ui-monospace,Menlo,monospace;font-size:11.5px">' + leakDetail + '</span>'
+        + '</div>';
+    }
+  }
+
+  var summaryLine = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:12px;color:var(--text-secondary)">'
+    + '<span>' + countLabel + '</span>'
+    + '<span style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">' + sortHtml + exportBtnHtml + '<span>' + escHtml(summary) + '</span></span>'
+    + '</div>';
+
+  var gridHtml;
+  if (sorted.length === 0 && listings.length > 0) {
+    gridHtml = '<div style="padding:28px;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);color:var(--text-secondary);font-size:13px">'
+      + 'No listings match your filters. <button onclick="_forSaleClearFilters()" type="button" style="margin-left:6px;padding:4px 10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-primary);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Clear filters</button>'
+      + '</div>';
+  } else {
+    gridHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">'
+      + _forSaleRenderCards(sorted)
+      + '</div>';
+  }
+
+  return needsRefreshBanner + verifyBannerHtml + filtersHtml + summaryLine + gridHtml;
+}
+
+// Color scheme for the income-level badge. Low/Moderate = CRA-qualifying so
+// they're highlighted in green; Middle/Upper in neutral gray; Unknown in
+// amber so a CRA officer can easily spot listings that need manual review.
+function _forSaleIncomeBadge(l) {
+  var level = l.tractIncomeLevel || 'Unknown';
+  var ratio = (l.tractIncomeRatio !== null && l.tractIncomeRatio !== undefined && isFinite(Number(l.tractIncomeRatio)))
+    ? Math.round(Number(l.tractIncomeRatio)) + '%'
+    : '';
+  // Reads as a sentence with the "Qualifies for CRA credit:" label to the
+  // left. Green = Yes, gray = No, amber = Unknown (needs data).
+  var palette = {
+    'Low':      { bg: '#dcfce7', fg: '#166534', border: '#86efac', short: 'Yes \u2014 Low' },
+    'Moderate': { bg: '#ecfccb', fg: '#3f6212', border: '#bef264', short: 'Yes \u2014 Moderate' },
+    'Middle':   { bg: '#f1f5f9', fg: '#475569', border: '#cbd5e1', short: 'No \u2014 Middle' },
+    'Upper':    { bg: '#fef3c7', fg: '#92400e', border: '#fde68a', short: 'No \u2014 Upper' },
+    'Unknown':  { bg: '#fff7ed', fg: '#9a3412', border: '#fed7aa', short: 'Unknown' },
+  };
+  var p = palette[level] || palette['Unknown'];
+  var title = 'Census tract income classification\n'
+    + 'Level: ' + level + (ratio ? ' (' + ratio + ' of MSA median)' : '')
+    + (l.tractId ? '\nTract: ' + l.tractId : '\nTract: not resolved — refresh this ZIP in the admin panel')
+    + (level === 'Low' || level === 'Moderate' ? '\nQualifies for CRA lending credit.' : (level === 'Middle' || level === 'Upper' ? '\nDoes NOT qualify for CRA lending credit on the geography test.' : ''));
+  return '<span title="' + escHtml(title) + '" style="display:inline-flex;align-items:center;gap:4px;background:' + p.bg + ';color:' + p.fg + ';border:1px solid ' + p.border + ';font-size:10.5px;font-weight:800;letter-spacing:0.3px;text-transform:uppercase;padding:3px 7px;border-radius:999px">'
+    + '<span>' + escHtml(p.short) + '</span>'
+    + (ratio ? '<span style="opacity:0.8;font-weight:700">' + escHtml(ratio) + '</span>' : '')
+    + '</span>';
+}
+
+function _forSaleRenderCards(listings) {
+  return listings.map(function(l) {
+    var meta = _forSaleSourceMeta(l.source);
+    var address = escHtml(l.address || 'Address not provided');
+    var cityState = [l.city, l.state].filter(Boolean).map(escHtml).join(', ');
+    if (!cityState && l.zip) cityState = 'ZIP ' + escHtml(l.zip);
+    var price = _forSaleFormatPrice(l.price);
+    var priceColor = (Number(l.price) > 0) ? 'var(--color-positive)' : 'var(--text-muted)';
+
+    var bbs = [];
+    if (l.beds) bbs.push(escHtml(String(l.beds)) + ' bd');
+    if (l.baths) bbs.push(escHtml(String(l.baths)) + ' ba');
+    if (l.sqft) {
+      var sqftNum = Number(l.sqft);
+      bbs.push(isFinite(sqftNum) && sqftNum > 0 ? sqftNum.toLocaleString() + ' sqft' : escHtml(String(l.sqft)) + ' sqft');
+    }
+    var bbsLine = bbs.length ? bbs.join(' \u00b7 ') : '&mdash;';
+
+    var link = l.link || l.url || '';
+    var linkHtml = link
+      ? '<a href="' + _forSaleEscapeAttr(link) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:13px;font-weight:700;color:var(--brand-accent-dark);text-decoration:none">View Listing &rarr;</a>'
+      : '';
+
+    // Tract ID on the card is important for CRA officers — they need to be
+    // able to cross-reference their bank's assessment area / HMDA data.
+    // The FFIEC Geocoder link lets anyone verify the classification against
+    // the authoritative source in one click (critical for CRA audit trail).
+    var ffiecAddr = [l.address, l.city, l.state, l.zip].filter(Boolean).join(', ');
+    var ffiecLink = ffiecAddr
+      ? 'https://geomap.ffiec.gov/FFIECGeocMap/GeocodeMap1.aspx?address=' + encodeURIComponent(ffiecAddr)
+      : '';
+    var tractLine;
+    if (l.tractId) {
+      tractLine = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11px;color:var(--text-muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace">'
+        + '<span>Tract ' + escHtml(l.tractId) + '</span>'
+        + (ffiecLink ? '<a href="' + _forSaleEscapeAttr(ffiecLink) + '" target="_blank" rel="noopener" style="font-family:inherit;color:#0369a1;text-decoration:none;font-weight:700">Verify on FFIEC \u2192</a>' : '')
+        + '</div>';
+    } else {
+      tractLine = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11px;color:var(--text-muted)">'
+        + '<span style="font-style:italic">Tract not resolved</span>'
+        + (ffiecLink ? '<a href="' + _forSaleEscapeAttr(ffiecLink) + '" target="_blank" rel="noopener" style="color:#0369a1;text-decoration:none;font-weight:700">Check on FFIEC \u2192</a>' : '')
+        + '</div>';
+    }
+
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-sm)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
+      +   '<span style="display:inline-block;background:' + meta.bg + ';color:' + meta.color + ';font-size:11px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;padding:3px 9px;border-radius:999px">' + escHtml(meta.label) + '</span>'
+      +   '<span style="font-weight:700;color:' + priceColor + ';font-size:16px">' + escHtml(price) + '</span>'
+      + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'
+      +   '<span style="font-size:11px;color:var(--text-secondary);font-weight:600">Qualifies for CRA credit:</span>'
+      +   _forSaleIncomeBadge(l)
+      + '</div>'
+      + '<div style="font-weight:600;color:var(--text-primary);font-size:14px;line-height:1.3">' + address + '</div>'
+      + (cityState ? '<div style="font-size:12px;color:var(--text-secondary)">' + cityState + '</div>' : '')
+      + '<div style="font-size:12px;color:var(--text-secondary)">' + bbsLine + '</div>'
+      + tractLine
+      + _forSaleRealtyButtons(l)
+      + linkHtml
+      + '</div>';
+  }).join('');
+}
+
+function loadForSaleListings(zip) {
+  var btn = document.getElementById('for-sale-btn');
+  var panel = document.getElementById('for-sale-results');
+  if (!btn || !panel) return;
+
+  // Prevent double-clicks while loading
+  if (btn.getAttribute('data-loading') === '1') return;
+  btn.setAttribute('data-loading', '1');
+
+  var originalLabel = btn.innerHTML;
+  btn.innerHTML = '<span style="display:inline-block;vertical-align:middle;width:14px;height:14px;border:2px solid rgba(255,255,255,0.45);border-top-color:#fff;border-radius:50%;animation:fsSpin 0.8s linear infinite;margin-right:8px"></span> Loading listings for ZIP ' + escHtml(zip) + '...';
+  btn.style.opacity = '0.85';
+  btn.style.cursor = 'progress';
+
+  // Inject keyframes once
+  if (!document.getElementById('for-sale-spin-style')) {
+    var style = document.createElement('style');
+    style.id = 'for-sale-spin-style';
+    style.textContent = '@keyframes fsSpin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="padding:18px;text-align:center;color:var(--text-secondary);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius)">Loading cached listings for ZIP ' + escHtml(zip) + '...</div>';
+
+  fetch(window.location.origin + '/for-sale?zip=' + encodeURIComponent(zip))
+    .then(function(r) {
+      if (!r.ok) throw new Error('Server returned ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      btn.innerHTML = originalLabel;
+      btn.style.opacity = '';
+      btn.style.cursor = 'pointer';
+      btn.removeAttribute('data-loading');
+
+      if (!data || data.error) {
+        panel.innerHTML = '<div style="padding:14px 16px;background:var(--color-negative-bg);color:var(--color-negative);border:1px solid var(--color-negative);border-radius:var(--radius);font-size:13px">Could not load listings: ' + escHtml(data && data.error ? data.error : 'Unknown error') + '</div>';
+        return;
+      }
+
+      // ZIP not in the scheduled priority list → friendly "not available" card
+      if (data.notAvailable) {
+        panel.innerHTML = '<div style="padding:20px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">'
+          + '<div style="font-size:28px;margin-bottom:6px">\ud83d\udccd</div>'
+          + '<div style="font-weight:700;color:var(--text-primary);margin-bottom:6px">Listings not available for ZIP ' + escHtml(zip) + '</div>'
+          + '<div style="font-size:13px;color:var(--text-secondary);line-height:1.5">This ZIP is not in the scheduled refresh list. A super admin can add it from the RentCast Data page in Super Admin.</div>'
+          + '</div>';
+        return;
+      }
+
+      var listings = Array.isArray(data.listings) ? data.listings : [];
+      var sources = data.sources || {};
+      var rentcastCount = sources.rentcast !== undefined
+        ? sources.rentcast
+        : ((sources.hud || 0) + (sources.homepath || 0) + (sources.homesteps || 0) + (sources.craigslist || 0));
+      var generated = data.generatedAt ? new Date(data.generatedAt).toLocaleDateString() : '';
+      var summary = 'RentCast: ' + rentcastCount + (generated ? '  \u00b7  refreshed ' + generated : '');
+
+      if (listings.length === 0) {
+        panel.innerHTML = '<div style="padding:20px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">'
+          + '<div style="font-size:28px;margin-bottom:6px">\ud83c\udfe1</div>'
+          + '<div style="font-weight:600;color:var(--text-primary);margin-bottom:4px">No listings found</div>'
+          + '<div style="font-size:13px;color:var(--text-secondary)">No active listings in ZIP ' + escHtml(zip) + ' at last refresh.</div>'
+          + '<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">' + escHtml(summary) + '</div>'
+          + '</div>';
+        return;
+      }
+
+      // Cache state so the sort dropdown can re-render without re-fetching.
+      window._forSaleState.listings = listings;
+      window._forSaleState.zip = zip;
+      window._forSaleState.summary = summary;
+      // Server stamps `enriched: true` + `enrichmentVersion` on cache blobs
+      // produced by the current pipeline. v1 used lat/lon + ZIP-list lookup
+      // (had known misses for tracts that straddle ZIPs). v2 uses address
+      // string → Census Geocoder → tract-direct CFPB lookup (authoritative,
+      // matches FFIEC Geocoder). Anything below v2 triggers the stale banner.
+      var enrichedOk = !!(data && data.enriched === true && Number(data.enrichmentVersion || 0) >= 2);
+      window._forSaleState.enriched = enrichedOk;
+      window._forSaleState.enrichmentVersion = Number(data && data.enrichmentVersion || 0);
+      // Keep previously chosen sort across searches if the user set one; else default.
+      if (!window._forSaleState.sortKey) window._forSaleState.sortKey = 'price-asc';
+
+      panel.innerHTML = _forSaleBuildPanelHtml(listings, zip, summary, window._forSaleState.sortKey);
+    })
+    .catch(function(err) {
+      btn.innerHTML = originalLabel;
+      btn.style.opacity = '';
+      btn.style.cursor = 'pointer';
+      btn.removeAttribute('data-loading');
+      panel.innerHTML = '<div style="padding:14px 16px;background:var(--color-negative-bg);color:var(--color-negative);border:1px solid var(--color-negative);border-radius:var(--radius);font-size:13px">\u26a0\ufe0f Could not load homes for sale: ' + escHtml(err.message || 'Network error') + '</div>';
+    });
 }
 
 // ── PROPERTY INTELLIGENCE ENGINE ──────────────────────────────
@@ -10726,7 +11476,7 @@ async function goSuperAdmin() {
 }
 
 function saShowTab(tab) {
-  ['orgs','users','billing','settings','auditlog'].forEach(function(t) {
+  ['orgs','users','billing','rentcast','settings','auditlog'].forEach(function(t) {
     var content = document.getElementById('sa-content-' + t);
     var btn = document.getElementById('sa-tab-' + t);
     if (content) content.classList.toggle('active', t === tab);
@@ -10735,8 +11485,612 @@ function saShowTab(tab) {
   if (tab === 'orgs') renderSAOrgs();
   if (tab === 'users') renderSAUsers();
   if (tab === 'billing') renderSABilling();
+  if (tab === 'rentcast') renderSARentcast();
   if (tab === 'settings') _loadLegalSettings();
   if (tab === 'auditlog') _renderAuditLogViewer();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RentCast Data — super-admin tab. Uses the worker /admin/rentcast-*
+// endpoints. All requests include the caller's Firebase ID token.
+// ═══════════════════════════════════════════════════════════
+
+function _rcGetAdminPassword() {
+  var pw = sessionStorage.getItem('rc_admin_pw') || '';
+  if (!pw) {
+    pw = window.prompt('Enter RentCast admin password (set by super admin via wrangler secret):') || '';
+    if (pw) sessionStorage.setItem('rc_admin_pw', pw);
+  }
+  return pw;
+}
+
+function _rcClearAdminPassword() {
+  sessionStorage.removeItem('rc_admin_pw');
+}
+
+async function _rcFetch(path, opts) {
+  opts = opts || {};
+  var pw = _rcGetAdminPassword();
+  if (!pw) throw new Error('admin_password_required');
+  var headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pw };
+  var base = window.location.origin;
+  var res = await fetch(base + path, { method: opts.method || 'GET', headers: headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  var json = null;
+  try { json = await res.json(); } catch (e) {}
+  if (res.status === 401) {
+    _rcClearAdminPassword();
+    throw new Error((json && json.error) || 'bad_admin_password');
+  }
+  if (!res.ok) throw new Error((json && json.error) || ('HTTP ' + res.status));
+  return json;
+}
+
+function _rcEsc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+async function renderSARentcast() {
+  var body = document.getElementById('sa-rc-body');
+  if (!body) return;
+  if (!isSuperAdmin()) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:#7a6a58">Super admin access required.</div>';
+    return;
+  }
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#7a6a58">Loading RentCast status...</div>';
+  try {
+    var data = await _rcFetch('/admin/rentcast-status');
+    _rcRender(data);
+  } catch (e) {
+    body.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07)"><div style="color:#b91c1c;font-weight:700;margin-bottom:6px">Could not load RentCast status</div><div style="font-size:12px;color:#7a6a58">' + _rcEsc(e.message || e) + '</div></div>';
+  }
+}
+
+function _rcRender(data) {
+  var body = document.getElementById('sa-rc-body');
+  if (!body) return;
+  var u = data.usage || { count: 0, limit: 50, remaining: 50, month: '' };
+  var c = data.config || { priorityZips: [], scheduledDay: 5, killSwitch: false };
+  var lr = data.lastRun;
+  var inv = data.cachedZipInventory || [];
+  var pct = Math.min(100, Math.round((u.count / Math.max(1, u.limit)) * 100));
+  var barColor = pct >= 90 ? '#b91c1c' : (pct >= 70 ? '#d97706' : '#059669');
+  var apiOk = !!data.apiKeyConfigured;
+
+  var html = '';
+
+  // Usage card
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px">';
+  html += '<div><div style="font-size:15px;font-weight:800;color:#1f2937">🏘 RentCast API Usage — ' + _rcEsc(u.month.replace('_','-')) + '</div><div style="font-size:12px;color:#7a6a58;margin-top:4px">Hard cap: ' + u.limit + ' calls/month. Counter auto-resets next month.</div></div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="_rcRefresh()" style="padding:9px 14px;border:2px solid #e2e8f0;background:#faf8f4;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🔄 Reload</button><button onclick="_rcRefreshOneZip()" title="Refresh one ZIP — uses exactly 1 RentCast call. Good for testing." style="padding:9px 14px;border:2px solid #bae6fd;background:#f0f9ff;color:#0369a1;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🎯 Refresh one ZIP (1 call)</button><button onclick="_rcResetCounter()" style="padding:9px 14px;border:2px solid #fecaca;background:#fff5f5;color:#991b1b;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">♻️ Reset monthly counter</button><button onclick="_rcRunNow()" style="padding:9px 14px;border:none;background:#7f1d1d;color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">⚡ Run Refresh Now</button></div>';
+  html += '</div>';
+  html += '<div style="background:#f1f5f9;border-radius:99px;height:24px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:' + pct + '%;background:' + barColor + ';transition:width 0.3s"></div></div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#1f2937"><span>' + u.count + ' / ' + u.limit + ' calls used</span><span>' + u.remaining + ' remaining</span></div>';
+  if (!apiOk) {
+    html += '<div style="margin-top:14px;padding:12px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;color:#92400e;font-size:13px;font-weight:600">⚠️ RentCast API key is not yet set. Set it by running <code style="background:#fff7e1;padding:2px 6px;border-radius:4px">npx wrangler secret put RENTCAST_API_KEY</code> in PowerShell, then redeploy.</div>';
+  }
+  html += '</div>';
+
+  // CRA verification card — paste an address, see what our system says,
+  // with a one-click link to FFIEC's authoritative Geocoder for cross-check.
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px">';
+  html += '<div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:4px">\u2705 Verify an address against FFIEC</div>';
+  html += '<div style="font-size:12px;color:#7a6a58;margin-bottom:12px">Paste any address. We\'ll show our tract + income classification, with a direct link to <a href="https://geomap.ffiec.gov/FFIECGeocMap/GeocodeMap1.aspx" target="_blank" rel="noopener" style="color:#0369a1;font-weight:600">FFIEC Geocoder</a> so you can confirm on their authoritative site.</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">'
+       +   '<input id="sa-rc-verify-addr" type="text" placeholder="921 S Aurora St, Stockton, CA 95206" value="921 S Aurora St, Stockton, CA 95206" style="flex:1;min-width:280px;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" onkeydown="if(event.key===\'Enter\')_rcVerifyAddress()" />'
+       +   '<button onclick="_rcVerifyAddress()" style="padding:10px 18px;background:#0369a1;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">\ud83d\udd0d Verify address</button>'
+       + '</div>';
+  html += '<div id="sa-rc-verify-result" style="margin-top:12px"></div>';
+  html += '</div>';
+
+  // Trace Address card — full pipeline diagnostic. Shows every step of
+  // classification for an arbitrary address: Census Geocoder result,
+  // FCC cross-check, CFPB tract-direct lookup, and legacy ZIP-list result.
+  // Use this to diagnose any listing that classifies differently than FFIEC.
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px">';
+  html += '<div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:4px">\ud83e\uddea Trace address &mdash; full pipeline diagnostic</div>';
+  html += '<div style="font-size:12px;color:#7a6a58;margin-bottom:12px">Runs an address through every step of the v2 classification pipeline side-by-side with the legacy v1 paths (FCC Block Find, ZIP-list lookup). Use this to see <strong>exactly</strong> why a listing classifies the way it does. Zero RentCast quota.</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch">'
+       +   '<input id="sa-rc-trace-addr" type="text" placeholder="921 S Aurora St, Stockton, CA 95206" value="921 S Aurora St, Stockton, CA 95206" style="flex:1;min-width:280px;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" onkeydown="if(event.key===\'Enter\')_rcTraceAddress()" />'
+       +   '<button onclick="_rcTraceAddress()" style="padding:10px 18px;background:#7c2d12;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">\ud83d\udd27 Trace pipeline</button>'
+       + '</div>';
+  html += '<div id="sa-rc-trace-result" style="margin-top:12px"></div>';
+  html += '</div>';
+
+  // Re-enrich cache card — re-runs the v2 classification on every cached
+  // listing without calling RentCast. This is how admins fix stale cache
+  // after a pipeline fix without burning any quota.
+  html += '<div style="background:#ecfeff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px;border:1px solid #a5f3fc">';
+  html += '<div style="font-size:14px;font-weight:800;color:#0c4a6e;margin-bottom:4px">\u267b\ufe0f Re-enrich cache with current pipeline</div>';
+  html += '<div style="font-size:12px;color:#075985;margin-bottom:12px;line-height:1.5">Re-runs the <strong>v2 classification pipeline</strong> (Census Geocoder + tract-direct CFPB lookup) on every listing already cached for the priority ZIPs. <strong>Zero RentCast API calls.</strong> Use this after deploying a pipeline fix to refresh classifications without waiting for the monthly refresh. Takes 10-30 seconds for ~50 listings per ZIP.</div>';
+  html += '<button onclick="_rcReenrichCache()" style="padding:10px 18px;background:#0369a1;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">\u267b\ufe0f Re-enrich all cached ZIPs (0 API calls)</button>';
+  html += '<div id="sa-rc-reenrich-result" style="margin-top:12px"></div>';
+  html += '</div>';
+
+  // Schedule + kill switch card
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px">';
+  html += '<div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:14px">📅 Schedule</div>';
+  html += '<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end">';
+  html += '<div style="flex:0 0 240px"><label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px">Day of month to refresh (1–28)</label><input id="sa-rc-day" type="number" min="1" max="28" value="' + c.scheduledDay + '" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box" /></div>';
+  html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 0"><input id="sa-rc-kill" type="checkbox" ' + (c.killSwitch ? 'checked' : '') + ' style="width:16px;height:16px" /><span style="font-size:13px;font-weight:700;color:#1f2937">🚫 Kill switch (disable all RentCast calls)</span></label>';
+  html += '<button onclick="_rcSaveSchedule()" style="padding:10px 18px;background:#1f2937;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">💾 Save Schedule</button>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:#7a6a58;margin-top:10px">Cron fires daily at 09:00 UTC. The scheduled refresh only executes when today matches the configured day.</div>';
+  html += '</div>';
+
+  // Priority ZIPs card
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">';
+  html += '<div><div style="font-size:14px;font-weight:800;color:#1f2937">📍 Priority ZIPs (' + c.priorityZips.length + ' / ' + u.limit + ')</div><div style="font-size:12px;color:#7a6a58;margin-top:4px">The scheduled refresh pulls listings for these ZIPs. Max = monthly cap.</div></div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="_rcResetDefaults()" style="padding:9px 14px;border:2px solid #e2e8f0;background:#faf8f4;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">↻ Reset to defaults</button></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"><input id="sa-rc-newzip" type="text" inputmode="numeric" maxlength="5" placeholder="Add ZIP (5 digits)" style="flex:1;min-width:160px;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none" /><button onclick="_rcAddZip()" style="padding:10px 18px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Add</button></div>';
+  // ZIP inventory list
+  var invMap = {};
+  inv.forEach(function(e) { invMap[e.zip] = e; });
+  if (c.priorityZips.length === 0) {
+    html += '<div style="text-align:center;padding:20px;color:#7a6a58;font-size:13px">No priority ZIPs configured. Click "Reset to defaults" to load the seeded list (41 CA LMI ZIPs).</div>';
+  } else {
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
+    c.priorityZips.forEach(function(z) {
+      var entry = invMap[z] || { cached: false, total: 0, generatedAt: null };
+      var cacheBadge = entry.cached
+        ? '<span style="background:#ecfdf5;color:#065f46;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">✓ ' + entry.total + ' listings</span>'
+        : '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">— pending</span>';
+      html += '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#faf8f4"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:14px;font-weight:800;color:#1f2937">' + _rcEsc(z) + '</div><button onclick="_rcRemoveZip(\'' + _rcEsc(z) + '\')" style="padding:4px 10px;border:1px solid #fecaca;color:#b91c1c;background:#fff;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Remove</button></div><div>' + cacheBadge + '</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Last run card
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:20px">';
+  html += '<div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:12px">🕐 Last refresh run</div>';
+  if (!lr) {
+    html += '<div style="font-size:13px;color:#7a6a58">No runs yet. Click "Run Refresh Now" above to trigger the first one.</div>';
+  } else {
+    var when = lr.finishedAt ? new Date(lr.finishedAt).toLocaleString() : new Date(lr.startedAt).toLocaleString();
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;font-size:13px">';
+    html += '<div><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;font-weight:700;margin-bottom:3px">When</div><div style="font-weight:700;color:#1f2937">' + _rcEsc(when) + '</div></div>';
+    html += '<div><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;font-weight:700;margin-bottom:3px">Source</div><div style="font-weight:700;color:#1f2937">' + _rcEsc(lr.source || '—') + '</div></div>';
+    html += '<div><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;font-weight:700;margin-bottom:3px">Succeeded</div><div style="font-weight:700;color:#059669">' + (lr.zipsSucceeded !== undefined ? lr.zipsSucceeded : '—') + '</div></div>';
+    html += '<div><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;font-weight:700;margin-bottom:3px">Failed</div><div style="font-weight:700;color:' + ((lr.zipsFailed || 0) > 0 ? '#b91c1c' : '#1f2937') + '">' + (lr.zipsFailed !== undefined ? lr.zipsFailed : '—') + '</div></div>';
+    html += '</div>';
+    if (lr.skipped) html += '<div style="margin-top:12px;padding:10px;background:#f1f5f9;border-radius:8px;font-size:12px;color:#475569">Run skipped: ' + _rcEsc(lr.reason) + '</div>';
+    if (lr.stoppedEarly) html += '<div style="margin-top:12px;padding:10px;background:#fee2e2;border-radius:8px;font-size:12px;color:#991b1b;font-weight:600">⚠️ Stopped early — monthly quota exhausted mid-run.</div>';
+    if (lr.failed && lr.failed.length) {
+      html += '<div style="margin-top:12px;font-size:12px;color:#64748b;font-weight:700">Failed ZIPs:</div><div style="font-size:12px;color:#7a6a58">' + lr.failed.slice(0, 12).map(function(f){ return _rcEsc(f.zip) + ' (' + _rcEsc(f.reason) + ')'; }).join(' · ') + '</div>';
+    }
+  }
+  html += '</div>';
+
+  // Upgrade instructions
+  html += '<div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.07)">';
+  html += '<div style="font-size:14px;font-weight:800;color:#1f2937;margin-bottom:10px">📈 How to upgrade RentCast</div>';
+  html += '<div style="font-size:13px;color:#475569;line-height:1.6">';
+  html += 'Current plan: <strong>Free tier (' + u.limit + ' calls/month)</strong>. If you need more coverage (e.g. all ~600 CA LMI ZIPs), upgrade to a paid plan at <a href="https://app.rentcast.io/app/api/plans" target="_blank" style="color:#7f1d1d;font-weight:700;text-decoration:underline">app.rentcast.io/app/api/plans</a>.<br><br>';
+  html += 'After upgrading:<br>';
+  html += '1. Log in to your <a href="https://app.rentcast.io" target="_blank" style="color:#7f1d1d;text-decoration:underline">RentCast dashboard</a> and confirm the new plan.<br>';
+  html += '2. Open <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">worker.js</code> in your repo and find the line <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">const RENTCAST_MONTHLY_LIMIT = ' + u.limit + ';</code> near the top.<br>';
+  html += '3. Change the number to your new monthly cap.<br>';
+  html += '4. Run <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">npx wrangler deploy -c wrangler.jsonc</code> to push the change.<br>';
+  html += '5. Come back here — the new limit will show on this page and you can add more priority ZIPs.';
+  html += '</div>';
+  html += '</div>';
+
+  body.innerHTML = html;
+}
+
+function _rcRefresh() { renderSARentcast(); }
+
+async function _rcSaveSchedule() {
+  var dayEl = document.getElementById('sa-rc-day');
+  var killEl = document.getElementById('sa-rc-kill');
+  if (!dayEl) return;
+  try {
+    await _rcFetch('/admin/rentcast-config', { method: 'POST', body: { scheduledDay: parseInt(dayEl.value, 10), killSwitch: !!(killEl && killEl.checked) } });
+    renderSARentcast();
+  } catch (e) { alert('Could not save schedule: ' + (e.message || e)); }
+}
+
+async function _rcAddZip() {
+  var el = document.getElementById('sa-rc-newzip');
+  if (!el) return;
+  var z = (el.value || '').trim();
+  if (!/^\d{5}$/.test(z)) { alert('Please enter a valid 5-digit ZIP code.'); return; }
+  try {
+    var data = await _rcFetch('/admin/rentcast-status');
+    var cfg = data.config || { priorityZips: [] };
+    if (cfg.priorityZips.indexOf(z) !== -1) { alert('ZIP ' + z + ' is already in the priority list.'); return; }
+    var limit = (data.usage && data.usage.limit) || 50;
+    if (cfg.priorityZips.length >= limit) { alert('Priority list is full (' + limit + '). Remove one before adding another, or raise the cap.'); return; }
+    var next = cfg.priorityZips.concat([z]);
+    await _rcFetch('/admin/rentcast-config', { method: 'POST', body: { priorityZips: next } });
+    el.value = '';
+    renderSARentcast();
+  } catch (e) { alert('Could not add ZIP: ' + (e.message || e)); }
+}
+
+async function _rcRemoveZip(zip) {
+  if (!confirm('Remove ZIP ' + zip + ' from the priority list? Its cached listings will no longer refresh.')) return;
+  try {
+    var data = await _rcFetch('/admin/rentcast-status');
+    var next = (data.config.priorityZips || []).filter(function(z){ return z !== zip; });
+    await _rcFetch('/admin/rentcast-config', { method: 'POST', body: { priorityZips: next } });
+    renderSARentcast();
+  } catch (e) { alert('Could not remove ZIP: ' + (e.message || e)); }
+}
+
+async function _rcResetDefaults() {
+  if (!confirm('Reset the priority ZIP list to the seeded defaults (41 CA LMI ZIPs)? This will overwrite your current list.')) return;
+  try {
+    await _rcFetch('/admin/rentcast-reset-defaults', { method: 'POST' });
+    renderSARentcast();
+  } catch (e) { alert('Could not reset: ' + (e.message || e)); }
+}
+
+async function _rcResetCounter() {
+  var warn = 'DANGER — Reset the monthly RentCast counter to 0?\n\n' +
+             'This tells OUR system you have not used any calls this month. It does NOT contact RentCast.\n\n' +
+             'Only do this if:\n' +
+             '  • A batch of calls failed for reasons OUTSIDE your RentCast quota (e.g. bad API key, all 401s), AND\n' +
+             '  • You have verified in your RentCast dashboard that those failed calls did NOT count against your real quota.\n\n' +
+             'Otherwise you WILL exceed your real RentCast monthly limit, get billed or throttled, and break the hard cap.\n\n' +
+             'Type RESET (all caps) to confirm:';
+  var answer = window.prompt(warn, '');
+  if (answer !== 'RESET') {
+    if (answer !== null) alert('Reset cancelled — confirmation text did not match.');
+    return;
+  }
+  // Second confirm for absolute certainty
+  if (!confirm('Final confirmation: reset the RentCast monthly counter to 0 now?')) return;
+  try {
+    var data = await _rcFetch('/admin/rentcast-reset-counter', { method: 'POST', body: { confirm: 'RESET' } });
+    alert('Counter reset. Month: ' + (data.month || '?') + '\nBefore: ' + (data.before || 0) + ' / ' + (data.limit || '?') + '\nAfter: 0 / ' + (data.limit || '?'));
+    renderSARentcast();
+  } catch (e) { alert('Reset failed: ' + (e.message || e)); }
+}
+
+async function _rcRunNow() {
+  var msg = 'Trigger a manual refresh now?\n\nThis will consume up to one API call per priority ZIP in your list. The hard cap of 50 calls/month is strictly enforced — the run will stop early if the cap is hit.';
+  if (!confirm(msg)) return;
+  var body = document.getElementById('sa-rc-body');
+  if (body) body.innerHTML = '<div style="text-align:center;padding:40px;color:#7a6a58">Running refresh… this may take up to a minute.</div>';
+  try {
+    await _rcFetch('/admin/rentcast-refresh-now', { method: 'POST' });
+    renderSARentcast();
+  } catch (e) {
+    alert('Run failed: ' + (e.message || e));
+    renderSARentcast();
+  }
+}
+
+// Refreshes exactly ONE ZIP. Uses 1 quota slot. Intended for testing fixes
+// (e.g. status=Active filter) without burning remaining quota on a full run.
+async function _rcRefreshOneZip() {
+  var zip = (window.prompt('Enter a 5-digit ZIP to refresh (uses exactly 1 RentCast call):', '') || '').trim();
+  if (!zip) return;
+  if (!/^\d{5}$/.test(zip)) { alert('That is not a 5-digit ZIP.'); return; }
+  if (!confirm('Refresh ZIP ' + zip + '? This will burn exactly 1 RentCast call.')) return;
+  var body = document.getElementById('sa-rc-body');
+  if (body) body.innerHTML = '<div style="text-align:center;padding:40px;color:#7a6a58">Refreshing ZIP ' + zip + '…</div>';
+  try {
+    var data = await _rcFetch('/admin/rentcast-refresh-zip', { method: 'POST', body: { zip: zip } });
+    var u = data.usageAfter || {};
+    var lines = [
+      'ZIP ' + zip + ' refreshed.',
+      'Active listings cached: ' + (data.total || 0),
+      'Quota used: ' + (u.count || '?') + ' / ' + (u.limit || '?'),
+    ];
+    if (data.sample && data.sample.length) {
+      lines.push('');
+      lines.push('Sample:');
+      data.sample.forEach(function(l) {
+        lines.push('  • ' + (l.address || '(no addr)') + ' — $' + (l.price || '?') + (l.link ? '  [has direct link]' : '  [no direct link]'));
+      });
+    }
+    alert(lines.join('\n'));
+    renderSARentcast();
+  } catch (e) {
+    alert('Refresh failed: ' + (e.message || e));
+    renderSARentcast();
+  }
+}
+
+// Verifies an address against the FFIEC authoritative source.
+// Uses Census Geocoder to resolve address -> tract, then cross-references
+// FFIEC CFPB data. Shows a deep-link to FFIEC Geocoder for manual confirmation.
+// Does NOT consume RentCast quota.
+async function _rcVerifyAddress() {
+  var input = document.getElementById('sa-rc-verify-addr');
+  var resultEl = document.getElementById('sa-rc-verify-result');
+  if (!input || !resultEl) return;
+  var address = (input.value || '').trim();
+  if (!address) {
+    resultEl.innerHTML = '<div style="color:#b91c1c;font-size:13px;padding:10px;background:#fef2f2;border-radius:8px">Please enter an address.</div>';
+    return;
+  }
+  resultEl.innerHTML = '<div style="color:#7a6a58;font-size:13px;padding:14px;background:#f8fafc;border-radius:8px;text-align:center">🔎 Verifying with Census Geocoder + FFIEC…</div>';
+  try {
+    var data = await _rcFetch('/admin/verify-address', { method: 'POST', body: { address: address } });
+    var level = (data.ourClassification || 'Unknown');
+    var lvlLower = level.toLowerCase();
+    var isLMI = (lvlLower === 'low' || lvlLower === 'moderate');
+    var badgeBg, badgeFg, badgeText;
+    if (lvlLower === 'low')        { badgeBg = '#dcfce7'; badgeFg = '#14532d'; badgeText = 'Low — Qualifies for CRA ✓'; }
+    else if (lvlLower === 'moderate'){ badgeBg = '#ecfccb'; badgeFg = '#365314'; badgeText = 'Moderate — Qualifies for CRA ✓'; }
+    else if (lvlLower === 'middle') { badgeBg = '#f1f5f9'; badgeFg = '#334155'; badgeText = 'Middle — Does NOT qualify'; }
+    else if (lvlLower === 'upper')  { badgeBg = '#fef3c7'; badgeFg = '#78350f'; badgeText = 'Upper — Does NOT qualify'; }
+    else                             { badgeBg = '#ffedd5'; badgeFg = '#7c2d12'; badgeText = 'Unknown'; }
+
+    var ratio = (typeof data.ourIncomeRatio === 'number' && isFinite(data.ourIncomeRatio))
+      ? data.ourIncomeRatio.toFixed(2) + '%'
+      : '—';
+
+    var html = '';
+    html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px">';
+    html += '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">';
+    html += '    <div style="font-weight:700;color:#1f2937;font-size:13px">Our classification:</div>';
+    html += '    <div style="display:inline-block;padding:4px 10px;background:' + badgeBg + ';color:' + badgeFg + ';border-radius:999px;font-size:12px;font-weight:800">' + escHtml(badgeText) + '</div>';
+    html += '  </div>';
+    html += '  <div style="display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:13px;color:#374151;margin-bottom:10px">';
+    html += '    <div style="font-weight:700">Matched address:</div><div>' + escHtml(data.matchedAddress || '—') + '</div>';
+    if (data.coordinates) {
+      html += '    <div style="font-weight:700">Coordinates:</div><div>' + escHtml(String(data.coordinates.lat)) + ', ' + escHtml(String(data.coordinates.lon)) + '</div>';
+    }
+    html += '    <div style="font-weight:700">Tract ID (11-digit FIPS):</div><div><code style="background:#fff;padding:2px 6px;border-radius:4px;border:1px solid #e2e8f0">' + escHtml(data.tractId || '—') + '</code></div>';
+    if (data.stateFips || data.countyFips || data.tractCode) {
+      html += '    <div style="font-weight:700">State / County / Tract:</div><div>' + escHtml(data.stateFips || '?') + ' / ' + escHtml(data.countyFips || '?') + ' / ' + escHtml(data.tractCode || '?') + '</div>';
+    }
+    html += '    <div style="font-weight:700">Tract income ratio:</div><div>' + escHtml(ratio) + ' of MSA median</div>';
+    html += '    <div style="font-weight:700">Qualifies for CRA:</div><div>' + (isLMI ? '<span style="color:#14532d;font-weight:800">YES ✓</span>' : '<span style="color:#991b1b;font-weight:800">NO ✗</span>') + '</div>';
+    if (data.zip) {
+      html += '    <div style="font-weight:700">ZIP:</div><div>' + escHtml(data.zip) + '</div>';
+    }
+    if (data.dataSource) {
+      html += '    <div style="font-weight:700">Data source:</div><div style="color:#64748b;font-size:12px">' + escHtml(data.dataSource) + '</div>';
+    }
+    html += '  </div>';
+    if (data.note) {
+      html += '  <div style="font-size:12px;color:#7a6a58;background:#fffaf0;border:1px solid #fde68a;border-radius:6px;padding:8px;margin-bottom:10px">' + escHtml(data.note) + '</div>';
+    }
+    // Legacy-path cross-checks: shown so the admin can see if/why the old
+    // pipeline would have tagged this listing differently. This is the
+    // money panel for diagnosing the 921 S Aurora St kind of failure.
+    if (data.fccCrossCheck) {
+      var f = data.fccCrossCheck;
+      var ok = f.matchesCensus;
+      html += '<div style="margin-top:8px;padding:10px 12px;background:' + (ok ? '#ecfdf5' : '#fef2f2') + ';border:1px solid ' + (ok ? '#a7f3d0' : '#fecaca') + ';border-radius:8px;font-size:12px;color:' + (ok ? '#065f46' : '#991b1b') + '">'
+           + '<strong>' + (ok ? '\u2713' : '\u26a0') + ' FCC Block Find (legacy lat/lon path):</strong> ' + escHtml(f.note || '') + (f.fccTractId ? ' Tract returned: <code>' + escHtml(f.fccTractId) + '</code>.' : '')
+           + '</div>';
+    }
+    if (data.zipListCrossCheck) {
+      var z = data.zipListCrossCheck;
+      var zok = z.tractFoundInZipList;
+      html += '<div style="margin-top:8px;padding:10px 12px;background:' + (zok ? '#ecfdf5' : '#fef2f2') + ';border:1px solid ' + (zok ? '#a7f3d0' : '#fecaca') + ';border-radius:8px;font-size:12px;color:' + (zok ? '#065f46' : '#991b1b') + '">'
+           + '<strong>' + (zok ? '\u2713' : '\u26a0') + ' FFIEC ZIP-list (legacy path):</strong> ' + escHtml(z.note || '')
+           + '</div>';
+    }
+    if (data.ffiecGeocoderLink) {
+      html += '  <div style="margin-top:8px">';
+      html += '    <a href="' + escHtml(data.ffiecGeocoderLink) + '" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:#0369a1;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">\ud83c\udf10 Open FFIEC Geocoder to confirm \u2192</a>';
+      html += '    <div style="font-size:11px;color:#94a3b8;margin-top:4px">Cross-check on the authoritative FFIEC site. If FFIEC also shows Low or Moderate, our classification is confirmed.</div>';
+      html += '  </div>';
+    }
+    html += '</div>';
+    resultEl.innerHTML = html;
+  } catch (e) {
+    resultEl.innerHTML = '<div style="color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:13px">\u274c Verification failed: ' + escHtml(e.message || String(e)) + '</div>';
+  }
+}
+
+// Full-pipeline trace. Shows every step of v2 + legacy paths so the admin
+// can see exactly where classification happens (and where FFIEC Geocoder
+// might disagree). Zero RentCast quota — pure diagnostic.
+async function _rcTraceAddress() {
+  var input = document.getElementById('sa-rc-trace-addr');
+  var resultEl = document.getElementById('sa-rc-trace-result');
+  if (!input || !resultEl) return;
+  var address = (input.value || '').trim();
+  if (!address) {
+    resultEl.innerHTML = '<div style="color:#b91c1c;font-size:13px;padding:10px;background:#fef2f2;border-radius:8px">Please enter an address.</div>';
+    return;
+  }
+  resultEl.innerHTML = '<div style="color:#7a6a58;font-size:13px;padding:14px;background:#f8fafc;border-radius:8px;text-align:center">\ud83d\udd0e Tracing pipeline\u2026 4 API calls, ~3-8 seconds.</div>';
+  try {
+    // Do the fetch inline (not via _rcFetch) so we can render the full
+    // structured error payload — partial trace, step-level reasons,
+    // stack trace — when the handler returns a non-OK response.
+    var pw = _rcGetAdminPassword();
+    if (!pw) throw new Error('admin_password_required');
+    var res = await fetch(window.location.origin + '/admin/trace-address', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pw },
+      body: JSON.stringify({ address: address }),
+    });
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (res.status === 401) { _rcClearAdminPassword(); throw new Error((data && data.error) || 'bad_admin_password'); }
+
+    if (!res.ok || !data || data.ok === false) {
+      // Structured error with step-level detail. Show whatever we have.
+      var errHtml = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px">';
+      errHtml += '  <div style="font-size:13px;font-weight:800;color:#991b1b;margin-bottom:6px">\u274c Trace failed (HTTP ' + res.status + ')</div>';
+      if (data && data.error)   errHtml += '  <div style="font-size:12px;color:#7f1d1d;margin-bottom:6px"><b>Error:</b> ' + escHtml(String(data.error)) + '</div>';
+      if (data && data.message) errHtml += '  <div style="font-size:12px;color:#7f1d1d;margin-bottom:6px"><b>Message:</b> ' + escHtml(String(data.message)) + '</div>';
+      if (data && data.stack)   errHtml += '  <pre style="background:#fff;border:1px solid #fecaca;border-radius:6px;padding:8px;font-size:11px;color:#7f1d1d;overflow:auto;max-height:180px;margin:6px 0">' + escHtml(String(data.stack)) + '</pre>';
+      if (data && data.partialTrace && Array.isArray(data.partialTrace.steps) && data.partialTrace.steps.length) {
+        errHtml += '  <div style="font-size:12px;font-weight:800;color:#7f1d1d;margin-top:10px;margin-bottom:6px">Partial trace (steps completed before failure)</div>';
+        data.partialTrace.steps.forEach(function(s) {
+          var ok = s.ok ? '\u2713' : '\u26a0';
+          errHtml += '  <div style="background:#fff;border:1px solid #fecaca;border-radius:6px;padding:8px;margin-bottom:6px">';
+          errHtml += '    <div style="font-size:11px;font-weight:700;color:' + (s.ok ? '#065f46' : '#991b1b') + ';margin-bottom:3px">' + ok + ' ' + escHtml(s.name) + '</div>';
+          errHtml += '    <pre style="background:#fafaf9;border:1px solid #e2e8f0;border-radius:4px;padding:6px;font-size:11px;color:#334155;overflow:auto;max-height:140px;margin:0">' + escHtml(JSON.stringify(s.result, null, 2)) + '</pre>';
+          errHtml += '  </div>';
+        });
+      }
+      errHtml += '</div>';
+      resultEl.innerHTML = errHtml;
+      return;
+    }
+
+    var trace = data.trace || {};
+    var final = trace.final || {};
+    var steps = Array.isArray(trace.steps) ? trace.steps : [];
+    var level = (final.level || 'Unknown');
+    var lvlLower = level.toLowerCase();
+    var badgeBg, badgeFg;
+    if (lvlLower === 'low')        { badgeBg = '#dcfce7'; badgeFg = '#14532d'; }
+    else if (lvlLower === 'moderate') { badgeBg = '#ecfccb'; badgeFg = '#365314'; }
+    else if (lvlLower === 'middle') { badgeBg = '#f1f5f9'; badgeFg = '#334155'; }
+    else if (lvlLower === 'upper')  { badgeBg = '#fef3c7'; badgeFg = '#78350f'; }
+    else                             { badgeBg = '#ffedd5'; badgeFg = '#7c2d12'; }
+
+    var html = '';
+    html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px">';
+    html += '  <div style="font-size:13px;font-weight:800;color:#1f2937;margin-bottom:8px">Final classification (v2 authoritative path)</div>';
+    html += '  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">';
+    html += '    <span style="padding:6px 14px;background:' + badgeBg + ';color:' + badgeFg + ';border-radius:999px;font-size:13px;font-weight:800">' + escHtml(level) + (final.incomeRatio != null ? ' (' + Number(final.incomeRatio).toFixed(2) + '%)' : '') + '</span>';
+    html += '    <span style="color:' + (final.qualifiesCRA ? '#065f46' : '#991b1b') + ';font-weight:700;font-size:13px">' + (final.qualifiesCRA ? 'Qualifies for CRA \u2713' : 'Does NOT qualify') + '</span>';
+    if (final.tractId) html += '    <code style="background:#f8fafc;padding:3px 8px;border-radius:4px;border:1px solid #e2e8f0;font-size:12px">Tract ' + escHtml(final.tractId) + '</code>';
+    if (final.ffiecYear) html += '    <span style="color:#64748b;font-size:12px">FFIEC year ' + escHtml(String(final.ffiecYear)) + '</span>';
+    html += '  </div>';
+    if (final.matchedAddress) {
+      html += '  <div style="font-size:12px;color:#64748b;margin-bottom:10px">Matched: ' + escHtml(final.matchedAddress) + '</div>';
+    }
+    if (final.ffiecGeocoderLink) {
+      html += '  <a href="' + escHtml(final.ffiecGeocoderLink) + '" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:#0369a1;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:14px">\ud83c\udf10 Open in FFIEC Geocoder \u2192</a>';
+    }
+
+    html += '  <div style="font-size:13px;font-weight:800;color:#1f2937;margin-top:16px;margin-bottom:8px">Pipeline steps</div>';
+    steps.forEach(function(s, i) {
+      var bg = s.ok ? '#ecfdf5' : '#fef2f2';
+      var border = s.ok ? '#a7f3d0' : '#fecaca';
+      var color = s.ok ? '#065f46' : '#991b1b';
+      var icon = s.ok ? '\u2713' : '\u26a0';
+      html += '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      html += '  <div style="font-size:12px;font-weight:800;color:' + color + ';margin-bottom:4px">' + icon + ' ' + escHtml(s.name) + '</div>';
+      html += '  <div style="font-size:11px;color:#64748b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-bottom:6px">' + escHtml(s.api) + '</div>';
+      html += '  <pre style="background:#fff;border:1px solid #e2e8f0;border-radius:4px;padding:8px;font-size:11px;color:#334155;overflow:auto;max-height:200px;margin:0">' + escHtml(JSON.stringify(s.result, null, 2)) + '</pre>';
+      if (s.note) {
+        html += '  <div style="margin-top:6px;padding:6px 8px;background:#fef3c7;border:1px solid #fde68a;border-radius:4px;font-size:11px;color:#78350f">\u26a0\ufe0f ' + escHtml(s.note) + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+    resultEl.innerHTML = html;
+  } catch (e) {
+    resultEl.innerHTML = '<div style="color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:13px">\u274c Trace failed: ' + escHtml(e.message || String(e)) + '</div>';
+  }
+}
+
+// Re-enriches every cached ZIP with the current (v2) classification pipeline.
+// Zero RentCast calls — just re-runs Census Geocoder + CFPB on already-cached
+// listings. Processes ZIPs in small batches client-side because Cloudflare
+// Workers have a 1000-subrequest limit per invocation and a first-run
+// enrichment hits ~100 subrequests per ZIP (Census + CFPB × ~50 listings).
+async function _rcReenrichCache() {
+  var resultEl = document.getElementById('sa-rc-reenrich-result');
+  if (!resultEl) return;
+  if (!confirm('Re-enrich all cached priority ZIPs with the v2 classification pipeline?\n\nThis will:\n  \u2022 Re-run Census Geocoder + CFPB lookup for every cached listing\n  \u2022 NOT call RentCast (zero quota consumed)\n  \u2022 Processes ZIPs in batches of 4 (respects Cloudflare subrequest limit)\n  \u2022 Takes ~10-15s per batch; totals shown live below\n\nSafe to re-run anytime.')) return;
+
+  // First, fetch the current priority-ZIP list so we know how many batches
+  // we need. The admin endpoint returns it indirectly via skippedZips on a
+  // zero-input call, but we can just pull it from the status endpoint.
+  var statusData;
+  try {
+    statusData = await _rcFetch('/admin/rentcast-status', { method: 'GET' });
+  } catch (e) {
+    resultEl.innerHTML = '<div style="color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:13px">\u274c Could not load priority ZIP list: ' + escHtml(e.message || String(e)) + '</div>';
+    return;
+  }
+  var priorityZips = (statusData && statusData.config && Array.isArray(statusData.config.priorityZips)) ? statusData.config.priorityZips.slice() : [];
+  if (!priorityZips.length) {
+    resultEl.innerHTML = '<div style="color:#78350f;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:12px;font-size:13px">No priority ZIPs configured. Nothing to re-enrich.</div>';
+    return;
+  }
+
+  var BATCH_SIZE = 4; // matches server-side MAX_ZIPS_PER_CALL
+  var totalBatches = Math.ceil(priorityZips.length / BATCH_SIZE);
+  var allResults = [];
+  var runningTotals = { zips: 0, total: 0, lmi: 0, low: 0, moderate: 0, unknown: 0 };
+
+  // Progress UI
+  function renderProgress(batchIdx, lastResults) {
+    var done = Math.min(priorityZips.length, (batchIdx + 1) * BATCH_SIZE);
+    var pct = Math.round((done / priorityZips.length) * 100);
+    var lastLine = '';
+    if (Array.isArray(lastResults) && lastResults.length) {
+      lastLine = '<div style="font-size:11px;color:#64748b;margin-top:6px">Last batch: ' + lastResults.map(function(r) {
+        return escHtml(r.zip) + (r.reenriched ? ' \u2713 (L:' + (r.lowCount||0) + ' M:' + (r.moderateCount||0) + ' U:' + (r.unknownCount||0) + ')' : ' \u2717 ' + escHtml(r.reason||'?'));
+      }).join(' &middot; ') + '</div>';
+    }
+    resultEl.innerHTML =
+      '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px">'
+      + '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-bottom:8px">\u267b\ufe0f Re-enriching batch ' + (batchIdx + 1) + ' of ' + totalBatches + ' \u2026 (' + done + ' / ' + priorityZips.length + ' ZIPs)</div>'
+      + '<div style="background:#e0f2fe;border-radius:99px;height:14px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#0369a1;transition:width 0.4s"></div></div>'
+      + '<div style="font-size:12px;color:#075985;margin-top:6px">Running: L=' + runningTotals.low + '  M=' + runningTotals.moderate + '  LMI=' + runningTotals.lmi + '  Unknown=' + runningTotals.unknown + '  (total listings: ' + runningTotals.total + ')</div>'
+      + lastLine
+      + '</div>';
+  }
+
+  try {
+    for (var bi = 0; bi < totalBatches; bi++) {
+      var batchZips = priorityZips.slice(bi * BATCH_SIZE, (bi + 1) * BATCH_SIZE);
+      renderProgress(bi, null);
+      var data = await _rcFetch('/admin/reenrich-cache', { method: 'POST', body: { zips: batchZips } });
+      var batchResults = Array.isArray(data.results) ? data.results : [];
+      var t = data.totals || {};
+      runningTotals.zips += t.zips || 0;
+      runningTotals.total += t.total || 0;
+      runningTotals.lmi += t.lmi || 0;
+      runningTotals.low += t.low || 0;
+      runningTotals.moderate += t.moderate || 0;
+      runningTotals.unknown += t.unknown || 0;
+      allResults = allResults.concat(batchResults);
+      renderProgress(bi, batchResults);
+    }
+    // Render final summary from the accumulated runningTotals + allResults.
+    var results = allResults;
+    var totals = runningTotals;
+
+    var html = '';
+    html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px">';
+    html += '  <div style="font-size:13px;font-weight:800;color:#1f2937;margin-bottom:10px">Re-enrichment complete</div>';
+    html += '  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px">';
+    html += '    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:#065f46">' + (totals.zips || 0) + '</div><div style="font-size:11px;color:#065f46;font-weight:700">ZIPs updated</div></div>';
+    html += '    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:#065f46">' + (totals.total || 0) + '</div><div style="font-size:11px;color:#065f46;font-weight:700">Total listings</div></div>';
+    html += '    <div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:#14532d">' + (totals.low || 0) + '</div><div style="font-size:11px;color:#14532d;font-weight:700">Low</div></div>';
+    html += '    <div style="background:#ecfccb;border:1px solid #bef264;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:#365314">' + (totals.moderate || 0) + '</div><div style="font-size:11px;color:#365314;font-weight:700">Moderate</div></div>';
+    html += '    <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:#064e3b">' + (totals.lmi || 0) + '</div><div style="font-size:11px;color:#064e3b;font-weight:700">LMI (total)</div></div>';
+    html += '    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:800;color:#9a3412">' + (totals.unknown || 0) + '</div><div style="font-size:11px;color:#9a3412;font-weight:700">Unknown</div></div>';
+    html += '  </div>';
+    html += '  <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:#64748b;font-weight:700">Show per-ZIP breakdown</summary>';
+    html += '  <table style="width:100%;margin-top:8px;border-collapse:collapse;font-size:12px">';
+    html += '    <thead><tr style="background:#f8fafc"><th style="text-align:left;padding:6px">ZIP</th><th style="text-align:right;padding:6px">Total</th><th style="text-align:right;padding:6px">Low</th><th style="text-align:right;padding:6px">Mod</th><th style="text-align:right;padding:6px">LMI</th><th style="text-align:right;padding:6px">Unknown</th><th style="text-align:left;padding:6px">Status</th></tr></thead><tbody>';
+    results.forEach(function(r) {
+      html += '<tr style="border-top:1px solid #e2e8f0">';
+      html += '<td style="padding:6px;font-family:monospace">' + escHtml(r.zip || '') + '</td>';
+      if (r.reenriched) {
+        html += '<td style="padding:6px;text-align:right">' + (r.total || 0) + '</td>';
+        html += '<td style="padding:6px;text-align:right;color:#14532d;font-weight:700">' + (r.lowCount || 0) + '</td>';
+        html += '<td style="padding:6px;text-align:right;color:#365314;font-weight:700">' + (r.moderateCount || 0) + '</td>';
+        html += '<td style="padding:6px;text-align:right;color:#064e3b;font-weight:700">' + (r.lmiCount || 0) + '</td>';
+        html += '<td style="padding:6px;text-align:right;color:#9a3412">' + (r.unknownCount || 0) + '</td>';
+        html += '<td style="padding:6px;color:#065f46">\u2713 updated</td>';
+      } else {
+        html += '<td colspan="5" style="padding:6px;color:#94a3b8;text-align:center">\u2014</td>';
+        html += '<td style="padding:6px;color:#991b1b">\u26a0 ' + escHtml(r.reason || 'failed') + '</td>';
+      }
+      html += '</tr>';
+    });
+    html += '  </tbody></table></details>';
+    html += '</div>';
+    resultEl.innerHTML = html;
+  } catch (e) {
+    resultEl.innerHTML = '<div style="color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:13px">\u274c Re-enrichment failed: ' + escHtml(e.message || String(e)) + '</div>';
+  }
 }
 
 async function renderSAOrgs() {
@@ -16820,9 +18174,26 @@ function updateBottomNav(tab) {
   var id = rpMap[tab] || mloMap[tab];
   if (id) { var el = document.getElementById(id); if (el) el.classList.add('active'); }
 }
+// Proactively remove any service worker that may have been registered by
+// an older version of this app. No new service worker is registered —
+// lmitool.com is online-only, so we let the normal browser HTTP cache
+// handle things and deploys go live instantly.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').catch(function() {});
+    try {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(reg) {
+          try { reg.unregister(); } catch (e) {}
+        });
+      }).catch(function() {});
+      if (window.caches && caches.keys) {
+        caches.keys().then(function(keys) {
+          keys.forEach(function(k) {
+            try { caches.delete(k); } catch (e) {}
+          });
+        }).catch(function() {});
+      }
+    } catch (e) {}
   });
 }
 </script>

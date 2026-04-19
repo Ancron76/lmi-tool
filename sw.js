@@ -1,39 +1,35 @@
-const CACHE_NAME = 'loopenta-v21';
-const PRECACHE = ['/'];
+// Self-destructing service worker.
+// Any browser that still has an old service worker registered will download
+// this file, activate it, delete every cache, unregister itself, and reload
+// all open tabs onto fresh code. After that, lmitool.com has no service
+// worker and every deploy is live instantly via the normal HTTP cache.
 
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(PRECACHE);
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', function(e) {
   e.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.filter(function(k) { return k !== CACHE_NAME; })
-            .map(function(k) { return caches.delete(k); })
-      );
-    })
+    caches.keys()
+      .then(function(keys) {
+        return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+      })
+      .then(function() {
+        return self.registration.unregister();
+      })
+      .then(function() {
+        return self.clients.matchAll({ type: 'window' });
+      })
+      .then(function(clients) {
+        clients.forEach(function(client) {
+          try { client.navigate(client.url); } catch (err) {}
+        });
+      })
+      .catch(function() {})
   );
-  self.clients.claim();
 });
 
+// Pass everything straight through while we're still alive.
 self.addEventListener('fetch', function(e) {
-  // Only cache GET requests to same origin
-  if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) return;
-  e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      if (cached) return cached;
-      return fetch(e.request).then(function(response) {
-        if (!response || response.status !== 200 || response.type !== 'basic') return response;
-        var clone = response.clone();
-        caches.open(CACHE_NAME).then(function(cache) { cache.put(e.request, clone); });
-        return response;
-      });
-    })
-  );
+  // No-op: let the browser handle the request normally.
 });
