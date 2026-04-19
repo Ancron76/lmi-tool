@@ -1587,6 +1587,9 @@ h1,h2,h3 { letter-spacing: -0.3px; }
 }
 .sidebar-logo-text { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.3px; line-height: 1.2; }
 .sidebar-logo-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; }
+.beta-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.6px; background: linear-gradient(140deg,#c4943a,#b07030); color: white; text-transform: uppercase; line-height: 1; vertical-align: middle; }
+.beta-badge--login { font-size: 11px; padding: 3px 9px; }
+.sidebar-logo-row { display: flex; align-items: center; gap: 6px; }
 .sidebar-section-label {
   font-size: 10px;
   font-weight: 700;
@@ -2069,6 +2072,81 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
   </div>
 </div>
 
+<!-- NDA AGREEMENT MODAL -->
+<div class="tos-overlay" id="nda-modal">
+  <div class="tos-box" style="max-width:600px">
+    <div class="tos-header" style="background:linear-gradient(135deg,#1c1812 0%,#2a2218 100%)">
+      <div class="tos-logo">
+        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(140deg,#c4943a,#b07030);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:22px;color:white;letter-spacing:-0.02em">L</div>
+      </div>
+      <div class="tos-title" style="font-family:'Cormorant Garamond',serif">Non-Disclosure Agreement</div>
+      <div class="tos-subtitle">Confidentiality terms for Beta access</div>
+    </div>
+    <div class="tos-scroll-area" id="nda-scroll-area" style="background:#f5f0e8;border:1px solid #ddd4c0;margin:20px 24px 0;border-radius:10px;padding:16px;min-height:200px;max-height:300px;font-size:12px;line-height:1.7;color:#1a1410">
+      <div class="tos-text" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#1a1410">LOOPENTA / LMI PROSPECT FINDER
+MUTUAL NON-DISCLOSURE AGREEMENT (BETA PROGRAM)
+Version 1.0
+
+This Non-Disclosure Agreement ("Agreement") is entered into between LMI Prospect Finder LLC ("Disclosing Party") and the undersigned authorized user ("Recipient") as of the date of electronic acceptance below.
+
+1. CONFIDENTIAL INFORMATION
+"Confidential Information" means any non-public information disclosed by the Disclosing Party to Recipient in connection with the Loopenta / LMI Prospect Finder beta platform, including but not limited to: software features, screen designs, source code, workflows, roadmaps, pricing, performance data, customer information, internal communications, and any feedback or bug reports exchanged between the parties.
+
+2. OBLIGATIONS OF RECIPIENT
+Recipient agrees to: (a) hold all Confidential Information in strict confidence; (b) use Confidential Information solely for the purpose of evaluating and using the beta platform in the course of authorized business; (c) not disclose Confidential Information to any third party, including other employees not authorized to access the beta, without prior written consent; and (d) protect Confidential Information using at least the same degree of care used to protect Recipient's own confidential information, but in no event less than reasonable care.
+
+3. NO PUBLIC DISCLOSURE
+Recipient shall not publish screenshots, recordings, performance benchmarks, or descriptions of the beta platform on social media, blogs, marketing materials, or any public forum without prior written approval from the Disclosing Party.
+
+4. CUSTOMER AND BORROWER DATA
+Recipient acknowledges that any borrower or customer PII processed through the platform remains the responsibility of Recipient's institution and must be handled in accordance with GLBA, CCPA, and all applicable privacy laws. Recipient will not export, share, or use such data for any purpose outside authorized lending workflows.
+
+5. FEEDBACK
+Any feedback, suggestions, or improvements provided by Recipient regarding the beta platform may be used by the Disclosing Party without restriction or compensation.
+
+6. TERM
+This Agreement remains in effect for the duration of Recipient's access to the beta platform and for two (2) years thereafter with respect to Confidential Information disclosed during the term.
+
+7. RETURN OR DESTRUCTION
+Upon termination of access or written request, Recipient shall promptly return or destroy all Confidential Information in their possession or control, including any copies.
+
+8. NO LICENSE
+Nothing in this Agreement grants Recipient any license, ownership, or intellectual property rights in the Confidential Information or the beta platform.
+
+9. REMEDIES
+Recipient acknowledges that breach of this Agreement may cause irreparable harm for which monetary damages are inadequate, and that the Disclosing Party shall be entitled to seek injunctive relief in addition to any other available remedies.
+
+10. GOVERNING LAW
+This Agreement is governed by the laws of the State of California, without regard to conflict of laws principles.
+
+By typing your name and clicking "I Agree," you are providing a legally binding digital signature confirming that you have read, understood, and agree to be bound by this Non-Disclosure Agreement.</div>
+    </div>
+    <div class="tos-footer" style="padding:16px 24px 24px">
+      <div class="tos-scroll-hint" id="nda-scroll-hint" style="text-align:center;font-size:12px;color:#a89880;margin-bottom:12px">↓ Please scroll to read the full NDA</div>
+      <!-- Checkbox -->
+      <label id="nda-agree-label" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:not-allowed;opacity:0.5;transition:opacity 0.3s">
+        <input type="checkbox" id="nda-agree-check" disabled onchange="_ndaValidateForm()" style="width:18px;height:18px;margin-top:2px;flex-shrink:0" />
+        <span style="font-size:13px;color:#1a1410;line-height:1.5">I have read and agree to the Non-Disclosure Agreement</span>
+      </label>
+      <!-- Signature -->
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Type your full name as your digital signature</label>
+        <input type="text" id="nda-sig-name" placeholder="Your full name" disabled oninput="_ndaValidateForm()" style="width:100%;padding:12px 14px;border:2px solid #ddd4c0;border-radius:10px;font-size:16px;outline:none;font-family:inherit;box-sizing:border-box;background:#faf8f4" />
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Date</label>
+        <input type="text" id="nda-sig-date" readonly style="width:100%;padding:12px 14px;border:2px solid #ddd4c0;border-radius:10px;font-size:14px;outline:none;font-family:inherit;box-sizing:border-box;background:#f5f0e8;color:#7a6a58" />
+      </div>
+      <!-- Accept -->
+      <button class="tos-agree-btn" id="nda-agree-btn" disabled onclick="acceptNDA()" style="width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:not-allowed;background:#ddd4c0;color:#a89880;transition:all 0.3s;font-family:inherit;min-height:48px">I Agree &amp; Continue</button>
+      <!-- Decline -->
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="_declineNDA()" style="background:none;border:none;color:#a89880;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Decline — I do not agree</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
@@ -2079,7 +2157,10 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
         <circle cx="55" cy="45" r="15" fill="#d4b070"/>
       </svg>
     </div>
-    <div class="login-title" style="font-family:var(--font-display);font-weight:600;letter-spacing:-0.02em">Loopenta</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
+      <div class="login-title" style="font-family:var(--font-display);font-weight:600;letter-spacing:-0.02em;margin-bottom:0">Loopenta</div>
+      <span class="beta-badge beta-badge--login" title="Beta release">Beta</span>
+    </div>
     <div class="login-sub">Mortgage CRM &nbsp;·&nbsp; Loan Officer Platform</div>
     <div style="text-align:left;margin-bottom:4px">
       <label style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Email</label>
@@ -2105,7 +2186,10 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
     <div class="sidebar-logo" onclick="_goHome();closeSidebar()" style="cursor:pointer">
       <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(140deg,#c4943a,#b07030);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:16px;color:white;letter-spacing:-0.02em">L</div>
       <div>
-        <div class="sidebar-logo-text" style="font-family:var(--font-display)">Loopenta</div>
+        <div class="sidebar-logo-row">
+          <div class="sidebar-logo-text" style="font-family:var(--font-display)">Loopenta</div>
+          <span class="beta-badge" title="Beta release">Beta</span>
+        </div>
         <div class="sidebar-logo-sub">MORTGAGE CRM</div>
       </div>
     </div>
@@ -5200,7 +5284,9 @@ async function _postLoginSetup(user) {
   _applyFeatureFlags(); // hide/show SMS UI based on flag
   // Agreement version check — re-show modal if version changed and re-sign required
   var agrOk = await _checkAgreementVersion();
-  if (agrOk) { showTab('home'); } else { showTOSModal(); }
+  if (!agrOk) { showTOSModal(); return; }
+  if (!_userHasSignedNDA(currentUser)) { showNDAModal(); return; }
+  showTab('home');
 }
 
 async function tryLogin() {
@@ -5220,7 +5306,9 @@ async function tryLogin() {
     if (user.role === 'realtor') {
       console.log('[tryLogin] Realtor login — id:', user.id, '| realtorDocId:', user.realtorDocId || '(not set)');
       var rLoginAgrOk = await _checkAgreementVersion();
-      if (rLoginAgrOk) { await showRealtorPortal(); } else { showTOSModal(); }
+      if (!rLoginAgrOk) { showTOSModal(); return; }
+      if (!_userHasSignedNDA(currentUser)) { showNDAModal(); return; }
+      await showRealtorPortal();
       return;
     }
     await _postLoginSetup(user);
@@ -5346,7 +5434,9 @@ window.onload = async function() {
     document.getElementById('login-screen').style.display = 'none';
     if (currentUser.role === 'realtor') {
       var rAgrOk = await _checkAgreementVersion();
-      if (rAgrOk) { await showRealtorPortal(); } else { showTOSModal(); }
+      if (!rAgrOk) { showTOSModal(); return; }
+      if (!_userHasSignedNDA(currentUser)) { showNDAModal(); return; }
+      await showRealtorPortal();
       return;
     }
     await _postLoginSetup(currentUser);
@@ -6386,11 +6476,124 @@ async function acceptAgreement() {
     });
   } catch(e) { console.error('Agreement save error', e); }
   document.getElementById('tos-modal').classList.remove('open');
+  // After TOS, require NDA for first-time users
+  if (!_userHasSignedNDA(currentUser)) { showNDAModal(); return; }
   if (currentUser && currentUser.role === 'realtor') { showRealtorPortal(); } else { showTab('home'); }
 }
 
 // Backward compat alias
 function acceptTOS() { acceptAgreement(); }
+
+// ── NDA AGREEMENT ─────────────────────────────────────────────
+var _currentNdaVersion = '1.0';
+var _ndaScrolledToBottom = false;
+
+function _userHasSignedNDA(u) {
+  if (!u) return false;
+  return u.ndaSigned === true;
+}
+
+function showNDAModal() {
+  var modal = document.getElementById('nda-modal');
+  if (!modal) return;
+  modal.classList.add('open');
+  _ndaScrolledToBottom = false;
+  var area = document.getElementById('nda-scroll-area');
+  var check = document.getElementById('nda-agree-check');
+  var sigName = document.getElementById('nda-sig-name');
+  var sigDate = document.getElementById('nda-sig-date');
+  var label = document.getElementById('nda-agree-label');
+  var hint = document.getElementById('nda-scroll-hint');
+  var btn = document.getElementById('nda-agree-btn');
+  if (area) area.scrollTop = 0;
+  if (check) { check.checked = false; check.disabled = true; }
+  if (sigName) { sigName.value = ''; sigName.disabled = true; }
+  if (sigDate) sigDate.value = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  if (label) { label.style.opacity = '0.5'; label.style.cursor = 'not-allowed'; }
+  if (hint) { hint.style.display = ''; hint.classList.remove('hidden'); }
+  if (btn) { btn.disabled = true; btn.classList.remove('enabled'); btn.textContent = 'I Agree & Continue'; }
+  if (area) area.addEventListener('scroll', _onNdaScroll);
+}
+
+function _onNdaScroll() {
+  var area = document.getElementById('nda-scroll-area');
+  if (!area) return;
+  var scrollPct = (area.scrollTop + area.clientHeight) / area.scrollHeight;
+  if (scrollPct >= 0.9) {
+    _ndaScrolledToBottom = true;
+    var check = document.getElementById('nda-agree-check');
+    var sigName = document.getElementById('nda-sig-name');
+    var label = document.getElementById('nda-agree-label');
+    var hint = document.getElementById('nda-scroll-hint');
+    if (check) check.disabled = false;
+    if (sigName) sigName.disabled = false;
+    if (label) { label.style.opacity = '1'; label.style.cursor = 'pointer'; }
+    if (hint) hint.classList.add('hidden');
+    area.removeEventListener('scroll', _onNdaScroll);
+    _ndaValidateForm();
+  }
+}
+
+function _ndaValidateForm() {
+  var check = document.getElementById('nda-agree-check');
+  var sigName = document.getElementById('nda-sig-name');
+  var btn = document.getElementById('nda-agree-btn');
+  if (!btn) return;
+  var valid = _ndaScrolledToBottom && check && check.checked && sigName && sigName.value.trim().length >= 2;
+  btn.disabled = !valid;
+  if (valid) { btn.classList.add('enabled'); } else { btn.classList.remove('enabled'); }
+}
+
+function _declineNDA() {
+  document.getElementById('nda-modal').classList.remove('open');
+  showToast('You must accept the NDA to use the Beta platform.');
+  setTimeout(logout, 1500);
+}
+
+async function acceptNDA() {
+  if (!currentUser || !db) return;
+  var btn = document.getElementById('nda-agree-btn');
+  var sigName = document.getElementById('nda-sig-name');
+  var enteredName = sigName ? sigName.value.trim() : '';
+  if (!enteredName) return;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  var now = new Date();
+  var version = _currentNdaVersion || '1.0';
+  var product = DOMAIN_CONFIG.isLoopenta ? 'loopenta' : 'lmi_tool';
+  try {
+    var ndaData = {
+      ndaSigned: true,
+      ndaSignedAt: now.toISOString(),
+      ndaSignedName: enteredName,
+      ndaVersion: version,
+      ndaUserAgent: navigator.userAgent,
+      ndaProduct: product
+    };
+    await db.collection('users').doc(currentUser.id).update(ndaData);
+    Object.assign(currentUser, ndaData);
+    sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
+    try {
+      await db.collection('ndaLog').add({
+        uid: currentUser.id,
+        email: currentUser.email || '',
+        displayName: currentUser.name || '',
+        signedName: enteredName,
+        tenantId: currentUser.orgId || '',
+        role: currentUser.role || '',
+        version: version,
+        signedAt: now.toISOString(),
+        userAgent: navigator.userAgent,
+        product: product
+      });
+    } catch(e) { console.warn('ndaLog write error', e); }
+    _auditLog('nda_signed', 'user_agreement', currentUser.id, currentUser.name || currentUser.email, {
+      version: version, signedName: enteredName
+    });
+  } catch(e) { console.error('NDA save error', e); }
+  document.getElementById('nda-modal').classList.remove('open');
+  if (currentUser && currentUser.role === 'realtor') { showRealtorPortal(); } else { showTab('home'); }
+}
 
 // ── OYZ ───────────────────────────────────────────────────────
 var cachedOYZ = [];
