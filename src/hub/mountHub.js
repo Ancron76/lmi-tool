@@ -7,7 +7,7 @@
   'use strict';
 
   var Hub = global.Hub = global.Hub || {};
-  Hub.VERSION = '20260422f';
+  Hub.VERSION = '20260422g';
 
   var mounted = false;
 
@@ -203,7 +203,10 @@
       else if (typeof global.showSignup === 'function') global.showSignup();
       else {
         var ls = document.getElementById('login-screen');
-        if (ls) ls.style.display = 'flex';
+        var ss = document.getElementById('signup-screen');
+        if (ls) ls.style.display = 'none';
+        if (ss) ss.style.display = 'flex';
+        else if (ls) ls.style.display = 'flex';
       }
     });
   }

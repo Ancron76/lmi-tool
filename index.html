@@ -2385,7 +2385,7 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
     <div class="login-error" id="login-error">Incorrect email or password.</div>
     <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
       <span style="font-size:12px;color:var(--text-muted)">New to Loopenta? </span>
-      <a href="#" onclick="showSignup();return false;" style="font-size:12px;color:var(--brand-accent);font-weight:700;text-decoration:none">Request access →</a>
+      <a href="#" onclick="document.getElementById('login-screen').style.display='none';document.getElementById('signup-screen').style.display='flex';return false;" style="font-size:12px;color:var(--brand-accent);font-weight:700;text-decoration:none">Request access →</a>
     </div>
   </div>
 </div>
@@ -20622,12 +20622,62 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ── Loopenta Hub (additive layer: roles, org types, referrals, reporting) ── -->
-<script src="src/hub/roleModel.js?v=20260422f"></script>
-<script src="src/hub/mountHub.js?v=20260422f"></script>
-<script src="src/hub/managerReporting.js?v=20260422f"></script>
-<script src="src/hub/referrals.js?v=20260422f"></script>
-<script src="src/hub/realtor.js?v=20260422f"></script>
-<script src="src/hub/referralPartner.js?v=20260422f"></script>
+<script src="src/hub/roleModel.js?v=20260422g"></script>
+<script src="src/hub/mountHub.js?v=20260422g"></script>
+<script src="src/hub/managerReporting.js?v=20260422g"></script>
+<script src="src/hub/referrals.js?v=20260422g"></script>
+<script src="src/hub/realtor.js?v=20260422g"></script>
+<script src="src/hub/referralPartner.js?v=20260422g"></script>
+
+<!-- DASHBOARD SETTINGS PANEL + BACKDROP -->
+<div id="dash-settings-backdrop" onclick="closeDashSettings()"></div>
+<aside id="dash-settings-panel" aria-label="Dashboard settings">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #ddd4c0;background:#f2ede4">
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#1a1410">Dashboard settings</div>
+      <div style="font-size:11px;color:#7a6a58;margin-top:2px">Customize modules, layout, and alerts</div>
+    </div>
+    <button onclick="closeDashSettings()" aria-label="Close" style="background:transparent;border:1px solid #ddd4c0;width:30px;height:30px;border-radius:6px;font-size:14px;color:#7a6a58;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">&times;</button>
+  </div>
+  <div style="padding:18px 20px;overflow-y:auto;flex:1">
+    <div style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px">Home modules</div>
+    <div style="font-size:12px;color:#7a6a58;margin-bottom:8px">Drag to reorder. Toggle to show or hide.</div>
+    <div id="dsp-modules-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px"></div>
+
+    <div style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px">Grid layout</div>
+    <div id="dsp-gridcols" style="display:flex;gap:6px;margin-bottom:20px">
+      <button class="dsp-seg-btn" data-cols="1" onclick="dspSetGrid(1)" style="flex:1;padding:8px;border:1px solid #ddd4c0;background:#faf8f4;border-radius:6px;font-size:12px;font-weight:600;color:#7a6a58;cursor:pointer">1 col</button>
+      <button class="dsp-seg-btn" data-cols="2" onclick="dspSetGrid(2)" style="flex:1;padding:8px;border:1px solid #ddd4c0;background:#faf8f4;border-radius:6px;font-size:12px;font-weight:600;color:#7a6a58;cursor:pointer">2 cols</button>
+      <button class="dsp-seg-btn" data-cols="3" onclick="dspSetGrid(3)" style="flex:1;padding:8px;border:1px solid #ddd4c0;background:#faf8f4;border-radius:6px;font-size:12px;font-weight:600;color:#7a6a58;cursor:pointer">3 cols</button>
+      <button class="dsp-seg-btn" data-cols="4" onclick="dspSetGrid(4)" style="flex:1;padding:8px;border:1px solid #ddd4c0;background:#faf8f4;border-radius:6px;font-size:12px;font-weight:600;color:#7a6a58;cursor:pointer">4 cols</button>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px">Alert thresholds</div>
+    <div style="display:grid;grid-template-columns:1fr 80px;gap:10px;align-items:center;margin-bottom:10px">
+      <label for="dsp-ratelock" style="font-size:13px;color:#1a1410">Rate lock expiring in (days)</label>
+      <input type="number" id="dsp-ratelock" min="1" max="90" style="padding:6px 8px;border:1px solid #ddd4c0;border-radius:6px;font-size:13px;text-align:right" />
+      <label for="dsp-realtoridle" style="font-size:13px;color:#1a1410">Realtor idle threshold (days)</label>
+      <input type="number" id="dsp-realtoridle" min="1" max="180" style="padding:6px 8px;border:1px solid #ddd4c0;border-radius:6px;font-size:13px;text-align:right" />
+      <label for="dsp-lmitarget" style="font-size:13px;color:#1a1410">LMI monthly target</label>
+      <input type="number" id="dsp-lmitarget" min="0" style="padding:6px 8px;border:1px solid #ddd4c0;border-radius:6px;font-size:13px;text-align:right" />
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#7a6a58;text-transform:uppercase;letter-spacing:0.4px;margin:18px 0 10px">Notifications</div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;font-size:13px;color:#1a1410">
+      <input type="checkbox" id="dsp-pushnotif" style="width:16px;height:16px;cursor:pointer" />
+      <span>Push notifications for required actions</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;font-size:13px;color:#1a1410">
+      <input type="checkbox" id="dsp-emaildigest" style="width:16px;height:16px;cursor:pointer" />
+      <span>Weekly email digest</span>
+    </label>
+  </div>
+  <div style="padding:14px 20px;border-top:1px solid #ddd4c0;background:#f2ede4;display:flex;justify-content:flex-end;align-items:center;gap:10px">
+    <span id="dsp-save-confirm" style="display:none;font-size:12px;color:#5a8a6a;font-weight:600">Saved</span>
+    <button onclick="closeDashSettings()" style="padding:8px 14px;background:transparent;border:1px solid #ddd4c0;border-radius:6px;font-size:13px;font-weight:600;color:#7a6a58;cursor:pointer">Cancel</button>
+    <button onclick="saveDashSettings()" style="padding:8px 16px;background:#1c1812;color:white;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Save</button>
+  </div>
+</aside>
 
 <!-- TIER CHANGE MODAL -->
 <div id="tier-change-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.85);z-index:9500;overflow-y:auto">
@@ -20677,4 +20727,30 @@ if ('serviceWorker' in navigator) {
           <div style="margin-top:12px;font-size:11px;color:#7a6a58;font-style:italic">Best for: Organizations with approved data agreements</div>
         </div>
       </div>
-      <!-- Warnings
+      <!-- Warnings -->
+      <div id="tcm-upgrade-warn" style="display:none;background:#fdf8ec;border:1px solid #e8d4a0;border-radius:10px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#7a5a18;margin-bottom:6px">Upgrade requires a signed Data Processing Agreement</div>
+        <div style="font-size:12px;color:#7a6a58;margin-bottom:10px">Loopenta Full enables borrower profiles, pipeline, and sequences — all of which store PII. You must confirm the DPA is on file before enabling.</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#1a1410">
+          <input type="checkbox" id="tcm-dpa-check" onchange="_tcmValidate()" style="width:16px;height:16px;cursor:pointer" />
+          <span>I confirm the signed DPA is on file for <strong id="tcm-dpa-org-label">this organization</strong>.</span>
+        </label>
+      </div>
+      <div id="tcm-downgrade-warn" style="display:none;background:#fdecec;border:1px solid #e8a0a0;border-radius:10px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#8a2020;margin-bottom:6px">Downgrade will disable PII features</div>
+        <div style="font-size:12px;color:#7a6a58;margin-bottom:10px">The LMI Tool tier does not include Borrower Profiles, Deal Pipeline, Sequences, or Past Customers. Existing data is retained but will be hidden from the UI. Re-upgrading restores access.</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#1a1410">
+          <input type="checkbox" id="tcm-down-check" onchange="_tcmValidate()" style="width:16px;height:16px;cursor:pointer" />
+          <span>I understand PII features will be disabled for this org.</span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:8px;border-top:1px solid #ddd4c0">
+        <button onclick="closeTierChangeModal()" style="padding:10px 18px;background:transparent;border:1px solid #ddd4c0;border-radius:8px;font-size:13px;font-weight:600;color:#7a6a58;cursor:pointer">Cancel</button>
+        <button id="tcm-save-btn" onclick="_tcmSave()" disabled style="padding:10px 20px;background:#1c1812;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;opacity:0.5">Save Tier Change</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
