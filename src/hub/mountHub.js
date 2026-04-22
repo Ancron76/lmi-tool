@@ -12,7 +12,7 @@
   'use strict';
 
   var Hub = global.Hub = global.Hub || {};
-  Hub.VERSION = '20260422d';
+  Hub.VERSION = '20260422e';
 
   // Wait for the shell (and currentUser) to be ready. We piggy-back on
   // the existing showTab()/tabs structure in index.html.
@@ -55,11 +55,6 @@
       +   '<div class="hub-hero-eyebrow">Loopenta Hub</div>'
       +   '<h1 id="hub-hero-title">The industry hub for finding property, loan, and home.</h1>'
       +   '<p id="hub-hero-sub">One place to work leads between Home Loan Advisors, Realtors, Referral Partners, Title, and Escrow. Manage your team. Hand off the right client to the right partner. Close more.</p>'
-      +   '<div class="hub-hero-cta" id="hub-hero-cta">'
-      +     '<button class="hub-btn hub-btn-primary" onclick="Hub.go(\'reporting\')">View team activity</button>'
-      +     '<button class="hub-btn hub-btn-ghost" onclick="Hub.go(\'referrals\')">Referrals inbox</button>'
-      +     '<button class="hub-btn hub-btn-ghost" onclick="Hub.go(\'network\')">Partner network</button>'
-      +   '</div>'
       + '</div>'
       + '<div class="hub-tabbar" id="hub-tabbar"></div>'
       + '<div id="hub-body"></div>';
