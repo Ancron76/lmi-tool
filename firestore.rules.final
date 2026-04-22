@@ -1,0 +1,323 @@
+rules_version = '2';
+// ------------------------------------------------------------------
+// Loopenta / LMI Tool — FINAL (Phase 8) Firestore rules
+//
+// DO NOT DEPLOY YET. Prerequisites:
+//   1. Blaze plan enabled on Firebase project
+//   2. TOTP MFA provider enabled in Firebase Auth console
+//   3. All users have enrolled a second factor
+//   4. MFA-enrollment gate live in the app
+//   5. Phase 1 rules (firestore.rules) deployed first for >= 1 week
+//      without incident reports
+//
+// Diff vs Phase 1 (firestore.rules): every sensitive read/write
+// now requires hasMfa() — the caller's ID token carries a
+// firebase.sign_in_second_factor claim. Pre-auth paths (invite/
+// flyer GETs, loginAttempts counters, auditLog appends) stay open
+// so the enrollment and failed-login flows still function.
+// ------------------------------------------------------------------
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ================ HELPERS ================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasMfa() {
+      return isSignedIn()
+        && request.auth.token.firebase.sign_in_second_factor != null;
+    }
+
+    function userDocExists() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function callerOrg() {
+      return userDocExists() ? userDoc().orgId : '';
+    }
+
+    function isSuperAdmin() {
+      return userDocExists() && userDoc().role == 'superadmin';
+    }
+
+    function isTenantAdmin() {
+      return userDocExists() && userDoc().role == 'admin';
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || isTenantAdmin();
+    }
+
+    function isMlo() {
+      return userDocExists() && (
+        userDoc().role == 'mlo'
+        || userDoc().role == 'admin'
+        || userDoc().role == 'superadmin'
+      );
+    }
+
+    function inOrg(oid) {
+      return userDocExists() && userDoc().orgId == oid;
+    }
+
+    function sameOrg(oid) {
+      return isSuperAdmin() || inOrg(oid);
+    }
+
+    function mfaAdmin()    { return hasMfa() && isAdmin(); }
+    function mfaSuper()    { return hasMfa() && isSuperAdmin(); }
+    function mfaMlo()      { return hasMfa() && isMlo(); }
+    function mfaSignedIn() { return hasMfa(); }
+
+    // ================ USERS ================
+    match /users/{userId} {
+      // Reading OWN record does not require MFA — the enrollment
+      // UI needs to bootstrap from the user doc.
+      allow get: if isSignedIn() && (
+        request.auth.uid == userId
+        || mfaSuper()
+        || (hasMfa() && isTenantAdmin() && inOrg(resource.data.orgId))
+      );
+
+      allow list: if mfaAdmin();
+
+      allow create: if mfaSuper()
+        || (hasMfa() && isTenantAdmin() && request.resource.data.orgId == callerOrg());
+
+      // Self-update — no MFA required (enrollment flow flips own
+      // mfaEnrolled flag). Privilege escalation guard still applies.
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+             'role', 'orgId', 'tier', 'tierLabel',
+             'failedLoginCount', 'lockedUntil', 'superAdmin',
+             'accountStatus', 'subscriptionStatus', 'subscriptionTier'
+           ]);
+
+      // Admin-update — MFA required.
+      allow update: if
+        mfaSuper()
+        || (
+          hasMfa() && isTenantAdmin()
+          && inOrg(resource.data.orgId)
+          && request.resource.data.orgId == resource.data.orgId
+        );
+
+      allow delete: if mfaSuper();
+
+      match /prefs/{prefId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /passwordHistory/{entryId} {
+        allow read, create: if isSignedIn() && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+
+      match /mfaRecoveryCodes/{codeId} {
+        // Written during enrollment (pre-MFA) and at redemption.
+        allow read, create, update: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if false;
+      }
+    }
+
+    // ================ TENANTS / ORGANIZATIONS ================
+    match /tenants/{tenantId} {
+      allow get: if hasMfa() && sameOrg(tenantId);
+      allow list, create, delete: if mfaSuper();
+      allow update: if mfaSuper()
+        || (hasMfa() && isTenantAdmin() && inOrg(tenantId));
+    }
+
+    match /organizations/{orgId} {
+      allow get: if hasMfa() && sameOrg(orgId);
+      allow list, create, delete: if mfaSuper();
+      allow update: if mfaSuper()
+        || (hasMfa() && isTenantAdmin() && inOrg(orgId));
+    }
+
+    // ================ INVITES ================
+    match /invites/{token} {
+      allow get: if true;
+      allow list, create, delete: if mfaAdmin();
+      // Acceptance: the user becomes authenticated during signup;
+      // they flip used=false→true. MFA not yet enrolled so hasMfa()
+      // is false at this moment — auth only.
+      allow update: if isSignedIn()
+        && resource.data.used == false
+        && request.resource.data.used == true
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['used', 'usedAt', 'usedBy']);
+    }
+
+    // ================ FLYERS ================
+    match /flyers/{token} {
+      allow get: if true;
+      allow list: if mfaSignedIn();
+      allow create: if mfaMlo();
+      allow update, delete: if mfaAdmin();
+    }
+
+    // ================ AGREEMENTS ================
+    match /agreements/{agreementId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if mfaSuper();
+      allow delete: if false;
+    }
+    match /agreementLog/{logId} {
+      allow get, list: if mfaAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // ================ AUDIT LOG ================
+    match /auditLog/{logId} {
+      allow get, list: if mfaAdmin();
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    // ================ LOGIN ATTEMPTS ================
+    match /loginAttempts/{key} {
+      allow get: if isSignedIn();
+      allow list: if mfaAdmin();
+      allow create, update: if true;
+      allow delete: if mfaSuper();
+    }
+
+    // ================ SECURITY EVENTS ================
+    match /securityEvents/{evtId} {
+      allow get, list: if mfaAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // ================ DATA DELETE REQUESTS ================
+    match /dataDeleteRequests/{reqId} {
+      allow get, list, create: if mfaAdmin();
+      allow update, delete: if false;
+    }
+
+    // ================ EMAIL LOG ================
+    match /email_log/{logId} {
+      allow get, list, create: if mfaSignedIn();
+      allow update: if mfaAdmin();
+      allow delete: if false;
+    }
+
+    // ================ SCORECARD SNAPSHOTS ================
+    match /scorecardSnapshots/{snapId} {
+      allow get, list: if mfaSignedIn();
+      allow create, update: if mfaAdmin();
+      allow delete: if false;
+    }
+
+    // ================ CRA REPORTS ================
+    match /craReports/{reportId} {
+      allow get, list: if mfaSignedIn();
+      allow create, update: if mfaAdmin();
+      allow delete: if mfaSuper();
+    }
+
+    // ================ OPERATIONAL COLLECTIONS ================
+    match /deals/{dealId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /prospects/{prospectId} {
+      allow read, create, update, delete: if mfaSignedIn();
+    }
+    match /pastCustomers/{customerId} {
+      allow read: if mfaSignedIn();
+      allow create, update, delete: if mfaMlo();
+    }
+    match /realtors/{realtorId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /realtor_searches/{searchId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /realtor_pushes/{pushId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /oyz/{oyzId} {
+      allow read, create, update, delete: if mfaSignedIn();
+    }
+    match /prequal/{prequalId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /activity/{activityId} {
+      allow read, create: if mfaSignedIn();
+      allow update: if hasMfa() && (
+        isSuperAdmin() || resource.data.userId == request.auth.uid
+      );
+      allow delete: if mfaAdmin();
+    }
+    match /notifications/{notifId} {
+      allow read, create, update, delete: if mfaSignedIn();
+    }
+    match /sequences/{seqId} {
+      allow read: if mfaSignedIn();
+      allow create: if mfaMlo();
+      allow update: if mfaAdmin()
+        || (hasMfa() && resource.data.createdBy == request.auth.uid);
+      allow delete: if mfaAdmin();
+    }
+    match /sequenceEnrollments/{enrollId} {
+      allow read: if mfaSignedIn();
+      allow create: if mfaMlo();
+      allow update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /communications/{commId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /email_templates/{tplId} {
+      allow read: if mfaSignedIn();
+      allow create: if mfaMlo();
+      allow update: if mfaAdmin()
+        || (hasMfa() && resource.data.createdBy == request.auth.uid);
+      allow delete: if mfaAdmin();
+    }
+    match /drip_campaigns/{campId} {
+      allow read: if mfaSignedIn();
+      allow create: if mfaMlo();
+      allow update: if mfaAdmin()
+        || (hasMfa() && resource.data.createdBy == request.auth.uid);
+      allow delete: if mfaAdmin();
+    }
+    match /drip_enrollments/{enrollId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+    match /call_log/{callId} {
+      allow read, create: if mfaSignedIn();
+      allow update: if hasMfa() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow delete: if mfaAdmin();
+    }
+    match /tasks/{taskId} {
+      allow read, create, update: if mfaSignedIn();
+      allow delete: if mfaAdmin();
+    }
+
+    // ================ DENY EVERYTHING ELSE ================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

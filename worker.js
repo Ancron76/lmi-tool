@@ -154,6 +154,23 @@ export default {
       return handleAdminResetCounter(request, env);
     }
 
+    // ── Firebase Auth admin endpoints (require ADMIN_PASSWORD bearer) ──
+    // Used by the client to create / delete Firebase Auth users without
+    // signing the admin OUT of their own session (which is what would
+    // happen if the client did `createUserWithEmailAndPassword` itself).
+    if (url.pathname === '/admin/migrate-users' && request.method === 'POST') {
+      return handleMigrateAuthUsers(request, env);
+    }
+    if (url.pathname === '/admin/create-auth-user' && request.method === 'POST') {
+      return handleCreateAuthUser(request, env);
+    }
+    if (url.pathname === '/admin/delete-auth-user' && request.method === 'POST') {
+      return handleDeleteAuthUser(request, env);
+    }
+    if (url.pathname === '/admin/set-auth-password' && request.method === 'POST') {
+      return handleSetAuthPassword(request, env);
+    }
+
     // Everything else → static assets
     return env.ASSETS.fetch(request);
   },
@@ -1162,11 +1179,42 @@ async function handleAdminReenrichCache(request, env) {
 // both of which had edge-case failures. The new pipeline uses the same
 // data sources FFIEC Geocoder itself uses.
 //
-// Runs in parallel (Promise.all) — ~50 listings per ZIP finishes in 2-4s.
-// All intermediate results cached in KV, so repeat enrichments are ~free.
+// Bounded-concurrency map: runs `fn` over `items` with at most `concurrency`
+// in flight at once. Prevents the thundering-herd Promise.all pattern from
+// blowing through Census Geocoder's per-IP rate limits (~100/min) and
+// Cloudflare's 1000-subrequest-per-invocation budget.
+async function mapWithConcurrency(items, concurrency, fn) {
+  const results = new Array(items.length);
+  let nextIdx = 0;
+  async function worker() {
+    while (true) {
+      const i = nextIdx++;
+      if (i >= items.length) return;
+      try { results[i] = await fn(items[i], i); }
+      catch (e) { results[i] = { __error: String(e && e.message || e) }; }
+    }
+  }
+  const workers = Array.from(
+    { length: Math.min(Math.max(1, concurrency), items.length || 1) },
+    worker
+  );
+  await Promise.all(workers);
+  return results;
+}
+
+// Enriches listings in two deduped passes so we never fan out blindly:
+//   Pass 1: geocode addresses → tractId (bounded concurrency, ~8 at a time)
+//   Pass 2: fetch income ratio for each UNIQUE tract only (also bounded)
+//   Pass 3: splice the per-tract ratio back onto each listing
+// Many listings in a ZIP share 3-5 tracts, so Pass 2 typically reduces
+// CFPB/ACS calls by 10-25x and keeps first-time runs inside the Worker's
+// subrequest budget. Second-and-later runs are ~all KV cache hits.
 async function enrichListingsWithTracts(listings, zip, env) {
-  const enriched = await Promise.all(listings.map(async (l) => {
-    // Build the most complete address string possible for geocoding.
+  const GEOCODE_CONCURRENCY = 8;
+  const RATIO_CONCURRENCY = 5;
+
+  // ── Pass 1: address → tractId ────────────────────────────────────────
+  const geocoded = await mapWithConcurrency(listings, GEOCODE_CONCURRENCY, async (l) => {
     const addrPieces = [];
     if (l.address) addrPieces.push(String(l.address).trim());
     const addrLower = (l.address || '').toLowerCase();
@@ -1177,11 +1225,11 @@ async function enrichListingsWithTracts(listings, zip, env) {
     if (zipStr && !addrLower.includes(zipStr)) addrPieces.push(zipStr);
     const fullAddress = addrPieces.filter(Boolean).join(', ');
 
-    // Step 1: Authoritative address-based geocode.
     let geocodeSource = 'none';
     let geocodeReason = null;
     let tractId = null;
     let matchedAddress = null;
+
     if (fullAddress) {
       const g = await geocodeAddressOneLine(fullAddress, env);
       if (g.ok) {
@@ -1193,7 +1241,6 @@ async function enrichListingsWithTracts(listings, zip, env) {
       }
     }
 
-    // Step 2: Fallback to lat/lon via FCC Block Find.
     if (!tractId && l.latitude != null && l.longitude != null) {
       const fccTract = await geocodeToTract(l.latitude, l.longitude, env);
       if (fccTract) {
@@ -1202,39 +1249,57 @@ async function enrichListingsWithTracts(listings, zip, env) {
       }
     }
 
-    // Step 3: Look up income ratio by tract GEOID directly (no ZIP crosswalk).
-    let ratio = null, level = 'Unknown', isLMI = null, ratioSource = null, ratioYear = null, ratioReason = null;
-    if (tractId) {
-      const info = await fetchTractIncomeRatio(tractId, env);
-      if (info.ok) {
-        ratio = info.incomeRatio;
-        level = info.level;
-        isLMI = (level === 'Low' || level === 'Moderate');
-        ratioSource = info.source;
-        ratioYear = info.year;
-      } else {
-        ratioReason = info.reason;
-      }
+    return { listing: l, tractId, matchedAddress, geocodeSource, geocodeReason };
+  });
+
+  // ── Pass 2: UNIQUE tractId → income ratio (deduped) ──────────────────
+  const uniqueTracts = Array.from(new Set(
+    geocoded
+      .filter(r => r && !r.__error && r.tractId)
+      .map(r => r.tractId)
+  ));
+  const ratioByTract = new Map();
+  await mapWithConcurrency(uniqueTracts, RATIO_CONCURRENCY, async (tractId) => {
+    const info = await fetchTractIncomeRatio(tractId, env);
+    ratioByTract.set(tractId, info);
+  });
+
+  // ── Pass 3: assemble final listings with provenance ──────────────────
+  return geocoded.map((r, i) => {
+    const original = listings[i];
+    if (!r || r.__error) {
+      return {
+        ...original,
+        tractId: null,
+        matchedAddress: null,
+        tractIncomeRatio: null,
+        tractIncomeLevel: 'Unknown',
+        isLMI: null,
+        geocodeSource: 'error',
+        geocodeReason: r && r.__error ? r.__error : 'unknown_error',
+        ratioSource: null,
+        ratioYear: null,
+        ratioReason: null,
+      };
     }
-
+    const info = r.tractId ? ratioByTract.get(r.tractId) : null;
+    const ok = info && info.ok;
+    const level = ok ? info.level : 'Unknown';
+    const isLMI = ok ? (level === 'Low' || level === 'Moderate') : null;
     return {
-      ...l,
-      tractId: tractId || null,
-      matchedAddress: matchedAddress || null,
-      tractIncomeRatio: ratio,
+      ...original,
+      tractId: r.tractId || null,
+      matchedAddress: r.matchedAddress || null,
+      tractIncomeRatio: ok ? info.incomeRatio : null,
       tractIncomeLevel: level,
-      isLMI: isLMI,
-      // Provenance fields — let the client + CSV export show exactly how
-      // each listing was classified. Critical for CRA audit defensibility.
-      geocodeSource,
-      geocodeReason,
-      ratioSource,
-      ratioYear,
-      ratioReason,
+      isLMI,
+      geocodeSource: r.geocodeSource,
+      geocodeReason: r.geocodeReason,
+      ratioSource: ok ? info.source : null,
+      ratioYear: ok ? info.year : null,
+      ratioReason: ok ? null : (info && info.reason) || (r.tractId ? null : 'no_tract_id'),
     };
-  }));
-
-  return enriched;
+  });
 }
 
 // ─────────────────────────────────────────
@@ -2428,4 +2493,306 @@ async function runScheduledRefresh(env, source /* 'cron' | 'manual' */) {
   };
   await writeLastRun(env, run);
   return run;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FIREBASE AUTH ADMIN (Identity Toolkit REST)
+// ═══════════════════════════════════════════════════════════════════════
+// The Worker signs a short-lived RS256 JWT with the service account's
+// private key, trades it for a Google OAuth2 access token, and calls
+// the Identity Toolkit REST API. Access tokens are cached in KV for
+// ~50 minutes (Google issues them with 1hr TTL).
+//
+// Env secrets required:
+//   FIREBASE_SERVICE_ACCOUNT — full JSON of the service-account key
+//                              (client_email, private_key, project_id,
+//                               token_uri)
+//   ADMIN_PASSWORD           — already configured; bearer-token gate
+//
+// These endpoints let the admin UI create/delete Firebase Auth users
+// WITHOUT doing it from the browser, because client-side
+// createUserWithEmailAndPassword signs the admin's own session out.
+
+const FBA_KV_TOKEN_KEY  = 'fba_access_token_v1';
+const FBA_SCOPES        = 'https://www.googleapis.com/auth/identitytoolkit https://www.googleapis.com/auth/firebase';
+
+function b64urlEncode(buf) {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function b64urlEncodeString(str) {
+  return b64urlEncode(new TextEncoder().encode(str));
+}
+
+function pemToArrayBuffer(pem) {
+  const stripped = String(pem)
+    .replace(/-----BEGIN [^-]+-----/g, '')
+    .replace(/-----END [^-]+-----/g, '')
+    .replace(/\s+/g, '');
+  const bin = atob(stripped);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return buf.buffer;
+}
+
+function getServiceAccount(env) {
+  if (!env.FIREBASE_SERVICE_ACCOUNT) {
+    throw new Error('firebase_service_account_not_configured');
+  }
+  let sa;
+  try { sa = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT); }
+  catch (e) { throw new Error('firebase_service_account_malformed'); }
+  if (!sa.client_email || !sa.private_key || !sa.project_id) {
+    throw new Error('firebase_service_account_missing_fields');
+  }
+  return sa;
+}
+
+async function signServiceAccountJwt(sa) {
+  const now = Math.floor(Date.now() / 1000);
+  const header  = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
+    iss: sa.client_email,
+    scope: FBA_SCOPES,
+    aud: sa.token_uri || 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  };
+  const signingInput = b64urlEncodeString(JSON.stringify(header)) + '.' +
+                       b64urlEncodeString(JSON.stringify(payload));
+  const keyData = pemToArrayBuffer(sa.private_key);
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8', keyData,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false, ['sign']
+  );
+  const sig = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', cryptoKey,
+    new TextEncoder().encode(signingInput)
+  );
+  return signingInput + '.' + b64urlEncode(sig);
+}
+
+async function getFirebaseAccessToken(env) {
+  // Check KV cache (tokens have 1hr TTL; we cache for 50min).
+  if (env.KV_NAMESPACE) {
+    try {
+      const cached = await env.KV_NAMESPACE.get(FBA_KV_TOKEN_KEY, 'json');
+      if (cached && cached.token && cached.expiresAt > Date.now() + 60_000) {
+        return cached.token;
+      }
+    } catch (e) { /* non-fatal */ }
+  }
+  const sa = getServiceAccount(env);
+  const jwt = await signServiceAccountJwt(sa);
+  const tokenUri = sa.token_uri || 'https://oauth2.googleapis.com/token';
+  const body = new URLSearchParams({
+    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    assertion: jwt,
+  });
+  const resp = await fetch(tokenUri, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error('oauth_token_exchange_failed: ' + resp.status + ' ' + txt.slice(0, 200));
+  }
+  const json = await resp.json();
+  const token = json.access_token;
+  if (!token) throw new Error('oauth_token_missing_in_response');
+  if (env.KV_NAMESPACE) {
+    try {
+      await env.KV_NAMESPACE.put(FBA_KV_TOKEN_KEY, JSON.stringify({
+        token, expiresAt: Date.now() + 50 * 60_000,
+      }), { expirationTtl: 60 * 60 });
+    } catch (e) { /* non-fatal */ }
+  }
+  return token;
+}
+
+async function firebaseAdminFetch(env, path, method, body) {
+  const token = await getFirebaseAccessToken(env);
+  const sa = getServiceAccount(env);
+  const url = 'https://identitytoolkit.googleapis.com/v1/projects/' +
+              encodeURIComponent(sa.project_id) + path;
+  const resp = await fetch(url, {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await resp.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+  return { ok: resp.ok, status: resp.status, data };
+}
+
+// POST /admin/migrate-users
+// Body: { users: [{ email, password, uid? }, ...] }
+// Creates Firebase Auth accounts for each user. Idempotent: if an
+// account already exists for that email, reports "already_exists"
+// and still returns its UID.
+async function handleMigrateAuthUsers(request, env) {
+  try { await requireSuperAdmin(request, env); }
+  catch (e) { return adminErrorResponse(e, request); }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+
+  const users = Array.isArray(body && body.users) ? body.users : [];
+  if (!users.length) return jsonResponse({ error: 'no_users' }, request, 400);
+
+  const migrated = [];
+  const failed = [];
+  const alreadyExists = [];
+
+  for (const u of users) {
+    const email = (u && u.email || '').trim().toLowerCase();
+    const password = (u && u.password || '').trim();
+    if (!email || !password) {
+      failed.push({ email: email || '(missing)', err: 'missing_email_or_password' });
+      continue;
+    }
+    // Firebase Auth minimum password length is 6 chars. Existing
+    // cleartext passwords shorter than 6 fail to import; flag them
+    // so the admin can force-reset those accounts manually later.
+    if (password.length < 6) {
+      failed.push({ email, err: 'password_below_firebase_min_length' });
+      continue;
+    }
+    try {
+      const createBody = { email, password, emailVerified: false };
+      if (u.uid && typeof u.uid === 'string') createBody.localId = u.uid;
+      const res = await firebaseAdminFetch(env, '/accounts', 'POST', createBody);
+      if (res.ok) {
+        migrated.push({ email, uid: res.data.localId || u.uid || '' });
+      } else {
+        const code = res.data && res.data.error && res.data.error.message || '';
+        if (code === 'EMAIL_EXISTS' || code.startsWith('EMAIL_EXISTS')) {
+          // Look up the existing UID so the caller can link the
+          // Firestore record to the right Auth account.
+          const lookup = await firebaseAdminFetch(env, '/accounts:lookup', 'POST', { email: [email] });
+          const uid = lookup.ok && lookup.data.users && lookup.data.users[0]
+            ? lookup.data.users[0].localId : '';
+          alreadyExists.push({ email, uid });
+        } else {
+          failed.push({ email, err: code || ('http_' + res.status) });
+        }
+      }
+    } catch (e) {
+      failed.push({ email, err: String(e.message || e) });
+    }
+  }
+
+  return jsonResponse({
+    migrated: migrated.length,
+    alreadyExisted: alreadyExists.length,
+    failedCount: failed.length,
+    users: { migrated, alreadyExists, failed },
+  }, request);
+}
+
+// POST /admin/create-auth-user
+// Body: { email, password, uid? }
+// Creates a single Firebase Auth user. Used by the admin "Add MLO"
+// flow — the client cannot do this itself without signing the admin
+// out of their own session.
+async function handleCreateAuthUser(request, env) {
+  try { await requireSuperAdmin(request, env); }
+  catch (e) { return adminErrorResponse(e, request); }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+
+  const email = String(body.email || '').trim().toLowerCase();
+  const password = String(body.password || '');
+  if (!email || !password) {
+    return jsonResponse({ error: 'missing_email_or_password' }, request, 400);
+  }
+  if (password.length < 12) {
+    return jsonResponse({ error: 'password_below_policy_min_length' }, request, 400);
+  }
+
+  try {
+    const createBody = { email, password, emailVerified: false };
+    if (body.uid && typeof body.uid === 'string') createBody.localId = body.uid;
+    const res = await firebaseAdminFetch(env, '/accounts', 'POST', createBody);
+    if (!res.ok) {
+      const code = res.data && res.data.error && res.data.error.message || ('http_' + res.status);
+      return jsonResponse({ error: code }, request, 400);
+    }
+    return jsonResponse({ uid: res.data.localId, email: res.data.email }, request);
+  } catch (e) {
+    return jsonResponse({ error: String(e.message || e) }, request, 500);
+  }
+}
+
+// POST /admin/delete-auth-user
+// Body: { uid }
+async function handleDeleteAuthUser(request, env) {
+  try { await requireSuperAdmin(request, env); }
+  catch (e) { return adminErrorResponse(e, request); }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+
+  const uid = String(body.uid || '').trim();
+  if (!uid) return jsonResponse({ error: 'missing_uid' }, request, 400);
+
+  try {
+    const res = await firebaseAdminFetch(env, '/accounts:delete', 'POST', { localId: uid });
+    if (!res.ok) {
+      const code = res.data && res.data.error && res.data.error.message || ('http_' + res.status);
+      return jsonResponse({ error: code }, request, 400);
+    }
+    return jsonResponse({ deleted: true, uid }, request);
+  } catch (e) {
+    return jsonResponse({ error: String(e.message || e) }, request, 500);
+  }
+}
+
+// POST /admin/set-auth-password
+// Body: { uid, password }
+// Admin-initiated password reset. Used rarely (e.g. user locked out
+// with no recovery code). Regular users change their own password
+// via the client SDK.
+async function handleSetAuthPassword(request, env) {
+  try { await requireSuperAdmin(request, env); }
+  catch (e) { return adminErrorResponse(e, request); }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+
+  const uid = String(body.uid || '').trim();
+  const password = String(body.password || '');
+  if (!uid || !password) {
+    return jsonResponse({ error: 'missing_uid_or_password' }, request, 400);
+  }
+  if (password.length < 12) {
+    return jsonResponse({ error: 'password_below_policy_min_length' }, request, 400);
+  }
+
+  try {
+    const res = await firebaseAdminFetch(env, '/accounts:update', 'POST', {
+      localId: uid, password,
+    });
+    if (!res.ok) {
+      const code = res.data && res.data.error && res.data.error.message || ('http_' + res.status);
+      return jsonResponse({ error: code }, request, 400);
+    }
+    return jsonResponse({ updated: true, uid }, request);
+  } catch (e) {
+    return jsonResponse({ error: String(e.message || e) }, request, 500);
+  }
 }

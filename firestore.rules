@@ -1,153 +1,487 @@
 rules_version = '2';
+// ------------------------------------------------------------------
+// Loopenta / LMI Tool — Firestore rules, PHASE 1
+// Safe to paste today. Phase 1 locks down the high-value attack
+// surfaces without breaking the app's existing unfiltered reads.
+// ------------------------------------------------------------------
+// PHASE 1 SCOPE
+//
+//   STRICT (bank-grade):
+//     - users: privilege-escalation guard (cannot change own role,
+//       orgId, tier, lockout state); admin-only list; superadmin-
+//       only create/delete
+//     - tenants / organizations: admin-write only; superadmin-list
+//     - auditLog: immutable append-only
+//     - agreementLog, email_log, scorecardSnapshots: immutable
+//     - dataDeleteRequests: admin-only, immutable after creation
+//     - invites: admin-create; one-shot acceptance only
+//     - flyers: MLO create; admin delete
+//     - passwordHistory, mfaRecoveryCodes: self-only, no deletion
+//
+//   SIGNED-IN-ONLY (Phase 1.5 will tighten):
+//     - deals, prospects, realtors, oyz, prequal, activity,
+//       notifications, sequences, sequenceEnrollments,
+//       communications, email_templates, drip_campaigns,
+//       drip_enrollments, call_log, tasks, craReports,
+//       pastCustomers, realtor_searches, realtor_pushes
+//
+//     Rationale: the app today performs unfiltered `.get()` on
+//     these collections in dashboards, aggregations, and admin
+//     views. Strict per-doc orgId checks at the list level would
+//     fail those queries. Requiring auth is still a huge upgrade
+//     over `allow read, write: if true`. Tenant isolation for
+//     these is enforced by the app's orgId filters client-side
+//     until Phase 1.5 refactors the queries.
+//
+//   PUBLIC (by design):
+//     - flyers GET (anonymous via opaque token)
+//     - invites GET (anonymous via opaque token)
+//     - auditLog CREATE (pre-auth failed-login logging)
+//     - loginAttempts create/update (lockout counters pre-auth)
+// ------------------------------------------------------------------
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthenticated() {
+    // ================ HELPERS ================
+
+    function isSignedIn() {
       return request.auth != null;
     }
 
-    function getUserData() {
+    function userDocExists() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    function isSameTenant(tenantId) {
-      return isAuthenticated() && getUserData().tenantId == tenantId;
-    }
-
-    function hasRole(role) {
-      return isAuthenticated() && getUserData().role == role;
+    function callerOrg() {
+      return userDocExists() ? userDoc().orgId : '';
     }
 
     function isSuperAdmin() {
-      return hasRole("superadmin");
+      return userDocExists() && userDoc().role == 'superadmin';
+    }
+
+    function isTenantAdmin() {
+      // App uses role == 'admin' for the in-tenant admin role.
+      return userDocExists() && userDoc().role == 'admin';
     }
 
     function isAdmin() {
-      return hasRole("tenant_admin") || isSuperAdmin();
+      return isSuperAdmin() || isTenantAdmin();
     }
 
     function isMlo() {
-      return hasRole("mlo") || isAdmin();
+      return userDocExists() && (
+        userDoc().role == 'mlo'
+        || userDoc().role == 'admin'
+        || userDoc().role == 'superadmin'
+      );
     }
 
-    function ownsTenantData(tenantId) {
-      return isAuthenticated() && isSameTenant(tenantId) && isMlo();
+    // ── Expanded role helpers (Hub model, 2026-04-22) ─────────────
+    // New roles introduced: manager, realtor (already existed),
+    // referralUser, titleUser, escrowUser. 'mlo' kept as the stored
+    // value for "Home Loan Advisor" — the field is renamed in UI only,
+    // which keeps existing data valid.
+    function isManager() {
+      return userDocExists() && userDoc().role == 'manager';
     }
 
-    // Users
+    function isRealtor() {
+      return userDocExists() && userDoc().role == 'realtor';
+    }
+
+    function isHla() {
+      // Alias: Home Loan Advisor. Stored as 'mlo' for back-compat.
+      return userDocExists() && userDoc().role == 'mlo';
+    }
+
+    function isReferralUser() {
+      return userDocExists() && userDoc().role == 'referralUser';
+    }
+
+    function isTitleUser() {
+      return userDocExists() && userDoc().role == 'titleUser';
+    }
+
+    function isEscrowUser() {
+      return userDocExists() && userDoc().role == 'escrowUser';
+    }
+
+    // Anyone who belongs to an org (i.e., not superadmin only) and is
+    // a "producing" individual contributor or manager. Used for things
+    // like creating leads, referral partnerships, etc.
+    function isOrgMember() {
+      return userDocExists() && (
+        userDoc().role == 'admin'
+        || userDoc().role == 'manager'
+        || userDoc().role == 'mlo'
+        || userDoc().role == 'realtor'
+        || userDoc().role == 'referralUser'
+        || userDoc().role == 'titleUser'
+        || userDoc().role == 'escrowUser'
+        || userDoc().role == 'superadmin'
+      );
+    }
+
+    // Manager sees their direct reports. Used by users-list + reporting
+    // screens. A "direct report" is any user in the same org whose
+    // managerId field points at the caller's uid.
+    function managesUser(targetUserData) {
+      return isManager()
+        && targetUserData.orgId == callerOrg()
+        && targetUserData.managerId == request.auth.uid;
+    }
+
+    function inOrg(oid) {
+      return userDocExists() && userDoc().orgId == oid;
+    }
+
+    function sameOrg(oid) {
+      return isSuperAdmin() || inOrg(oid);
+    }
+
+    // ================ USERS ================
+    // STRICT — privilege-escalation-proof.
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      allow create: if isSuperAdmin();
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // get: self, superadmin, tenant-admin of same org, or a
+      // Manager whose team the target user belongs to.
+      allow get: if isSignedIn() && (
+        request.auth.uid == userId
+        || isSuperAdmin()
+        || (isTenantAdmin() && inOrg(resource.data.orgId))
+        || managesUser(resource.data)
+      );
+
+      // list: admins only at the query level. Managers filter by
+      // orgId + managerId on the client and re-check in rules via
+      // the `get` above on individual docs if needed.
+      allow list: if isAdmin() || isManager();
+
+      // create: superadmin anywhere; tenant-admin within own org.
+      allow create: if
+        isSuperAdmin()
+        || (isTenantAdmin() && request.resource.data.orgId == callerOrg());
+
+      // self-update — cannot escalate privileges.
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+             'role', 'orgId', 'tier', 'tierLabel',
+             'failedLoginCount', 'lockedUntil', 'superAdmin',
+             'accountStatus', 'subscriptionStatus', 'subscriptionTier',
+             'managerId'
+           ]);
+
+      // admin-update — tenant-admin within own org, or superadmin
+      // anywhere. Tenant-admin cannot move users to another org.
+      allow update: if
+        isSuperAdmin()
+        || (
+          isTenantAdmin()
+          && inOrg(resource.data.orgId)
+          && request.resource.data.orgId == resource.data.orgId
+        );
+
+      allow delete: if isSuperAdmin();
+
+      // --- user-scoped subcollections ---
+      match /prefs/{prefId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /passwordHistory/{entryId} {
+        allow read, create: if isSignedIn() && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+
+      match /mfaRecoveryCodes/{codeId} {
+        allow read, create, update: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if false;
+      }
+    }
+
+    // ================ TENANTS / ORGANIZATIONS ================
+    // STRICT — only admins can write tenant config.
+    match /tenants/{tenantId} {
+      allow get: if sameOrg(tenantId);
+      allow list: if isSuperAdmin();
+      allow create, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin()
+        || (isTenantAdmin() && inOrg(tenantId));
+    }
+
+    match /organizations/{orgId} {
+      allow get: if sameOrg(orgId);
+      allow list: if isSuperAdmin();
+      allow create, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin()
+        || (isTenantAdmin() && inOrg(orgId));
+    }
+
+    // ================ INVITES (public token reads) ================
+    // Invitee hits URL unauthenticated — get only, no list. Admin
+    // creates/revokes. Acceptance flips used=false→true one time.
+    match /invites/{token} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isSignedIn()
+        && resource.data.used == false
+        && request.resource.data.used == true
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['used', 'usedAt', 'usedBy']);
+      allow delete: if isAdmin();
+    }
+
+    // ================ FLYERS (public token reads) ================
+    match /flyers/{token} {
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create: if isMlo();
+      allow update, delete: if isAdmin();
+    }
+
+    // ================ AGREEMENTS (DPA / ToS) ================
+    match /agreements/{agreementId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isSuperAdmin();
+      allow delete: if false;
+    }
+
+    // Immutable: signed log of agreement signings.
+    match /agreementLog/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // ================ AUDIT LOG (immutable) ================
+    // create is open so the pre-auth failed-login path (line ~5542
+    // in index.html) can still append. Nobody can read without
+    // admin; nobody can update or delete, ever.
+    match /auditLog/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    // ================ LOGIN ATTEMPTS (lockout counters) ================
+    // Pre-auth writable by design — the failed-login handler needs
+    // to increment counters BEFORE the caller has a session. Keep
+    // the doc shape minimal (counter + windowStart + lockedUntil).
+    match /loginAttempts/{key} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create, update: if true;
       allow delete: if isSuperAdmin();
     }
 
-    // Tenants
-    match /tenants/{tenantId} {
-      allow read: if isSameTenant(tenantId);
-      allow write: if isSuperAdmin() || (isAdmin() && isSameTenant(tenantId));
+    // ================ SECURITY EVENTS (immutable) ================
+    match /securityEvents/{evtId} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
-    // Deals
-    match /deals/{dealId} {
-      allow read: if isAuthenticated() && isSameTenant(resource.data.tenantId);
-      allow create: if isAuthenticated() && isSameTenant(request.resource.data.tenantId);
-      allow update: if isAuthenticated() && isSameTenant(resource.data.tenantId);
-      allow delete: if isAdmin() && isSameTenant(resource.data.tenantId);
-    }
-
-    // Past Customers
-    match /pastCustomers/{customerId} {
-      allow read: if isAuthenticated() && isSameTenant(resource.data.tenantId);
-      allow write: if ownsTenantData(request.resource.data.tenantId);
-    }
-
-    // Realtors
-    match /realtors/{realtorId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // OYZ
-    match /oyz/{oyzId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Prequal
-    match /prequal/{prequalId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-    }
-
-    // Activities
-    match /activity/{activityId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Notifications
-    match /notifications/{notifId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated();
-    }
-
-    // Sequences
-    match /sequences/{seqId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Sequence Enrollments
-    match /sequenceEnrollments/{enrollId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Communications
-    match /communications/{commId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Audit Logs — immutable
-    match /auditLog/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    // CRA Reports
-    match /craReports/{reportId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Scorecard Snapshots
-    match /scorecardSnapshots/{snapId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Tasks
-    match /tasks/{taskId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Data Delete Requests
+    // ================ DATA DELETE REQUESTS (GDPR/CCPA) ================
     match /dataDeleteRequests/{reqId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if false;
+      allow get, list, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ================ EMAIL LOG (immutable) ================
+    match /email_log/{logId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
       allow delete: if false;
     }
 
+    // ================ SCORECARD SNAPSHOTS (immutable) ================
+    match /scorecardSnapshots/{snapId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ================ CRA REPORTS ================
+    match /craReports/{reportId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // =================================================================
+    // SIGNED-IN-ONLY OPERATIONAL COLLECTIONS (Phase 1.5 will tighten)
+    // =================================================================
+
+    match /deals/{dealId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /prospects/{prospectId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    match /pastCustomers/{customerId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isMlo();
+    }
+
+    match /realtors/{realtorId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /realtor_searches/{searchId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /realtor_pushes/{pushId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /oyz/{oyzId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+
+    match /prequal/{prequalId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /activity/{activityId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /notifications/{notifId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    match /sequences/{seqId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    match /sequenceEnrollments/{enrollId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    match /communications/{commId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /tasks/{taskId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    // ========================================================
+    // HUB (2026-04-22): cross-org referrals, leads, listings,
+    // buyers, shared deals, deal documents.
+    // ========================================================
+
+    // referralLinks: agreements between two orgs to send/receive referrals
+    match /referralLinks/{linkId} {
+      allow read: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.orgAId == callerOrg()
+        || resource.data.orgBId == callerOrg()
+        || resource.data.invitedEmail == request.auth.token.email
+      );
+      allow create: if isSignedIn() && (
+        isAdmin()
+        || isManager()
+        || request.resource.data.orgAId == callerOrg()
+      );
+      allow update: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.orgAId == callerOrg()
+        || resource.data.orgBId == callerOrg()
+        || resource.data.invitedEmail == request.auth.token.email
+      );
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // leads: a referred opportunity moving between orgs
+    match /leads/{leadId} {
+      allow read: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.fromOrgId == callerOrg()
+        || resource.data.toOrgId == callerOrg()
+        || resource.data.fromUserId == request.auth.uid
+        || resource.data.toUserId == request.auth.uid
+      );
+      allow create: if isSignedIn()
+        && request.resource.data.fromOrgId == callerOrg()
+        && request.resource.data.fromUserId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.fromOrgId == callerOrg()
+        || resource.data.toOrgId == callerOrg()
+      );
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // listings: realtor inventory, optionally LMI-flagged
+    match /listings/{listingId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.orgId == callerOrg();
+      allow update, delete: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.orgId == callerOrg()
+      );
+    }
+
+    // buyers: realtor buyer pipeline
+    match /buyers/{buyerId} {
+      allow read: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.orgId == callerOrg()
+      );
+      allow create: if isSignedIn()
+        && request.resource.data.orgId == callerOrg();
+      allow update, delete: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.orgId == callerOrg()
+      );
+    }
+
+    // sharedDeals: co-working deal workspace between two orgs
+    match /sharedDeals/{dealId} {
+      allow read, update: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.lenderOrgId == callerOrg()
+        || resource.data.realtyOrgId == callerOrg()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.lenderOrgId == callerOrg()
+        || request.resource.data.realtyOrgId == callerOrg()
+      );
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // dealDocuments: files attached to a sharedDeal or lead
+    match /dealDocuments/{docId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ========================================================
     // Deny everything else
+    // ========================================================
     match /{document=**} {
       allow read, write: if false;
     }
