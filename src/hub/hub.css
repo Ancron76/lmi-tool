@@ -369,30 +369,21 @@ body.hub-enabled .role-badge {
 }
 #hub-body > * + * { margin-top: 18px; }
 
-/* Scoped surface backdrop — overlays the main content area when active.
-   The legacy sidebar (260px wide) stays visible on the left; the hub
-   covers the content column only. */
+/* Hub sits in the same flow as legacy #tab-*-content divs so it feels
+   like just another page rather than a modal/popup. Matches the legacy
+   content offset (232px sidebar + 56px topbar). */
 #hub-root.hub-screen {
   display: none;
+  margin-left: 232px;
+  padding-top: 56px;
+  box-sizing: border-box;
+  min-height: 100vh;
   background: linear-gradient(180deg, #faf8f4 0%, #ffffff 260px);
 }
-#hub-root.hub-screen.active {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 260px; /* width of legacy sidebar */
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  overflow-y: auto;
-}
+#hub-root.hub-screen.active { display: block; }
 @media (max-width: 900px) {
-  #hub-root.hub-screen.active { left: 0; }
+  #hub-root.hub-screen { margin-left: 0; }
 }
-/* When Hub is active, it owns the viewport-right of the sidebar and
-   handles its own scrolling. Lock the body so only the hub scrolls
-   (prevents a double-scrollbar / "overlay" feel). */
-body.hub-active { overflow: hidden; }
 
 /* ── Listings / Buyers / Network body wrappers ───────────── */
 .hub-listings-body,

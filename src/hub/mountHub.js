@@ -43,7 +43,9 @@
 
   function injectShell() {
     if (document.getElementById('hub-root')) return;
-    var host = document.body;
+    // Place Hub inside #app-screen (next to legacy tab-*-content divs) so
+    // it flows in the same layout as every other page. Fall back to body.
+    var host = document.getElementById('app-screen') || document.body;
     var shell = document.createElement('div');
     shell.id = 'hub-root';
     shell.className = 'hub-scope hub-screen';
@@ -92,31 +94,20 @@
     });
   }
 
-  // Internal: make the hub visible and hide all legacy UI. Idempotent.
-  // IMPORTANT: this does NOT call Hub.go — avoids recursion with Hub.show.
+  // Internal: make the hub visible and hide all legacy tab content.
+  // Idempotent. The Hub is treated like another tab — same layout flow,
+  // no fixed positioning, no body scroll lock.
   function ensureVisible() {
     var root = document.getElementById('hub-root');
     if (!root) return false;
-    // Hide legacy tab content AND any legacy page wrappers. The app uses
-    // a few different container patterns; cover the common ones.
-    var legacySelectors = [
-      '.tab-content',
-      '.page-content',
-      '.main-content',
-      '#main-content',
-      '#app-main',
-      '#app-body',
-      '.app-main',
-      '.content-area'
-    ];
-    legacySelectors.forEach(function (sel) {
-      document.querySelectorAll(sel).forEach(function (el) {
-        if (el.id === 'hub-root') return;
-        if (el.dataset._hubPrevDisplay == null) {
-          el.dataset._hubPrevDisplay = el.style.display || '';
-        }
-        el.style.display = 'none';
-      });
+    // Legacy app uses #tab-<name>-content divs as sibling tabs. Hide them all
+    // so the Hub is the only visible "tab".
+    document.querySelectorAll('[id^="tab-"][id$="-content"]').forEach(function (el) {
+      if (el.id === 'hub-root') return;
+      if (el.dataset.hubPrev == null) {
+        el.dataset.hubPrev = el.style.display || '';
+      }
+      el.style.display = 'none';
     });
     document.body.classList.add('hub-active');
     root.classList.add('active');
@@ -125,9 +116,9 @@
   }
 
   function restoreLegacy() {
-    document.querySelectorAll('[data-_hub-prev-display]').forEach(function (el) {
-      el.style.display = el.dataset._hubPrevDisplay || '';
-      delete el.dataset._hubPrevDisplay;
+    document.querySelectorAll('[data-hub-prev]').forEach(function (el) {
+      el.style.display = el.dataset.hubPrev || '';
+      delete el.dataset.hubPrev;
     });
     document.body.classList.remove('hub-active');
   }
