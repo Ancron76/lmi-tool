@@ -48,10 +48,6 @@
     shell.id = 'hub-root';
     shell.className = 'hub-scope hub-screen';
     shell.innerHTML = ''
-      + '<div class="hub-topbar">'
-      +   '<div class="hub-topbar-brand">Loopenta Hub</div>'
-      +   '<button class="hub-btn hub-btn-ghost hub-topbar-back" onclick="Hub.hide()">← Back to App</button>'
-      + '</div>'
       + '<div class="hub-hero">'
       +   '<div class="hub-hero-eyebrow">Loopenta Hub</div>'
       +   '<h1 id="hub-hero-title">The industry hub for finding property, loan, and home.</h1>'
