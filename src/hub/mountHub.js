@@ -48,6 +48,10 @@
     shell.id = 'hub-root';
     shell.className = 'hub-scope hub-screen';
     shell.innerHTML = ''
+      + '<div class="hub-topbar">'
+      +   '<div class="hub-topbar-brand">Loopenta Hub</div>'
+      +   '<button class="hub-btn hub-btn-ghost hub-topbar-back" onclick="Hub.hide()">← Back to App</button>'
+      + '</div>'
       + '<div class="hub-hero">'
       +   '<div class="hub-hero-eyebrow">Loopenta Hub</div>'
       +   '<h1 id="hub-hero-title">The industry hub for finding property, loan, and home.</h1>'
@@ -92,8 +96,48 @@
     });
   }
 
+  // Internal: make the hub visible and hide all legacy UI. Idempotent.
+  // IMPORTANT: this does NOT call Hub.go — avoids recursion with Hub.show.
+  function ensureVisible() {
+    var root = document.getElementById('hub-root');
+    if (!root) return false;
+    // Hide legacy tab content AND any legacy page wrappers. The app uses
+    // a few different container patterns; cover the common ones.
+    var legacySelectors = [
+      '.tab-content',
+      '.page-content',
+      '.main-content',
+      '#main-content',
+      '#app-main',
+      '#app-body',
+      '.app-main',
+      '.content-area'
+    ];
+    legacySelectors.forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (el) {
+        if (el.id === 'hub-root') return;
+        if (el.dataset._hubPrevDisplay == null) {
+          el.dataset._hubPrevDisplay = el.style.display || '';
+        }
+        el.style.display = 'none';
+      });
+    });
+    document.body.classList.add('hub-active');
+    root.classList.add('active');
+    personalizeHero();
+    return true;
+  }
+
+  function restoreLegacy() {
+    document.querySelectorAll('[data-_hub-prev-display]').forEach(function (el) {
+      el.style.display = el.dataset._hubPrevDisplay || '';
+      delete el.dataset._hubPrevDisplay;
+    });
+    document.body.classList.remove('hub-active');
+  }
+
   Hub.go = function (route) {
-    Hub.show();
+    if (!ensureVisible()) return;
     var body = document.getElementById('hub-body');
     var tabs = document.querySelectorAll('.hub-tab');
     tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.route === route); });
@@ -126,25 +170,20 @@
   }
 
   Hub.show = function () {
-    var root = document.getElementById('hub-root');
-    if (!root) return;
-    // Hide legacy tab content (best-effort)
-    document.querySelectorAll('.tab-content').forEach(function (el) { el.style.display = 'none'; });
-    root.classList.add('active');
-    // Personalize hero based on role
-    personalizeHero();
-    // Render default landing route if none active
+    if (!ensureVisible()) return;
+    // If a tab is already active, we're done.
     var active = document.querySelector('.hub-tab.active');
-    if (!active) {
-      var keys = Object.keys(Hub._routes || {});
-      if (keys.length) Hub.go(defaultRouteForUser(keys));
-    }
+    if (active) return;
+    // Otherwise, route to the default. Hub.go does NOT call Hub.show.
+    var keys = Object.keys(Hub._routes || {});
+    if (keys.length) Hub.go(defaultRouteForUser(keys));
   };
 
   Hub.hide = function () {
     var root = document.getElementById('hub-root');
     if (!root) return;
     root.classList.remove('active');
+    restoreLegacy();
   };
 
   function defaultRouteForUser(keys) {
@@ -185,28 +224,34 @@
     personalizeHero();
   };
 
-  // Auto-mount as soon as currentUser is ready. Otherwise wait.
+  // Auto-mount as soon as the DOM is ready. The hub shell is harmless
+  // when hidden (display:none until activated), so we don't need to wait
+  // for currentUser — that's only used for personalization/visibility.
   function tryAutoMount() {
     if (mounted) return;
-    if (!global.currentUser) { return; }
+    if (!global.document || !global.document.body) return;
     Hub.mount();
-    // Sub-modules should have registered routes by now.
     Hub.refreshNav();
   }
   Hub._tryAutoMount = tryAutoMount;
 
-  // Install a tiny polling watcher so we pick up currentUser however it
-  // gets set (onAuthStateChanged, legacy tryLogin, invite flow, etc.).
-  var _watchStart = Date.now();
-  var _watchTimer = setInterval(function () {
-    if (mounted) { clearInterval(_watchTimer); return; }
-    if (global.currentUser) {
-      tryAutoMount();
-      clearInterval(_watchTimer);
-    } else if (Date.now() - _watchStart > 120000) {
-      // Stop polling after 2 minutes; user probably never signed in.
-      clearInterval(_watchTimer);
+  // Run ASAP. If DOM not ready, wait for it.
+  if (global.document) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryAutoMount, { once: true });
+    } else {
+      // Defer a tick so sub-modules finish loading their registerRoute calls.
+      setTimeout(tryAutoMount, 0);
     }
-  }, 500);
+  }
+
+  // Also refresh nav periodically for a minute so role/capability changes
+  // at sign-in update the tabbar without requiring a reload.
+  var _navRefreshStart = Date.now();
+  var _navRefreshTimer = setInterval(function () {
+    if (!mounted) return;
+    try { Hub.refreshNav(); } catch (e) {}
+    if (Date.now() - _navRefreshStart > 60000) clearInterval(_navRefreshTimer);
+  }, 1500);
 
 })(typeof window !== 'undefined' ? window : globalThis);

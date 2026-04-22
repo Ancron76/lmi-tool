@@ -353,9 +353,57 @@ body.hub-enabled .role-badge {
 }
 #hub-body > * + * { margin-top: 18px; }
 
-/* Scoped surface backdrop */
-#hub-root.hub-screen { background: linear-gradient(180deg,#faf8f4 0%,#ffffff 260px); min-height: 100vh; display:none; }
-#hub-root.hub-screen.active { display: block; }
+/* Scoped surface backdrop — overlays the main content area when active.
+   The legacy sidebar (260px wide) stays visible on the left; the hub
+   covers the content column only. */
+#hub-root.hub-screen {
+  display: none;
+  background: linear-gradient(180deg, #faf8f4 0%, #ffffff 260px);
+}
+#hub-root.hub-screen.active {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 260px; /* width of legacy sidebar */
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+@media (max-width: 900px) {
+  #hub-root.hub-screen.active { left: 0; }
+}
+body.hub-active { overflow: hidden; }
+
+/* Topbar with Back-to-App escape hatch */
+.hub-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: rgba(28,24,18,0.96);
+  color: #faf8f4;
+  border-bottom: 1px solid rgba(196,148,58,0.3);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.hub-topbar-brand {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hub-gold);
+}
+.hub-topbar-back {
+  background: rgba(255,255,255,0.10);
+  color: #faf8f4;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.hub-topbar-back:hover {
+  background: rgba(255,255,255,0.18);
+  color: #ffffff;
+}
 
 /* ── Listings / Buyers / Network body wrappers ───────────── */
 .hub-listings-body,
