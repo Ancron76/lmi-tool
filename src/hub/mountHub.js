@@ -12,6 +12,7 @@
   'use strict';
 
   var Hub = global.Hub = global.Hub || {};
+  Hub.VERSION = '20260422c';
 
   // Wait for the shell (and currentUser) to be ready. We piggy-back on
   // the existing showTab()/tabs structure in index.html.
