@@ -5,20 +5,20 @@
    don't collide with the legacy CSS in index.html.
    ====================================================================== */
 
-/* ── Brand tokens (re-declared here so the Hub layer stands alone) ── */
+/* ── Brand tokens (matched to LMI tool palette — warm cream + gold) ── */
 .hub-scope, .hub-screen {
   --hub-brand:         #1c1812;
   --hub-brand-50:      #2a2118;
   --hub-gold:          #c4943a;
   --hub-gold-soft:     #d4b070;
   --hub-gold-pale:     #f5e6c0;
-  --hub-ink:           #0f172a;
-  --hub-ink-soft:      #334155;
-  --hub-muted:         #64748b;
-  --hub-mist:          #94a3b8;
-  --hub-line:          #e2e8f0;
-  --hub-surface:       #ffffff;
-  --hub-surface-tint:  #f8fafc;
+  --hub-ink:           #1a1410;
+  --hub-ink-soft:      #3d342b;
+  --hub-muted:         #7a6a58;
+  --hub-mist:          #a89880;
+  --hub-line:          #ddd4c0;
+  --hub-surface:       #faf8f4;
+  --hub-surface-tint:  #f2ede4;
   --hub-success:       #10b981;
   --hub-warn:          #f59e0b;
   --hub-danger:        #ef4444;
@@ -87,7 +87,7 @@
   gap: 14px;
 }
 .hub-kpi {
-  background: linear-gradient(135deg,#fff 0%,#fafaf7 100%);
+  background: linear-gradient(135deg, var(--hub-surface) 0%, #f5f0e6 100%);
   border: 1px solid var(--hub-line);
   border-radius: var(--hub-radius-md);
   padding: 16px 18px;
@@ -178,7 +178,7 @@
 }
 .hub-btn-ghost:hover { background: rgba(255,255,255,0.1); }
 .hub-btn-secondary {
-  background: #fff; color: var(--hub-ink); border-color: var(--hub-line);
+  background: var(--hub-surface); color: var(--hub-ink); border-color: var(--hub-line);
 }
 .hub-btn-secondary:hover { background: var(--hub-surface-tint); }
 .hub-btn-danger {
@@ -204,7 +204,7 @@
   color: var(--hub-ink); vertical-align: middle;
 }
 .hub-table tbody tr:last-child td { border-bottom: 0; }
-.hub-table tbody tr:hover { background: #fafafa; }
+.hub-table tbody tr:hover { background: #f5f0e6; }
 
 /* ── Empty state ──────────────────────────────────────────── */
 .hub-empty {
@@ -252,7 +252,7 @@
   margin-bottom: 10px;
 }
 .hub-pipeline-card {
-  background: #fff; border: 1px solid var(--hub-line);
+  background: var(--hub-surface); border: 1px solid var(--hub-line);
   border-radius: var(--hub-radius-sm); padding: 10px 12px;
   margin-bottom: 8px; box-shadow: var(--hub-shadow-sm);
   cursor: pointer;
@@ -268,7 +268,7 @@
   border: 1px solid var(--hub-line);
   border-radius: 10px; padding: 10px 12px;
   font-size: 14px; color: var(--hub-ink);
-  background: #fff;
+  background: var(--hub-surface);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .hub-field input:focus, .hub-field select:focus, .hub-field textarea:focus {
@@ -285,7 +285,7 @@
 }
 .hub-modal-backdrop.open { display: flex; }
 .hub-modal {
-  background: #fff; border-radius: var(--hub-radius-xl);
+  background: var(--hub-surface); border-radius: var(--hub-radius-xl);
   width: min(680px, 92vw); max-height: 88vh; overflow-y: auto;
   box-shadow: var(--hub-shadow-lg);
   padding: 28px;
@@ -324,7 +324,7 @@
   cursor: pointer; border: 1px solid transparent;
   background: transparent;
 }
-.hub-tab:hover { background: #fff; border-color: var(--hub-line); color: var(--hub-ink); }
+.hub-tab:hover { background: var(--hub-surface); border-color: var(--hub-line); color: var(--hub-ink); }
 .hub-tab.active {
   background: var(--hub-brand); color: #fff;
   box-shadow: 0 4px 10px rgba(28,24,18,0.18);
@@ -378,7 +378,7 @@ body.hub-enabled .role-badge {
   padding-top: 56px;
   box-sizing: border-box;
   min-height: 100vh;
-  background: linear-gradient(180deg, #faf8f4 0%, #ffffff 260px);
+  background: #f2ede4; /* matches LMI tool body-bg */
 }
 #hub-root.hub-screen.active { display: block; }
 @media (max-width: 900px) {
