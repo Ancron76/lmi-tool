@@ -1,21 +1,14 @@
 // ======================================================================
 // Loopenta Hub — mount / shell (2026-04-22)
-// Injects a new "Hub" section into index.html that contains:
-//   • Manager team reporting
-//   • Referrals inbox + sender
-//   • Realtor listings + buyer pipeline
-//   • Title/Escrow portals (scaffold)
-//   • Referral Partner directory
-// Non-invasive: if the user is not signed in, nothing mounts.
+// Professional tool chrome: masthead (not marketing hero), flat tabbar,
+// text-only nav (no emojis), restrained gold accents, tabular figures.
 // ======================================================================
 (function (global) {
   'use strict';
 
   var Hub = global.Hub = global.Hub || {};
-  Hub.VERSION = '20260422e';
+  Hub.VERSION = '20260422f';
 
-  // Wait for the shell (and currentUser) to be ready. We piggy-back on
-  // the existing showTab()/tabs structure in index.html.
   var mounted = false;
 
   Hub.mount = function () {
@@ -51,16 +44,17 @@
     shell.id = 'hub-root';
     shell.className = 'hub-scope hub-screen';
     shell.innerHTML = ''
-      + '<div class="hub-hero">'
-      +   '<div class="hub-hero-eyebrow">Loopenta Hub</div>'
-      +   '<h1 id="hub-hero-title">The industry hub for finding property, loan, and home.</h1>'
-      +   '<p id="hub-hero-sub">One place to work leads between Home Loan Advisors, Realtors, Referral Partners, Title, and Escrow. Manage your team. Hand off the right client to the right partner. Close more.</p>'
-      + '</div>'
-      + '<div class="hub-tabbar" id="hub-tabbar"></div>'
-      + '<div id="hub-body"></div>';
+      + '<header class="hub-masthead">'
+      +   '<div>'
+      +     '<div class="hub-masthead-eyebrow" id="hub-hero-sub">Loopenta Hub</div>'
+      +     '<h1 class="hub-masthead-title" id="hub-hero-title">Hub</h1>'
+      +   '</div>'
+      +   '<div class="hub-masthead-actions" id="hub-masthead-actions"></div>'
+      + '</header>'
+      + '<nav class="hub-tabbar" id="hub-tabbar" aria-label="Hub sections"></nav>'
+      + '<main id="hub-body"></main>';
     host.appendChild(shell);
 
-    // Simple lazy renderers, installed by sub-modules.
     Hub._routes = Hub._routes || {};
   }
 
@@ -80,9 +74,9 @@
     Object.keys(routes).forEach(function (key) {
       var r = routes[key];
       if (r.visible && !r.visible(caps)) return;
+      // Text-only tab — no emoji/icon clutter.
       html += '<button class="hub-tab" data-route="' + key + '">'
-            + '<span>' + (r.icon || '') + '</span>'
-            + '<span>' + r.label + '</span></button>';
+            + escHtml(r.label) + '</button>';
     });
     bar.innerHTML = html;
     bar.querySelectorAll('.hub-tab').forEach(function (btn) {
@@ -90,14 +84,15 @@
     });
   }
 
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
   // Internal: make the hub visible and hide all legacy tab content.
-  // Idempotent. The Hub is treated like another tab — same layout flow,
-  // no fixed positioning, no body scroll lock.
   function ensureVisible() {
     var root = document.getElementById('hub-root');
     if (!root) return false;
-    // Legacy app uses #tab-<name>-content divs as sibling tabs. Hide them all
-    // so the Hub is the only visible "tab".
     document.querySelectorAll('[id^="tab-"][id$="-content"]').forEach(function (el) {
       if (el.id === 'hub-root') return;
       if (el.dataset.hubPrev == null) {
@@ -119,27 +114,37 @@
     document.body.classList.remove('hub-active');
   }
 
+  function setMastheadTitle(text) {
+    var t = document.getElementById('hub-hero-title');
+    if (t) t.textContent = text;
+  }
+
   Hub.go = function (route) {
     if (!ensureVisible()) return;
     var body = document.getElementById('hub-body');
     var tabs = document.querySelectorAll('.hub-tab');
     tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.route === route); });
     if (!body) return;
-    // Not signed in? Show a clean sign-in CTA instead of routing.
     if (!global.currentUser) { renderSignedOutCta(body); return; }
     var routes = Hub._routes || {};
     var r = routes[route];
     if (!r) {
-      body.innerHTML = '<div class="hub-empty"><div class="hub-empty-icon">🗺️</div><h4>Pick a section above</h4><p>Team activity, referrals, partner network, and more.</p></div>';
+      setMastheadTitle('Hub');
+      body.innerHTML = '<div class="hub-empty"><h4>Select a section</h4><p>Use the tabs above to open team activity, referrals, or your partner network.</p></div>';
       return;
     }
-    body.innerHTML = '<div class="hub-empty"><div class="hub-empty-icon">⏳</div><p>Loading…</p></div>';
+    setMastheadTitle(r.label || 'Hub');
+    body.innerHTML = '<div class="hub-empty"><p>Loading</p></div>';
     try {
       Promise.resolve(r.render(body)).catch(function (err) {
-        body.innerHTML = '<div class="hub-empty"><div class="hub-empty-icon">⚠️</div><h4>Something went wrong</h4><p>' + (err && err.message ? err.message : 'Unknown error') + '</p></div>';
+        body.innerHTML = '<div class="hub-empty"><h4>Something went wrong</h4><p>'
+          + escHtml(err && err.message ? err.message : 'Unknown error')
+          + '</p></div>';
       });
     } catch (err) {
-      body.innerHTML = '<div class="hub-empty"><div class="hub-empty-icon">⚠️</div><h4>Something went wrong</h4><p>' + (err && err.message ? err.message : String(err)) + '</p></div>';
+      body.innerHTML = '<div class="hub-empty"><h4>Something went wrong</h4><p>'
+        + escHtml(err && err.message ? err.message : String(err))
+        + '</p></div>';
     }
   };
 
@@ -156,16 +161,13 @@
 
   Hub.show = function () {
     if (!ensureVisible()) return;
-    // Not signed in? Skip routing and show the sign-in CTA.
     if (!global.currentUser) {
       var body = document.getElementById('hub-body');
       if (body) renderSignedOutCta(body);
       return;
     }
-    // If a tab is already active, we're done.
     var active = document.querySelector('.hub-tab.active');
     if (active) return;
-    // Otherwise, route to the default. Hub.go does NOT call Hub.show.
     var keys = Object.keys(Hub._routes || {});
     if (keys.length) Hub.go(defaultRouteForUser(keys));
   };
@@ -178,11 +180,11 @@
   };
 
   function renderSignedOutCta(body) {
+    setMastheadTitle('Sign in required');
     body.innerHTML = ''
       + '<div class="hub-signin-card">'
-      +   '<div class="hub-signin-icon">🔒</div>'
-      +   '<h3>Sign in to access the Loopenta Hub</h3>'
-      +   '<p>Manage your team, work referrals between lenders and realtors, and coordinate with your title &amp; escrow partners — all in one place.</p>'
+      +   '<h3>Sign in to access the Hub</h3>'
+      +   '<p>Manage your team, route referrals between lenders and realtors, and coordinate with title &amp; escrow partners — all in one workspace.</p>'
       +   '<div class="hub-signin-actions">'
       +     '<button class="hub-btn hub-btn-primary" id="hub-signin-btn">Sign in</button>'
       +     '<button class="hub-btn hub-btn-ghost" id="hub-signup-btn">Create an account</button>'
@@ -214,35 +216,25 @@
     return keys.indexOf('referrals') > -1 ? 'referrals' : keys[0];
   }
 
+  // Update the masthead eyebrow with a contextual greeting.
+  // The title is set per-route by Hub.go, so this only touches the eyebrow.
   function personalizeHero() {
     var u = global.currentUser;
-    var titleEl = document.getElementById('hub-hero-title');
     var subEl = document.getElementById('hub-hero-sub');
-    if (!u || !titleEl || !subEl) return;
-    var first = (u.name || u.email || '').split(' ')[0] || 'there';
-    var role = Hub.roleLabel(u.role);
-    titleEl.textContent = 'Welcome back, ' + first + '.';
-    if (u.role === 'manager') {
-      subEl.textContent = 'See every move your team makes today, assign new leads, and keep the pipeline full.';
-    } else if (u.role === 'admin' || u.role === 'superadmin') {
-      subEl.textContent = 'Organization-wide visibility. Manage your team, partners, and the cross-org deal flow.';
-    } else if (u.role === 'realtor') {
-      subEl.textContent = 'Your buyer pipeline, listings, and the Home Loan Advisors ready to pre-qualify your clients.';
-    } else if (u.role === 'mlo') {
-      subEl.textContent = 'Your borrowers, your realtors, your referral partners — all in one working view.';
-    } else if (u.role === 'referralUser') {
-      subEl.textContent = 'Send a qualified referral to a lender or realtor in your network. Track the outcome. Get paid.';
-    } else {
-      subEl.textContent = 'Work with the right partner at the right moment. That\'s the hub.';
+    if (!subEl) return;
+    if (!u) {
+      subEl.textContent = 'Loopenta Hub';
+      return;
     }
+    var first = (u.name || u.email || '').split(' ')[0] || '';
+    var hr = new Date().getHours();
+    var timeOfDay = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+    subEl.textContent = first ? (timeOfDay + ', ' + first) : 'Loopenta Hub';
   }
 
-  // Expose re-renderer so sub-modules can force a tabbar refresh after
-  // currentUser changes (login, role changes, etc.).
   Hub.refreshNav = function () {
     renderTabbar();
     personalizeHero();
-    // If we're currently showing the signed-out CTA and the user just signed in, route to default.
     var root = document.getElementById('hub-root');
     if (root && root.classList.contains('active') && global.currentUser) {
       var body = document.getElementById('hub-body');
@@ -255,9 +247,6 @@
     }
   };
 
-  // Auto-mount as soon as the DOM is ready. The hub shell is harmless
-  // when hidden (display:none until activated), so we don't need to wait
-  // for currentUser — that's only used for personalization/visibility.
   function tryAutoMount() {
     if (mounted) return;
     if (!global.document || !global.document.body) return;
@@ -266,18 +255,14 @@
   }
   Hub._tryAutoMount = tryAutoMount;
 
-  // Run ASAP. If DOM not ready, wait for it.
   if (global.document) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', tryAutoMount, { once: true });
     } else {
-      // Defer a tick so sub-modules finish loading their registerRoute calls.
       setTimeout(tryAutoMount, 0);
     }
   }
 
-  // Also refresh nav periodically for a minute so role/capability changes
-  // at sign-in update the tabbar without requiring a reload.
   var _navRefreshStart = Date.now();
   var _navRefreshTimer = setInterval(function () {
     if (!mounted) return;

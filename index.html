@@ -2403,10 +2403,10 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
     </div>
     <nav class="sidebar-nav">
       <div class="sidebar-section-label" style="color:#c4943a">LOOPENTA HUB</div>
-      <button class="sidebar-nav-item" id="sn-hub" onclick="showTab('hub');closeSidebar()" style="font-weight:700"><span class="sn-icon">✨</span>Hub Home</button>
-      <button class="sidebar-nav-item" id="sn-hub-reporting" onclick="if(window.Hub){Hub.go('reporting');}else{showTab('hub');}closeSidebar()"><span class="sn-icon">📊</span>Team Activity</button>
-      <button class="sidebar-nav-item" id="sn-hub-referrals" onclick="if(window.Hub){Hub.go('referrals');}else{showTab('hub');}closeSidebar()"><span class="sn-icon">🔁</span>Referrals</button>
-      <button class="sidebar-nav-item" id="sn-hub-network" onclick="if(window.Hub){Hub.go('network');}else{showTab('hub');}closeSidebar()"><span class="sn-icon">🌐</span>Partner Network</button>
+      <button class="sidebar-nav-item" id="sn-hub" onclick="showTab('hub');closeSidebar()" style="font-weight:700"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>Hub Home</button>
+      <button class="sidebar-nav-item" id="sn-hub-reporting" onclick="if(window.Hub){Hub.go('reporting');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><rect x="5" y="11" width="3" height="8"/><rect x="10.5" y="7" width="3" height="12"/><rect x="16" y="13" width="3" height="6"/></svg></span>Team Activity</button>
+      <button class="sidebar-nav-item" id="sn-hub-referrals" onclick="if(window.Hub){Hub.go('referrals');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>Referrals</button>
+      <button class="sidebar-nav-item" id="sn-hub-network" onclick="if(window.Hub){Hub.go('network');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/></svg></span>Partner Network</button>
       <div class="sidebar-section-label">WORKSPACE</div>
       <button class="sidebar-nav-item active" id="sn-home" onclick="showTab('home');closeSidebar()"><span class="sn-icon">🏠</span>Home</button>
       <button class="sidebar-nav-item" id="sn-pipeline" data-feature="deal_pipeline" onclick="showTab('pipeline');closeSidebar()"><span class="sn-icon">🎯</span>Deal Pipeline</button>
@@ -20599,12 +20599,12 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ── Loopenta Hub (additive layer: roles, org types, referrals, reporting) ── -->
-<script src="src/hub/roleModel.js?v=20260422e"></script>
-<script src="src/hub/mountHub.js?v=20260422e"></script>
-<script src="src/hub/managerReporting.js?v=20260422e"></script>
-<script src="src/hub/referrals.js?v=20260422e"></script>
-<script src="src/hub/realtor.js?v=20260422e"></script>
-<script src="src/hub/referralPartner.js?v=20260422e"></script>
+<script src="src/hub/roleModel.js?v=20260422f"></script>
+<script src="src/hub/mountHub.js?v=20260422f"></script>
+<script src="src/hub/managerReporting.js?v=20260422f"></script>
+<script src="src/hub/referrals.js?v=20260422f"></script>
+<script src="src/hub/realtor.js?v=20260422f"></script>
+<script src="src/hub/referralPartner.js?v=20260422f"></script>
 
 <!-- TIER CHANGE MODAL -->
 <div id="tier-change-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.85);z-index:9500;overflow-y:auto">
@@ -20654,15 +20654,4 @@ if ('serviceWorker' in navigator) {
           <div style="margin-top:12px;font-size:11px;color:#7a6a58;font-style:italic">Best for: Organizations with approved data agreements</div>
         </div>
       </div>
-      <!-- Warnings -->
-      <div id="tcm-upgrade-warn" style="display:none;background:#faf0e4;border:1px solid #e8d5b8;border-radius:10px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:600;color:#b07030;margin-bottom:8px">&#9888; Upgrading enables storage of borrower PII</div>
-        <div style="font-size:12px;color:#7a6a58;margin-bottom:10px">Ensure this organization has a signed Data Processing Agreement before proceeding.</div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#1a1410">
-          <input type="checkbox" id="tcm-dpa-check" onchange="_tcmValidate()" style="width:15px;height:15px" />
-          DPA is on file for this organization
-        </label>
-      </div>
-      <div id="tcm-downgrade-warn" style="display:none;background:#f8ecea;border:1px solid #e8c5c0;border-radius:10px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:600;color:#9a4a3a;margin-bottom:8px">&#9888; Downgrading will hide CRM features</div>
-        <div style="font-size:12px;color:#7a6a58;margin-bottom:10px">Existing data will NOT be deleted. Borrower records will b
+      <!-- Warnings
