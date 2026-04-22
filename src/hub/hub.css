@@ -216,6 +216,22 @@
 .hub-empty h4 { margin: 0; font-size: 15px; font-weight: 700; color: var(--hub-ink); }
 .hub-empty p { margin: 4px 0 0; font-size: 13px; color: var(--hub-muted); }
 
+/* ── Signed-out CTA card ──────────────────────────────────── */
+.hub-signin-card {
+  max-width: 540px;
+  margin: 40px auto;
+  padding: 40px 32px;
+  text-align: center;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-line);
+  border-radius: var(--hub-radius-lg, 16px);
+  box-shadow: 0 8px 32px rgba(28, 24, 18, 0.08);
+}
+.hub-signin-icon { font-size: 44px; margin-bottom: 12px; }
+.hub-signin-card h3 { margin: 0 0 10px; font-size: 20px; font-weight: 700; color: var(--hub-ink); }
+.hub-signin-card p { margin: 0 0 24px; font-size: 14px; line-height: 1.55; color: var(--hub-muted); }
+.hub-signin-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
 /* ── Pipeline columns ─────────────────────────────────────── */
 .hub-pipeline {
   display: grid;

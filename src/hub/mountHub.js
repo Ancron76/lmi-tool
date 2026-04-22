@@ -142,6 +142,8 @@
     var tabs = document.querySelectorAll('.hub-tab');
     tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.route === route); });
     if (!body) return;
+    // Not signed in? Show a clean sign-in CTA instead of routing.
+    if (!global.currentUser) { renderSignedOutCta(body); return; }
     var routes = Hub._routes || {};
     var r = routes[route];
     if (!r) {
@@ -171,6 +173,12 @@
 
   Hub.show = function () {
     if (!ensureVisible()) return;
+    // Not signed in? Skip routing and show the sign-in CTA.
+    if (!global.currentUser) {
+      var body = document.getElementById('hub-body');
+      if (body) renderSignedOutCta(body);
+      return;
+    }
     // If a tab is already active, we're done.
     var active = document.querySelector('.hub-tab.active');
     if (active) return;
@@ -185,6 +193,35 @@
     root.classList.remove('active');
     restoreLegacy();
   };
+
+  function renderSignedOutCta(body) {
+    body.innerHTML = ''
+      + '<div class="hub-signin-card">'
+      +   '<div class="hub-signin-icon">🔒</div>'
+      +   '<h3>Sign in to access the Loopenta Hub</h3>'
+      +   '<p>Manage your team, work referrals between lenders and realtors, and coordinate with your title &amp; escrow partners — all in one place.</p>'
+      +   '<div class="hub-signin-actions">'
+      +     '<button class="hub-btn hub-btn-primary" id="hub-signin-btn">Sign in</button>'
+      +     '<button class="hub-btn hub-btn-ghost" id="hub-signup-btn">Create an account</button>'
+      +   '</div>'
+      + '</div>';
+    var signin = document.getElementById('hub-signin-btn');
+    var signup = document.getElementById('hub-signup-btn');
+    if (signin) signin.addEventListener('click', function () {
+      Hub.hide();
+      var ls = document.getElementById('login-screen');
+      if (ls) ls.style.display = 'flex';
+    });
+    if (signup) signup.addEventListener('click', function () {
+      Hub.hide();
+      if (typeof global.showSignupScreen === 'function') global.showSignupScreen();
+      else if (typeof global.showSignup === 'function') global.showSignup();
+      else {
+        var ls = document.getElementById('login-screen');
+        if (ls) ls.style.display = 'flex';
+      }
+    });
+  }
 
   function defaultRouteForUser(keys) {
     var u = global.currentUser;
@@ -222,6 +259,17 @@
   Hub.refreshNav = function () {
     renderTabbar();
     personalizeHero();
+    // If we're currently showing the signed-out CTA and the user just signed in, route to default.
+    var root = document.getElementById('hub-root');
+    if (root && root.classList.contains('active') && global.currentUser) {
+      var body = document.getElementById('hub-body');
+      var hasCta = body && body.querySelector && body.querySelector('#hub-signin-btn');
+      var active = document.querySelector('.hub-tab.active');
+      if (hasCta || !active) {
+        var keys = Object.keys(Hub._routes || {});
+        if (keys.length) Hub.go(defaultRouteForUser(keys));
+      }
+    }
   };
 
   // Auto-mount as soon as the DOM is ready. The hub shell is harmless

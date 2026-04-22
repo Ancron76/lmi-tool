@@ -5594,6 +5594,11 @@ async function fetchAllActivities() {
 }
 
 let currentUser = null, branchTargetId = null;
+// Expose currentUser on window so the Hub (and other late-loaded modules) can read it.
+// Any code that writes `currentUser = X` should also call _syncCurrentUser() — or use setCurrentUser(X).
+function _syncCurrentUser() { try { window.currentUser = currentUser; if (window.Hub && Hub.refreshNav) Hub.refreshNav(); } catch(e){} }
+function setCurrentUser(u) { currentUser = u; _syncCurrentUser(); }
+window._syncCurrentUser = _syncCurrentUser;
 let cachedUsers = [], cachedProspects = [], cachedActivities = [], cachedRealtors = [];
 let allTeamActivities = [];
 let cachedOyzEntries = [];
@@ -6237,6 +6242,7 @@ async function tryLogin() {
   btn.textContent = 'Sign In';
   if (user) {
     currentUser = user;
+    _syncCurrentUser();
     sessionStorage.setItem('g1_session', JSON.stringify(user));
     _auditLog('login', 'auth', user.id, user.name||user.email, null);
     document.getElementById('login-screen').style.display = 'none';
@@ -6295,6 +6301,7 @@ async function _handleFirebaseAuthSession(fbUser) {
       userData = rekeyed;
     }
     currentUser = Object.assign({ id: fbUser.uid }, userData);
+    _syncCurrentUser();
     // Mirror into sessionStorage so legacy code paths that inspect g1_session still work.
     try { sessionStorage.setItem('g1_session', JSON.stringify(currentUser)); } catch(e){}
     cachedUsers = await getUsers();
@@ -6387,6 +6394,7 @@ function logout() {
   if (iconEl) { iconEl.innerHTML = ''; iconEl.style.background = ''; }
   currentOrg = null;
   currentUser = null;
+  _syncCurrentUser();
   cachedProspects = []; cachedActivities = []; cachedRealtors = []; allTeamActivities = [];
   realtorPortalMlo = null; realtorSearches = []; realtorPrequals = []; realtorPushes = []; currentQualData = null;
   restoreMloBottomNav();
@@ -6662,6 +6670,7 @@ window.onload = async function() {
     const saved = JSON.parse(s);
     cachedUsers = await getUsers();
     currentUser = cachedUsers.find(function(u) { return u.id === saved.id; }) || saved;
+    _syncCurrentUser();
     document.getElementById('login-screen').style.display = 'none';
     if (currentUser.role === 'realtor') {
       var rAgrOk = await _checkAgreementVersion();
@@ -15559,6 +15568,7 @@ async function submitSignup() {
     try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: _signupData.fname, to_email: _signupData.email, invite_link: APP_URL }); } catch(e) {}
     // Auto-login
     currentUser = adminUser;
+    _syncCurrentUser();
     currentOrg = orgData;
     sessionStorage.setItem('g1_session', JSON.stringify(adminUser));
     document.getElementById('signup-screen').style.display = 'none';
