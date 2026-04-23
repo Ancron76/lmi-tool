@@ -482,20 +482,24 @@
 /* ── Modal ─────────────────────────────────────────────────────────── */
 .hub-modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(28,20,16,0.45);
+  background: rgba(28,20,16,0.22);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 10000;
   display: none;
   align-items: center; justify-content: center;
 }
 .hub-modal-backdrop.open { display: flex; }
 .hub-modal {
-  background: var(--hub-surface);
+  background: #fffdf8;
+  border: 1px solid var(--hub-line);
   border-radius: 10px;
   width: min(620px, 92vw);
   max-height: 88vh;
   overflow-y: auto;
-  box-shadow: 0 20px 48px rgba(28,20,16,0.18), 0 4px 12px rgba(28,20,16,0.08);
+  box-shadow: 0 24px 56px rgba(28,20,16,0.22), 0 6px 14px rgba(28,20,16,0.10);
   padding: 24px 24px 22px;
+  color: var(--hub-ink);
 }
 .hub-modal-h {
   display: flex; align-items: center; justify-content: space-between;
@@ -522,6 +526,231 @@
   border-radius: 6px;
 }
 .hub-modal-close:hover { background: var(--hub-surface-tint); color: var(--hub-ink); }
+
+/* ── Lifecycle pills ─────────────────────────────────────────────── */
+.hub-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  border: 1px solid var(--hub-line);
+  background: var(--hub-surface-tint);
+  color: var(--hub-ink-soft);
+  white-space: nowrap;
+}
+.hub-pill-muted        { background: transparent; color: var(--hub-muted); }
+.hub-pill-stage        { background: rgba(196,148,58,0.12); border-color: rgba(196,148,58,0.35); color: #7a5a1a; }
+.hub-pill-urgency-high { background: #fff2ec; border-color: #f0c5a8; color: #9a3d12; }
+.hub-pill-urgency-low  { background: #eef5ff; border-color: #c7d8f1; color: #35527e; }
+
+.hub-status-pending     { background: #fff7e6; border-color: #f0d9a8; color: #7a541a; }
+.hub-status-accepted    { background: #e8f5ed; border-color: #b6dcc1; color: #23663a; }
+.hub-status-in_process  { background: #eaf1fa; border-color: #b7cbe7; color: #26497e; }
+.hub-status-closed_won  { background: #e7f7ee; border-color: #a6dabc; color: #1f6e3a; }
+.hub-status-closed_lost { background: #fbeaea; border-color: #e5bcbc; color: #822222; }
+.hub-status-declined    { background: #f2efec; border-color: #ddd4c0; color: #6a5a48; }
+
+/* ── Stage stepper ───────────────────────────────────────────────── */
+.hub-stepper {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  margin: 10px 0 4px;
+  border: 1px solid var(--hub-line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.hub-step {
+  flex: 1 1 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--hub-line);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--hub-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  min-width: 0;
+}
+.hub-step:last-child { border-right: none; }
+.hub-step:hover { background: var(--hub-surface-tint); color: var(--hub-ink); }
+.hub-step-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--hub-surface-tint);
+  color: var(--hub-muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  flex-shrink: 0;
+}
+.hub-step-label {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hub-step-done .hub-step-dot { background: #23663a; color: #fff; }
+.hub-step-done                { color: var(--hub-ink-soft); background: #f5f9f5; }
+.hub-step-current .hub-step-dot { background: var(--hub-gold); color: #fff; box-shadow: 0 0 0 3px rgba(196,148,58,0.22); }
+.hub-step-current              { color: var(--hub-ink); font-weight: 700; background: #fffbee; }
+.hub-step-todo .hub-step-dot   { background: var(--hub-surface-tint); color: var(--hub-muted); }
+
+/* ── Activity feed ───────────────────────────────────────────────── */
+.hub-activity-feed {
+  list-style: none;
+  margin: 0; padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--hub-line);
+  border-radius: 8px;
+  background: #fff;
+}
+.hub-activity-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--hub-line);
+  font-size: 12.5px;
+}
+.hub-activity-item:last-child { border-bottom: none; }
+.hub-activity-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 10px;
+}
+.hub-activity-title { font-weight: 600; color: var(--hub-ink); }
+.hub-activity-when { font-size: 10.5px; color: var(--hub-muted); flex-shrink: 0; }
+.hub-activity-meta { font-size: 11px; color: var(--hub-muted); margin-top: 2px; }
+.hub-activity-sub  { font-size: 11.5px; color: var(--hub-ink-soft); margin-top: 4px; font-style: italic; }
+.hub-activity-note {
+  margin-top: 6px;
+  padding: 7px 10px;
+  background: var(--hub-surface-tint);
+  border-radius: 6px;
+  color: var(--hub-ink-soft);
+  white-space: pre-wrap;
+  font-size: 12.5px;
+}
+
+/* ── Note composer ───────────────────────────────────────────────── */
+.hub-note-composer textarea {
+  width: 100%;
+  border: 1px solid var(--hub-line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--hub-ink);
+  background: #fff;
+  resize: vertical;
+}
+.hub-note-composer textarea:focus {
+  outline: none;
+  border-color: var(--hub-gold);
+  box-shadow: 0 0 0 2px rgba(196,148,58,0.20);
+}
+
+/* ── Unread indicator on list rows ───────────────────────────────── */
+.hub-row-unread td { font-weight: 600; background: #fffbee; }
+.hub-unread-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--hub-gold);
+  box-shadow: 0 0 0 2px rgba(196,148,58,0.25);
+}
+.hub-row-chevron {
+  color: var(--hub-muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ── Ghost button variant ────────────────────────────────────────── */
+.hub-btn-ghost {
+  background: transparent;
+  color: var(--hub-muted);
+  border: 1px solid transparent;
+}
+.hub-btn-ghost:hover {
+  background: var(--hub-surface-tint);
+  color: var(--hub-ink);
+}
+
+/* ── Lead detail: responsive 2-col → stack ───────────────────────── */
+@media (max-width: 760px) {
+  .hub-lead-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── Notifications bell + tab badge ──────────────────────────────── */
+.hub-bell-count {
+  position: absolute;
+  top: 2px; right: 2px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #c14848;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  align-items: center; justify-content: center;
+}
+.hub-bell-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 340px;
+  max-height: 460px;
+  overflow-y: auto;
+  background: #fffdf8;
+  border: 1px solid var(--hub-line);
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(28,20,16,0.18);
+  z-index: 12000;
+}
+.hub-bell-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hub-line);
+  font-size: 12.5px;
+}
+.hub-bell-head strong { color: var(--hub-ink); font-size: 13px; }
+.hub-bell-mark-all {
+  background: transparent; border: none;
+  color: var(--hub-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.hub-bell-mark-all:hover { color: var(--hub-ink); text-decoration: underline; }
+.hub-bell-list { list-style: none; margin: 0; padding: 0; }
+.hub-bell-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hub-line);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.hub-bell-item:last-child { border-bottom: none; }
+.hub-bell-item:hover { background: var(--hub-surface-tint); }
+.hub-bell-item-title { font-weight: 600; font-size: 12.5px; color: var(--hub-ink); line-height: 1.3; }
+.hub-bell-item-body  { font-size: 11.5px; color: var(--hub-ink-soft); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.hub-bell-item-meta  { font-size: 10.5px; color: var(--hub-muted); margin-top: 4px; }
+.hub-bell-empty      { padding: 28px 14px; font-size: 12px; color: var(--hub-muted); text-align: center; }
+
+.hub-tab-badge {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  min-width: 16px; height: 16px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: #c14848;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
 
 /* ── Listings / Buyers / Network / Referral body wrappers ────────── */
 .hub-listings-body,
@@ -628,4 +857,200 @@
   .hub-tabbar { padding: 0 16px; }
   #hub-body { padding: 16px; }
   .hub-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+{ color: var(--hub-ink); }
+.hub-step-current { background: #fff8e8; }
+.hub-step-current .hub-step-dot { background: var(--hub-gold); color: #fff; }
+.hub-step-current .hub-step-label { color: var(--hub-ink); font-weight: 700; }
+.hub-step-todo .hub-step-dot { background: var(--hub-surface-tint); }
+
+/* Activity feed — timeline under the stepper inside the lead modal. */
+.hub-activity-feed {
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 260px; overflow-y: auto;
+  padding-right: 4px;
+}
+.hub-activity-item {
+  border: 1px solid var(--hub-line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: #fffdf8;
+}
+.hub-activity-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 10px;
+}
+.hub-activity-title { font-size: 12px; font-weight: 700; color: var(--hub-ink); }
+.hub-activity-when  { font-size: 11px; color: var(--hub-muted); white-space: nowrap; }
+.hub-activity-meta  { font-size: 11px; color: var(--hub-muted); margin-top: 2px; }
+.hub-activity-sub   { font-size: 11px; color: var(--hub-ink-soft); margin-top: 2px; }
+.hub-activity-note  {
+  font-size: 13px; color: var(--hub-ink);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--hub-line);
+  white-space: pre-wrap;
+}
+
+/* Note composer inside the lead modal. */
+.hub-note-composer {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 10px;
+}
+.hub-note-composer textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid var(--hub-line);
+  border-radius: 6px;
+  background: #fffdf8;
+  font: inherit;
+  color: var(--hub-ink);
+  resize: vertical;
+}
+
+/* Unread row highlighting in the Referrals list. */
+.hub-row-unread > td { background: #fff7e1 \!important; }
+.hub-unread-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--hub-gold);
+}
+.hub-row-chevron {
+  color: var(--hub-muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Ghost button variant (used by bell). */
+.hub-btn-ghost {
+  background: transparent \!important;
+  border: 1px solid var(--hub-line) \!important;
+  color: var(--hub-ink-soft) \!important;
+}
+.hub-btn-ghost:hover {
+  background: var(--hub-surface-tint) \!important;
+  color: var(--hub-ink) \!important;
+}
+
+/* Bell icon + count badge in the masthead. */
+.hub-bell-count {
+  position: absolute;
+  top: -3px; right: -3px;
+  background: #c0321f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  line-height: 1;
+  border: 2px solid var(--hub-surface);
+}
+.hub-bell-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 320px;
+  max-width: 380px;
+  max-height: 440px;
+  overflow-y: auto;
+  background: #fffdf8;
+  border: 1px solid var(--hub-line);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(20, 16, 10, 0.14);
+  z-index: 1000;
+}
+.hub-bell-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hub-line);
+  background: var(--hub-surface-tint);
+  font-size: 13px;
+  color: var(--hub-ink);
+}
+.hub-bell-mark-all {
+  background: transparent;
+  border: 1px solid var(--hub-line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--hub-ink-soft);
+  cursor: pointer;
+}
+.hub-bell-mark-all:hover { background: #fff; color: var(--hub-ink); }
+.hub-bell-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.hub-bell-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hub-line);
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.hub-bell-item:last-child { border-bottom: none; }
+.hub-bell-item:hover { background: var(--hub-surface-tint); }
+.hub-bell-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hub-ink);
+}
+.hub-bell-item-body {
+  font-size: 12px;
+  color: var(--hub-ink-soft);
+  margin-top: 2px;
+  max-height: 3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hub-bell-item-meta {
+  font-size: 11px;
+  color: var(--hub-muted);
+  margin-top: 4px;
+}
+.hub-bell-empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+
+/* Referrals tab unread counter. */
+.hub-tab-badge {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  background: #c0321f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  margin-left: 6px;
+  line-height: 1;
+  vertical-align: 1px;
+}
+
+/* Preferences modal helpers. */
+.hub-modal-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hub-line);
+  background: var(--hub-surface-tint);
+}
+.hub-modal-body {
+  padding: 14px 16px;
+}
+.hub-modal-foot {
+  padding: 10px 16px;
+  border-top: 1px solid var(--hub-line);
+  display: flex; justify-content: flex-end; gap: 8px;
 }

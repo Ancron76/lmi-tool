@@ -414,7 +414,10 @@ service cloud.firestore {
       allow delete: if isAdmin() || isSuperAdmin();
     }
 
-    // leads: a referred opportunity moving between orgs
+    // leads: a referred opportunity moving between orgs.
+    // Lifecycle fields (status, stage, timeline[], lastReadBy, viewedAt,
+    // closedAt, stageUpdatedAt, stageUpdatedBy) are all writable by either
+    // side — "both sides can update" model. Creator org is immutable.
     match /leads/{leadId} {
       allow read: if isSignedIn() && (
         isSuperAdmin()
@@ -430,8 +433,53 @@ service cloud.firestore {
         isSuperAdmin()
         || resource.data.fromOrgId == callerOrg()
         || resource.data.toOrgId == callerOrg()
+      ) && (
+        // Immutable identity fields — can't be changed on update.
+        isSuperAdmin() || (
+          request.resource.data.fromOrgId == resource.data.fromOrgId
+          && request.resource.data.fromUserId == resource.data.fromUserId
+          && request.resource.data.toOrgId == resource.data.toOrgId
+          && request.resource.data.createdAt == resource.data.createdAt
+        )
       );
       allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // hubNotifications: per-user in-app notification feed.
+    // Target user reads & marks read; any signed-in user touching a lead
+    // can create (status changes, notes on their referrals produce notifs).
+    match /hubNotifications/{notifId} {
+      allow read: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.targetUid == request.auth.uid
+      );
+      allow create: if isSignedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.targetUid is string
+        && request.resource.data.targetUid.size() > 0;
+      // Only the target can update (mark-as-read) or delete.
+      allow update, delete: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.targetUid == request.auth.uid
+      );
+    }
+
+    // pushSubscriptions: Web Push endpoints keyed by user.
+    // A user owns only their own subscription records.
+    match /pushSubscriptions/{subId} {
+      allow read, update, delete: if isSignedIn() && (
+        isSuperAdmin()
+        || resource.data.uid == request.auth.uid
+      );
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid;
+    }
+
+    // notificationPrefs: per-user email/push opt-in settings.
+    match /notificationPrefs/{uid} {
+      allow read: if isSignedIn() && (isSuperAdmin() || uid == request.auth.uid);
+      allow create, update: if isSignedIn() && uid == request.auth.uid;
+      allow delete: if isSuperAdmin();
     }
 
     // listings: realtor inventory, optionally LMI-flagged

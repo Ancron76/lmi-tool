@@ -20621,13 +20621,31 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- ── Loopenta Hub (additive layer: roles, org types, referrals, reporting) ── -->
-<script src="src/hub/roleModel.js?v=20260422g"></script>
-<script src="src/hub/mountHub.js?v=20260422g"></script>
-<script src="src/hub/managerReporting.js?v=20260422g"></script>
-<script src="src/hub/referrals.js?v=20260422g"></script>
-<script src="src/hub/realtor.js?v=20260422g"></script>
-<script src="src/hub/referralPartner.js?v=20260422g"></script>
+<\!-- ── Loopenta Hub (additive layer: roles, org types, referrals, reporting) ── -->
+<\!--
+  Hub delivery config (email + web push)
+  ---------------------------------------
+  COWORK_WORKER_BASE — base URL of the Cloudflare Worker that sends email
+    and web push (source: workers/notify.js). Leave '' to disable external
+    delivery entirely; the in-app bell + feed still work.
+    After deploying the worker, set e.g. 'https://notify.loopenta.workers.dev'.
+
+  VAPID_PUBLIC_KEY — base64url-encoded VAPID public key, paired with the
+    VAPID_PRIVATE_KEY secret in the notify worker. Generate once with
+    `npx web-push generate-vapid-keys`. Required for browser push.
+-->
+<script>
+  window.COWORK_WORKER_BASE = '';   // e.g. 'https://notify.loopenta.workers.dev'
+  window.VAPID_PUBLIC_KEY   = '';   // e.g. 'BNa...<87-char base64url>'
+</script>
+<script src="src/hub/roleModel.js?v=20260423a"></script>
+<script src="src/hub/mountHub.js?v=20260423a"></script>
+<script src="src/hub/managerReporting.js?v=20260423a"></script>
+<script src="src/hub/referralLifecycle.js?v=20260423a"></script>
+<script src="src/hub/notifications.js?v=20260423a"></script>
+<script src="src/hub/referrals.js?v=20260423a"></script>
+<script src="src/hub/realtor.js?v=20260423a"></script>
+<script src="src/hub/referralPartner.js?v=20260423a"></script>
 
 <!-- DASHBOARD SETTINGS PANEL + BACKDROP -->
 <div id="dash-settings-backdrop" onclick="closeDashSettings()"></div>
