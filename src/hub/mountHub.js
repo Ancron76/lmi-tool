@@ -7,7 +7,7 @@
   'use strict';
 
   var Hub = global.Hub = global.Hub || {};
-  Hub.VERSION = '20260423b';
+  Hub.VERSION = '20260423c';
 
   var mounted = false;
 
@@ -318,13 +318,3 @@
   }, 1500);
 
 })(typeof window !== 'undefined' ? window : globalThis);
-    // If a modal is open, never re-render body — we'd wipe the user's
-    // in-progress form input. The tabbar sig check above already prevents
-    // the tab re-render path.
-    if (document.querySelector('.hub-modal-backdrop')) return;
-    // If an input/textarea/select is focused, the user is typing — don't
-    // yank focus out by re-rendering.
-    var ae = document.activeElement;
-    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
-
-    // If the body already has an active tab rendered (no signin
