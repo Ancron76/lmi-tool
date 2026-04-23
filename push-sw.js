@@ -15,7 +15,7 @@
 // No caching, no offline, no fetch interception — deliberately minimal.
 // ======================================================================
 
-const SW_VERSION = '20260423a';
+const SW_VERSION = '20260423b';
 
 self.addEventListener('install', function (event) {
   // Activate immediately so push works without a page reload.

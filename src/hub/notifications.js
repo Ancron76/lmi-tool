@@ -129,7 +129,7 @@
       // NOTE: this replaces the self-destructing /sw.js registration at
       // the root scope, which is intentional: once a user opts in, they
       // want the push handler live at '/'.
-      var reg = await navigator.serviceWorker.register('/push-sw.js?v=20260423a');
+      var reg = await navigator.serviceWorker.register('/push-sw.js?v=20260423b');
       await navigator.serviceWorker.ready;
 
       // Reuse existing subscription if one is already attached.

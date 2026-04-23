@@ -7,7 +7,7 @@
   'use strict';
 
   var Hub = global.Hub = global.Hub || {};
-  Hub.VERSION = '20260423a';
+  Hub.VERSION = '20260423b';
 
   var mounted = false;
 
@@ -327,57 +327,4 @@
     var ae = document.activeElement;
     if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
 
-    // If the body already has an active tab rendered (no signin CTA),
-    // stop the polling timer — we've reached steady-state and further
-    // ticks are unnecessary churn.
-    var hasSignedOutCta = \!\!document.getElementById('hub-signin-cta');
-    var hasActiveTab = \!\!document.querySelector('.hub-tab.active');
-    if (hasActiveTab && \!hasSignedOutCta) {
-      if (Hub._navRefreshTimer) {
-        clearInterval(Hub._navRefreshTimer);
-        Hub._navRefreshTimer = null;
-      }
-      return;
-    }
-    // Otherwise: if we're signed in but no tab is active yet, pick the
-    // default one. This unsticks first load where routes register after mount.
-    if (global.currentUser && \!hasActiveTab) {
-      var keys = Object.keys(Hub._routes || {});
-      if (keys.length) Hub.go(defaultRouteForUser(keys));
-    }
-  };
-
-  // ── Auto-mount + route-registration watcher ─────────────────────────
-  function tryAutoMount() {
-    if (mounted) return;
-    if (\!global.currentUser) return;
-    Hub.mount();
-    Hub.refreshNav();
-  }
-  Hub._tryAutoMount = tryAutoMount;
-
-  // Small poller: as sub-modules register their routes *after* this file
-  // loads, we call refreshNav a few times to paint the tabbar. Once a tab
-  // is active and body is rendered, refreshNav clears this timer itself.
-  var _watchStart = Date.now();
-  Hub._navRefreshTimer = setInterval(function () {
-    if (\!mounted) {
-      tryAutoMount();
-    } else {
-      try { Hub.refreshNav(); } catch (e) {}
-    }
-    // Belt-and-suspenders: hard stop after 2 minutes so we never churn forever.
-    if (Date.now() - _watchStart > 120000) {
-      clearInterval(Hub._navRefreshTimer);
-      Hub._navRefreshTimer = null;
-    }
-  }, 1500);
-
-  // Also try an immediate mount in case currentUser is already present
-  // at script-load time (typical after a hot reload).
-  setTimeout(tryAutoMount, 0);
-
-  // Bind the legacy nav trigger so clicking a "hub" link flips the view.
-  bindNavTrigger();
-
-})(typeof window \!== 'undefined' ? window : globalThis);
+    // If the body already has an active tab rendered (no signin
