@@ -335,6 +335,7 @@
     var who = lead.borrowerName || lead.clientName || lead.propertyAddress || 'referral';
     var actor = evt.byName || 'Someone';
     switch (event) {
+      case 'sent':           return actor + ' sent you a new referral — ' + who;
       case 'accepted':       return actor + ' accepted your referral — ' + who;
       case 'declined':       return actor + ' declined your referral — ' + who;
       case 'stage_advanced': return who + ' → ' + (Hub.lifecycle ? Hub.lifecycle.stageLabel(evt.toStage) : evt.toStage);
