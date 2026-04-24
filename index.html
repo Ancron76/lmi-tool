@@ -5188,7 +5188,12 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
 const EMAILJS_PUBLIC_KEY  = 'uSiYFQtZ-GzxmJ53A';
 const EMAILJS_SERVICE_ID  = 'service_g1ghxq2';
 const EMAILJS_TEMPLATE_ID = 'template_fksjm5e';
-const APP_URL = 'https://loopenta.com';
+// Use the current origin so invite links always point back to whichever
+// domain the admin is on (lmitool.com, loopenta.com, localhost, etc.).
+// Falls back to the lmitool.com prod URL if window.location is unavailable.
+const APP_URL = (typeof window !== 'undefined' && window.location && window.location.origin)
+  ? window.location.origin
+  : 'https://lmitool.com';
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -5396,7 +5401,11 @@ async function sendInvite() {
     return;
   }
   try {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: name, to_email: email, invite_link: inviteLink });
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_name: name, to_email: email, invite_link: inviteLink,
+      app_name: DOMAIN_CONFIG.appName, app_tagline: DOMAIN_CONFIG.appTagline,
+      app_host:  (window.location && window.location.hostname) || 'lmitool.com',
+    });
     btn.textContent = '✉️ Send Invite Email';
     btn.disabled = false;
     succEl.textContent = '✅ Invite sent to ' + email + '! Link expires in 72 hours.';
@@ -16083,7 +16092,9 @@ async function inviteRealtorToPortal(docId) {
   try {
     await db.collection('invites').doc(token).set(inviteData);
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_name: r.name, to_email: r.email, invite_link: inviteLink
+      to_name: r.name, to_email: r.email, invite_link: inviteLink,
+      app_name: DOMAIN_CONFIG.appName, app_tagline: DOMAIN_CONFIG.appTagline,
+      app_host:  (window.location && window.location.hostname) || 'lmitool.com',
     });
     showToast('✅ Portal invite sent to ' + r.name + '!');
   } catch(e) {
