@@ -290,9 +290,9 @@
   Hub.registerRoute && Hub.registerRoute('help', {
     label: 'Help Center',
     icon:  '?',
-    visible: function (caps) {
-      return caps && caps.isAnyAdmin; // Super Admin + Admin only
-    },
+    // Open to every signed-in user; the sidebar link now lives in the
+    // footer next to Settings / Sign Out so it's always reachable.
+    visible: function (caps) { return !!caps; },
     render: function (mount) {
       renderHelp(mount);
     },
@@ -455,32 +455,6 @@
   }
   function stripTags(html) {
     return String(html || '').replace(/<[^>]+>/g, ' ');
-  }
-
-  // ── Sidebar visibility gate ──────────────────────────────────────────
-  // The sidebar <button id="sn-hub-help"> is hidden by default. Show it
-  // when we know the user is an admin or super admin. We poll because the
-  // currentUser object populates asynchronously after Firebase auth.
-  function syncSidebar() {
-    var btn = global.document && global.document.getElementById('sn-hub-help');
-    if (!btn) return;
-    var u = global.currentUser;
-    var isAdmin = !!(u && (u.role === 'admin' || u.role === 'superadmin'));
-    btn.style.display = isAdmin ? '' : 'none';
-  }
-  if (global.document) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', syncSidebar, { once: true });
-    } else {
-      setTimeout(syncSidebar, 0);
-    }
-    // Poll for up to 2 minutes after load so we catch the currentUser swap
-    // once Firebase resolves the signed-in session. Self-clears.
-    var _helpSyncStart = Date.now();
-    var _helpSyncTimer = setInterval(function () {
-      syncSidebar();
-      if (Date.now() - _helpSyncStart > 120000) clearInterval(_helpSyncTimer);
-    }, 1500);
   }
 
   console.info('[Hub.help] loaded', ARTICLES.length, 'articles');
