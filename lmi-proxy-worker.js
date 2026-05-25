@@ -44,11 +44,24 @@ function corsHeaders(request) {
   };
 }
 
-function jsonResp(data, request, status = 200) {
+function jsonResp(data, request, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders(request) },
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders(request),
+      ...extraHeaders,
+    },
   });
+}
+
+// Emits an error with an `x-deny-reason` header so the frontend can
+// self-diagnose without parsing the body. The body still carries detail.
+function errResp(reason, data, request, status, attempts) {
+  const body = { error: data && data.error || reason, reason };
+  if (data) Object.assign(body, data);
+  if (attempts && attempts.length) body.attempts = attempts;
+  return jsonResp(body, request, status, { 'x-deny-reason': reason });
 }
 
 export default {
@@ -83,9 +96,9 @@ export default {
         return handleLmiLookup(zip, request);
       }
 
-      return jsonResp({ error: 'Not found' }, request, 404);
+      return errResp('not_found', { error: 'Not found', path: url.pathname }, request, 404);
     } catch (e) {
-      return jsonResp({ error: e.message || 'Internal error' }, request, 500);
+      return errResp('internal_error', { error: e.message || 'Internal error' }, request, 500);
     }
   },
 };
@@ -161,97 +174,178 @@ const COUNTY_TO_MSA = {
   '06097': '42220', // Santa Rosa (Sonoma)
 };
 
+// Try a Census ACS year in order. Returns the first year whose tract
+// query succeeds. Logs each attempt so failure responses can pinpoint
+// what broke (HTTP status, body sample, JSON shape).
+async function fetchCensusTracts(stateCode, countyCode, msaCode, attempts) {
+  // Try newer ACS first; fall back through older releases. 2023 ACS 5-year
+  // was published Dec 2024; 2024 ACS 5-year is expected Dec 2025. Census
+  // occasionally throttles or 5xx's the newest year right after release,
+  // so the fallback chain matters.
+  const years = [2023, 2022, 2021, 2020];
+
+  for (const year of years) {
+    const tractUrl =
+      'https://api.census.gov/data/' + year + '/acs/acs5' +
+      '?get=NAME,B19113_001E,B01003_001E' +
+      '&for=tract:*&in=state:' + stateCode + '+county:' + countyCode;
+
+    let tractRes;
+    try {
+      tractRes = await fetch(tractUrl, {
+        headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' },
+      });
+    } catch (e) {
+      attempts.push({ year, scope: 'tract', ok: false, reason: 'fetch_threw', error: String(e && e.message || e) });
+      continue;
+    }
+
+    if (!tractRes.ok) {
+      let bodySample = '';
+      try { bodySample = (await tractRes.text()).slice(0, 200); } catch (_) {}
+      attempts.push({ year, scope: 'tract', ok: false, status: tractRes.status, bodySample });
+      continue;
+    }
+
+    let tractData;
+    try {
+      tractData = await tractRes.json();
+    } catch (e) {
+      attempts.push({ year, scope: 'tract', ok: false, reason: 'json_parse_failed' });
+      continue;
+    }
+
+    if (!Array.isArray(tractData) || tractData.length < 2) {
+      attempts.push({ year, scope: 'tract', ok: false, reason: 'empty_or_invalid_response' });
+      continue;
+    }
+
+    // Got tract data — now try to get MSA AMI in parallel (best effort).
+    let ami = 0;
+    if (msaCode) {
+      // URL-encode the slash in the geography name. Census API accepts
+      // both raw and encoded slashes here, but some intermediate proxies
+      // normalize unencoded slashes as path separators.
+      const msaUrl =
+        'https://api.census.gov/data/' + year + '/acs/acs5' +
+        '?get=B19113_001E' +
+        '&for=metropolitan%20statistical%20area%2Fmicropolitan%20statistical%20area:' + msaCode;
+      try {
+        const amiRes = await fetch(msaUrl, {
+          headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' },
+        });
+        if (amiRes.ok) {
+          const amiData = await amiRes.json();
+          ami = parseInt(amiData?.[1]?.[0]) || 0;
+        } else {
+          attempts.push({ year, scope: 'msa_ami', ok: false, status: amiRes.status });
+        }
+      } catch (e) {
+        attempts.push({ year, scope: 'msa_ami', ok: false, reason: 'fetch_threw', error: String(e && e.message || e) });
+      }
+    }
+
+    attempts.push({ year, scope: 'tract', ok: true, rows: tractData.length - 1, amiFound: !!ami });
+    return { year, tractData, ami };
+  }
+
+  return null;
+}
+
 async function handleLmiLookup(zip, request) {
   if (!/^\d{5}$/.test(zip)) {
-    return jsonResp({ error: 'Invalid zip code' }, request, 400);
+    return errResp('invalid_zip', { error: 'Invalid zip code' }, request, 400);
   }
 
   const prefix = zip.substring(0, 3);
   const countyFips = ZIP_TO_COUNTY[prefix];
   if (!countyFips) {
-    return jsonResp({ error: 'ZIP code not in coverage area' }, request, 400);
+    return errResp('zip_not_in_coverage', {
+      error: 'ZIP code not in coverage area',
+      zip,
+      coverage: 'California only (lmi-proxy fallback). The primary lmi-tool Worker covers all states.',
+    }, request, 400);
   }
 
   const stateCode = countyFips.substring(0, 2);
   const countyCode = countyFips.substring(2);
   const msaCode = COUNTY_TO_MSA[countyFips] || '';
+  const attempts = [];
 
+  let result;
   try {
-    // Fetch tract-level data and MSA AMI in parallel
-    const acsYear = 2022; // Most recent stable ACS 5-year
-    const [tractRes, amiRes] = await Promise.all([
-      // B19113_001E = Median family income, B01003_001E = Population
-      fetch(
-        'https://api.census.gov/data/' + acsYear + '/acs/acs5' +
-        '?get=NAME,B19113_001E,B01003_001E' +
-        '&for=tract:*&in=state:' + stateCode + '+county:' + countyCode
-      ),
-      // MSA-level AMI
-      msaCode
-        ? fetch(
-            'https://api.census.gov/data/' + acsYear + '/acs/acs5' +
-            '?get=B19113_001E' +
-            '&for=metropolitan%20statistical%20area/micropolitan%20statistical%20area:' + msaCode
-          )
-        : Promise.resolve(null),
-    ]);
-
-    if (!tractRes.ok) {
-      return jsonResp({ error: 'Census API error' }, request, 502);
-    }
-
-    const tractData = await tractRes.json();
-    let ami = 0;
-    if (amiRes && amiRes.ok) {
-      const amiData = await amiRes.json();
-      ami = parseInt(amiData[1]?.[0]) || 0;
-    }
-    // Fallback: use county median if MSA unavailable
-    if (!ami) {
-      const countyIncomes = tractData.slice(1)
-        .map(r => parseInt(r[1]) || 0)
-        .filter(v => v > 0);
-      ami = countyIncomes.length > 0
-        ? Math.round(countyIncomes.reduce((s, v) => s + v, 0) / countyIncomes.length)
-        : 80000;
-    }
-
-    // Parse tract data: [NAME, B19113_001E, B01003_001E, state, county, tract]
-    const tracts = [];
-    const countyName = (tractData[1]?.[0] || '').replace(/Census Tract [\d.]+;\s*/, '').replace(/;\s*California$/, '');
-
-    for (let i = 1; i < tractData.length; i++) {
-      const row = tractData[i];
-      const tractName = row[0] || '';
-      const tractIncome = parseInt(row[1]) || 0;
-      const population = parseInt(row[2]) || 0;
-      const tractNum = row[5] || '';
-      const tractId = stateCode + countyCode + tractNum;
-
-      if (tractIncome <= 0) continue;
-
-      const incomeRatio = ami > 0 ? Math.round((tractIncome / ami) * 100) : 0;
-
-      // Only include LMI tracts (income ratio <= 80%) and borderline (<=120%)
-      tracts.push({
-        tract_id: tractId,
-        tract_md_fam_income: tractIncome,
-        area_md_fam_income: ami,
-        income_ratio: incomeRatio,
-        county_name: countyName,
-        city: '',
-        population,
-        minority_pct: 0,
-      });
-    }
-
-    // Sort: LMI tracts first (lowest income ratio), then others
-    tracts.sort((a, b) => a.income_ratio - b.income_ratio);
-
-    return jsonResp(tracts, request);
+    result = await fetchCensusTracts(stateCode, countyCode, msaCode, attempts);
   } catch (e) {
-    return jsonResp({ error: 'Census API unreachable' }, request, 502);
+    return errResp('census_unreachable', {
+      error: 'Census API unreachable',
+      detail: String(e && e.message || e),
+    }, request, 502, attempts);
   }
+
+  if (!result) {
+    return errResp('census_all_years_failed', {
+      error: 'Census API returned no usable data for any tried year',
+      zip,
+      stateCode,
+      countyCode,
+    }, request, 502, attempts);
+  }
+
+  const { tractData, ami: msaAmi, year } = result;
+
+  let ami = msaAmi;
+  // Fallback: use county average if MSA AMI is unavailable.
+  if (!ami) {
+    const countyIncomes = tractData.slice(1)
+      .map(r => parseInt(r[1]) || 0)
+      .filter(v => v > 0);
+    ami = countyIncomes.length > 0
+      ? Math.round(countyIncomes.reduce((s, v) => s + v, 0) / countyIncomes.length)
+      : 80000;
+  }
+
+  // Parse tract data: [NAME, B19113_001E, B01003_001E, state, county, tract]
+  const tracts = [];
+  const countyName = (tractData[1]?.[0] || '')
+    .replace(/Census Tract [\d.]+;\s*/, '')
+    .replace(/;\s*California$/, '');
+
+  for (let i = 1; i < tractData.length; i++) {
+    const row = tractData[i];
+    const tractIncome = parseInt(row[1]) || 0;
+    const population = parseInt(row[2]) || 0;
+    const tractNum = row[5] || '';
+    const tractId = stateCode + countyCode + tractNum;
+
+    if (tractIncome <= 0) continue;
+
+    const incomeRatio = ami > 0 ? Math.round((tractIncome / ami) * 100) : 0;
+
+    tracts.push({
+      tract_id: tractId,
+      tract_md_fam_income: tractIncome,
+      area_md_fam_income: ami,
+      income_ratio: incomeRatio,
+      county_name: countyName,
+      city: '',
+      population,
+      minority_pct: 0,
+      acs_year: year,
+    });
+  }
+
+  // Sort: LMI tracts first (lowest income ratio), then others
+  tracts.sort((a, b) => a.income_ratio - b.income_ratio);
+
+  if (!tracts.length) {
+    return errResp('no_tracts_with_income', {
+      error: 'Census returned tracts but none had usable income data',
+      year,
+      countyName,
+    }, request, 502, attempts);
+  }
+
+  return jsonResp(tracts, request);
 }
 
 
@@ -264,7 +358,10 @@ async function handlePropertyIntelligence(url, env, request) {
   const county = url.searchParams.get('county') || '';
 
   if (!tractId || !zip) {
-    return jsonResp({ error: 'tractId and zip are required' }, request, 400);
+    return errResp('missing_params', {
+      error: 'tractId and zip are required',
+      received: { tractId: tractId || null, zip: zip || null },
+    }, request, 400);
   }
 
   // Check KV cache (6 hours)
