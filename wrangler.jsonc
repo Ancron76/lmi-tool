@@ -7,7 +7,14 @@
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".",
+    // Without this, Cloudflare's static-asset router serves index.html for
+    // every path that matches an asset (including `/`), so requests like
+    // `/?zip=93702` never reach worker.js. The worker explicitly falls
+    // through to `env.ASSETS.fetch(request)` (worker.js:175) for any
+    // unmatched route, so flipping this to true gives the worker first
+    // crack at API paths while pages still get served normally.
+    "run_worker_first": true
   },
   "triggers": {
     // Run daily at 09:00 UTC (= 02:00 PDT / 01:00 PST). The scheduled()
