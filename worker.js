@@ -443,8 +443,14 @@ async function fetchLmiTractsForZip(zip) {
       const values = parseCsvLine(line);
       const row = {};
       headers.forEach((h, idx) => { row[h] = values[idx]; });
-      const incomeRatio = parseFloat(row.tract_to_msa_income_percentage);
       const rawId = row.census_tract || '';
+      // CFPB's data-browser-api ignores `counties=` on the nationwide CSV
+      // endpoint — every query just returns the pre-built actions_taken×year
+      // slice of the WHOLE country (verified: Fresno + LA + no-filter all
+      // redirect to the same file hash). So filter here against the 5-digit
+      // state+county FIPS prefix of the resolved county.
+      if (countyFips && !rawId.startsWith(countyFips)) return null;
+      const incomeRatio = parseFloat(row.tract_to_msa_income_percentage);
       const msaMfi = parseInt(row.ffiec_msa_md_median_family_income) || 0;
       // Tract MFI is not in CFPB's response — derive from ratio × MSA MFI.
       // This is what the frontend's renderResults expects in
