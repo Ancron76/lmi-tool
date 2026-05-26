@@ -74,6 +74,49 @@ const ZIP_TO_CITY = {
   '91761':'Ontario','91762':'Ontario','91764':'Ontario',
 };
 
+// ZIP3 prefix → 5-digit county FIPS. Required because CFPB's HMDA
+// data-browser-api does NOT accept a `zip_codes` filter — only `states`,
+// `counties`, `census_tracts`, and `msamds`. Before this map existed,
+// `fetchLmiTractsForZip` passed `&zip_codes=` and CFPB silently ignored
+// it, dumping the entire national HMDA dataset (3 MB+) which the frontend
+// then rendered as if those random out-of-state tracts belonged to the
+// searched ZIP. Mirrors lmi-proxy-worker.js's CA-only coverage.
+const ZIP3_TO_COUNTY_FIPS = {
+  '900': '06037', '901': '06037', '902': '06037', '903': '06037', '904': '06037',
+  '905': '06037', '906': '06037', '907': '06037', '908': '06037',
+  '910': '06037', '911': '06037', '912': '06037', '913': '06037', '914': '06037',
+  '915': '06037', '916': '06037', '917': '06037', '918': '06037',
+  '919': '06111', // Ventura
+  '920': '06073', '921': '06073', // San Diego
+  '922': '06025', // Imperial
+  '923': '06065', '924': '06065', '925': '06065', // Riverside
+  '926': '06059', '927': '06059', '928': '06059', // Orange
+  '930': '06111', // Ventura
+  '931': '06083', // Santa Barbara
+  '932': '06029', '933': '06029', // Kern
+  '934': '06079', // San Luis Obispo
+  '935': '06029', // Kern
+  '936': '06019', '937': '06019', '938': '06019', // Fresno
+  '939': '06107', // Tulare
+  '940': '06081', // San Mateo
+  '941': '06075', // San Francisco
+  '942': '06081', // San Mateo
+  '943': '06001', // Alameda
+  '944': '06075', // San Francisco
+  '945': '06001', '946': '06001', // Alameda
+  '947': '06013', // Contra Costa
+  '948': '06097', // Sonoma
+  '949': '06041', // Marin
+  '950': '06085', '951': '06085', '954': '06085', // Santa Clara
+  '952': '06087', // Santa Cruz
+  '953': '06069', // San Benito
+  '955': '06077', '956': '06077', // San Joaquin
+  '957': '06039', // Madera
+  '958': '06067', '959': '06067', // Sacramento
+  '960': '06089', // Shasta
+  '961': '06007', '962': '06007', // Butte
+};
+
 function getAllowedOrigin(request) {
   const origin = request.headers.get('Origin') || '';
   if (ALLOWED_ORIGINS.includes(origin)) return origin;
@@ -333,6 +376,22 @@ function parseCsvLine(line) {
 async function fetchLmiTractsForZip(zip) {
   if (!/^\d{5}$/.test(zip)) return { ok: false, reason: 'invalid_zip', tracts: [] };
 
+  // CFPB HMDA's data-browser-api does NOT support a `zip_codes` query
+  // parameter on the nationwide CSV endpoint — only `states`, `counties`,
+  // `census_tracts`, `msamds`. Resolve ZIP → county FIPS first, then ask
+  // for that county's tracts. (The frontend renders all returned tracts
+  // for the area, matching how lmi-proxy-worker.js behaves.)
+  const countyFips = ZIP3_TO_COUNTY_FIPS[zip.substring(0, 3)];
+  if (!countyFips) {
+    return {
+      ok: false,
+      reason: 'zip_not_in_coverage',
+      detail: 'ZIP ' + zip + ' is outside the current CA coverage area. ' +
+        'Add the ZIP3 prefix to ZIP3_TO_COUNTY_FIPS in worker.js to extend coverage.',
+      tracts: []
+    };
+  }
+
   // CFPB HMDA currently has data for 2018-2023 (per the API's own range
   // error). Hardcoded to the known-good range so we stop hitting invalid
   // years and wasting subrequests.
@@ -343,7 +402,7 @@ async function fetchLmiTractsForZip(zip) {
     for (const year of yearsToTry) {
       // `actions_taken=1,2,3` narrows HMDA rows to originated, approved-not-
       // accepted, and denied only — cuts the response size ~4x vs. no filter,
-      // which is important because some large-volume ZIPs (e.g. 95206) return
+      // which matters because some large counties (e.g. LA = 06037) return
       // CSVs big enough to blow the Worker 128MB memory limit otherwise. The
       // tract-level fields (ratio / median income / population) are identical
       // across action_taken values, so filtering doesn't lose any tract data.
@@ -351,12 +410,11 @@ async function fetchLmiTractsForZip(zip) {
         'https://ffiec.cfpb.gov/v2/data-browser-api/view/nationwide/csv' +
         '?years=' + year +
         '&actions_taken=1,2,3' +
-        '&msa_md=&state=&county=&census_tract=' +
+        '&counties=' + countyFips +
         '&fields=census_tract,tract_population,' +
         'tract_minority_population_percent,' +
         'ffiec_msa_md_median_family_income,' +
-        'tract_to_msa_income_percentage' +
-        '&zip_codes=' + zip;
+        'tract_to_msa_income_percentage';
       res = await fetch(ffiecUrl, { headers: { 'User-Agent': 'LMI-Tool/1.0' } });
       if (res.ok) break;
     }
