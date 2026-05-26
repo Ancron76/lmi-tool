@@ -14,7 +14,12 @@
     // through to `env.ASSETS.fetch(request)` (worker.js:175) for any
     // unmatched route, so flipping this to true gives the worker first
     // crack at API paths while pages still get served normally.
-    "run_worker_first": true
+    "run_worker_first": true,
+    // Required so the worker can call `env.ASSETS.fetch(request)` to serve
+    // the static index.html / src/ assets for non-API routes. Without this
+    // binding, env.ASSETS is undefined and every page load throws a
+    // Cloudflare 1101 (Worker threw exception).
+    "binding": "ASSETS"
   },
   "triggers": {
     // Run daily at 09:00 UTC (= 02:00 PDT / 01:00 PST). The scheduled()
