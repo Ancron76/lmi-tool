@@ -57,11 +57,24 @@ function jsonResp(data, request, status = 200, extraHeaders = {}) {
 
 // Emits an error with an `x-deny-reason` header so the frontend can
 // self-diagnose without parsing the body. The body still carries detail.
+// Also emits `x-attempts-summary` (a compact "year:scope=status,..." string)
+// so per-year diagnostic info survives the frontend's body-truncation.
 function errResp(reason, data, request, status, attempts) {
   const body = { error: data && data.error || reason, reason };
   if (data) Object.assign(body, data);
   if (attempts && attempts.length) body.attempts = attempts;
-  return jsonResp(body, request, status, { 'x-deny-reason': reason });
+  const extra = { 'x-deny-reason': reason };
+  if (attempts && attempts.length) {
+    extra['x-attempts-summary'] = attempts
+      .map(a => {
+        const scope = a.scope || '?';
+        const code = a.ok ? 'ok' : (a.status || a.reason || 'err');
+        return (a.year ? a.year + ':' : '') + scope + '=' + code;
+      })
+      .join(',')
+      .slice(0, 400);
+  }
+  return jsonResp(body, request, status, extra);
 }
 
 export default {

@@ -11245,32 +11245,78 @@ async function doSearch() {
   document.getElementById('qualifier-trigger').style.display = 'none';
   closeQualifier();
   res.innerHTML = '<div class="loader">🔍 Looking up live census tract data...</div>';
+
+  // Try same-origin first (the main lmi-tool Worker on the custom domain
+  // uses CFPB FFIEC as primary which is more reliable than the proxy's
+  // ACS-only path). Fall back to the lmi-proxy Worker if same-origin
+  // returns HTML (no route bound) or a 5xx.
+  async function tryFetch(url) {
+    const r = await fetch(url);
+    const ct = r.headers.get('content-type') || '';
+    if (r.ok && ct.indexOf('json') !== -1) return { data: await r.json(), via: url };
+    const denyReason = r.headers.get('x-deny-reason') || '';
+    const attemptsSummary = r.headers.get('x-attempts-summary') || '';
+    let bodyText = '';
+    try { bodyText = (await r.text() || '').slice(0, 1500); } catch(_) {}
+    const err = new Error(
+      'HTTP ' + r.status
+      + (denyReason ? ' · ' + denyReason : '')
+      + (attemptsSummary ? ' · attempts=' + attemptsSummary : '')
+      + (ct && ct.indexOf('json') === -1 ? ' · ' + ct : '')
+      + (bodyText ? ' · ' + bodyText : '')
+    );
+    err.status = r.status;
+    err.denyReason = denyReason;
+    err.attemptsSummary = attemptsSummary;
+    err.contentType = ct;
+    throw err;
+  }
+
+  const sameOriginUrl = window.location.origin + '/?zip=' + zip;
+  const proxyUrl = PROXY_URL + '?zip=' + zip;
+  let result;
+  let primaryErr = null;
   try {
-    const response = await fetch(PROXY_URL + '?zip=' + zip);
-    if (!response.ok) {
-      // Surface the Worker's failure reason so ops issues are self-diagnosing
-      // instead of always reading "Could not reach census data".
-      const denyReason = response.headers.get('x-deny-reason') || '';
-      let bodyText = '';
-      try { bodyText = (await response.text() || '').slice(0, 140); } catch(_) {}
-      const err = new Error('HTTP ' + response.status + (denyReason ? ' · ' + denyReason : '') + (bodyText ? ' · ' + bodyText : ''));
-      err.status = response.status;
-      err.denyReason = denyReason;
-      throw err;
+    result = await tryFetch(sameOriginUrl);
+  } catch (e) {
+    primaryErr = e;
+    // Only fall through to the proxy if same-origin clearly isn't the LMI
+    // route (HTML response = static asset) or returned a 5xx. Don't mask
+    // hard 4xx errors (invalid zip etc) by retrying the proxy.
+    const sameOriginRoutable = e.contentType && e.contentType.indexOf('json') !== -1 && e.status && e.status < 500;
+    if (sameOriginRoutable) {
+      // Same-origin is the LMI route and gave a real error — surface it.
+      result = null;
+    } else {
+      try { result = await tryFetch(proxyUrl); }
+      catch (e2) {
+        e2.primaryError = e;
+        primaryErr = e2;
+        result = null;
+      }
     }
-    const data = await response.json();
-    if (!data || !data.length || data.error) { renderNotFound(zip); return; }
-    renderFarmCard(zip, data[0].city || zip, data[0].area_md_fam_income || 0);
-    renderResults(zip, data);
-  } catch(err) {
+  }
+
+  if (!result) {
+    const err = primaryErr || new Error('unknown_error');
     console.warn('[doSearch]', err);
-    const isHostAllowlist = err && (err.denyReason === 'host_not_allowed' || (err.message || '').indexOf('host_not_allowed') !== -1);
+    const isHostAllowlist = err.denyReason === 'host_not_allowed' || (err.message || '').indexOf('host_not_allowed') !== -1;
     const detail = isHostAllowlist
       ? '<strong>Worker is rejecting this origin.</strong><br/>The <code>lmi-proxy</code> Worker\'s host allowlist needs <code>' + esc(location.origin) + '</code>. Redeploy the Worker from this repo (<code>npx wrangler deploy -c wrangler-proxy.jsonc</code>) to pick up the latest allowlist.'
       : 'Check your connection or try again.<br/>You can also look up at <a href="https://ffiec.cfpb.gov/tools/tract-lookup#' + zip + '" target="_blank">FFIEC.gov →</a>';
-    const techDetail = err && err.message ? '<div style="font-size:11px;color:#94a3b8;margin-top:8px;font-family:monospace">' + esc(err.message) + '</div>' : '';
+    const techDetail = err.message ? '<div style="font-size:11px;color:#94a3b8;margin-top:8px;font-family:monospace;word-break:break-all">' + esc(err.message) + '</div>' : '';
     res.innerHTML = '<div class="api-error"><h3>⚠️ Could not reach census data</h3><p>' + detail + '</p>' + techDetail + '</div>';
+    return;
   }
+
+  const data = result.data;
+  if (!data || !data.length || data.error) { renderNotFound(zip); return; }
+  // worker.js returns `median_family_income` (the MSA MFI); lmi-proxy
+  // returns `area_md_fam_income`. Accept either so this works through
+  // both paths.
+  const amiForCard = data[0].area_md_fam_income || data[0].median_family_income || 0;
+  renderFarmCard(zip, data[0].city || zip, amiForCard);
+  renderResults(zip, data);
 }
 
 function getCategory(tractIncome, ami) {

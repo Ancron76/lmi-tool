@@ -387,16 +387,29 @@ async function fetchLmiTractsForZip(zip) {
       headers.forEach((h, idx) => { row[h] = values[idx]; });
       const incomeRatio = parseFloat(row.tract_to_msa_income_percentage);
       const rawId = row.census_tract || '';
+      const msaMfi = parseInt(row.ffiec_msa_md_median_family_income) || 0;
+      // Tract MFI is not in CFPB's response — derive from ratio × MSA MFI.
+      // This is what the frontend's renderResults expects in
+      // `tract_md_fam_income`. Exact when ratio is exact, otherwise off by
+      // CFPB's rounding (negligible).
+      const tractMfi = isFinite(incomeRatio) && msaMfi
+        ? Math.round((incomeRatio / 100) * msaMfi)
+        : 0;
+      const tractPop = parseInt(row.tract_population) || 0;
       results.push({
         tract_id: rawId,
         tract_id_normalized: normalizeTractId(rawId),
         census_tract: rawId,
-        tract_population: parseInt(row.tract_population) || 0,
+        tract_population: tractPop,
+        population: tractPop,                 // alias used by frontend renderers
         minority_pct: parseFloat(row.tract_minority_population_percent) || 0,
-        median_family_income: parseInt(row.ffiec_msa_md_median_family_income) || 0,
+        median_family_income: msaMfi,         // legacy/diagnostic
+        area_md_fam_income: msaMfi,           // frontend alias (MSA AMI)
+        tract_md_fam_income: tractMfi,        // frontend alias (tract MFI)
         income_ratio: isFinite(incomeRatio) ? incomeRatio : null,
         lmi_status: isFinite(incomeRatio) && incomeRatio <= 80,
         lmi_category: classifyIncomeRatio(isFinite(incomeRatio) ? incomeRatio : null),
+        city: '',
       });
       return null;
     });
