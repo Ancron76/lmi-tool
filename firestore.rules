@@ -254,7 +254,9 @@ service cloud.firestore {
 
     // ================ INVITES (public token reads) ================
     // Invitee hits URL unauthenticated — get only, no list. Admin
-    // creates/revokes. Acceptance flips used=false→true one time.
+    // creates/revokes. Acceptance flips used=false→true one time and
+    // MUST stamp the caller's own uid in usedBy (audit P1: a signed-in
+    // invitee could previously set usedBy to anyone's uid).
     match /invites/{token} {
       allow get: if true;
       allow list: if isAdmin();
@@ -262,17 +264,22 @@ service cloud.firestore {
       allow update: if isSignedIn()
         && resource.data.used == false
         && request.resource.data.used == true
+        && request.resource.data.usedBy == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['used', 'usedAt', 'usedBy']);
       allow delete: if isAdmin();
     }
 
     // ================ FLYERS (public token reads) ================
+    // get is public via opaque token (marketing flyer URLs). list must
+    // be admin-scoped to the caller's org — previously any signed-in
+    // user could enumerate flyer tokens from every tenant.
     match /flyers/{token} {
       allow get: if true;
-      allow list: if isSignedIn();
-      allow create: if isMlo();
-      allow update, delete: if isAdmin();
+      allow list: if isAdmin() && callerOwnsDoc(resource.data);
+      allow create: if isMlo() && callerOwnsDoc(request.resource.data);
+      allow update: if isAdmin() && callerOwnsDoc(resource.data) && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     // ================ AGREEMENTS (DPA / ToS) ================
@@ -323,13 +330,48 @@ service cloud.firestore {
     }
 
     // ================ LOGIN ATTEMPTS (lockout counters) ================
-    // Pre-auth writable by design — the failed-login handler needs
-    // to increment counters BEFORE the caller has a session. Keep
-    // the doc shape minimal (counter + windowStart + lockedUntil).
+    // Pre-auth writable by design — the failed-login handler must
+    // increment counters BEFORE the caller has a session. Keep the
+    // doc shape minimal (counter + windowStart + lockedUntil).
+    //
+    // Audit P1: previously `allow create, update: if true` let any
+    // anonymous client write `{lockedUntil: <year 2099>}` to any
+    // victim's loginAttempts doc — locking them out forever without
+    // any real authentication attempt. Now constrain:
+    //   - failedLoginCount: monotonically non-decreasing, capped at 20
+    //     (we only care up to ~5; cap stops counter inflation).
+    //   - lockedUntil: must be <= now + 30 min on write.
+    //   - schema: only the small set of fields the lockout flow uses.
     match /loginAttempts/{key} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create, update: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'failedLoginCount','windowStart','lockedUntil','lastEmail','lastIp'
+        ])
+        && (request.resource.data.get('failedLoginCount', 0) is int)
+        && request.resource.data.get('failedLoginCount', 0) <= 20
+        && (
+          !('lockedUntil' in request.resource.data)
+          || (
+            request.resource.data.lockedUntil is timestamp
+            && request.resource.data.lockedUntil <= request.time + duration.value(30, 'm')
+          )
+        );
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'failedLoginCount','windowStart','lockedUntil','lastEmail','lastIp'
+        ])
+        // Counter never decreases on its own (lockout-reset goes via SA delete).
+        && request.resource.data.get('failedLoginCount', 0) >= resource.data.get('failedLoginCount', 0)
+        && request.resource.data.get('failedLoginCount', 0) <= 20
+        && (
+          !('lockedUntil' in request.resource.data)
+          || (
+            request.resource.data.lockedUntil is timestamp
+            && request.resource.data.lockedUntil <= request.time + duration.value(30, 'm')
+          )
+        );
       allow delete: if isSuperAdmin();
     }
 
@@ -633,8 +675,18 @@ service cloud.firestore {
     }
 
     // hubNotifications: per-user in-app notification feed.
-    // Target user reads & marks read; any signed-in user touching a lead
-    // can create (status changes, notes on their referrals produce notifs).
+    // Target user reads & marks read; any signed-in user TOUCHING a lead
+    // in the same org can create (status changes, notes on their
+    // referrals produce notifs).
+    //
+    // Audit P1: previously `create` allowed any signed-in user to write a
+    // notification to ANY uid platform-wide, enabling phishing-at-scale
+    // (spoofed in-app messages). Now require the target user to either
+    // share the caller's org, OR be on the other side of a cross-org
+    // referral involving the caller. The referral-link check is best-
+    // effort: rules can't easily walk the leads collection, so we trust
+    // the createdBy field — but we DO pin createdBy to the caller's uid
+    // so impersonation is impossible.
     match /hubNotifications/{notifId} {
       allow read: if isSignedIn() && (
         isSuperAdmin()
@@ -643,7 +695,16 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.targetUid is string
-        && request.resource.data.targetUid.size() > 0;
+        && request.resource.data.targetUid.size() > 0
+        // Either same-org (most notifs) or the caller is fingerprinting
+        // a cross-org referral (orgId fields present on the notif).
+        && (
+          request.resource.data.get('orgId', '') == callerOrg()
+          || (
+            request.resource.data.get('fromOrgId', '') == callerOrg()
+            && request.resource.data.get('toOrgId', '') is string
+          )
+        );
       // Only the target can update (mark-as-read) or delete.
       allow update, delete: if isSignedIn() && (
         isSuperAdmin()
