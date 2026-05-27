@@ -187,81 +187,189 @@ const COUNTY_TO_MSA = {
   '06097': '42220', // Santa Rosa (Sonoma)
 };
 
-// Try a Census ACS year in order. Returns the first year whose tract
-// query succeeds. Logs each attempt so failure responses can pinpoint
-// what broke (HTTP status, body sample, JSON shape).
-async function fetchCensusTracts(stateCode, countyCode, msaCode, attempts) {
-  // Try newer ACS first; fall back through older releases. 2023 ACS 5-year
-  // was published Dec 2024; 2024 ACS 5-year is expected Dec 2025. Census
-  // occasionally throttles or 5xx's the newest year right after release,
-  // so the fallback chain matters.
-  const years = [2023, 2022, 2021, 2020];
+// ─────────────────────────────────────────────────────────────
+// LMI lookup helpers — mirrors the main lmi-tool worker.
+//
+// The previous implementation hit api.census.gov directly, but production
+// diagnostics in commit 450bb68/24e872a showed every ACS year (2023-2020)
+// failing from this Worker's network path. Census API blocks or throttles
+// some Cloudflare egress; switching to CFPB FFIEC matches what the main
+// worker uses successfully. Both workers now share the same data source,
+// so the proxy is a true hot standby — when the main worker is briefly
+// unreachable (deploys in flight, route hiccups), the frontend's
+// proxy-fallback path lands on identical logic.
+// ─────────────────────────────────────────────────────────────
 
-  for (const year of years) {
-    const tractUrl =
-      'https://api.census.gov/data/' + year + '/acs/acs5' +
-      '?get=NAME,B19113_001E,B01003_001E' +
-      '&for=tract:*&in=state:' + stateCode + '+county:' + countyCode;
+function classifyIncomeRatio(ratio) {
+  if (ratio === null || ratio === undefined || !isFinite(ratio)) return 'Unknown';
+  if (ratio < 50)  return 'Low';
+  if (ratio < 80)  return 'Moderate';
+  if (ratio < 120) return 'Middle';
+  return 'Upper';
+}
 
-    let tractRes;
-    try {
-      tractRes = await fetch(tractUrl, {
-        headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' },
-      });
-    } catch (e) {
-      attempts.push({ year, scope: 'tract', ok: false, reason: 'fetch_threw', error: String(e && e.message || e) });
-      continue;
-    }
+function normalizeTractId(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim().replace(/\D/g, '');
+  if (!s) return '';
+  if (s.length >= 15) return s.slice(0, 11);
+  if (s.length === 11) return s;
+  if (s.length === 10) return '0' + s;
+  return s.padStart(11, '0');
+}
 
-    if (!tractRes.ok) {
-      let bodySample = '';
-      try { bodySample = (await tractRes.text()).slice(0, 200); } catch (_) {}
-      attempts.push({ year, scope: 'tract', ok: false, status: tractRes.status, bodySample });
-      continue;
-    }
-
-    let tractData;
-    try {
-      tractData = await tractRes.json();
-    } catch (e) {
-      attempts.push({ year, scope: 'tract', ok: false, reason: 'json_parse_failed' });
-      continue;
-    }
-
-    if (!Array.isArray(tractData) || tractData.length < 2) {
-      attempts.push({ year, scope: 'tract', ok: false, reason: 'empty_or_invalid_response' });
-      continue;
-    }
-
-    // Got tract data — now try to get MSA AMI in parallel (best effort).
-    let ami = 0;
-    if (msaCode) {
-      // URL-encode the slash in the geography name. Census API accepts
-      // both raw and encoded slashes here, but some intermediate proxies
-      // normalize unencoded slashes as path separators.
-      const msaUrl =
-        'https://api.census.gov/data/' + year + '/acs/acs5' +
-        '?get=B19113_001E' +
-        '&for=metropolitan%20statistical%20area%2Fmicropolitan%20statistical%20area:' + msaCode;
-      try {
-        const amiRes = await fetch(msaUrl, {
-          headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' },
-        });
-        if (amiRes.ok) {
-          const amiData = await amiRes.json();
-          ami = parseInt(amiData?.[1]?.[0]) || 0;
-        } else {
-          attempts.push({ year, scope: 'msa_ami', ok: false, status: amiRes.status });
+// Stream a response body line-by-line with a hard byte cap. CFPB redirects
+// every nationwide CSV query to the same ~3 MB pre-built file (filters are
+// silently ignored), so a 5 MB cap is generous headroom without risking
+// the Worker's 128 MB memory limit on `.text()`.
+async function streamTextCapped(resp, maxBytes, onLine) {
+  if (!resp.body) {
+    const text = await resp.text();
+    if (text.length > maxBytes) return { tooLarge: true, bytesRead: text.length };
+    if (onLine) for (const line of text.split('\n')) { const r = onLine(line); if (r && r.stop) break; }
+    return { tooLarge: false, bytesRead: text.length, text };
+  }
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  let bytesRead = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytesRead += value.byteLength;
+      if (bytesRead > maxBytes) {
+        try { await reader.cancel(); } catch (e) {}
+        return { tooLarge: true, bytesRead };
+      }
+      buffer += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, idx).replace(/\r$/, '');
+        buffer = buffer.slice(idx + 1);
+        if (onLine) {
+          const r = onLine(line);
+          if (r && r.stop) { try { await reader.cancel(); } catch (e) {} return { tooLarge: false, bytesRead, stopped: true }; }
         }
-      } catch (e) {
-        attempts.push({ year, scope: 'msa_ami', ok: false, reason: 'fetch_threw', error: String(e && e.message || e) });
       }
     }
-
-    attempts.push({ year, scope: 'tract', ok: true, rows: tractData.length - 1, amiFound: !!ami });
-    return { year, tractData, ami };
+    if (buffer.length && onLine) onLine(buffer);
+  } catch (e) {
+    return { tooLarge: false, bytesRead, error: String(e && e.message || e) };
   }
+  return { tooLarge: false, bytesRead };
+}
 
+function parseCsvLine(line) {
+  const out = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line.charCodeAt(i);
+    if (inQ) {
+      if (c === 34) {
+        if (line.charCodeAt(i + 1) === 34) { cur += '"'; i++; }
+        else { inQ = false; }
+      } else { cur += line[i]; }
+    } else {
+      if (c === 34) inQ = true;
+      else if (c === 44) { out.push(cur.trim()); cur = ''; }
+      else cur += line[i];
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+// Fetches tracts for a county FIPS from the CFPB FFIEC HMDA nationwide CSV.
+// IMPORTANT: CFPB's data-browser-api ignores every filter besides `years`
+// and `actions_taken` (verified — Fresno, LA, and no-filter all redirect to
+// the same pre-built file). We get the full national dataset and filter
+// rows in the stream by the 5-digit state+county FIPS prefix.
+async function fetchCfpbTractsForCounty(countyFips, attempts) {
+  const yearsToTry = [2023, 2022, 2021, 2020, 2019, 2018];
+  for (const year of yearsToTry) {
+    const ffiecUrl =
+      'https://ffiec.cfpb.gov/v2/data-browser-api/view/nationwide/csv' +
+      '?years=' + year +
+      '&actions_taken=1,2,3' +
+      '&fields=census_tract,tract_population,' +
+      'tract_minority_population_percent,' +
+      'ffiec_msa_md_median_family_income,' +
+      'tract_to_msa_income_percentage';
+
+    let res;
+    try {
+      res = await fetch(ffiecUrl, { headers: { 'User-Agent': 'LMI-Tool/1.0' } });
+    } catch (e) {
+      attempts.push({ year, scope: 'cfpb', ok: false, reason: 'fetch_threw', error: String(e && e.message || e) });
+      continue;
+    }
+    if (!res.ok) {
+      attempts.push({ year, scope: 'cfpb', ok: false, status: res.status });
+      continue;
+    }
+
+    const MAX_BYTES = 5 * 1024 * 1024;
+    let headers = null;
+    const tracts = [];
+    const seen = new Set();
+    let streamResult;
+    try {
+      streamResult = await streamTextCapped(res, MAX_BYTES, (line) => {
+        if (!line) return null;
+        if (!headers) {
+          headers = parseCsvLine(line).map(h => h.trim().replace(/"/g, ''));
+          return null;
+        }
+        const values = parseCsvLine(line);
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = values[idx]; });
+        const rawId = row.census_tract || '';
+        // Filter: keep only tracts inside the requested county.
+        if (!rawId.startsWith(countyFips)) return null;
+        const incomeRatio = parseFloat(row.tract_to_msa_income_percentage);
+        const msaMfi = parseInt(row.ffiec_msa_md_median_family_income) || 0;
+        const tractMfi = isFinite(incomeRatio) && msaMfi
+          ? Math.round((incomeRatio / 100) * msaMfi)
+          : 0;
+        const tractPop = parseInt(row.tract_population) || 0;
+        const key = normalizeTractId(rawId);
+        if (seen.has(key)) return null;
+        seen.add(key);
+        tracts.push({
+          tract_id: rawId,
+          tract_id_normalized: key,
+          census_tract: rawId,
+          tract_population: tractPop,
+          population: tractPop,
+          minority_pct: parseFloat(row.tract_minority_population_percent) || 0,
+          median_family_income: msaMfi,
+          area_md_fam_income: msaMfi,
+          tract_md_fam_income: tractMfi,
+          income_ratio: isFinite(incomeRatio) ? incomeRatio : null,
+          lmi_status: isFinite(incomeRatio) && incomeRatio <= 80,
+          lmi_category: classifyIncomeRatio(isFinite(incomeRatio) ? incomeRatio : null),
+          city: '',
+          hmda_year: year,
+        });
+        return null;
+      });
+    } catch (e) {
+      attempts.push({ year, scope: 'cfpb', ok: false, reason: 'body_read_failed', error: String(e && e.message || e) });
+      continue;
+    }
+    if (!headers) {
+      attempts.push({ year, scope: 'cfpb', ok: false, reason: 'no_headers_in_stream', bytesRead: streamResult && streamResult.bytesRead });
+      continue;
+    }
+    if (!tracts.length) {
+      attempts.push({ year, scope: 'cfpb', ok: false, reason: 'no_tracts_in_county', countyFips });
+      continue;
+    }
+    attempts.push({ year, scope: 'cfpb', ok: true, tracts: tracts.length });
+    return { year, tracts };
+  }
   return null;
 }
 
@@ -280,85 +388,32 @@ async function handleLmiLookup(zip, request) {
     }, request, 400);
   }
 
-  const stateCode = countyFips.substring(0, 2);
-  const countyCode = countyFips.substring(2);
-  const msaCode = COUNTY_TO_MSA[countyFips] || '';
   const attempts = [];
-
   let result;
   try {
-    result = await fetchCensusTracts(stateCode, countyCode, msaCode, attempts);
+    result = await fetchCfpbTractsForCounty(countyFips, attempts);
   } catch (e) {
-    return errResp('census_unreachable', {
-      error: 'Census API unreachable',
+    return errResp('cfpb_unreachable', {
+      error: 'CFPB FFIEC API unreachable',
       detail: String(e && e.message || e),
     }, request, 502, attempts);
   }
 
   if (!result) {
-    return errResp('census_all_years_failed', {
-      error: 'Census API returned no usable data for any tried year',
+    return errResp('cfpb_all_years_failed', {
+      error: 'CFPB FFIEC returned no usable data for any tried year',
       zip,
-      stateCode,
-      countyCode,
+      countyFips,
     }, request, 502, attempts);
   }
 
-  const { tractData, ami: msaAmi, year } = result;
-
-  let ami = msaAmi;
-  // Fallback: use county average if MSA AMI is unavailable.
-  if (!ami) {
-    const countyIncomes = tractData.slice(1)
-      .map(r => parseInt(r[1]) || 0)
-      .filter(v => v > 0);
-    ami = countyIncomes.length > 0
-      ? Math.round(countyIncomes.reduce((s, v) => s + v, 0) / countyIncomes.length)
-      : 80000;
-  }
-
-  // Parse tract data: [NAME, B19113_001E, B01003_001E, state, county, tract]
-  const tracts = [];
-  const countyName = (tractData[1]?.[0] || '')
-    .replace(/Census Tract [\d.]+;\s*/, '')
-    .replace(/;\s*California$/, '');
-
-  for (let i = 1; i < tractData.length; i++) {
-    const row = tractData[i];
-    const tractIncome = parseInt(row[1]) || 0;
-    const population = parseInt(row[2]) || 0;
-    const tractNum = row[5] || '';
-    const tractId = stateCode + countyCode + tractNum;
-
-    if (tractIncome <= 0) continue;
-
-    const incomeRatio = ami > 0 ? Math.round((tractIncome / ami) * 100) : 0;
-
-    tracts.push({
-      tract_id: tractId,
-      tract_md_fam_income: tractIncome,
-      area_md_fam_income: ami,
-      income_ratio: incomeRatio,
-      county_name: countyName,
-      city: '',
-      population,
-      minority_pct: 0,
-      acs_year: year,
-    });
-  }
-
-  // Sort: LMI tracts first (lowest income ratio), then others
-  tracts.sort((a, b) => a.income_ratio - b.income_ratio);
-
-  if (!tracts.length) {
-    return errResp('no_tracts_with_income', {
-      error: 'Census returned tracts but none had usable income data',
-      year,
-      countyName,
-    }, request, 502, attempts);
-  }
-
-  return jsonResp(tracts, request);
+  // Sort: LMI tracts first (lowest income ratio), then others.
+  result.tracts.sort((a, b) => {
+    const ar = a.income_ratio == null ? 9999 : a.income_ratio;
+    const br = b.income_ratio == null ? 9999 : b.income_ratio;
+    return ar - br;
+  });
+  return jsonResp(result.tracts, request);
 }
 
 
