@@ -12,9 +12,10 @@ lmi-proxy-worker.js
 wrangler.jsonc
 wrangler-proxy.jsonc
 
-# Firebase + security rules
+# Firebase + security rules + index config
 firestore.rules
 firestore.rules.final
+firestore.indexes.json
 firebase.json
 .firebaserc
 
