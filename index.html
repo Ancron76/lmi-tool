@@ -6746,6 +6746,27 @@ var HOME_MODULES = [
 
 var _requiredActionsCache = [];
 
+// Apply org-scoping to a Firestore query so the database only returns the
+// caller's tenant data. Pre-fix, several dashboard queries did unfiltered
+// .get() and then filtered orgId client-side — which meant the database
+// shipped every tenant's records over the wire (any user could open
+// DevTools and skip the filter). This helper enforces the scope at the
+// query level so Firestore rules (orgId-required) can also block it
+// server-side.
+//
+// Super-admin bypass: returns the un-scoped query so cross-tenant views
+// keep working. Collections that store the tenant key as `tenantId`
+// instead of `orgId` (sequences, scorecardSnapshots, etc.) pass
+// { field: 'tenantId' }.
+function _scopeOrg(query, opts) {
+  if (!currentUser || !db) return query;
+  if (typeof isSuperAdmin === 'function' && isSuperAdmin()) return query;
+  var orgId = currentUser.orgId;
+  if (!orgId) return query;
+  var field = (opts && opts.field) || 'orgId';
+  return query.where(field, '==', orgId);
+}
+
 async function useRequiredActions() {
   var actions = [];
   if (!db || !currentUser) return actions;
@@ -6765,10 +6786,10 @@ async function useRequiredActions() {
   // (full tier only)
   if (hasFeature(_effectiveTier(), 'deal_pipeline')) {
   try {
-    var dealSnap = await db.collection('deals').get();
+    // Server-side org scope (was: unfiltered .get() + client-side filter).
+    var dealSnap = await _scopeOrg(db.collection('deals')).get();
     var dealDocs = dealSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    var orgId = currentUser && currentUser.orgId;
-    if (orgId && !isSuperAdmin()) dealDocs = dealDocs.filter(function(d){ return d.orgId===orgId; });
+    // Belt-and-suspenders: keep the client-side userId narrow for non-admins.
     if (!isAnyAdmin()) dealDocs = dealDocs.filter(function(d){ return d.userId===currentUser.id; });
     dealDocs.forEach(function(d){
       if (d.stage === 'Closed' || d.stage === 'Lost') return;
@@ -6793,7 +6814,7 @@ async function useRequiredActions() {
   // (full tier only — contacts CRM)
   if (hasFeature(_effectiveTier(), 'contacts_full')) {
   try {
-    var pqSnap = await db.collection('prequal').where('status','==','pending').get();
+    var pqSnap = await _scopeOrg(db.collection('prequal').where('status','==','pending')).get();
     pqSnap.forEach(function(d){
       var pq = d.data();
       actions.push({
@@ -6809,7 +6830,7 @@ async function useRequiredActions() {
 
   // 3. REALTORS — lastContact exists AND lastContact <= 14 days ago
   try {
-    var rSnap = await db.collection('realtors').get();
+    var rSnap = await _scopeOrg(db.collection('realtors')).get();
     rSnap.forEach(function(d){
       var r = Object.assign({id:d.id, docId:d.id}, d.data());
       if (!r.lastContact) return;
@@ -6830,7 +6851,7 @@ async function useRequiredActions() {
 
   // 4. OPEN HOUSES — past openHouseDate AND reportSubmitted != true
   try {
-    var oyzSnap = await db.collection('oyz').get();
+    var oyzSnap = await _scopeOrg(db.collection('oyz')).get();
     oyzSnap.forEach(function(d){
       var e = Object.assign({id:d.id}, d.data());
       if (e.reportSubmitted === true) return;
@@ -6848,7 +6869,7 @@ async function useRequiredActions() {
 
   // 5. ACTIVITY LOG — unlogged CRA activities
   try {
-    var actSnap = await db.collection('activity').get();
+    var actSnap = await _scopeOrg(db.collection('activity')).get();
     var unlogged = 0;
     actSnap.forEach(function(d){
       var a = d.data();
@@ -6869,7 +6890,7 @@ async function useRequiredActions() {
   // (full tier only)
   if (hasFeature(_effectiveTier(), 'communications')) {
   try {
-    var nSnap = await db.collection('notifications').get();
+    var nSnap = await _scopeOrg(db.collection('notifications')).get();
     var unread = 0;
     nSnap.forEach(function(d){
       var n = d.data();
@@ -6898,7 +6919,7 @@ async function useRequiredActions() {
       var prefDoc = await db.collection('users').doc(currentUser.id).get();
       if (prefDoc.exists) stuckThreshold = (prefDoc.data().preferences || {}).stuckThresholdDays || 3;
     } catch(e){}
-    var sDeals = await db.collection('deals').get();
+    var sDeals = await _scopeOrg(db.collection('deals')).get();
     sDeals.forEach(function(d){
       var deal = d.data();
       if (!deal.stageUpdatedAt) return;
@@ -6925,7 +6946,7 @@ async function useRequiredActions() {
   // 8. COLD REALTORS — no contact in 60+ days
   try {
     var sixtyDaysAgo = new Date(now.getTime() - 60 * 86400000);
-    var crSnap = await db.collection('realtors').get();
+    var crSnap = await _scopeOrg(db.collection('realtors')).get();
     crSnap.forEach(function(d){
       var r = d.data();
       if (!r.lastContact) return;
@@ -6948,13 +6969,12 @@ async function useRequiredActions() {
   if (hasFeature(_effectiveTier(), 'sequences')) {
   try {
     if (isAnyAdmin()) {
-      var seqSnap = await db.collection('sequences').where('status','==','pending_approval').get();
-      var pendingCount = 0;
-      seqSnap.forEach(function(d){
-        var s = d.data();
-        var orgId = currentUser.orgId || '';
-        if (s.tenantId === orgId || !s.tenantId) pendingCount++;
-      });
+      // sequences use `tenantId` not `orgId`. Scope it server-side too.
+      var seqSnap = await _scopeOrg(
+        db.collection('sequences').where('status','==','pending_approval'),
+        { field: 'tenantId' }
+      ).get();
+      var pendingCount = seqSnap.size;
       if (pendingCount > 0) {
         actions.push({
           p: 'med',
@@ -6968,7 +6988,10 @@ async function useRequiredActions() {
 
   // 10. REJECTED SEQUENCES NEEDING REVISION
   try {
-    var rejSnap = await db.collection('sequences').where('createdBy','==',currentUser.id).get();
+    var rejSnap = await _scopeOrg(
+      db.collection('sequences').where('createdBy','==',currentUser.id),
+      { field: 'tenantId' }
+    ).get();
     rejSnap.forEach(function(d){
       var s = d.data();
       if (s.status !== 'rejected') return;
@@ -7014,7 +7037,7 @@ async function useRequiredActions() {
   if (hasFeature(_effectiveTier(), 'mlo_scorecards')) {
   try {
     if (isAnyAdmin() && new Date().getDate() >= 15) {
-      var snapSnap = await db.collection('scorecardSnapshots').get();
+      var snapSnap = await _scopeOrg(db.collection('scorecardSnapshots'), { field: 'tenantId' }).get();
       var latestByMlo = {};
       snapSnap.forEach(function(d) {
         var s = d.data();
@@ -7043,7 +7066,7 @@ async function useRequiredActions() {
 
   // 13. UNREAD SMS REPLIES (gated by feature flag + tier)
   if (_featureFlags.smsEnabled) try {
-    var smsSnap = await db.collection('communications').get();
+    var smsSnap = await _scopeOrg(db.collection('communications')).get();
     var unreadSms = 0;
     var firstSmsContact = '';
     smsSnap.forEach(function(d){
@@ -7093,7 +7116,7 @@ async function useRequiredActions() {
       var isQuarterEnd = (qMonth===2||qMonth===5||qMonth===8||qMonth===11) && qDay >= 15;
       if (isQuarterEnd) {
         var qLabel = qNow.getFullYear()+'-Q'+Math.ceil((qMonth+1)/3);
-        var crSnap = await db.collection('craReports').get();
+        var crSnap = await _scopeOrg(db.collection('craReports')).get();
         var hasReport = false;
         crSnap.forEach(function(d){ if(d.data().period===qLabel) hasReport=true; });
         if (!hasReport) {
