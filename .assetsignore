@@ -3,13 +3,49 @@ node_modules/
 .claude/
 .git/
 .wrangler/
-firestore.rules
-wrangler.jsonc
+
+# Worker source + deploy config — never serve publicly. These were
+# leaking before the audit (https://lmitool.com/lmi-proxy-worker.js
+# returned the full 37 KB source).
 worker.js
+lmi-proxy-worker.js
+wrangler.jsonc
+wrangler-proxy.jsonc
+
+# Firebase + security rules
+firestore.rules
+firestore.rules.final
+firebase.json
+.firebaserc
+
+# Internal docs (markdown, design plans, migration notes) — leaked
+# before fix: SECURITY_ROLLOUT.md, MIGRATION_PLAN_FIREBASE_AUTH.md,
+# ROLES_SPEC.md, COMPETITIVE_RESEARCH.md, FIREBASE_CONSOLE_SETUP.md
+*.md
+docs/
+
+# Pre-launch / design-intent files
+mockup-redesign.html
+mockup-redesign-light.html
+mockup-redesign-refined.html
+
+# Node tooling
 package.json
 package-lock.json
+
+# Local secrets + ignore files
 .gitignore
 .assetsignore
 .dev.vars*
 .env*
+
+# Cloudflare custom-domain marker (not for download)
 CNAME
+
+# Stray files from local debugging / repairs
+npx
+tail.log
+tail.err
+*.new
+*.tmp
+response.csv

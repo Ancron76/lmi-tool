@@ -179,13 +179,18 @@ service cloud.firestore {
            ]);
 
       // admin-update — tenant-admin within own org, or superadmin
-      // anywhere. Tenant-admin cannot move users to another org.
+      // anywhere. Tenant-admin cannot move users to another org and
+      // CANNOT promote anyone to superadmin (audit found this gap:
+      // a single tenant-admin could pivot laterally to global root
+      // by flipping `role:'superadmin'` on any user in their org).
       allow update: if
         isSuperAdmin()
         || (
           isTenantAdmin()
           && inOrg(resource.data.orgId)
           && request.resource.data.orgId == resource.data.orgId
+          && request.resource.data.role != 'superadmin'
+          && request.resource.data.get('superAdmin', false) == false
         );
 
       allow delete: if isSuperAdmin();
@@ -262,12 +267,35 @@ service cloud.firestore {
     }
 
     // ================ AUDIT LOG (immutable) ================
-    // create is open so the pre-auth failed-login path (line ~5542
-    // in index.html) can still append. Nobody can read without
-    // admin; nobody can update or delete, ever.
+    // Nobody reads without admin; nobody ever updates or deletes.
+    // Create is gated to prevent forged-actor entries (previously
+    // `if true` let any signed-in user write a log entry claiming
+    // to be the CEO or to belong to another tenant — see audit).
+    //
+    // Two valid create paths:
+    //   1. Signed-in entries — userId/userName/tenantId MUST match
+    //      the caller's auth uid + org. The client cannot lie about
+    //      who acted.
+    //   2. Pre-auth security entries — only a small whitelist of
+    //      actions (failed-login telemetry) can be written without
+    //      a session. Those entries MUST NOT carry a userId, so
+    //      they can never impersonate a real user.
     match /auditLog/{logId} {
       allow get, list: if isAdmin();
-      allow create: if true;
+      allow create: if (
+        // Signed-in: actor is pinned to the caller.
+        (isSignedIn()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.get('tenantId', '') == callerOrg())
+        // Pre-auth: only failed-login telemetry, no userId field.
+        || (
+          request.resource.data.action in [
+            'login_failed', 'login_throttled', 'login_locked_out',
+            'login_recovery_requested'
+          ]
+          && !('userId' in request.resource.data)
+        )
+      );
       allow update, delete: if false;
     }
 

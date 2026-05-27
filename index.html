@@ -20655,16 +20655,24 @@ function updateBottomNav(tab) {
   var id = rpMap[tab] || mloMap[tab];
   if (id) { var el = document.getElementById(id); if (el) el.classList.add('active'); }
 }
-// Proactively remove any service worker that may have been registered by
-// an older version of this app. No new service worker is registered —
-// lmitool.com is online-only, so we let the normal browser HTTP cache
-// handle things and deploys go live instantly.
+// Remove any stale service worker that may have been registered by an
+// older version of this app — but DO NOT unregister push-sw.js, which
+// src/hub/notifications.js registers for web-push delivery. Previously
+// this code unregistered everything, silently breaking push the moment
+// the user reloaded a tab. Match by scriptURL ending so future paths
+// like /push-sw.js?v=123 still survive the cleanup.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     try {
       navigator.serviceWorker.getRegistrations().then(function(regs) {
         regs.forEach(function(reg) {
-          try { reg.unregister(); } catch (e) {}
+          try {
+            var sw = reg.active || reg.installing || reg.waiting;
+            var url = sw && sw.scriptURL || '';
+            // Preserve the push notification worker.
+            if (/\/push-sw\.js(\?|$)/.test(url)) return;
+            reg.unregister();
+          } catch (e) {}
         });
       }).catch(function() {});
       if (window.caches && caches.keys) {
