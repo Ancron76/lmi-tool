@@ -5583,7 +5583,7 @@ async function deleteUserFromDB(id) { await db.collection('users').doc(id).delet
 // ── PROSPECTS ─────────────────────────────────────────────────
 async function fetchMyProspects() {
   try {
-    const snap = await db.collection('prospects').where('userId','==',currentUser.id).get();
+    const snap = await _scopeOrg(db.collection('prospects').where('userId','==',currentUser.id)).get();
     const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
     docs.sort(function(a,b) { return new Date(b.savedAt) - new Date(a.savedAt); });
     return docs;
@@ -5601,7 +5601,7 @@ async function fetchAllProspects() {
 // ── REALTORS ──────────────────────────────────────────────────
 async function fetchMyRealtors() {
   try {
-    const snap = await db.collection('realtors').where('userId','==',currentUser.id).get();
+    const snap = await _scopeOrg(db.collection('realtors').where('userId','==',currentUser.id)).get();
     const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
     docs.sort(function(a,b) { return a.name.localeCompare(b.name); });
     return docs;
@@ -5611,7 +5611,7 @@ async function fetchMyRealtors() {
 // ── ACTIVITIES ────────────────────────────────────────────────
 async function fetchMyActivities() {
   try {
-    const snap = await db.collection('activity').where('userId','==',currentUser.id).get();
+    const snap = await _scopeOrg(db.collection('activity').where('userId','==',currentUser.id)).get();
     const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
     docs.sort(function(a,b) { return new Date(b.loggedAt) - new Date(a.loggedAt); });
     return docs;
@@ -9707,7 +9707,9 @@ async function saveZip(zip, city) {
   if (btn) { btn.textContent = '✓ Saved!'; btn.style.background = '#DBEAFE'; }
   showToast('📌 ' + zip + ' saved to prospects');
   try {
-    const snap = await db.collection('prospects').where('userId','==',currentUser.id).where('zip','==',zip).get();
+    const snap = await _scopeOrg(
+      db.collection('prospects').where('userId','==',currentUser.id).where('zip','==',zip)
+    ).get();
     const noName = snap.docs.filter(function(d) { return !d.data().borrowerName; });
     if (noName.length) { await noName[0].ref.update({ savedAt: now, city: city }); }
     else { await db.collection('prospects').add(prospectData); }
@@ -10524,7 +10526,7 @@ async function generateNotifications() {
   // G. REALTOR SUBMISSIONS (from Firestore notifications collection)
   if (db && currentUser) {
     try {
-      var _snap = await db.collection('notifications').get();
+      var _snap = await _scopeOrg(db.collection('notifications')).get();
       _snap.forEach(function(d) {
         var nd = Object.assign({ id: d.id }, d.data());
         if (nd.userId !== currentUser.id) return;
@@ -12804,11 +12806,15 @@ async function showRealtorPortal() {
   realtorPrequals = [];
   if (db) {
     try {
-      var sSnap = await db.collection('realtor_searches').where('realtorUserId', '==', currentUser.id).orderBy('savedAt', 'desc').limit(50).get();
+      var sSnap = await _scopeOrg(
+        db.collection('realtor_searches').where('realtorUserId', '==', currentUser.id).orderBy('savedAt', 'desc').limit(50)
+      ).get();
       sSnap.forEach(function(d) { realtorSearches.push(Object.assign({ id: d.id }, d.data())); });
     } catch(e) {}
     try {
-      var pSnap = await db.collection('prequal').where('realtorUserId', '==', currentUser.id).orderBy('requestedAt', 'desc').limit(50).get();
+      var pSnap = await _scopeOrg(
+        db.collection('prequal').where('realtorUserId', '==', currentUser.id).orderBy('requestedAt', 'desc').limit(50)
+      ).get();
       pSnap.forEach(function(d) { realtorPrequals.push(Object.assign({ id: d.id }, d.data())); });
     } catch(e) {}
   }
@@ -15690,19 +15696,20 @@ async function runDataMigration() {
   statusEl.textContent = '⏳ Running migration...';
   var counts = { users: 0, oyz: 0, activity: 0, realtors: 0 };
   try {
-    // Migrate users
+    // SA-only one-time data migration — backfills orgId on legacy docs.
+    // The queries are intentionally unscoped (this is the one place that
+    // SHOULD see cross-tenant data), and runDataMigration is gated to
+    // isSuperAdmin() before this function runs. Rules' isSuperAdmin()
+    // bypass on every operational collection allows this to work.
     var uSnap = await db.collection('users').get();
     var batch1 = []; uSnap.forEach(function(d) { if (!d.data().orgId) batch1.push(d.ref); });
     for (var i = 0; i < batch1.length; i++) { await batch1[i].update({ orgId: 'golden1-org' }); counts.users++; }
-    // Migrate oyz
     var oSnap = await db.collection('oyz').get();
     var batch2 = []; oSnap.forEach(function(d) { if (!d.data().orgId) batch2.push(d.ref); });
     for (var j = 0; j < batch2.length; j++) { await batch2[j].update({ orgId: 'golden1-org' }); counts.oyz++; }
-    // Migrate activity
     var aSnap = await db.collection('activity').get();
     var batch3 = []; aSnap.forEach(function(d) { if (!d.data().orgId) batch3.push(d.ref); });
     for (var k = 0; k < batch3.length; k++) { await batch3[k].update({ orgId: 'golden1-org' }); counts.activity++; }
-    // Migrate realtors
     var rSnap = await db.collection('realtors').get();
     var batch4 = []; rSnap.forEach(function(d) { if (!d.data().orgId) batch4.push(d.ref); });
     for (var l = 0; l < batch4.length; l++) { await batch4[l].update({ orgId: 'golden1-org' }); counts.realtors++; }
@@ -16503,10 +16510,12 @@ async function loadRealtorPushes() {
 
   console.log('[loadRealtorPushes] uid:', uid, '| realtorDocId:', rdocId || '(not set)', '| name:', rname);
 
-  // Single unfiltered fetch — bypasses all index and per-field security rule issues.
-  // Filter entirely in JavaScript so no composite index is ever needed.
+  // Org-scoped fetch — was previously unfiltered with the comment claiming
+  // it sidestepped index issues. With strict rules, unscoped queries are
+  // permission_denied, so we MUST scope. Composite index is auto-created
+  // by Firestore for single-field equality (orgId).
   try {
-    var snap = await db.collection('realtor_pushes').limit(200).get();
+    var snap = await _scopeOrg(db.collection('realtor_pushes')).limit(200).get();
     console.log('[loadRealtorPushes] Full collection fetch returned', snap.size, 'doc(s)');
     snap.forEach(function(d) {
       var data = Object.assign({ id: d.id }, d.data());
@@ -17185,7 +17194,7 @@ function checkMergeBorrowers() {
 
 async function executeMergeRealtors(keepId,deleteId) {
   try {
-    var allOyzSnap=await db.collection('oyz').get(); var promises=[];
+    var allOyzSnap=await _scopeOrg(db.collection('oyz')).get(); var promises=[];
     var keepR=(cachedRealtors||[]).find(function(r){return r.id===keepId||r.docId===keepId;});
     allOyzSnap.docs.forEach(function(d){if(d.data().realtorId===deleteId) promises.push(db.collection('oyz').doc(d.id).update({realtorId:keepId,realtorName:keepR?keepR.name:d.data().realtorName}));});
     await Promise.all(promises);
@@ -18547,7 +18556,7 @@ var cachedCallLog=[];
 async function loadCallLogData() {
   if(!currentUser) return [];
   try {
-    var snap=await db.collection('call_log').where('userId','==',currentUser.id).get();
+    var snap=await _scopeOrg(db.collection('call_log').where('userId','==',currentUser.id)).get();
     cachedCallLog=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
       .sort(function(a,b){return new Date(b.callDate||b.createdAt||0)-new Date(a.callDate||a.createdAt||0);});
     return cachedCallLog;
@@ -19046,10 +19055,9 @@ var SEQ_TEMPLATES = [
 async function loadSequences() {
   if (!db || !currentUser) return;
   try {
-    var snap = await db.collection('sequences').get();
+    // sequences use tenantId. Server-side scope.
+    var snap = await _scopeOrg(db.collection('sequences'), { field: 'tenantId' }).get();
     cachedSequences = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    var orgId = currentUser.orgId || '';
-    cachedSequences = cachedSequences.filter(function(s){ return s.tenantId === orgId || s.scope === 'global'; });
   } catch(e){ cachedSequences = []; }
 }
 
@@ -19304,7 +19312,15 @@ function _seqMergeFields(text, data) {
 async function checkAndEnroll(triggerType, triggerData) {
   if (!db || !currentUser) return;
   try {
-    var snap = await db.collection('sequences').where('status','==','approved').get();
+    // Org-scope at the query level (was: unfiltered .get() then filter
+    // tenantId/scope in JS). With the strict rules, unfiltered .get()
+    // returns permission_denied. Note: "global" sequences (scope:'global')
+    // would need their own pass but the current data doesn't use that path,
+    // so this is the safer narrow-scope query for now.
+    var snap = await _scopeOrg(
+      db.collection('sequences').where('status','==','approved'),
+      { field: 'tenantId' }
+    ).get();
     var matches = [];
     snap.forEach(function(d) {
       var s = Object.assign({id:d.id}, d.data());
@@ -19345,7 +19361,10 @@ async function runDueSequenceSteps() {
   var now = new Date();
   var executed = 0;
   try {
-    var snap = await db.collection('sequenceEnrollments').where('enrolledBy','==',currentUser.id).get();
+    var snap = await _scopeOrg(
+      db.collection('sequenceEnrollments').where('enrolledBy','==',currentUser.id),
+      { field: 'tenantId' }
+    ).get();
     var due = [];
     snap.forEach(function(d) {
       var e = Object.assign({id:d.id}, d.data());
@@ -19552,25 +19571,23 @@ async function _scCalcMetrics(uid, start) {
   var m = { pipelineVolume:0, lmiPct:0, realtorContacts:0, openHouses:0, craActivities:0, dealsFunded:0, followUpResponseRate:0 };
   if (!db) return m;
   try {
-    // Deals
-    var dSnap = await db.collection('deals').get();
+    // Scorecard math — org-scoped (SA bypasses for cross-tenant team views).
+    var dSnap = await _scopeOrg(db.collection('deals')).get();
     var myDeals = dSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); })
       .filter(function(d){ return (d.userId===uid||d.assignedTo===uid) && d.createdAt && new Date(d.createdAt)>=start; });
     m.pipelineVolume = myDeals.reduce(function(s,d){ return s+(parseFloat(d.loanAmount)||0); },0);
     m.lmiPct = myDeals.length>0 ? Math.round(myDeals.filter(function(d){return d.lmiEligible===true;}).length/myDeals.length*100) : 0;
     m.dealsFunded = myDeals.filter(function(d){ return d.stage==='Funded'||d.stage==='Closed'; }).length;
-    // OYZ
-    var oSnap = await db.collection('oyz').get();
+    var oSnap = await _scopeOrg(db.collection('oyz')).get();
     m.openHouses = oSnap.docs.filter(function(d){ var e=d.data(); return (e.userId===uid) && e.openHouseDate && new Date(e.openHouseDate)>=start; }).length;
-    // Activities
-    var aSnap = await db.collection('activity').get();
+    var aSnap = await _scopeOrg(db.collection('activity')).get();
     m.craActivities = aSnap.docs.filter(function(d){ var a=d.data(); return (a.userId===uid) && a.craQualifying===true && a.date && new Date(a.date)>=start; }).length;
-    // Realtors contacted
-    var rSnap = await db.collection('realtors').get();
+    // Realtors contacted — scorecard math; SA bypasses to compute across tenants
+    var rSnap = await _scopeOrg(db.collection('realtors')).get();
     m.realtorContacts = rSnap.docs.filter(function(d){ var r=d.data(); return (r.userId===uid) && r.lastContact && new Date(r.lastContact)>=start; }).length;
     // Sequence response rate
     try {
-      var sSnap = await db.collection('sequenceEnrollments').get();
+      var sSnap = await _scopeOrg(db.collection('sequenceEnrollments'), { field: 'tenantId' }).get();
       var myEnroll = sSnap.docs.filter(function(d){ var e=d.data(); return e.enrolledBy===uid && e.startedAt && new Date(e.startedAt)>=start; });
       var completed = myEnroll.filter(function(d){ return d.data().status==='completed'; }).length;
       m.followUpResponseRate = myEnroll.length>0 ? Math.round(completed/myEnroll.length*100) : 0;
@@ -19594,7 +19611,10 @@ async function _scMaybeWriteSnapshot(uid, metrics, goals) {
   var weekNum = Math.ceil((((now - new Date(now.getFullYear(),0,1)) / 86400000) + new Date(now.getFullYear(),0,1).getDay() + 1) / 7);
   var periodKey = now.getFullYear() + '-W' + String(weekNum).padStart(2,'0');
   try {
-    var existing = await db.collection('scorecardSnapshots').where('mloUid','==',uid).get();
+    var existing = await _scopeOrg(
+      db.collection('scorecardSnapshots').where('mloUid','==',uid),
+      { field: 'tenantId' }
+    ).get();
     var hasThisPeriod = false;
     existing.forEach(function(d){ if(d.data().period === periodKey) hasThisPeriod = true; });
     if (!hasThisPeriod) {
