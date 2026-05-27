@@ -5591,7 +5591,7 @@ async function fetchMyProspects() {
 }
 async function fetchAllProspects() {
   try {
-    const snap = await db.collection('prospects').get();
+    const snap = await _scopeOrg(db.collection('prospects')).get();
     const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
     docs.sort(function(a,b) { return new Date(b.savedAt) - new Date(a.savedAt); });
     return docs;
@@ -5619,7 +5619,7 @@ async function fetchMyActivities() {
 }
 async function fetchAllActivities() {
   try {
-    const snap = await db.collection('activity').get();
+    const snap = await _scopeOrg(db.collection('activity')).get();
     const docs = snap.docs.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
     docs.sort(function(a,b) { return new Date(b.loggedAt) - new Date(a.loggedAt); });
     return docs;
@@ -11183,7 +11183,7 @@ async function _renderCraHistory() {
   var el = document.getElementById('cra-history');
   if (!el||!db) return;
   try {
-    var snap = await db.collection('craReports').get();
+    var snap = await _scopeOrg(db.collection('craReports')).get();
     var reports = [];
     snap.forEach(function(d){ var r=Object.assign({id:d.id},d.data()); if(r.generatedBy===currentUser.id||isAnyAdmin()) reports.push(r); });
     reports.sort(function(a,b){return (b.createdAt||'').localeCompare(a.createdAt||'');});
@@ -12912,7 +12912,7 @@ function renderRPOpenHouses() {
   var rdocId = currentUser.realtorDocId || '';
   var rname  = currentUser.name || '';
   var rid    = currentUser.id || '';
-  db.collection('oyz').get()
+  _scopeOrg(db.collection('oyz')).get()
     .then(function(snap) {
       var entries = [];
       snap.forEach(function(d) {
@@ -17368,7 +17368,8 @@ function fmtK(n) {
 // ── LOAD & RENDER ────────────────────────────────────────────
 async function loadDeals() {
   try {
-    var snap = await db.collection('deals').get();
+    // Server-side org scope (SA bypasses to see all tenants).
+    var snap = await _scopeOrg(db.collection('deals')).get();
     cachedDeals = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var orgId = currentUser&&currentUser.orgId;
     if (orgId && !isSuperAdmin()) cachedDeals = cachedDeals.filter(function(d){ return d.orgId===orgId; });
@@ -18053,7 +18054,7 @@ async function renderAdminTeamPipeline(containerId) {
   var el=document.getElementById(containerId); if(!el) return;
   el.innerHTML='<div style="color:#94a3b8;text-align:center;padding:20px">Loading...</div>';
   try {
-    var snap=await db.collection('deals').get();
+    var snap=await _scopeOrg(db.collection('deals')).get();
     var all=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var orgId=currentUser&&currentUser.orgId;
     if (orgId&&!isSuperAdmin()) all=all.filter(function(d){ return d.orgId===orgId; });
@@ -19938,7 +19939,7 @@ async function _loadSmsThreads() {
   var el = document.getElementById('sms-thread-list');
   if (!el || !db) return;
   try {
-    var snap = await db.collection('communications').get();
+    var snap = await _scopeOrg(db.collection('communications')).get();
     var msgs = [];
     snap.forEach(function(d) {
       var m = Object.assign({id:d.id}, d.data());
@@ -20018,7 +20019,7 @@ async function _smsReply(contactKey, contactName) {
   // Find the contact's phone from the last message
   var phone = '';
   try {
-    var snap = await db.collection('communications').get();
+    var snap = await _scopeOrg(db.collection('communications')).get();
     snap.forEach(function(d) {
       var m = d.data();
       if (m.mloUid !== currentUser.id) return;
@@ -20114,7 +20115,7 @@ async function _checkRateLockSmsAlerts() {
       // Check if already sent
       var alreadySent = false;
       try {
-        var chk = await db.collection('communications').get();
+        var chk = await _scopeOrg(db.collection('communications')).get();
         chk.forEach(function(cd) {
           var cm = cd.data();
           if (cm.type === 'sms_outbound' && cm.contactId === d.id && cm.body && cm.body.indexOf('rate lock') !== -1) alreadySent = true;
@@ -20214,7 +20215,7 @@ var RATE_FIELD_MAP = {
 async function loadPastCustomers() {
   if (!db || !currentUser) return;
   try {
-    var snap = await db.collection('pastCustomers').get();
+    var snap = await _scopeOrg(db.collection('pastCustomers')).get();
     cachedPastCustomers = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var orgId = currentUser.orgId || '';
     if (orgId && !isSuperAdmin()) cachedPastCustomers = cachedPastCustomers.filter(function(c){ return c.tenantId === orgId; });
@@ -20563,8 +20564,9 @@ async function _deletePersonData(collectionName, docId, personName) {
     // Anonymize rather than delete for compliance
     var anonData = { borrowerName: 'DELETED', phone: 'DELETED', email: 'DELETED', firstName: 'DELETED', lastName: 'DELETED', deletedAt: new Date().toISOString(), deletedBy: currentUser.id };
     await db.collection(collectionName).doc(docId).update(anonData);
-    // Delete linked communications
-    var comms = await db.collection('communications').get();
+    // Delete linked communications — scope to caller's org so a tenant
+    // admin's GDPR-delete request only touches their own tenant's data.
+    var comms = await _scopeOrg(db.collection('communications')).get();
     comms.forEach(function(d) { if (d.data().contactId === docId) db.collection('communications').doc(d.id).delete().catch(function(){}); });
     // Log in audit
     await _auditLog('delete_person_data', collectionName, docId, personName, 'Right to be forgotten');
@@ -20584,14 +20586,14 @@ async function _exportPersonData(collectionName, docId, personName) {
     var result = { person: {}, deals: [], communications: [], activities: [] };
     var pDoc = await db.collection(collectionName).doc(docId).get();
     if (pDoc.exists) result.person = pDoc.data();
-    // Linked deals
-    var dSnap = await db.collection('deals').get();
+    // Linked deals — org-scoped (SA bypasses for cross-tenant exports).
+    var dSnap = await _scopeOrg(db.collection('deals')).get();
     dSnap.forEach(function(d) { var dd = d.data(); if (dd.borrowerName === personName || dd.contactId === docId) result.deals.push(dd); });
     // Communications
-    var cSnap = await db.collection('communications').get();
+    var cSnap = await _scopeOrg(db.collection('communications')).get();
     cSnap.forEach(function(d) { var cd = d.data(); if (cd.contactId === docId) result.communications.push(cd); });
     // Activities
-    var aSnap = await db.collection('activity').get();
+    var aSnap = await _scopeOrg(db.collection('activity')).get();
     aSnap.forEach(function(d) { var ad = d.data(); if (ad.relatedContactId === docId) result.activities.push(ad); });
     var blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
