@@ -881,9 +881,54 @@ async function handleSmsSend(request, env) {
   return jsonResp({ success: false, error: data.message || 'Twilio error' }, request, 500);
 }
 
+// Twilio webhook signature verification.
+// https://www.twilio.com/docs/usage/security#validating-requests
+// Signature = base64( HMAC-SHA1( authToken, url + sortedFormParams ) ).
+// Twilio sends it in the X-Twilio-Signature header.
+async function verifyTwilioSignature(request, env, urlOverride) {
+  if (!env || !env.TWILIO_AUTH_TOKEN) return false;
+  const sig = request.headers.get('X-Twilio-Signature') || '';
+  if (!sig) return false;
+  // Twilio signs the FULL URL Twilio was configured to POST to (including
+  // any query string). Use the override if provided so callers can pin
+  // the exact URL Twilio sees (especially behind a reverse proxy).
+  const url = urlOverride || request.url;
+  const form = await request.clone().formData();
+  // Sort form params by key, concatenate as key+value pairs.
+  const keys = [];
+  form.forEach((_, k) => { keys.push(k); });
+  keys.sort();
+  let payload = url;
+  for (const k of keys) payload += k + form.get(k);
+  // HMAC-SHA1 via Web Crypto.
+  const keyBytes = new TextEncoder().encode(env.TWILIO_AUTH_TOKEN);
+  const dataBytes = new TextEncoder().encode(payload);
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', keyBytes,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false, ['sign']
+  );
+  const macBuf = await crypto.subtle.sign('HMAC', cryptoKey, dataBytes);
+  const mac = btoa(String.fromCharCode.apply(null, new Uint8Array(macBuf)));
+  // Constant-time comparison.
+  if (mac.length !== sig.length) return false;
+  let diff = 0;
+  for (let i = 0; i < mac.length; i++) diff |= mac.charCodeAt(i) ^ sig.charCodeAt(i);
+  return diff === 0;
+}
+
 async function handleSmsIncoming(request, env) {
-  const formData = await request.formData();
-  // Return TwiML response (empty — we log via Firestore on the client side)
+  // Verify the call really came from Twilio. Previously this endpoint
+  // returned 200 to any POST — anyone could forge "incoming" SMS
+  // events. Currently a no-op, but if we ever wire in auto-replies,
+  // billing, or analytics this becomes an abuse vector. Reject anything
+  // that doesn't carry a valid X-Twilio-Signature.
+  const ok = await verifyTwilioSignature(request, env);
+  if (!ok) {
+    return new Response('Forbidden', { status: 403, headers: corsHeaders(request) });
+  }
+  // (Body intentionally unused — we log inbound SMS via Firestore
+  // client-side. Kept the signature gate above for future expansion.)
   return new Response(
     '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
     { headers: { 'Content-Type': 'text/xml', ...corsHeaders(request) } }
