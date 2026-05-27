@@ -499,24 +499,25 @@ async function handleLmiLookup(zip, request) {
     return jsonResponse({ error: 'Invalid zip code' }, request, 400);
   }
   try {
-    const { ok, tracts, reason } = await fetchLmiTractsForZip(zip);
-    if (!ok) {
-      // Preserve legacy fallback behavior for the aggregations endpoint.
-      // CFPB only has data up to 2023 at the moment.
-      const aggUrl =
-        'https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations' +
-        '?years=2023' +
-        '&actions_taken=1,2,3&loan_purposes=1&zip_codes=' + zip;
-      const aggRes = await fetch(aggUrl, {
-        headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' },
-      });
-      if (!aggRes.ok) return jsonResponse({ error: 'FFIEC API error', reason }, request, 502);
-      const aggData = await aggRes.json();
-      return jsonResponse(aggData.aggregations || [], request);
+    const result = await fetchLmiTractsForZip(zip);
+    if (result.ok) {
+      return jsonResponse(result.tracts, request);
     }
-    return jsonResponse(tracts, request);
+    // Surface the actual failure reason from the primary path so the
+    // frontend can show a useful error instead of "Census unreachable".
+    // The previous aggregations fallback queried CFPB with `zip_codes=`,
+    // but that endpoint silently ignores `zip_codes` (audit confirmed
+    // every query 301-redirects to the same pre-built national file).
+    // Returning the unfiltered national HMDA aggregations is worse than
+    // returning a structured error.
+    return jsonResponse({
+      error: 'No LMI data available for this ZIP',
+      reason: result.reason || 'unknown',
+      detail: result.detail || null,
+    }, request, result.reason === 'zip_not_in_coverage' ? 400 : 502);
   } catch (e) {
-    return jsonResponse({ error: 'Census API unreachable' }, request, 502);
+    console.error('[handleLmiLookup]', zip, e && e.stack || e);
+    return jsonResponse({ error: 'LMI lookup failed', reason: 'internal_error' }, request, 502);
   }
 }
 
@@ -1135,11 +1136,15 @@ async function handleAdminTraceAddress(request, env) {
 
     return jsonResponse({ ok: true, trace }, request);
   } catch (e) {
+    // Log the full stack trace to the worker console (visible via
+    // `wrangler tail`), but do NOT include it in the HTTP response —
+    // even behind ADMIN_PASSWORD, leaking stack frames is information
+    // disclosure. The frontend only needs the message + partial trace.
+    console.error('[trace-address] internal error:', e && e.stack || e);
     return jsonResponse({
       ok: false,
       error: 'trace_internal_error',
-      message: String(e && e.message || e),
-      stack: String(e && e.stack || ''),
+      message: String(e && e.message || 'internal error'),
       partialTrace: trace,
     }, request, 500);
   }
@@ -1464,6 +1469,23 @@ async function handlePropertyIntelligence(request, env) {
 
   if (!tractId || !zip) {
     return jsonResponse({ error: 'tractId and zip are required' }, request, 400);
+  }
+
+  // Input validation — both fields end up interpolated into outbound URLs
+  // (ArcGIS `where=CENSUS_TRACT='${tractId}'`, RentCast `?zipCode=`, etc).
+  // Audit found tractId injection was possible because ArcGIS treats `'`
+  // as a SQL delimiter; an unvalidated tractId like `' OR 1=1 --` could
+  // exfiltrate the full parcel database. Reject anything that isn't an
+  // 11-digit FIPS tract / 5-digit ZIP up front so no downstream call can
+  // be coerced into something else.
+  if (!/^\d{11}$/.test(tractId)) {
+    return jsonResponse({ error: 'invalid tractId (expected 11-digit FIPS)' }, request, 400);
+  }
+  if (!/^\d{5}$/.test(zip)) {
+    return jsonResponse({ error: 'invalid zip (expected 5 digits)' }, request, 400);
+  }
+  if (county && !/^[A-Za-z .'\-]{2,40}$/.test(county)) {
+    return jsonResponse({ error: 'invalid county' }, request, 400);
   }
 
   // Check KV cache first (6 hours)
@@ -2465,7 +2487,6 @@ async function runScheduledRefresh(env, source /* 'cron' | 'manual' */) {
   const startedAt = new Date().toISOString();
   const runId = 'run_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   const cfg = await readRentCastConfig(env);
-  const usage = await getRentCastUsage(env);
 
   // Cron-only gate: only do real work if today matches configured day.
   if (source === 'cron') {
@@ -2474,6 +2495,29 @@ async function runScheduledRefresh(env, source /* 'cron' | 'manual' */) {
       const run = { runId, startedAt, finishedAt: new Date().toISOString(), source,
         skipped: true, reason: 'not_scheduled_day', todayDay, scheduledDay: cfg.scheduledDay };
       return run;
+    }
+  }
+
+  // Idempotency guard: if cron fires twice on the same UTC day (Cloudflare
+  // retries are rare but not impossible, and admin can press "Run Now"
+  // while a cron-fired refresh is mid-flight), refuse the second run.
+  // Without this, two parallel runs each burn ~30 RentCast quota slots.
+  // Key TTL is 25 h so it auto-expires before the next day's cron.
+  if (env.KV_NAMESPACE) {
+    const dayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+    const lockKey = 'cron_lock_' + dayKey;
+    try {
+      const existing = await env.KV_NAMESPACE.get(lockKey, 'json');
+      if (existing) {
+        return { runId, startedAt, finishedAt: new Date().toISOString(), source,
+          skipped: true, reason: 'already_ran_today', lockedBy: existing.runId,
+          lockedAt: existing.lockedAt };
+      }
+      await env.KV_NAMESPACE.put(lockKey,
+        JSON.stringify({ runId, lockedAt: startedAt, source }),
+        { expirationTtl: 25 * 60 * 60 });
+    } catch (e) {
+      console.warn('[cron-lock] KV write failed, proceeding without guard:', e && e.message || e);
     }
   }
 
