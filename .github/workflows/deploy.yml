@@ -38,6 +38,12 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+    # GitHub Actions removes Node.js 20 from runners on Sept 16, 2026.
+    # actions/checkout@v4 and actions/setup-node@v4 still ship as Node 20
+    # actions today, so opt them into Node 24 now to avoid the cliff.
+    # Safe to remove this env block once those actions publish v5 (Node 24).
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout

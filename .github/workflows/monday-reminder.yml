@@ -9,6 +9,10 @@ on:
 jobs:
   send-reminders:
     runs-on: ubuntu-latest
+    # GitHub Actions removes Node.js 20 from runners on Sept 16, 2026.
+    # See deploy.yml for context on why this env var is needed.
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,7 +20,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Use 22 (LTS) for the script body — 20 is being deprecated.
+          # The env-var above keeps the v4 actions themselves alive.
+          node-version: "22"
 
       - name: Install dependencies
         run: npm install firebase-admin node-fetch
