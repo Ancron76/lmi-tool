@@ -146,6 +146,29 @@ service cloud.firestore {
       return isSuperAdmin() || inOrg(oid);
     }
 
+    // Phase 2 tenant-isolation helpers. The app stores the tenant key as
+    // either `orgId` (most operational collections) or `tenantId` (sequences,
+    // scorecardSnapshots, securityEvents, agreementLog, auditLog). Both are
+    // populated from the same currentUser.orgId at write time, so we accept
+    // either field — whichever exists matches callerOrg(). Super-admins
+    // bypass entirely so cross-tenant SA views keep working.
+    function callerOwnsDoc(data) {
+      return isSuperAdmin()
+        || data.get('orgId', '__none__') == callerOrg()
+        || data.get('tenantId', '__none__') == callerOrg();
+    }
+    // For update operations: the new doc must also belong to caller's org
+    // (prevents cross-tenant move via update). Super-admins exempt.
+    function orgScopePreserved() {
+      return isSuperAdmin()
+        || (
+          resource.data.get('orgId', '__none__')
+            == request.resource.data.get('orgId', '__none__')
+          && resource.data.get('tenantId', '__none__')
+            == request.resource.data.get('tenantId', '__none__')
+        );
+    }
+
     // ================ USERS ================
     // STRICT — privilege-escalation-proof.
     match /users/{userId} {
@@ -323,96 +346,232 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ================ EMAIL LOG (immutable) ================
-    match /email_log/{logId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isAdmin();
-      allow delete: if false;
-    }
-
-    // ================ SCORECARD SNAPSHOTS (immutable) ================
-    match /scorecardSnapshots/{snapId} {
-      allow get, list: if isSignedIn();
-      allow create, update: if isAdmin();
-      allow delete: if false;
-    }
-
-    // ================ CRA REPORTS ================
-    match /craReports/{reportId} {
-      allow get, list: if isSignedIn();
-      allow create, update: if isAdmin();
-      allow delete: if isSuperAdmin();
-    }
+    // (email_log, scorecardSnapshots, craReports moved into the
+    // tenant-isolated block below. Removing the old looser duplicate
+    // match blocks prevents them from OR-merging with the strict
+    // versions and re-opening cross-tenant access.)
 
     // =================================================================
-    // SIGNED-IN-ONLY OPERATIONAL COLLECTIONS (Phase 1.5 will tighten)
+    // OPERATIONAL COLLECTIONS — TENANT-ISOLATED (Phase 2)
+    //
+    // Every collection below now requires the caller to be in the same
+    // org as the doc (orgId or tenantId, whichever the doc carries).
+    // Cross-tenant reads are blocked at the database level — the previous
+    // "filter client-side" approach failed open because any user could
+    // open DevTools and skip the filter.
+    //
+    // CLIENT REQUIREMENT: list queries MUST include
+    //   .where('orgId','==', currentUser.orgId)
+    // (or 'tenantId' for sequences/scorecardSnapshots). An unfiltered
+    // .get() will now return permission_denied because some docs in the
+    // result fail the per-doc rule. _scopeOrg() in index.html handles
+    // this — every caller threads through it. Super-admins bypass
+    // because callerOwnsDoc() short-circuits on isSuperAdmin().
+    //
+    // ROLLBACK: if a dashboard breaks after deploy, revert this file
+    // to the previous commit (firestore.rules @ 2836a8a) and re-deploy.
+    // Client code keeps working under the older rules — the .where()
+    // clauses just become harmless extra filters.
     // =================================================================
 
     match /deals/{dealId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /prospects/{prospectId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
     }
 
     match /pastCustomers/{customerId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isMlo();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isMlo() && callerOwnsDoc(request.resource.data);
+      allow update: if isMlo()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isMlo() && callerOwnsDoc(resource.data);
     }
 
     match /realtors/{realtorId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /realtor_searches/{searchId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /realtor_pushes/{pushId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /oyz/{oyzId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isSignedIn();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      // Was open to any signed-in user; now requires caller to own the doc.
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
     }
 
-
     match /prequal/{prequalId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /activity/{activityId} {
-      allow read, create: if isSignedIn();
-      allow update, delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isAdmin()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /notifications/{notifId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
     }
 
     match /sequences/{seqId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      // Was open to any signed-in user; now requires caller to own the doc.
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
     }
 
     match /sequenceEnrollments/{enrollId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
     }
 
     match /communications/{commId} {
-      allow read, create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     match /tasks/{taskId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
+    }
+
+    match /call_log/{logId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
+    }
+
+    match /craReports/{reportId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isAdmin() && callerOwnsDoc(request.resource.data);
+      allow update: if isAdmin()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /scorecardSnapshots/{snapId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isAdmin()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if false;
+    }
+
+    match /email_log/{logId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isAdmin()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if false;
+    }
+
+    match /email_templates/{tplId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
+    }
+
+    match /drip_campaigns/{campId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
+    }
+
+    match /drip_enrollments/{enrId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isSignedIn() && callerOwnsDoc(resource.data);
+    }
+
+    match /dealDocuments/{docId} {
+      allow get, list: if isSignedIn() && callerOwnsDoc(resource.data);
+      allow create: if isSignedIn() && callerOwnsDoc(request.resource.data);
+      allow update: if isSignedIn()
+        && callerOwnsDoc(resource.data)
+        && orgScopePreserved();
+      allow delete: if isAdmin() && callerOwnsDoc(resource.data);
     }
 
     // ========================================================
