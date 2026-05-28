@@ -2403,10 +2403,12 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
     </div>
     <nav class="sidebar-nav">
       <div class="sidebar-section-label" style="color:#c4943a">LOOPENTA HUB</div>
+      <!-- Hub Home opens the hub UI which renders its own .hub-tabbar with
+           Team Activity, Referrals, and Partner Network as in-page tabs
+           (see src/hub/mountHub.js). Surfacing them again in the sidebar
+           was redundant clutter, so the sidebar now exposes the single
+           entry point and the user navigates within the Hub itself. -->
       <button class="sidebar-nav-item" id="sn-hub" onclick="showTab('hub');closeSidebar()" style="font-weight:700"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>Hub Home</button>
-      <button class="sidebar-nav-item" id="sn-hub-reporting" onclick="if(window.Hub){Hub.go('reporting');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><rect x="5" y="11" width="3" height="8"/><rect x="10.5" y="7" width="3" height="12"/><rect x="16" y="13" width="3" height="6"/></svg></span>Team Activity</button>
-      <button class="sidebar-nav-item" id="sn-hub-referrals" onclick="if(window.Hub){Hub.go('referrals');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>Referrals</button>
-      <button class="sidebar-nav-item" id="sn-hub-network" onclick="if(window.Hub){Hub.go('network');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/></svg></span>Partner Network</button>
       <div class="sidebar-section-label">WORKSPACE</div>
       <button class="sidebar-nav-item active" id="sn-home" onclick="showTab('home');closeSidebar()"><span class="sn-icon">🏠</span>Home</button>
       <button class="sidebar-nav-item" id="sn-pipeline" data-feature="deal_pipeline" onclick="showTab('pipeline');closeSidebar()"><span class="sn-icon">🎯</span>Deal Pipeline</button>
