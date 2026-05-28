@@ -3886,6 +3886,11 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
             <option value="referralUser">Referral Partner</option>
             <option value="titleUser">Title Officer</option>
             <option value="escrowUser">Escrow Officer</option>
+            <!-- Super Admin is shown ONLY when the caller is a super-admin.
+                 The Firestore rule blocks non-SA from creating superadmin
+                 users anyway (Stage 1 escalation block + Stage 2C admin-
+                 update guard) — this is just UI hygiene. -->
+            <option value="superadmin" id="new-role-superadmin-opt" style="display:none">Super Admin (backup)</option>
         </select></div>
         <div class="form-group"><label>Type</label><select id="new-type"><option value="Internal">Internal</option><option value="External">External</option><option value="N/A">N/A</option></select></div>
         <div class="form-group"><label>Region</label><select id="new-region"><option value="Central Valley">Central Valley</option><option value="Los Angeles">Los Angeles</option><option value="Both">Both</option></select></div>
@@ -6664,6 +6669,12 @@ async function goAdmin() {
   document.getElementById('app-screen').style.display = 'none';
   document.getElementById('superadmin-screen').style.display = 'none';
   document.getElementById('admin-screen').style.display = 'block';
+  // Super-admins see the 'Super Admin (backup)' role option on the
+  // Invite New User form. Tenant admins don't.
+  try {
+    var saOpt = document.getElementById('new-role-superadmin-opt');
+    if (saOpt) saOpt.style.display = isSuperAdmin() ? '' : 'none';
+  } catch(e){}
   cachedUsers = await getUsers();
   renderAdminStats(); renderUserTable();
   await renderAdminProspects(); populateProspectFilter();
