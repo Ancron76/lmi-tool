@@ -2383,6 +2383,10 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
     <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()" />
     <button class="login-btn" onclick="tryLogin()">Sign In</button>
     <div class="login-error" id="login-error">Incorrect email or password.</div>
+    <div style="margin-top:14px;text-align:right">
+      <a href="#" id="forgot-password-link" onclick="sendPasswordReset();return false;" style="font-size:12px;color:var(--brand-accent);font-weight:600;text-decoration:none">Forgot password?</a>
+    </div>
+    <div id="password-reset-msg" style="display:none;font-size:12px;margin-top:10px;padding:10px;border-radius:8px;background:var(--color-positive-bg, #ecfdf5);color:var(--color-positive, #047857);border:1px solid var(--color-positive-border, #a7f3d0)"></div>
     <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
       <span style="font-size:12px;color:var(--text-muted)">New to Loopenta? </span>
       <a href="#" onclick="document.getElementById('login-screen').style.display='none';document.getElementById('signup-screen').style.display='flex';return false;" style="font-size:12px;color:var(--brand-accent);font-weight:700;text-decoration:none">Request access →</a>
@@ -6269,6 +6273,81 @@ async function tryLogin() {
         timestamp:new Date().toISOString(), userAgent:navigator.userAgent
       });
     } catch(e){}
+  }
+}
+
+// "Forgot password?" handler. Calls Firebase Auth's
+// sendPasswordResetEmail, then surfaces a generic message
+// regardless of whether the email is registered. Returning the
+// SAME message for "we sent the email" and "no such account"
+// is important: distinguishing them lets attackers enumerate
+// which emails are valid customers. Firebase Auth itself sends
+// the email (or doesn't) based on whether the account exists.
+async function sendPasswordReset() {
+  var emailInput = (document.getElementById('login-email').value || '').trim().toLowerCase();
+  var msgEl = document.getElementById('password-reset-msg');
+  var errEl = document.getElementById('login-error');
+  if (errEl) errEl.style.display = 'none';
+  if (!emailInput || !emailInput.includes('@')) {
+    if (msgEl) {
+      msgEl.style.background = 'var(--color-warning-bg, #fef3c7)';
+      msgEl.style.color = 'var(--color-warning, #92400e)';
+      msgEl.style.border = '1px solid var(--color-warning-border, #fde68a)';
+      msgEl.textContent = 'Enter your email above first, then click "Forgot password?" again.';
+      msgEl.style.display = 'block';
+    }
+    return;
+  }
+  if (!msgEl) return;
+  // Show "working..." immediately so the user knows something is happening.
+  msgEl.style.background = 'var(--color-info-bg, #eff6ff)';
+  msgEl.style.color = 'var(--color-info, #1e3a8a)';
+  msgEl.style.border = '1px solid var(--color-info-border, #bfdbfe)';
+  msgEl.textContent = 'Sending reset email...';
+  msgEl.style.display = 'block';
+  try {
+    if (typeof auth === 'undefined' || !auth || typeof auth.sendPasswordResetEmail !== 'function') {
+      throw new Error('Auth not initialized');
+    }
+    await auth.sendPasswordResetEmail(emailInput);
+    // Generic success message — does NOT confirm whether the email exists.
+    msgEl.style.background = 'var(--color-positive-bg, #ecfdf5)';
+    msgEl.style.color = 'var(--color-positive, #047857)';
+    msgEl.style.border = '1px solid var(--color-positive-border, #a7f3d0)';
+    msgEl.textContent = "If an account exists for that email, you'll receive a password reset link within a minute. Check spam if it doesn't arrive.";
+    // Audit the request — actor unknown, so write as anonymous failed-
+    // login-style telemetry. Permitted by the auditLog rule.
+    try {
+      if (db) {
+        db.collection('auditLog').add({
+          action: 'login_recovery_requested', resource: 'auth',
+          userName: emailInput, tenantId: '',
+          timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+        });
+      }
+    } catch (e) {}
+  } catch (err) {
+    var code = err && err.code || '';
+    var msg;
+    if (code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+    else if (code === 'auth/too-many-requests') msg = 'Too many requests. Try again in a few minutes.';
+    else if (code === 'auth/network-request-failed') msg = 'Network error — check your connection and try again.';
+    else if (err && err.message === 'Auth not initialized') msg = 'Sign-in service unavailable. Reload the page and try again.';
+    // Notable: we deliberately do NOT special-case auth/user-not-found —
+    // surfacing that would let attackers enumerate accounts. Treat it
+    // as success (same generic copy as above) so the response is
+    // indistinguishable.
+    else {
+      msgEl.style.background = 'var(--color-positive-bg, #ecfdf5)';
+      msgEl.style.color = 'var(--color-positive, #047857)';
+      msgEl.style.border = '1px solid var(--color-positive-border, #a7f3d0)';
+      msgEl.textContent = "If an account exists for that email, you'll receive a password reset link within a minute. Check spam if it doesn't arrive.";
+      return;
+    }
+    msgEl.style.background = 'var(--color-warning-bg, #fef3c7)';
+    msgEl.style.color = 'var(--color-warning, #92400e)';
+    msgEl.style.border = '1px solid var(--color-warning-border, #fde68a)';
+    msgEl.textContent = msg;
   }
 }
 
