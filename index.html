@@ -6769,6 +6769,19 @@ function _scopeOrg(query, opts) {
   return query.where(field, '==', orgId);
 }
 
+// Hard-scope a query to the caller's own org regardless of SA status.
+// Used by the home dashboard's Required Actions panel: even a super-admin
+// signed into their own account should see ONLY their work there, not
+// every tenant's pending items + orphaned legacy docs. SA cross-tenant
+// dashboards live in the SA admin screens, not in Home.
+function _scopeOrgHard(query, opts) {
+  if (!currentUser || !db) return null;
+  var orgId = currentUser.orgId;
+  if (!orgId) return null;
+  var field = (opts && opts.field) || 'orgId';
+  return query.where(field, '==', orgId);
+}
+
 async function useRequiredActions() {
   var actions = [];
   if (!db || !currentUser) return actions;
@@ -6790,17 +6803,27 @@ async function useRequiredActions() {
     return isNaN(d) ? null : d;
   }
 
+  // The home dashboard's Required Actions panel = "what I, the logged-in
+  // user, need to act on today". Even super-admins should see THEIR own
+  // org's actionable work here (SA cross-tenant views live in the SA
+  // admin screens). Every collection below uses _scopeOrgHard (no SA
+  // bypass) and additionally skips records with missing orgId/tenantId
+  // (orphans from pre-migration data that otherwise haunt the panel).
+  var _orphanWarn = { oyz: [], prequal: [], deals: [], realtors: [] };
+  function _hasOrg(d) { return !!(d && (d.orgId || d.tenantId)); }
+
   // 1. DEAL PIPELINE — active deals with rateLockExpiry within 7 days
   // (full tier only)
   if (hasFeature(_effectiveTier(), 'deal_pipeline')) {
   try {
-    // Server-side org scope (was: unfiltered .get() + client-side filter).
-    var dealSnap = await _scopeOrg(db.collection('deals')).get();
+    var dealQ = _scopeOrgHard(db.collection('deals'));
+    if (!dealQ) throw new Error('no_org');
+    var dealSnap = await dealQ.get();
     var dealDocs = dealSnap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    // Belt-and-suspenders: keep the client-side userId narrow for non-admins.
     if (!isAnyAdmin()) dealDocs = dealDocs.filter(function(d){ return d.userId===currentUser.id; });
     dealDocs.forEach(function(d){
-      if (d.stage === 'Closed' || d.stage === 'Lost') return;
+      if (!_hasOrg(d)) { _orphanWarn.deals.push(d.id); return; }
+      if (d.stage === 'Closed' || d.stage === 'Lost' || d.stage === 'Funded' || d.stage === 'Dead/Lost') return;
       if (!d.rateLockExpiry) return;
       var exp = _toDateLocal(d.rateLockExpiry);
       if (!exp) return;
@@ -6822,23 +6845,26 @@ async function useRequiredActions() {
   // (full tier only — contacts CRM)
   if (hasFeature(_effectiveTier(), 'contacts_full')) {
   try {
-    var pqSnap = await _scopeOrg(db.collection('prequal').where('status','==','pending')).get();
+    var pqQ = _scopeOrgHard(db.collection('prequal').where('status','==','pending'));
+    if (!pqQ) throw new Error('no_org');
+    var pqSnap = await pqQ.get();
     pqSnap.forEach(function(d){
       var pq = d.data();
-      // Only nag for requests submitted in the last 60 days. Anything
-      // older than that is stale and should be cleaned up directly in
-      // the pre-qual list, not perpetually surfaced as "needs action".
-      // Skip records missing both a name and a submitter — those are
-      // almost certainly legacy/test docs.
+      // Orphan guard — a record without orgId can't be the caller's
+      // pending work. Track for the post-load console warning.
+      if (!_hasOrg(pq)) { _orphanWarn.prequal.push(d.id); return; }
+      // Freshness window — older than 60 days is stale, not actionable.
       var requested = pq.requestedAt || pq.submittedAt || pq.createdAt;
       var requestedDate = requested ? _toDateLocal(requested) : null;
       if (requestedDate && requestedDate < ago60Days) return;
+      // Require at least one identifying field — empty test rows skip.
       if (!pq.realtorName && !pq.submittedBy && !pq.borrowerName) return;
       actions.push({
         p: 'high',
         title: 'Pre-qual request pending review',
         detail: 'Submitted by: ' + (pq.realtorName || pq.submittedBy || 'Realtor'),
         module: 'Contacts', tab: 'contacts',
+        _prequalId: d.id, // doc id so the click handler can deep-link
         _nav: 'contacts'
       });
     });
@@ -6847,9 +6873,12 @@ async function useRequiredActions() {
 
   // 3. REALTORS — lastContact exists AND lastContact <= 14 days ago
   try {
-    var rSnap = await _scopeOrg(db.collection('realtors')).get();
+    var rQ = _scopeOrgHard(db.collection('realtors'));
+    if (!rQ) throw new Error('no_org');
+    var rSnap = await rQ.get();
     rSnap.forEach(function(d){
       var r = Object.assign({id:d.id, docId:d.id}, d.data());
+      if (!_hasOrg(r)) { _orphanWarn.realtors.push(d.id); return; }
       if (!r.lastContact) return;
       var lc = _toDateLocal(r.lastContact);
       if (!lc) return;
@@ -6868,9 +6897,13 @@ async function useRequiredActions() {
 
   // 4. OPEN HOUSES — past openHouseDate AND reportSubmitted != true
   try {
-    var oyzSnap = await _scopeOrg(db.collection('oyz')).get();
+    var oyzQ = _scopeOrgHard(db.collection('oyz'));
+    if (!oyzQ) throw new Error('no_org');
+    var oyzSnap = await oyzQ.get();
     oyzSnap.forEach(function(d){
       var e = Object.assign({id:d.id}, d.data());
+      // Orphan guard — record without orgId can't be the caller's work.
+      if (!_hasOrg(e)) { _orphanWarn.oyz.push(d.id); return; }
       if (e.reportSubmitted === true) return;
       if (e.trackingStatus === 'archived') return;
       var eventDate = _toDateLocal(e.openHouseDate);
@@ -7153,11 +7186,64 @@ async function useRequiredActions() {
     }
   } catch(e){ console.warn('[RequiredActions] cra report:', e); }
 
+  // Surface orphan-record warnings in the console so the user can spot
+  // dirty data without it ever polluting the Required Actions panel.
+  // (Each orphan was skipped above, so it does NOT appear as an alert.)
+  try {
+    var totalOrphans = (_orphanWarn.oyz.length + _orphanWarn.prequal.length
+      + _orphanWarn.deals.length + _orphanWarn.realtors.length);
+    if (totalOrphans > 0) {
+      console.warn('[RequiredActions] %d orphan record(s) skipped (missing orgId):', totalOrphans, _orphanWarn,
+        '\nRun cleanupOrphans() from the console to inspect/fix.');
+      window._lastOrphans = _orphanWarn;
+    }
+  } catch (e) {}
+
   // Sort: high → med → low
   var order = {high:0, med:1, low:2};
   actions.sort(function(a,b){ return (order[a.p]||9) - (order[b.p]||9); });
   return actions;
 }
+
+// Console-only helper: enumerate orphan records (no orgId) across the
+// PII collections. Read-only — prints results, does NOT mutate. The user
+// can decide per-record whether to backfill, delete, or ignore.
+//   await cleanupOrphans()          // print report
+//   await cleanupOrphans({ delete: true })  // also delete every orphan
+//   await cleanupOrphans({ assignTo: 'my-org-id' })  // backfill orgId
+window.cleanupOrphans = async function (opts) {
+  if (!db) return console.warn('No db');
+  opts = opts || {};
+  var colls = ['oyz','prequal','deals','realtors','prospects','communications','call_log','pastCustomers','activity','notifications','tasks','craReports','realtor_searches','realtor_pushes'];
+  var report = {};
+  for (var i = 0; i < colls.length; i++) {
+    var c = colls[i];
+    try {
+      var snap = await db.collection(c).get();
+      var orphans = snap.docs.filter(function (d) {
+        var x = d.data();
+        return !x.orgId && !x.tenantId;
+      });
+      report[c] = orphans.map(function (d) { return d.id; });
+      if (opts.delete) {
+        for (var j = 0; j < orphans.length; j++) {
+          try { await orphans[j].ref.delete(); } catch (e) { console.warn('delete failed', c, orphans[j].id, e); }
+        }
+      } else if (opts.assignTo) {
+        for (var k = 0; k < orphans.length; k++) {
+          try { await orphans[k].ref.update({ orgId: opts.assignTo }); } catch (e) { console.warn('update failed', c, orphans[k].id, e); }
+        }
+      }
+    } catch (e) {
+      report[c] = 'denied/error: ' + (e && e.code || e.message || e);
+    }
+  }
+  console.table(Object.keys(report).map(function (c) {
+    var v = report[c];
+    return { collection: c, orphans: Array.isArray(v) ? v.length : v, ids: Array.isArray(v) ? v.join(',') : '' };
+  }));
+  return report;
+};
 
 var _PA = {
   high: { dot:'#9a4a3a', bg:'#f8ecea', label:'Urgent'     },
@@ -7496,7 +7582,23 @@ async function renderHomeActions() {
       if (a._dealId) { showTab('pipeline'); setTimeout(function(){ openDealDetail(a._dealId); }, 400); }
       else if (a._realtorId) { showTab('realtors'); setTimeout(function(){ openRealtorProfile(a._realtorId); }, 400); }
       else if (a._oyzId) { showTab('oyz'); setTimeout(function(){ openPropDetail(a._oyzId); }, 400); }
-      else { showTab(a.tab); }
+      else if (a._prequalId) {
+        // Pre-qual deep link: switch to Contacts and try to scroll the
+        // specific pre-qual into view if the list is rendered. If the
+        // list isn't there (different tier), at least the user lands
+        // on the right tab with an aware breadcrumb in the URL hash.
+        showTab(a.tab || 'contacts');
+        setTimeout(function() {
+          try {
+            window.location.hash = '#prequal-' + a._prequalId;
+            var el = document.getElementById('prequal-' + a._prequalId)
+              || document.querySelector('[data-prequal-id="' + a._prequalId + '"]');
+            if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch (e) { /* navigation is enough */ }
+        }, 400);
+      }
+      else if (a.tab) { showTab(a.tab); }
+      else { console.warn('[RequiredActions] click had no target', a); }
     });
   });
 }
