@@ -21323,6 +21323,71 @@ function updateBottomNav(tab) {
   if (id) { var el = document.getElementById(id); if (el) el.classList.add('active'); }
 }
 // Remove any stale service worker that may have been registered by an
+// ── Global error reporter ────────────────────────────────────
+// Forwards uncaught exceptions + unhandled promise rejections to the
+// worker's /error-report endpoint. The worker rate-limits per-IP and
+// the receiver logs to wrangler tail / observability, so a buggy page
+// shows up in operator view without needing Sentry. Best-effort —
+// failures here are swallowed silently so we don't loop on report
+// errors.
+(function() {
+  var REPORT_URL = (window.location.origin || 'https://lmitool.com') + '/error-report';
+  var _lastErrorTs = 0;
+  function _postError(payload) {
+    // Coalesce identical bursts — never more than 1 report per 2s.
+    var now = Date.now();
+    if (now - _lastErrorTs < 2000) return;
+    _lastErrorTs = now;
+    try {
+      var body = JSON.stringify(payload);
+      if (navigator.sendBeacon) {
+        var blob = new Blob([body], { type: 'application/json' });
+        navigator.sendBeacon(REPORT_URL, blob);
+      } else {
+        fetch(REPORT_URL, {
+          method: 'POST', body: body, keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+        }).catch(function(){});
+      }
+    } catch(e) { /* never throw from a reporter */ }
+  }
+  window.addEventListener('error', function(ev) {
+    _postError({
+      tag: 'window_error',
+      message: ev && ev.message,
+      source: ev && ev.filename,
+      lineno: ev && ev.lineno,
+      colno: ev && ev.colno,
+      stack: ev && ev.error && ev.error.stack,
+      url: location.href,
+      ua: navigator.userAgent,
+      ts: new Date().toISOString(),
+    });
+  });
+  window.addEventListener('unhandledrejection', function(ev) {
+    var reason = ev && ev.reason;
+    _postError({
+      tag: 'unhandledrejection',
+      message: reason && (reason.message || String(reason)),
+      stack: reason && reason.stack,
+      url: location.href,
+      ua: navigator.userAgent,
+      ts: new Date().toISOString(),
+    });
+  });
+  // Expose for explicit reporting from try/catch blocks elsewhere.
+  window._reportError = function(err, tag) {
+    _postError({
+      tag: tag || 'manual',
+      message: err && (err.message || String(err)),
+      stack: err && err.stack,
+      url: location.href,
+      ua: navigator.userAgent,
+      ts: new Date().toISOString(),
+    });
+  };
+})();
+
 // older version of this app — but DO NOT unregister push-sw.js, which
 // src/hub/notifications.js registers for web-push delivery. Previously
 // this code unregistered everything, silently breaking push the moment

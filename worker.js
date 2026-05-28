@@ -221,6 +221,35 @@ export default {
       return handleSetAuthPassword(request, env);
     }
 
+    // ── Public error-report sink ─────────────────────────────────
+    // The frontend posts uncaught exceptions + unhandled rejections
+    // here. Rate-limited per IP. Body is logged via console.error so
+    // it shows up in `wrangler tail` and (if enabled) the worker's
+    // observability dashboard. Returns 204 fast — never blocks the
+    // user's page.
+    if (url.pathname === '/error-report' && request.method === 'POST') {
+      const rl = await checkPublicRateLimit(request, env, 'error_report');
+      if (rl) return rl;
+      try {
+        const body = await request.json();
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const ua = request.headers.get('User-Agent') || 'unknown';
+        console.error('[client-error]', JSON.stringify({
+          ip, ua,
+          message: String(body.message || '').slice(0, 500),
+          source: String(body.source || '').slice(0, 200),
+          lineno: body.lineno,
+          colno: body.colno,
+          stack: String(body.stack || '').slice(0, 2000),
+          url: String(body.url || '').slice(0, 500),
+          userAgentClient: String(body.ua || '').slice(0, 200),
+          tag: String(body.tag || '').slice(0, 50),
+          ts: body.ts || new Date().toISOString(),
+        }));
+      } catch (e) { /* malformed body — ignore */ }
+      return new Response(null, { status: 204, headers: corsHeaders(request) });
+    }
+
     // Everything else → static assets
     return env.ASSETS.fetch(request);
   },
@@ -2375,6 +2404,7 @@ const PUBLIC_RATE_MAX = {
   lmi: 40,           // /?zip=X — generous, UIs paginate
   propintel: 30,     // /property-intelligence — slower, more expensive
   forsale: 60,       // /for-sale — KV-cache reads, cheap
+  error_report: 20,  // /error-report — one buggy page shouldn't drown the log
   default: 30,
 };
 const PUBLIC_RATE_KEY_PREFIX = 'public_rate_v1_';
