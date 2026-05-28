@@ -2257,17 +2257,119 @@ function constantTimeEqual(a, b) {
   return diff === 0;
 }
 
+// Per-IP brute-force throttle for ADMIN_PASSWORD.
+// ─────────────────────────────────────────────────────────────
+// ADMIN_PASSWORD is the only thing guarding RentCast quota, the
+// Firebase Auth admin endpoints, the cache re-enrichment endpoint,
+// and every other /admin/* route. Without per-IP throttling an
+// attacker could spray guesses globally from a CF Worker isolate
+// pool and find the password.
+//
+// Strategy:
+//   - Successful auth: reset the counter to 0 (in-flight legitimate
+//     admin can keep going without surprise lockouts).
+//   - Failed auth: increment counter, window = 15 minutes.
+//   - After 5 failures in the window: respond 429 with a Retry-After
+//     equal to remaining window. Counter must clear before retries
+//     are accepted.
+//   - Key = CF-Connecting-IP. If somehow missing (private network /
+//     internal call), fall back to a synthetic 'unknown_ip' bucket
+//     which is shared and very strict (3 per window).
+//   - KV write failures are logged but don't open the gate — better
+//     to false-positive lock out a legitimate admin than silently
+//     remove the throttle.
+const ADMIN_THROTTLE_WINDOW_S = 15 * 60;  // 15 minutes
+const ADMIN_THROTTLE_MAX_FAILS = 5;
+const ADMIN_THROTTLE_KEY_PREFIX = 'admin_throttle_v1_';
+
+async function getAdminThrottleState(env, ip) {
+  if (!env.KV_NAMESPACE) return { count: 0, kvAvailable: false };
+  try {
+    const raw = await env.KV_NAMESPACE.get(ADMIN_THROTTLE_KEY_PREFIX + ip, 'json');
+    if (!raw) return { count: 0, kvAvailable: true };
+    // Expired? Treat as no record.
+    if (raw.windowEndsAt && Date.now() > raw.windowEndsAt) return { count: 0, kvAvailable: true };
+    return { count: raw.count || 0, windowEndsAt: raw.windowEndsAt, kvAvailable: true };
+  } catch (e) {
+    console.warn('[admin-throttle] KV read failed:', e && e.message || e);
+    return { count: 0, kvAvailable: false };
+  }
+}
+
+async function incrementAdminFailure(env, ip) {
+  if (!env.KV_NAMESPACE) return;
+  try {
+    const state = await getAdminThrottleState(env, ip);
+    const newCount = (state.count || 0) + 1;
+    const windowEndsAt = state.windowEndsAt && state.count > 0
+      ? state.windowEndsAt
+      : Date.now() + ADMIN_THROTTLE_WINDOW_S * 1000;
+    await env.KV_NAMESPACE.put(
+      ADMIN_THROTTLE_KEY_PREFIX + ip,
+      JSON.stringify({ count: newCount, windowEndsAt }),
+      { expirationTtl: ADMIN_THROTTLE_WINDOW_S + 60 }
+    );
+  } catch (e) {
+    console.warn('[admin-throttle] KV write failed:', e && e.message || e);
+  }
+}
+
+async function clearAdminFailures(env, ip) {
+  if (!env.KV_NAMESPACE) return;
+  try { await env.KV_NAMESPACE.delete(ADMIN_THROTTLE_KEY_PREFIX + ip); }
+  catch (e) { /* non-fatal */ }
+}
+
 async function requireSuperAdmin(request, env) {
   if (!env.ADMIN_PASSWORD) throw new Error('admin_password_not_configured');
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown_ip';
+
+  // Pre-flight throttle check BEFORE we look at the bearer token.
+  const state = await getAdminThrottleState(env, ip);
+  const maxForThisBucket = ip === 'unknown_ip' ? 3 : ADMIN_THROTTLE_MAX_FAILS;
+  if (state.count >= maxForThisBucket) {
+    const remaining = state.windowEndsAt
+      ? Math.max(1, Math.ceil((state.windowEndsAt - Date.now()) / 1000))
+      : ADMIN_THROTTLE_WINDOW_S;
+    const err = new Error('rate_limited');
+    err.retryAfter = remaining;
+    err.failCount = state.count;
+    throw err;
+  }
+
   const auth = request.headers.get('Authorization') || request.headers.get('authorization') || '';
   const m = auth.match(/^Bearer\s+(.+)$/i);
-  if (!m) throw new Error('no_auth_header');
-  if (!constantTimeEqual(m[1].trim(), String(env.ADMIN_PASSWORD).trim())) throw new Error('bad_admin_password');
+  if (!m) {
+    // Missing header is still abuse-detectable — count it.
+    await incrementAdminFailure(env, ip);
+    throw new Error('no_auth_header');
+  }
+  if (!constantTimeEqual(m[1].trim(), String(env.ADMIN_PASSWORD).trim())) {
+    await incrementAdminFailure(env, ip);
+    throw new Error('bad_admin_password');
+  }
+  // Successful auth — reset the per-IP counter so a legitimate admin
+  // who fat-fingered the password once doesn't get locked out.
+  await clearAdminFailures(env, ip);
   return { ok: true };
 }
 
 function adminErrorResponse(err, request) {
   const msg = String(err && err.message || err || 'auth_failed');
+  if (msg === 'rate_limited') {
+    return new Response(JSON.stringify({
+      error: 'rate_limited',
+      retryAfterSeconds: err.retryAfter || 60,
+      detail: 'Too many failed attempts from this IP. Wait before retrying.'
+    }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(err.retryAfter || 60),
+        ...corsHeaders(request),
+      },
+    });
+  }
   const status = msg === 'no_auth_header' || msg === 'bad_admin_password' ? 401 :
                  msg === 'admin_password_not_configured' ? 500 : 401;
   return jsonResponse({ error: msg }, request, status);
