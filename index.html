@@ -7295,8 +7295,14 @@ window._resetTenantData = async function (opts) {
     return { error: 'no_firebase_auth_uid' };
   }
 
-  // Collections to fully empty.
-  var pii = ['deals','prospects','realtors','oyz','prequal','pastCustomers','communications','call_log','tasks','activity','notifications','sequences','sequenceEnrollments','email_log','email_templates','drip_campaigns','drip_enrollments','craReports','scorecardSnapshots','realtor_searches','realtor_pushes','dealDocuments','agreementLog','securityEvents','auditLog'];
+  // Collections to fully empty. NOTE: auditLog, securityEvents, and
+  // agreementLog are intentionally NOT in this list — they're immutable
+  // by Firestore rule (`allow update, delete: if false`) for compliance.
+  // Trying to delete them would just produce a wall of permission-denied
+  // errors in the console. The 146-entry audit log from this development
+  // session lives forever; that's the right tradeoff for a regulated
+  // industry.
+  var pii = ['deals','prospects','realtors','oyz','prequal','pastCustomers','communications','call_log','tasks','activity','notifications','sequences','sequenceEnrollments','email_log','email_templates','drip_campaigns','drip_enrollments','craReports','scorecardSnapshots','realtor_searches','realtor_pushes','dealDocuments'];
 
   console.group('[reset] ' + (dry ? 'DRY-RUN' : 'EXECUTING'));
   var report = { mode: dry ? 'dry-run' : 'executing', collections: {}, users: { keptId: currentUser.id, keptEmail: meData.email, deleted: [] } };
