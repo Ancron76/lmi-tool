@@ -20329,16 +20329,102 @@ async function _checkAndSendDigest() {
 var _smsComposerContact = null;
 var _smsActiveThread = null;
 
-// ── SEND SMS VIA CLOUDFLARE WORKER ───────────────────────────
-async function _sendSms(to, message, contactId, contactName, contactType) {
+// ── TCPA-AWARE SMS SEND VIA CLOUDFLARE WORKER ────────────────────
+// Marketing/transactional SMS is regulated under the TCPA. Per-message
+// violations run $500–$1,500. Guardrails enforced here:
+//
+//   1. Quiet hours — by default, refuse to send between 9 pm and 8 am
+//      in the recipient's local time. {force:true} bypasses for
+//      genuinely transactional messages (rate-lock alerts), but the
+//      caller has to ask explicitly and we log the bypass.
+//
+//   2. Opt-out check — if the contact has smsOptOut === true (set when
+//      they replied STOP / UNSUBSCRIBE / QUIT / END / CANCEL /
+//      OPTOUT), refuse with a clear reason. Audit-logged.
+//
+//   3. Auto-append "Reply STOP to unsubscribe" on the first message
+//      to a contact who hasn't yet been sent one (tracked via the
+//      tcpaStopFooterSentAt field on the contact doc). After that the
+//      caller is responsible for periodically re-disclosing per TCPA
+//      best practice (every ~30 days).
+//
+//   4. Audit-log every send + every refusal so a regulator request
+//      ("show me you have consent for this borrower at this date")
+//      is answerable from /auditLog and /communications.
+//
+// Time-zone resolution is intentionally simplified: we treat the
+// MLO's local time as the recipient's. For a national platform this
+// should later use the recipient's area code → time zone lookup.
+function _isQuietHourLocal(now) {
+  var hour = now.getHours();
+  // Quiet between 21:00 and 07:59 inclusive on either side (i.e. send
+  // window is 08:00–20:59). This conservatively exceeds the federal
+  // TCPA window (8 am – 9 pm recipient local) by an hour at the end.
+  return hour < 8 || hour >= 21;
+}
+
+var _SMS_STOP_KEYWORDS = ['STOP','UNSUBSCRIBE','QUIT','END','CANCEL','OPTOUT','OPT-OUT','OPT OUT','REVOKE'];
+var _SMS_HELP_KEYWORDS = ['HELP','INFO'];
+
+async function _sendSms(to, message, contactId, contactName, contactType, opts) {
+  opts = opts || {};
   if (!db || !currentUser || !to || !message) return { success:false, error:'Missing data' };
-  // Get MLO's Twilio number
+
+  // Quiet hours.
+  if (!opts.force && _isQuietHourLocal(new Date())) {
+    try {
+      await db.collection('auditLog').add({
+        action: 'sms_refused_quiet_hours', resource: 'sms',
+        userId: currentUser.id, userName: currentUser.name||currentUser.email,
+        tenantId: currentUser.orgId||'',
+        details: { contactId: contactId||'', contactName: contactName||'' },
+        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+      });
+    } catch(e){}
+    return { success:false, error:'Quiet hours: SMS may only be sent 8 am–9 pm. Override with {force:true} only for genuinely transactional (non-marketing) messages.', reason:'quiet_hours' };
+  }
+
+  // Opt-out check (per-contact).
+  if (contactId && contactType) {
+    var contactCollection = contactType === 'realtor' ? 'realtors'
+                          : contactType === 'deal' ? 'deals'
+                          : 'prospects';
+    try {
+      var cDoc = await db.collection(contactCollection).doc(contactId).get();
+      if (cDoc.exists && cDoc.data().smsOptOut === true) {
+        try {
+          await db.collection('auditLog').add({
+            action: 'sms_refused_optout', resource: 'sms',
+            userId: currentUser.id, userName: currentUser.name||currentUser.email,
+            tenantId: currentUser.orgId||'',
+            details: { contactId: contactId, contactName: contactName||'' },
+            timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+          });
+        } catch(e){}
+        return { success:false, error:'Recipient has opted out of SMS.', reason:'optout' };
+      }
+      // Auto-append STOP footer on first contact (TCPA best practice).
+      if (cDoc.exists && !cDoc.data().tcpaStopFooterSentAt) {
+        if (!/reply\s+stop|text\s+stop/i.test(message)) {
+          message = message + '\n\nReply STOP to unsubscribe. HELP for info. Msg & data rates may apply.';
+        }
+        try {
+          await cDoc.ref.update({ tcpaStopFooterSentAt: new Date().toISOString() });
+        } catch(e){}
+      }
+    } catch(e){
+      console.warn('[sms] opt-out check failed, continuing:', e);
+    }
+  }
+
+  // MLO Twilio number.
   var fromNumber = '';
   try {
     var uDoc = await db.collection('users').doc(currentUser.id).get();
     if (uDoc.exists) fromNumber = uDoc.data().twilioNumber || '';
   } catch(e){}
-  if (!fromNumber) return { success:false, error:'No SMS number assigned. Ask admin to provision one.' };
+  if (!fromNumber) return { success:false, error:'No SMS number assigned. Ask admin to provision one.', reason:'no_from_number' };
+
   try {
     var resp = await fetch(PROXY_URL + '/sms/send', {
       method: 'POST',
@@ -20351,20 +20437,70 @@ async function _sendSms(to, message, contactId, contactName, contactType) {
     });
     var data = await resp.json();
     if (!data.success) throw new Error(data.error || 'Send failed');
-    // Log outbound to Firestore
+    // Log outbound to Firestore.
     await db.collection('communications').add({
       type: 'sms_outbound', to: to, body: message,
       messageSid: data.messageSid || '',
       mloUid: currentUser.id, tenantId: currentUser.orgId || '',
       contactId: contactId || '', contactName: contactName || '', contactType: contactType || '',
-      read: true, createdAt: new Date().toISOString()
+      read: true, createdAt: new Date().toISOString(),
+      tcpaBypassUsed: opts.force === true
     });
+    try {
+      await db.collection('auditLog').add({
+        action: 'sms_sent', resource: 'sms',
+        userId: currentUser.id, userName: currentUser.name||currentUser.email,
+        tenantId: currentUser.orgId||'',
+        details: { contactId: contactId||'', contactName: contactName||'', bypass: !!opts.force, messageSid: data.messageSid||'' },
+        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+      });
+    } catch(e){}
     return { success: true, messageSid: data.messageSid };
   } catch(e) {
     console.error('SMS send error:', e);
     return { success: false, error: e.message };
   }
 }
+
+// Process an inbound SMS from a contact. Called by the Twilio webhook
+// handler (in the worker) or the manual paste-in tool. Honors STOP /
+// HELP keywords per TCPA — STOP sets smsOptOut on the contact doc and
+// audit-logs it; HELP records a request for info.
+async function _processInboundSms(fromPhone, body, contactId, contactType) {
+  if (!body) return;
+  var upper = String(body).trim().toUpperCase();
+  var first = upper.split(/\s+/)[0];
+  var isStop = _SMS_STOP_KEYWORDS.indexOf(first) !== -1
+    || _SMS_STOP_KEYWORDS.some(function(k){ return upper === k; });
+  var isHelp = _SMS_HELP_KEYWORDS.indexOf(first) !== -1;
+  if (isStop && contactId && contactType) {
+    var coll = contactType === 'realtor' ? 'realtors'
+             : contactType === 'deal' ? 'deals'
+             : 'prospects';
+    try {
+      await db.collection(coll).doc(contactId).update({
+        smsOptOut: true,
+        smsOptOutAt: new Date().toISOString(),
+        smsOptOutKeyword: first
+      });
+    } catch(e){}
+    try {
+      await db.collection('auditLog').add({
+        action: 'sms_optout_processed', resource: 'sms',
+        userId: currentUser ? currentUser.id : null,
+        tenantId: currentUser ? currentUser.orgId||'' : '',
+        details: { contactId: contactId, contactType: contactType, keyword: first },
+        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+      });
+    } catch(e){}
+  }
+  if (isHelp) {
+    // Send the standard HELP reply (no opt-in needed for HELP responses).
+    return { autoReply: 'For help, contact your loan officer or visit lmitool.com. Reply STOP to unsubscribe.' };
+  }
+  return { autoReply: null };
+}
+window._processInboundSms = _processInboundSms;
 
 // ── SMS COMPOSER ─────────────────────────────────────────────
 function _openSmsComposer(contact) {
