@@ -8142,7 +8142,7 @@ function populateOYZRealtorSelect() {
   if (!sel) return;
   sel.innerHTML = '<option value="">Select existing realtor...</option>';
   (cachedRealtors || []).forEach(function(r) {
-    sel.innerHTML += '<option value="' + (r.docId || r.id || '') + '" data-name="' + (r.name || '') + '">' + (r.name || '') + (r.brokerage ? ' — ' + r.brokerage : '') + '</option>';
+    sel.innerHTML += '<option value="' + esc(r.docId || r.id || '') + '" data-name="' + esc(r.name || '') + '">' + esc(r.name || '') + (r.brokerage ? ' — ' + esc(r.brokerage) : '') + '</option>';
   });
 }
 
@@ -8210,7 +8210,7 @@ function oyzCardHtml(e, isAdmin) {
     : (e.realtorName || '—');
   return '<div class="oyz-card" onclick="openPropDetail(\'' + e.id + '\')" style="cursor:pointer">'
     + '<div class="oyz-card-top">'
-    + '<div><div class="oyz-card-address">' + (e.propertyAddress || '—') + '</div>'
+    + '<div><div class="oyz-card-address">' + esc(e.propertyAddress || '—') + '</div>'
     + '<div class="oyz-card-realtor">Realtor: ' + realtorLink + ' ' + mloLine + '</div></div>'
     + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + outcomeBadge + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
     + '</div>'
@@ -8219,7 +8219,7 @@ function oyzCardHtml(e, isAdmin) {
     + '<div class="oyz-date-item"><div class="oyz-date-label">First Contact</div><div class="oyz-date-value">' + fmtOYZDate(e.firstContactDate) + '</div></div>'
     + '<div class="oyz-date-item"><div class="oyz-date-label">Next Connection</div><div class="oyz-date-value">' + fmtOYZDate(e.nextConnectionDate) + '</div></div>'
     + '</div>'
-    + (e.notes ? '<div class="oyz-card-notes">' + e.notes + '</div>' : '')
+    + (e.notes ? '<div class="oyz-card-notes">' + esc(e.notes) + '</div>' : '')
     + '<div class="oyz-card-actions" onclick="event.stopPropagation()">'
     + (status !== 'complete' ? '<button class="oyz-complete-btn" onclick="markOYZComplete(\'' + e.id + '\')">✓ Mark Complete</button>' : '<span style="font-size:12px;color:#059669;font-weight:700">✓ Completed</span>')
     + '<button class="oyz-delete-btn" onclick="deleteOYZ(\'' + e.id + '\')">🗑 Delete</button>'
@@ -8260,7 +8260,7 @@ function renderOYZList() {
             : '<span style="font-size:12px;color:#64748b">' + (e.realtorName || '—') + '</span>';
           return '<div class="oyz-weekend-card" onclick="openPropDetail(\'' + e.id + '\')">'
             + '<div style="display:flex;justify-content:space-between;align-items:center">'
-            + '<div style="font-size:14px;font-weight:800;color:#1f2937">' + (e.propertyAddress || '—') + '</div>'
+            + '<div style="font-size:14px;font-weight:800;color:#1f2937">' + esc(e.propertyAddress || '—') + '</div>'
             + '<div style="font-size:12px;font-weight:700;color:#1B73E3">' + fmtOYZDate(e.openHouseDate) + '</div>'
             + '</div>'
             + '<div style="margin-top:4px">Realtor: ' + realtorLink + '</div>'
@@ -8946,7 +8946,7 @@ function openRealtorProfile(docId) {
     var outcomeBadge = e.dealOutcome ? '<span style="font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;background:' + _ros.bg + ';color:' + _ros.color + '">' + e.dealOutcome + '</span>' : '';
     return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer" onclick="closeRealtorProfile();openPropDetail(\'' + e.id + '\')">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-      + '<div style="font-size:13px;font-weight:700;color:#1f2937">' + (e.propertyAddress || '—') + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:#1f2937">' + esc(e.propertyAddress || '—') + '</div>'
       + '<div style="display:flex;gap:6px">' + outcomeBadge + '<span class="oyz-status-badge ' + sl.cls + '">' + sl.text + '</span></div>'
       + '</div>'
       + '<div style="font-size:11px;color:#94a3b8">Open House: ' + fmtOYZDate(e.openHouseDate) + '</div>'
@@ -9038,7 +9038,7 @@ function openRealtorProfile(docId) {
     + '<div class="rp-section">'
     + '<div class="rp-section-title">Contact Info</div>'
     + '<div class="rp-contact-grid">'
-    + (r.phone ? '<div class="rp-contact-item"><label>Phone</label><span><a href="tel:' + r.phone + '" style="color:var(--text-primary);text-decoration:none">' + r.phone + '</a></span></div>' : '')
+    + (r.phone ? '<div class="rp-contact-item"><label>Phone</label><span><a href="tel:' + esc(r.phone) + '" style="color:var(--text-primary);text-decoration:none">' + esc(r.phone) + '</a></span></div>' : '')
     + (r.email ? '<div class="rp-contact-item"><label>Email</label><span><a href="mailto:' + r.email + '" style="color:#5a8a9e;text-decoration:none">' + r.email + '</a></span></div>' : '')
     + (r.area  ? '<div class="rp-contact-item"><label>Area / ZIP</label><span>' + r.area + '</span></div>' : '')
     + (lastContact ? '<div class="rp-contact-item"><label>Last Contact</label><span>' + new Date(lastContact).toLocaleDateString() + '</span></div>' : '')
@@ -9108,7 +9108,7 @@ function openRealtorProfile(docId) {
           return '<div class="rp-shared-search-item">'
             + '<div class="rp-shared-search-buyer">' + (s.buyerName || 'Unnamed Buyer') + '</div>'
             + '<div class="rp-shared-search-meta">ZIP: ' + (s.zip || '—') + ' · ' + (s.lmiCategory || '—') + (s.savedAt ? ' · ' + new Date(s.savedAt).toLocaleDateString() : '') + '</div>'
-            + (s.notes ? '<div style="font-size:12px;color:#64748b;margin-bottom:8px;font-style:italic">' + s.notes + '</div>' : '')
+            + (s.notes ? '<div style="font-size:12px;color:#64748b;margin-bottom:8px;font-style:italic">' + esc(s.notes) + '</div>' : '')
             + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + convertedBadge + '</div>'
             + '</div>';
         }).join('');
@@ -9366,7 +9366,7 @@ async function generateShoppingList() {
       + prospect.assignedRealtors.map(function(r) {
           return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px">'
             + '<div style="font-size:14px">🏠</div>'
-            + '<div><div style="font-size:13px;font-weight:700;color:#1f2937">' + r.name + '</div><div style="font-size:11px;color:#64748b">' + r.brokerage + '</div></div>'
+            + '<div><div style="font-size:13px;font-weight:700;color:#1f2937">' + esc(r.name) + '</div><div style="font-size:11px;color:#64748b">' + esc(r.brokerage) + '</div></div>'
             + '</div>';
         }).join('')
       + '</div>'
@@ -9797,13 +9797,13 @@ function renderRealtorList() {
       : '';
     return '<div class="realtor-card">'
       + '<div class="realtor-card-top"><div>'
-      + '<div class="realtor-card-name realtor-name-link" onclick="openRealtorProfileById(\'' + r.docId + '\',\'' + (r.name||'').replace(/'/g,"&#39;") + '\')">' + r.name + '</div>'
+      + '<div class="realtor-card-name realtor-name-link" onclick="openRealtorProfileById(\'' + esc(r.docId) + '\',\'' + esc((r.name||'').replace(/'/g,"\\'")) + '\')">' + esc(r.name) + '</div>'
       + '<div class="realtor-card-brokerage">' + r.brokerage + (r.license ? ' · Lic: ' + r.license : '') + '</div>'
       + oyzSummary
       + '</div>'
       + '<div class="realtor-card-actions"><button class="invite-portal-btn" onclick="inviteRealtorToPortal(\'' + r.docId + '\')" title="Invite to Realtor Portal">📧 Invite</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="openCallModal(\'' + r.docId + '\',\'realtor\')" title="Log Call">📞</button><button class="action-btn" style="color:#4f46e5;margin-left:4px" onclick="editRealtor(\'' + r.docId + '\')">✏️</button><button class="action-btn del-btn" onclick="deleteRealtor(\'' + r.docId + '\')">🗑</button></div></div>'
       + '<div class="realtor-card-body">'
-      + (r.phone ? '<div class="realtor-info-item"><div class="realtor-info-label">Phone</div><div class="realtor-info-value"><a href="tel:' + r.phone + '" style="color:#1f2937;text-decoration:none">' + r.phone + '</a></div></div>' : '')
+      + (r.phone ? '<div class="realtor-info-item"><div class="realtor-info-label">Phone</div><div class="realtor-info-value"><a href="tel:' + esc(r.phone) + '" style="color:#1f2937;text-decoration:none">' + esc(r.phone) + '</a></div></div>' : '')
       + (r.email ? '<div class="realtor-info-item"><div class="realtor-info-label">Email</div><div class="realtor-info-value"><a href="mailto:' + r.email + '" style="color:#1B73E3;text-decoration:none">' + r.email + '</a></div></div>' : '')
       + (r.area  ? '<div class="realtor-info-item"><div class="realtor-info-label">Area</div><div class="realtor-info-value">' + r.area + '</div></div>' : '')
       + '</div>'
@@ -9867,7 +9867,7 @@ function renderRealtorPicker() {
   el.innerHTML = realtors.map(function(r) {
     const selected = pendingRealtorAssignments.indexOf(r.docId) > -1;
     return '<div class="realtor-picker-item ' + (selected ? 'selected' : '') + '" onclick="toggleRealtorPick(\'' + r.docId + '\')">'
-      + '<div><div class="realtor-picker-item-name">' + r.name + '</div><div class="realtor-picker-item-sub">' + r.brokerage + (r.phone ? ' · ' + r.phone : '') + '</div></div>'
+      + '<div><div class="realtor-picker-item-name">' + esc(r.name) + '</div><div class="realtor-picker-item-sub">' + esc(r.brokerage) + (r.phone ? ' · ' + esc(r.phone) : '') + '</div></div>'
       + '<div class="realtor-picker-check">' + (selected ? '✓' : '') + '</div></div>';
   }).join('');
   updatePickerCount();
@@ -9896,7 +9896,7 @@ function renderAssignedRealtors() {
   if (!currentBorrowerRealtors.length) { container.innerHTML = ''; return; }
   container.innerHTML = '<div class="qual-assigned-realtors">'
     + currentBorrowerRealtors.map(function(r) {
-        return '<span class="qual-realtor-tag">🏠 ' + r.name + '<span class="qual-realtor-tag-remove" onclick="removeAssignedRealtor(\'' + r.docId + '\')">✕</span></span>';
+        return '<span class="qual-realtor-tag">🏠 ' + esc(r.name) + '<span class="qual-realtor-tag-remove" onclick="removeAssignedRealtor(\'' + esc(r.docId) + '\')">✕</span></span>';
       }).join('')
     + '</div>';
 }
@@ -10047,7 +10047,7 @@ function renderSaved() {
   if (!cachedProspects.length) { el.innerHTML = '<div class="empty-saved">No ZIPs saved yet.</div>'; return; }
   el.innerHTML = cachedProspects.map(function(s) {
     const borrowerTag  = s.borrowerName ? '<span class="saved-borrower-tag" style="background:' + getBorrowerColor(s.borrowerCategory) + '20;color:' + getBorrowerColor(s.borrowerCategory) + '">' + s.borrowerName + ' · ' + s.borrowerCategory + '</span>' : '';
-    const realtorTags  = (s.assignedRealtors || []).map(function(r) { return '<span class="saved-realtor-tag">🏠 ' + r.name + '</span>'; }).join('');
+    const realtorTags  = (s.assignedRealtors || []).map(function(r) { return '<span class="saved-realtor-tag">🏠 ' + esc(r.name) + '</span>'; }).join('');
     const reopenHint   = s.borrowerName ? '<span class="saved-reopen">✏️ click to update</span>' : '<span class="saved-reopen">↗ click to search</span>';
     const mktBtn       = s.borrowerName ? '<button class="mkt-btn" onclick="event.stopPropagation();quickGenerateShoppingList(\'' + s.docId + '\')">🖨 Flyer</button>' : '';
     return '<div class="saved-row">'
@@ -10205,7 +10205,7 @@ async function renderAdminProspects() {
   const filtered = filterVal === 'all' ? all : all.filter(function(p) { return p.userId === filterVal; });
   if (!filtered.length) { listEl.innerHTML = '<div class="empty-saved">No saved prospects yet.</div>'; return; }
   listEl.innerHTML = filtered.map(function(p) {
-    const borrowerInfo = p.borrowerName ? '<span class="saved-borrower-tag" style="background:' + getBorrowerColor(p.borrowerCategory) + '20;color:' + getBorrowerColor(p.borrowerCategory) + ';margin-left:8px">' + p.borrowerName + ' · ' + p.borrowerCategory + ' · $' + (p.borrowerMaxPrice ? p.borrowerMaxPrice.toLocaleString() : '') + '</span>' : '';
+    const borrowerInfo = p.borrowerName ? '<span class="saved-borrower-tag" style="background:' + getBorrowerColor(p.borrowerCategory) + '20;color:' + getBorrowerColor(p.borrowerCategory) + ';margin-left:8px">' + esc(p.borrowerName) + ' · ' + esc(p.borrowerCategory) + ' · $' + (p.borrowerMaxPrice ? p.borrowerMaxPrice.toLocaleString() : '') + '</span>' : '';
     const realtorInfo  = (p.assignedRealtors || []).map(function(r) { return '<span class="saved-realtor-tag">🏠 ' + r.name + '</span>'; }).join('');
     return '<div class="saved-row"><div><span class="saved-zip">' + p.zip + '</span><span class="saved-city">' + p.city + '</span><span class="lmi-tag">LMI ✓</span>' + borrowerInfo + realtorInfo + '<span class="saved-mlo">— ' + p.userName + ' · ' + p.userRegion + '</span></div><span class="saved-date">' + new Date(p.savedAt).toLocaleDateString() + '</span></div>';
   }).join('');
@@ -13276,7 +13276,7 @@ function renderRPSearches() {
       + '<div class="rp-search-card-top">'
       + '<div>'
       + '<div class="rp-search-buyer">' + (s.buyerName || 'Unnamed Search') + '</div>'
-      + '<div class="rp-search-meta">ZIP ' + (s.zip||'—') + (s.savedAt ? ' · ' + new Date(s.savedAt).toLocaleDateString() : '') + (s.notes ? ' · ' + s.notes : '') + '</div>'
+      + '<div class="rp-search-meta">ZIP ' + esc(s.zip||'—') + (s.savedAt ? ' · ' + new Date(s.savedAt).toLocaleDateString() : '') + (s.notes ? ' · ' + esc(s.notes) : '') + '</div>'
       + '</div>'
       + pqBtn
       + '</div>'
@@ -13316,12 +13316,12 @@ function renderRPOpenHouses() {
         return '<div class="rp-search-card">'
           + '<div class="rp-search-card-top">'
           + '<div>'
-          + '<div class="rp-search-buyer">' + (e.propertyAddress || 'Open House') + '</div>'
+          + '<div class="rp-search-buyer">' + esc(e.propertyAddress || 'Open House') + '</div>'
           + '<div class="rp-search-meta">' + (e.openHouseDate ? 'Date: ' + e.openHouseDate : '—') + (e.city ? ' · ' + e.city : '') + mloLabel + '</div>'
           + '</div>'
           + outcomeBadge
           + '</div>'
-          + (e.notes ? '<div style="font-size:12px;color:#64748b;margin-top:6px;font-style:italic">' + e.notes + '</div>' : '')
+          + (e.notes ? '<div style="font-size:12px;color:#64748b;margin-top:6px;font-style:italic">' + esc(e.notes) + '</div>' : '')
           + '</div>';
       }).join('');
     })
@@ -17013,7 +17013,7 @@ function renderRPBuyerProfiles() {
       // — Card header (always visible, click to expand)
       + '<div class="rp-search-card-top" onclick="rpTogglePush(\'' + safeId + '\')" style="cursor:pointer">'
       + '<div style="flex:1;min-width:0">'
-      + '<div class="rp-search-buyer">' + newBadge + (p.borrowerName || 'Unnamed Buyer') + '</div>'
+      + '<div class="rp-search-buyer">' + newBadge + esc(p.borrowerName || 'Unnamed Buyer') + '</div>'
       + '<div class="rp-search-meta">Received ' + dateStr + ' · ZIP ' + (p.zip||'—') + (p.city ? ' · ' + p.city : '') + '</div>'
       + '</div>'
       + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0">' + catBadgeHtml + '<span style="font-size:18px;color:#94a3b8" id="rp-push-arrow-' + safeId + '">›</span></div>'
@@ -17027,7 +17027,7 @@ function renderRPBuyerProfiles() {
       // — Expanded detail panel
       + '<div id="rp-push-detail-' + safeId + '" style="display:none;margin-top:14px;padding-top:14px;border-top:2px solid #EEF4FF">'
       + '<div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;color:#374151;line-height:2">'
-      + '<div><span style="font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.4px">Buyer</span><br><span style="font-size:15px;font-weight:800;color:#1f2937">' + (p.borrowerName || '—') + '</span></div>'
+      + '<div><span style="font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:.4px">Buyer</span><br><span style="font-size:15px;font-weight:800;color:#1f2937">' + esc(p.borrowerName || '—') + '</span></div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
       + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">Income</div><div style="font-weight:700;color:#1f2937">$' + (p.borrowerIncome||0).toLocaleString() + '</div></div>'
       + '<div><div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px">% of AMI</div><div style="font-weight:700;color:#1f2937">' + (p.borrowerPctAmi||0) + '%</div></div>'
@@ -17197,7 +17197,7 @@ function renderContactsBorrowers() {
     var maxP=p.maxPrice?'$'+Number(p.maxPrice).toLocaleString():'—';
     var tags=renderTagPills(p.tags||[]);
     return '<div class="contact-card" onclick="openBorrowerDetail(\''+p.id+'\')"><div class="contact-card-header">'
-      +'<div><div class="contact-card-name">'+(p.borrowerName||'Unknown')+'</div>'
+      +'<div><div class="contact-card-name">'+esc(p.borrowerName||'Unknown')+'</div>'
       +'<div class="contact-card-sub">'+(p.city||'')+(p.zip?' · ZIP '+p.zip:'')+'</div></div>'
       +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">'+(p.lmiCategory||'Unknown')+'</span></div>'
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:6px">💰 '+maxP+(p.amiPct?' &nbsp;·&nbsp; 📊 '+p.amiPct+'% AMI':'')+'</div>'
@@ -17320,7 +17320,7 @@ function bdShowTab(tab) {
 function renderNotesList(notes) {
   if(!notes||!notes.length) return '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:20px">No notes yet.</div>';
   return notes.slice().reverse().map(function(n){
-    return '<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:13px;color:#1f2937">'+(n.text||'')+'</div>'
+    return '<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:13px;color:#1f2937">'+esc(n.text||'')+'</div>'
       +'<div style="font-size:11px;color:#94a3b8;margin-top:4px">'+(n.author||'')+' · '+(n.date||'')+'</div></div>';
   }).join('');
 }
@@ -17376,7 +17376,7 @@ function renderCustomFieldsSection(doc, type) {
   var html='<div id="cf-list">';
   if(keys.length){
     html+=keys.map(function(k){
-      return '<div class="custom-field-row"><span class="custom-field-key">'+k+'</span><span class="custom-field-val">'+fields[k]+'</span>'
+      return '<div class="custom-field-row"><span class="custom-field-key">'+esc(k)+'</span><span class="custom-field-val">'+esc(fields[k])+'</span>'
         +'<button onclick="_cfDelete(\''+type+'\',\''+k.replace(/'/g,"\\'")+'\') " style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px">🗑</button></div>';
     }).join('');
   } else html+='<div style="color:#94a3b8;font-size:13px;text-align:center;padding:16px">No custom fields yet.</div>';
@@ -18352,7 +18352,7 @@ function ddShowTab(tab) {
 
 function _ddNotesList(notes) {
   if (!notes||!notes.length) return '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:16px">No notes yet.</div>';
-  return notes.slice().reverse().map(function(n){ return '<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:13px;color:#1f2937">'+(n.text||'')+'</div><div style="font-size:11px;color:#94a3b8;margin-top:3px">'+(n.author||'')+' · '+(n.date||'')+'</div></div>'; }).join('');
+  return notes.slice().reverse().map(function(n){ return '<div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:13px;color:#1f2937">'+esc(n.text||'')+'</div><div style="font-size:11px;color:#94a3b8;margin-top:3px">'+esc(n.author||'')+' · '+esc(n.date||'')+'</div></div>'; }).join('');
 }
 
 async function ddAddNote() {
