@@ -7812,7 +7812,11 @@ function loadOYZ() {
 
   // Server-side org scope; SA bypasses for cross-tenant views.
   var query = _scopeOrg(db.collection('oyz').orderBy('openHouseDate', 'asc'));
-  if (!isAdmin) query = query.where('userId', '==', currentUser.id);
+  // Tenant-admin sees the whole org. Super-admin also sees all (no userId
+  // filter) — matches the cross-tenant intent of the SA bypass. Everyone
+  // else is narrowed to their own events.
+  var _isSA = (typeof isSuperAdmin === 'function') && isSuperAdmin();
+  if (!isAdmin && !_isSA) query = query.where('userId', '==', currentUser.id);
 
   query.get().then(function(snap) {
     cachedOYZ = [];

@@ -115,6 +115,14 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "openHouseDate", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "oyz",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "openHouseDate", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
