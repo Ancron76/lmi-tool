@@ -2093,9 +2093,29 @@ async function getRentCastUsage(env) {
   }
 }
 
-// consumeRentCastQuota: attempts to reserve 1 quota slot. Returns { ok: true }
-// if reserved, { ok: false, reason, count, limit } if refused. Increments
-// BEFORE returning so callers can't forget to update the counter.
+// consumeRentCastQuota: attempts to reserve 1 quota slot. Returns
+// { ok: true } if reserved, { ok: false, reason, count, limit } if
+// refused. Increments BEFORE returning so callers can't forget to
+// update the counter.
+//
+// CONCURRENCY NOTE
+// Cloudflare KV is eventually consistent and supports neither atomic
+// counters nor compare-and-swap. Two parallel calls can both read
+// `current=49`, both write `50`, and both proceed — overshooting the
+// cap by 1. To bound the overshoot, we apply a safety margin:
+// QUOTA_SAFETY_MARGIN slots are reserved as concurrency headroom. The
+// effective usable cap is RENTCAST_MONTHLY_LIMIT - QUOTA_SAFETY_MARGIN
+// (typical real-world worst case = 1-2 concurrent calls). Trade-off
+// is documented and tunable; true atomicity would require a Durable
+// Object backing store, which is overkill for a 50/month cap.
+//
+// If overshoot DOES happen (count climbs above LIMIT - margin between
+// the read and a subsequent caller), we log a warning so ops can see
+// it without changing user-visible behavior. The hard ceiling at
+// RENTCAST_MONTHLY_LIMIT itself is still enforced — that's the safety
+// stop the comment block at the top of this file mandates.
+const QUOTA_SAFETY_MARGIN = 2;
+
 async function consumeRentCastQuota(env) {
   if (!env.KV_NAMESPACE) {
     return { ok: false, reason: 'no_kv_binding' };
@@ -2112,7 +2132,20 @@ async function consumeRentCastQuota(env) {
   } catch (e) {
     return { ok: false, reason: 'kv_read_failed' };
   }
-  if (current >= RENTCAST_MONTHLY_LIMIT) {
+  // Soft cap (with safety margin) blocks BEFORE the race window can
+  // make us overshoot the hard cap. Hard cap is also enforced below
+  // as belt-and-suspenders in case the soft cap is ever tuned down.
+  const softCap = Math.max(0, RENTCAST_MONTHLY_LIMIT - QUOTA_SAFETY_MARGIN);
+  if (current >= softCap) {
+    // Even within margin, never go past the hard cap.
+    if (current >= RENTCAST_MONTHLY_LIMIT) {
+      return { ok: false, reason: 'monthly_limit_reached', count: current, limit: RENTCAST_MONTHLY_LIMIT };
+    }
+    // We're inside the margin band — refuse but log so ops sees usage
+    // creeping into the headroom (means concurrency is high enough that
+    // QUOTA_SAFETY_MARGIN may need to grow).
+    console.warn('[quota] caller hit safety margin band: count=' + current
+      + ' softCap=' + softCap + ' hardCap=' + RENTCAST_MONTHLY_LIMIT);
     return { ok: false, reason: 'monthly_limit_reached', count: current, limit: RENTCAST_MONTHLY_LIMIT };
   }
   const next = current + 1;
