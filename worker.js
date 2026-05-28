@@ -147,18 +147,25 @@ export default {
     }
 
     // LMI census tract lookup: GET /?zip=XXXXX
+    // Rate-limited — unauthenticated, can hit CFPB / consume subrequests.
     const zip = url.searchParams.get('zip');
     if (zip && url.pathname === '/') {
+      const rl = await checkPublicRateLimit(request, env, 'lmi');
+      if (rl) return rl;
       return handleLmiLookup(zip, request);
     }
 
-    // Property Intelligence API route
+    // Property Intelligence API route — rate-limited, expensive.
     if (url.pathname === '/property-intelligence' && request.method === 'GET') {
+      const rl = await checkPublicRateLimit(request, env, 'propintel');
+      if (rl) return rl;
       return handlePropertyIntelligence(request, env);
     }
 
     // For-sale aggregate listings route (reads from KV cache only — never live)
     if (url.pathname === '/for-sale' && request.method === 'GET') {
+      const rl = await checkPublicRateLimit(request, env, 'forsale');
+      if (rl) return rl;
       return handleForSale(request, env);
     }
 
@@ -2318,6 +2325,78 @@ async function clearAdminFailures(env, ip) {
   if (!env.KV_NAMESPACE) return;
   try { await env.KV_NAMESPACE.delete(ADMIN_THROTTLE_KEY_PREFIX + ip); }
   catch (e) { /* non-fatal */ }
+}
+
+// Public-endpoint rate limit. Same KV pattern as the admin throttle but
+// with a per-minute sliding window and per-scope buckets so a heavy LMI
+// search doesn't also block property-intelligence lookups for the same
+// IP. Returns a 429 Response when the bucket is full, or null when the
+// caller can proceed.
+//
+// Defaults tuned for "normal UI use" (a dashboard might issue a handful
+// of ZIP lookups per minute) while still blocking obvious abuse (script
+// hammering 1k/sec). Tune via env vars later if real traffic shows
+// false positives.
+const PUBLIC_RATE_WINDOW_S = 60;
+const PUBLIC_RATE_MAX = {
+  lmi: 40,           // /?zip=X — generous, UIs paginate
+  propintel: 30,     // /property-intelligence — slower, more expensive
+  forsale: 60,       // /for-sale — KV-cache reads, cheap
+  default: 30,
+};
+const PUBLIC_RATE_KEY_PREFIX = 'public_rate_v1_';
+
+async function checkPublicRateLimit(request, env, scope) {
+  if (!env.KV_NAMESPACE) return null; // KV not available, no throttle (logs in admin path)
+  scope = scope || 'default';
+  const cap = PUBLIC_RATE_MAX[scope] || PUBLIC_RATE_MAX.default;
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown_ip';
+  // Unknown_ip is shared so be aggressive — half the normal cap.
+  const effectiveCap = ip === 'unknown_ip' ? Math.max(5, Math.floor(cap / 2)) : cap;
+  const key = PUBLIC_RATE_KEY_PREFIX + scope + ':' + ip;
+
+  let state;
+  try {
+    state = await env.KV_NAMESPACE.get(key, 'json');
+  } catch (e) {
+    // KV read failed — fail OPEN for public endpoints (don't let a KV
+    // hiccup turn into a customer-facing 429).
+    return null;
+  }
+  const now = Date.now();
+  // Drop expired window.
+  if (state && state.windowEndsAt && now > state.windowEndsAt) state = null;
+
+  const count = (state && state.count) || 0;
+  if (count >= effectiveCap) {
+    const remainingSec = state && state.windowEndsAt
+      ? Math.max(1, Math.ceil((state.windowEndsAt - now) / 1000))
+      : PUBLIC_RATE_WINDOW_S;
+    return new Response(JSON.stringify({
+      error: 'rate_limited',
+      scope: scope,
+      retryAfterSeconds: remainingSec,
+      detail: 'Too many requests from this IP. Slow down and retry.'
+    }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(remainingSec),
+        ...corsHeaders(request),
+      },
+    });
+  }
+  // Increment counter (fire-and-forget so the request isn't slowed by KV).
+  try {
+    const newCount = count + 1;
+    const windowEndsAt = (state && state.windowEndsAt) || (now + PUBLIC_RATE_WINDOW_S * 1000);
+    await env.KV_NAMESPACE.put(
+      key,
+      JSON.stringify({ count: newCount, windowEndsAt }),
+      { expirationTtl: PUBLIC_RATE_WINDOW_S + 30 }
+    );
+  } catch (e) { /* non-fatal */ }
+  return null;
 }
 
 async function requireSuperAdmin(request, env) {
