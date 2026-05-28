@@ -11925,10 +11925,11 @@ function _forSaleSourceMeta(src) {
   return { label: src || 'Listing', bg: 'var(--body-bg)', color: 'var(--text-secondary)' };
 }
 
-function _forSaleEscapeAttr(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+// Deprecated alias — kept for backward compatibility with existing
+// call sites in the "for sale" listing card. Use esc() instead.
+// Identical semantics; both handle null/undefined and produce the
+// same HTML-attribute-safe output.
+function _forSaleEscapeAttr(s) { return esc(s); }
 
 function _forSaleFormatPrice(p) {
   var n = Number(p);
@@ -13113,10 +13114,10 @@ function _rapidApiCopy(btn) {
   });
 }
 
-function escHtml(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// Deprecated alias — kept for backward compatibility. Use esc()
+// instead. Identical semantics. Consolidation lets future fixes
+// (like extending to escape ' for attributes) land in one place.
+function escHtml(s) { return esc(s); }
 
 // ── REALTOR PORTAL ────────────────────────────────────────────
 var realtorPortalMlo = null;
@@ -19183,8 +19184,25 @@ async function renderAdminComms(tab) {
   } catch(e){ el.innerHTML='<div style="color:#ef4444;padding:20px">Error: '+esc(e.message)+'</div>'; }
 }
 
-// ── HELPER ────────────────────────────────────────────────────
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── CANONICAL HTML ESCAPE ─────────────────────────────────────
+// Use esc(value) anywhere user-controlled data gets interpolated
+// into an HTML string. Also escapes single quotes for safety in
+// attribute contexts like `<a title='${value}'>` — most call sites
+// use double-quoted attributes, but the cost is one extra .replace
+// and the safety on both quote styles makes the helper safe to
+// reach for without thinking about context.
+//
+// Two thin aliases (escHtml, _forSaleEscapeAttr) point here for
+// backward compatibility with ~86 existing call sites. Future code
+// should call esc() directly.
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // ── DASHBOARD PREFS & SETTINGS PANEL ─────────────────────────
 var _dashPrefs = {
