@@ -6229,69 +6229,46 @@ async function tryLogin() {
   const btn = document.querySelector('.login-btn');
   btn.textContent = 'Signing in...';
 
-  // ── PATH 1: Firebase Auth (migrated users) ────────────────────
+  // Firebase Auth is now the SOLE credential store. The legacy DIY-
+  // password fallback (u.password === pass against Firestore) was
+  // removed once the reset confirmed every active /users doc has a
+  // firebaseAuthUid and no `password` field. Firestore rules now also
+  // forbid the `password` field on /users writes.
   try {
     await auth.signInWithEmailAndPassword(emailInput, pass);
     btn.textContent = 'Sign In';
     await _handleFirebaseAuthSession(auth.currentUser);
     return;
   } catch (fbErr) {
-    // Only fall through to legacy DIY auth if Firebase says "no such user".
-    // Any other error (wrong password on a migrated account, disabled user,
-    // network failure) is a real error — surface it and stop.
-    var fallbackCodes = [
-      'auth/user-not-found',
-      'auth/invalid-email',
-      'auth/invalid-login-credentials',
-      'auth/internal-error'
-    ];
-    if (fbErr && fbErr.code && fallbackCodes.indexOf(fbErr.code) === -1) {
-      btn.textContent = 'Sign In';
-      var errEl1 = document.getElementById('login-error');
-      if (errEl1) {
-        errEl1.textContent = (fbErr.code === 'auth/wrong-password')
-          ? 'Incorrect password.'
-          : (fbErr.code === 'auth/user-disabled')
-          ? 'This account has been disabled.'
-          : (fbErr.code === 'auth/too-many-requests')
-          ? 'Too many failed attempts. Try again later.'
-          : (fbErr.message || 'Sign-in failed.');
-        errEl1.style.display = 'block';
-      }
-      try {
-        db.collection('auditLog').add({
-          action:'login_failed', resource:'auth', userId:null,
-          userName:emailInput, tenantId:'', errCode: fbErr.code || '',
-          timestamp:new Date().toISOString(), userAgent:navigator.userAgent
-        });
-      } catch(e){}
-      return;
+    btn.textContent = 'Sign In';
+    var errEl = document.getElementById('login-error');
+    if (errEl) {
+      // Map Firebase Auth error codes to user-friendly copy. Don't
+      // distinguish "no such user" from "wrong password" — both must
+      // reveal the same generic "invalid" message to prevent account
+      // enumeration (a determined attacker would otherwise know which
+      // emails are registered).
+      var code = fbErr && fbErr.code || '';
+      var msg;
+      if (code === 'auth/user-disabled') msg = 'This account has been disabled.';
+      else if (code === 'auth/too-many-requests') msg = 'Too many failed attempts. Try again in a few minutes.';
+      else if (code === 'auth/network-request-failed') msg = 'Network error — check your connection and try again.';
+      else if (code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+      else msg = 'Invalid email or password.';
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
     }
-    // else: user probably hasn't been migrated yet — try legacy path
-  }
-
-  // ── PATH 2: Legacy DIY comparison (unmigrated users) ──────────
-  const users = await getUsers();
-  cachedUsers = users;
-  const user = users.find(function(u) { return u.email.toLowerCase() === emailInput && u.password === pass && u.active; });
-  btn.textContent = 'Sign In';
-  if (user) {
-    currentUser = user;
-    _syncCurrentUser();
-    sessionStorage.setItem('g1_session', JSON.stringify(user));
-    _auditLog('login', 'auth', user.id, user.name||user.email, null);
-    document.getElementById('login-screen').style.display = 'none';
-    if (user.role === 'realtor') {
-      console.log('[tryLogin] Realtor login — id:', user.id, '| realtorDocId:', user.realtorDocId || '(not set)');
-      var rLoginAgrOk = await _checkAgreementVersion();
-      if (rLoginAgrOk) { await showRealtorPortal(); } else { showTOSModal(); }
-      return;
-    }
-    await _postLoginSetup(user);
-  } else {
-    var errEl2 = document.getElementById('login-error');
-    if (errEl2) { errEl2.textContent = 'Invalid email or password.'; errEl2.style.display = 'block'; }
-    if (db) { try { db.collection('auditLog').add({ action:'login_failed', resource:'auth', userId:null, userName:emailInput, tenantId:'', timestamp:new Date().toISOString(), userAgent:navigator.userAgent }); } catch(e){} }
+    // Audit log the failure. userId is null (we don't know which user,
+    // by design — the rule disallows actor impersonation on pre-auth
+    // entries anyway). Action whitelisted by firestore.rules so this
+    // create succeeds without a session.
+    try {
+      db.collection('auditLog').add({
+        action:'login_failed', resource:'auth',
+        userName:emailInput, tenantId:'', errCode: fbErr && fbErr.code || '',
+        timestamp:new Date().toISOString(), userAgent:navigator.userAgent
+      });
+    } catch(e){}
   }
 }
 
@@ -10291,6 +10268,11 @@ async function _saveLmiGoals() {
   } catch(e) { console.error('Save LMI goals:', e); }
 }
 
+// User-driven "change my password" flow. Re-authenticates first to
+// verify the user's current password (required by Firebase Auth before
+// any sensitive mutation), then calls updatePassword() on the live
+// firebase.User. The Firestore /users doc is NEVER touched — passwords
+// live only in Firebase Auth now.
 async function saveSettingsPassword() {
   const current = document.getElementById('s-pw-current').value;
   const newPw   = document.getElementById('s-pw-new').value;
@@ -10298,35 +10280,59 @@ async function saveSettingsPassword() {
   const errEl   = document.getElementById('s-pw-error');
   const succEl  = document.getElementById('s-pw-success');
   errEl.style.display = 'none'; succEl.style.display = 'none';
-  if (current !== currentUser.password) { errEl.textContent = 'Current password is incorrect.'; errEl.style.display = 'block'; return; }
   if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
   if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
-  currentUser.password = newPw;
-  await saveUser(currentUser);
-  sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
-  const idx = cachedUsers.findIndex(function(u) { return u.id === currentUser.id; });
-  if (idx > -1) cachedUsers[idx].password = newPw;
-  succEl.textContent = '✅ Password updated successfully!'; succEl.style.display = 'block';
-  ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(function(id) { document.getElementById(id).value = ''; });
-  setTimeout(function() { succEl.style.display = 'none'; }, 3000);
-  showToast('✅ Password updated');
+  try {
+    var fbUser = (typeof auth !== 'undefined' && auth.currentUser) || null;
+    if (!fbUser || !fbUser.email) {
+      errEl.textContent = 'Session lost — please sign in again.';
+      errEl.style.display = 'block';
+      return;
+    }
+    var cred = firebase.auth.EmailAuthProvider.credential(fbUser.email, current);
+    try {
+      await fbUser.reauthenticateWithCredential(cred);
+    } catch (reErr) {
+      if (reErr && reErr.code === 'auth/wrong-password') {
+        errEl.textContent = 'Current password is incorrect.';
+      } else if (reErr && reErr.code === 'auth/too-many-requests') {
+        errEl.textContent = 'Too many attempts. Try again in a few minutes.';
+      } else {
+        errEl.textContent = 'Could not verify current password: ' + (reErr && reErr.message || 'unknown error');
+      }
+      errEl.style.display = 'block';
+      return;
+    }
+    await fbUser.updatePassword(newPw);
+    succEl.textContent = '✅ Password updated successfully!'; succEl.style.display = 'block';
+    ['s-pw-current','s-pw-new','s-pw-confirm'].forEach(function(id) { document.getElementById(id).value = ''; });
+    setTimeout(function() { succEl.style.display = 'none'; }, 3000);
+    showToast('✅ Password updated');
+    try {
+      await db.collection('auditLog').add({
+        action: 'password_changed', resource: 'auth',
+        userId: currentUser.id, userName: currentUser.name||currentUser.email,
+        tenantId: currentUser.orgId||'',
+        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+      });
+    } catch(e){}
+  } catch (e) {
+    errEl.textContent = 'Could not update password: ' + (e && e.message || 'unknown error');
+    errEl.style.display = 'block';
+  }
 }
 
+// Admin-driven "reset another user's password" flow. The Firebase
+// Admin SDK is required to change another user's password, and we
+// only expose that via the /admin/set-auth-password worker endpoint
+// (ADMIN_PASSWORD-gated). Until that endpoint is wired into this UI,
+// surface a clear message instead of silently writing a /users doc.
 async function saveAdminPasswordFromSettings() {
-  const userId  = document.getElementById('s-admin-user-select').value;
-  const newPw   = document.getElementById('s-admin-pw-new').value.trim();
-  const confirm = document.getElementById('s-admin-pw-confirm').value.trim();
-  const errEl   = document.getElementById('s-admin-pw-error');
-  errEl.style.display = 'none';
-  if (!userId) { errEl.textContent = 'Please select a user.'; errEl.style.display = 'block'; return; }
-  if (newPw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
-  if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
-  const user = cachedUsers.find(function(u) { return u.id === userId; });
-  user.password = newPw;
-  await saveUser(user);
-  ['s-admin-pw-new','s-admin-pw-confirm'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('s-admin-user-select').value = '';
-  showToast('✅ Password reset for ' + user.name);
+  const errEl = document.getElementById('s-admin-pw-error');
+  if (!errEl) return;
+  errEl.textContent = 'Admin password reset moved to the Super Admin > Firebase Auth panel — '
+    + 'the legacy in-Firestore password field has been removed for security.';
+  errEl.style.display = 'block';
 }
 
 // ── BRANCHES ──────────────────────────────────────────────────
@@ -10414,7 +10420,8 @@ async function addUser() {
   errEl.style.display = 'none';
   if (!name)  { showFormErr('Please enter a full name.'); return; }
   if (!email || !email.includes('@')) { showFormErr('Please enter a valid email.'); return; }
-  if (!pass)  { showFormErr('Please enter or generate a password.'); return; }
+  if (!pass)  { showFormErr('Please enter or generate an initial password.'); return; }
+  if (pass.length < 8) { showFormErr('Password must be at least 8 characters.'); return; }
   if (cachedUsers.find(function(u) { return u.email.toLowerCase() === email; })) { showFormErr('A user with this email already exists.'); return; }
   const managerSel = document.getElementById('new-manager-id');
   const managerId = (managerSel && managerSel.value) ? managerSel.value : '';
@@ -10429,7 +10436,41 @@ async function addUser() {
       partnerTitle = titleSel.value || '';
     }
   }
-  const newUser = { id: 'u-' + Date.now(), name: name, email: email, password: pass, role: role, type: type, region: region, active: true, branches: [], created: new Date().toLocaleDateString(), accountStatus: 'active', subscriptionTier: 'team', subscriptionStatus: 'active', orgId: currentUser.orgId || '', managerId: managerId };
+
+  // Create the Firebase Auth account first via the worker's
+  // /admin/create-auth-user endpoint. Returns the new uid which
+  // becomes the Firestore /users doc id, ensuring the two are
+  // always linked. If Firebase Auth creation fails (e.g. duplicate
+  // email already exists in Auth from a deleted-but-not-purged
+  // record), surface that and stop — don't half-create.
+  var fbUid;
+  try {
+    var resp = await _rcFetch('/admin/create-auth-user', {
+      method: 'POST',
+      body: { email: email, password: pass, displayName: name }
+    });
+    fbUid = resp && resp.uid;
+    if (!fbUid) throw new Error('Worker did not return a uid');
+  } catch (e) {
+    showFormErr('Could not create Firebase Auth account: ' + (e.message || e));
+    return;
+  }
+
+  // /users doc — NO `password` field. Firebase Auth owns the
+  // credential; Firestore stores the profile. Rules now forbid
+  // writing `password` on /users.
+  const newUser = {
+    id: fbUid, firebaseAuthUid: fbUid,
+    name: name, email: email,
+    role: role, type: type, region: region,
+    active: true, branches: [],
+    created: new Date().toLocaleDateString(),
+    accountStatus: 'active',
+    subscriptionTier: 'team', subscriptionStatus: 'active',
+    orgId: currentUser.orgId || '',
+    managerId: managerId,
+    mustResetPassword: true
+  };
   if (role === 'referralUser') {
     newUser.partnerTitle = partnerTitle;
     newUser.partnerTitleCustom = partnerTitleCustom;
@@ -10443,7 +10484,7 @@ async function addUser() {
   cachedUsers.push(newUser);
   ['new-name','new-email','new-password'].forEach(function(id) { document.getElementById(id).value = ''; });
   renderAdminStats(); renderUserTable();
-  showToast('✅ ' + name + ' added successfully');
+  showToast('✅ ' + name + ' added — share the initial password securely');
 }
 
 function showFormErr(msg) { const el = document.getElementById('form-error'); el.textContent = msg; el.style.display = 'block'; }
@@ -15905,6 +15946,27 @@ async function submitSignup() {
   err.style.display = 'none';
   btn.textContent = '⏳ Creating your account...'; btn.disabled = true;
   try {
+    // PATH: create Firebase Auth account first, then sign in, then
+    // create the tenant + admin /users doc tied to that uid. If any
+    // step fails, the user sees a clear error and nothing is half-
+    // committed. Password is held briefly in _signupData but never
+    // written to Firestore.
+    var fbCred;
+    try {
+      fbCred = await auth.createUserWithEmailAndPassword(_signupData.email, _signupData.password);
+    } catch (authErr) {
+      var msg = (authErr && authErr.code === 'auth/email-already-in-use')
+        ? 'An account with this email already exists. Sign in instead.'
+        : (authErr && authErr.code === 'auth/weak-password')
+        ? 'Password is too weak — use at least 8 characters.'
+        : (authErr && authErr.message) || 'Could not create the account.';
+      btn.textContent = '🚀 Start Free 30-Day Trial'; btn.disabled = false;
+      err.textContent = msg; err.style.display = 'block';
+      return;
+    }
+    var fbUser = fbCred.user;
+    var adminId = fbUser.uid; // Firestore /users doc keyed by Firebase Auth UID.
+
     var now = new Date();
     var trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     var orgId = 'org-' + Date.now();
@@ -15916,23 +15978,27 @@ async function submitSignup() {
       trialEndDate: trialEnd.toISOString(), createdAt: now.toISOString(), memberCount: 1
     };
     await db.collection('organizations').doc(orgId).set(orgData);
-    var adminId = 'u-' + Date.now();
+
     var adminUser = {
-      id: adminId, name: _signupData.fname + ' ' + _signupData.lname,
-      email: _signupData.email, password: _signupData.password,
+      id: adminId, firebaseAuthUid: adminId,
+      name: _signupData.fname + ' ' + _signupData.lname,
+      email: _signupData.email,
+      // NO password field — Firebase Auth owns it now (rules forbid
+      // writing `password` on /users).
       role: 'admin', type: 'N/A', region: 'Central Valley', active: true, branches: [],
       created: now.toLocaleDateString(), orgId: orgId,
       accountStatus: 'trial', trialStartDate: now.toISOString(), trialEndDate: trialEnd.toISOString(),
       subscriptionTier: 'trial', subscriptionStatus: 'trial', tosAccepted: true
     };
     await db.collection('users').doc(adminId).set(adminUser);
+    // Forget the in-memory password ASAP.
+    _signupData.password = null;
     // Send welcome email
     try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_name: _signupData.fname, to_email: _signupData.email, invite_link: APP_URL }); } catch(e) {}
-    // Auto-login
+    // Auto-login (already signed in via createUserWithEmailAndPassword).
     currentUser = adminUser;
     _syncCurrentUser();
     currentOrg = orgData;
-    sessionStorage.setItem('g1_session', JSON.stringify(adminUser));
     document.getElementById('signup-screen').style.display = 'none';
     cachedUsers = [adminUser];
     await _postLoginSetup(adminUser);
