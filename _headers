@@ -6,3 +6,16 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Cross-Origin-Opener-Policy: same-origin
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.emailjs.com https://api.emailjs.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firestore.googleapis.com https://firebasestorage.googleapis.com wss://*.firebaseio.com https://api.emailjs.com https://lmitool.com https://loopenta.com https://www.loopenta.com https://lmi-proxy.aaronsimonson.workers.dev https://ffiec.cfpb.gov https://files.ffiec.cfpb.gov https://api.census.gov https://geocoding.geo.census.gov https://geo.fcc.gov https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+
+# HTML entry points — never cache. The app ships as a single-page
+# index.html with inline JS; if the browser caches it, deploys to
+# fix bugs (like the orphan-record alerts) don't land until the
+# user manually clears cache. no-cache + must-revalidate forces the
+# browser to re-check with Cloudflare on every navigation; CF still
+# holds its own edge cache so this stays fast. Other paths (JS/CSS
+# modules under src/, manifest.json, push-sw.js) already use ?v=
+# cache-busters in their URLs, so they're unaffected.
+/
+  Cache-Control: no-cache, must-revalidate
+/index.html
+  Cache-Control: no-cache, must-revalidate
