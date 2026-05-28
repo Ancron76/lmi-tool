@@ -53,11 +53,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          # No package-lock.json in repo, so no cache key to provide.
+          cache: "npm"
 
       - name: Install dependencies
-        # Installs the devDependency `wrangler` declared in package.json.
-        run: npm install --no-audit --no-fund
+        # `npm ci` installs EXACTLY what's pinned in package-lock.json,
+        # refusing any version that doesn't match. This prevents a
+        # malicious wrangler minor (or any transitive dep) from being
+        # auto-pulled into a prod deploy. Audit P1 #11.
+        run: npm ci --no-audit --no-fund
 
       - name: Syntax-check workers
         # Cheap guard — catches typos before we burn a deploy slot.
