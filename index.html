@@ -7245,6 +7245,125 @@ window.cleanupOrphans = async function (opts) {
   return report;
 };
 
+// ════════════════════════════════════════════════════════════
+// FRESH-START RESET (super-admin only)
+// ════════════════════════════════════════════════════════════
+// One-time helper to wipe every PII collection and every non-SA
+// user, while preserving:
+//   - the SA user doc itself (you keep your login)
+//   - tenant/organization/agreement config
+//   - branding, RentCast secrets, KV state
+//
+// Run from the browser Console as the signed-in super-admin:
+//
+//   await _resetTenantData()                         // dry-run preview
+//   await _resetTenantData({confirm:'YES_DELETE_EVERYTHING'})  // do it
+//
+// Default refuses without the confirm string. After the destructive
+// run, the SA user's own `password` field is stripped (it's no longer
+// used — Firebase Auth is the new credential source). Re-run
+// `cleanupOrphans()` after to confirm everything is zero.
+//
+// The function also runs a preflight: it REFUSES to proceed if the
+// caller's /users doc doesn't have a firebaseAuthUid set, because
+// the next time they sign out we'd want them to be able to sign back
+// in via Firebase Auth. This guards against an accidental lockout.
+window._resetTenantData = async function (opts) {
+  opts = opts || {};
+  var dry = opts.confirm !== 'YES_DELETE_EVERYTHING';
+  if (!db || !currentUser) return console.error('No db/currentUser');
+
+  // Preflight 1: must be super-admin.
+  var meIsSA = (typeof isSuperAdmin === 'function') && isSuperAdmin();
+  if (!meIsSA) {
+    return console.error('_resetTenantData: refuses to run for non-super-admin. role=' + currentUser.role);
+  }
+
+  // Preflight 2: confirm the SA has a Firebase Auth UID set so they
+  // can log back in after the legacy-password column is removed.
+  var meDoc;
+  try {
+    meDoc = await db.collection('users').doc(currentUser.id).get();
+  } catch (e) {
+    return console.error('_resetTenantData: could not read own user doc:', e);
+  }
+  if (!meDoc.exists) return console.error('_resetTenantData: own user doc missing — refusing.');
+  var meData = meDoc.data();
+  if (!meData.firebaseAuthUid) {
+    console.error('_resetTenantData: REFUSING — your /users/' + currentUser.id + ' doc has no firebaseAuthUid.');
+    console.error('Run the Firebase Auth migration first (Super Admin tab > Phase 2A), then retry.');
+    return { error: 'no_firebase_auth_uid' };
+  }
+
+  // Collections to fully empty.
+  var pii = ['deals','prospects','realtors','oyz','prequal','pastCustomers','communications','call_log','tasks','activity','notifications','sequences','sequenceEnrollments','email_log','email_templates','drip_campaigns','drip_enrollments','craReports','scorecardSnapshots','realtor_searches','realtor_pushes','dealDocuments','agreementLog','securityEvents','auditLog'];
+
+  console.group('[reset] ' + (dry ? 'DRY-RUN' : 'EXECUTING'));
+  var report = { mode: dry ? 'dry-run' : 'executing', collections: {}, users: { keptId: currentUser.id, keptEmail: meData.email, deleted: [] } };
+
+  // Pass 1: count + (if !dry) delete PII collections.
+  for (var i = 0; i < pii.length; i++) {
+    var c = pii[i];
+    try {
+      var snap = await db.collection(c).get();
+      report.collections[c] = snap.size;
+      if (!dry) {
+        for (var j = 0; j < snap.docs.length; j++) {
+          try { await snap.docs[j].ref.delete(); }
+          catch (e) { console.warn('  ✗ delete failed', c, snap.docs[j].id, e.code || e.message); }
+        }
+      }
+    } catch (e) {
+      report.collections[c] = 'denied/error: ' + (e.code || e.message);
+    }
+  }
+
+  // Pass 2: delete every /users doc EXCEPT the super-admin's own.
+  try {
+    var uSnap = await db.collection('users').get();
+    var others = uSnap.docs.filter(function (d) { return d.id !== currentUser.id; });
+    report.users.deleted = others.map(function (d) {
+      return { id: d.id, email: d.data().email || '?', role: d.data().role || '?' };
+    });
+    if (!dry) {
+      for (var k = 0; k < others.length; k++) {
+        try { await others[k].ref.delete(); }
+        catch (e) { console.warn('  ✗ user delete failed', others[k].id, e.code || e.message); }
+      }
+    }
+  } catch (e) {
+    report.users.error = e.code || e.message;
+  }
+
+  // Pass 3: strip the legacy `password` field from the SA's own user doc.
+  // Keeps everything else (role, orgId, firebaseAuthUid, profile, etc.).
+  if (!dry && meData.password) {
+    try {
+      await db.collection('users').doc(currentUser.id).update({
+        password: firebase.firestore.FieldValue.delete(),
+        passwordStrippedAt: new Date().toISOString()
+      });
+      report.users.passwordFieldStripped = true;
+    } catch (e) {
+      console.warn('  ✗ password strip failed:', e.code || e.message);
+      report.users.passwordFieldStripped = false;
+    }
+  } else if (!dry) {
+    report.users.passwordFieldStripped = 'no_password_field_present';
+  }
+
+  console.log('Report:', report);
+  console.groupEnd();
+  if (dry) {
+    console.log('%c[reset] This was a DRY RUN. Nothing was deleted.', 'color:#5a8a6a;font-weight:700');
+    console.log('To actually delete, run: await _resetTenantData({confirm:"YES_DELETE_EVERYTHING"})');
+  } else {
+    console.log('%c[reset] Done. Verify with: await cleanupOrphans()  → should be all zeros.', 'color:#5a8a6a;font-weight:700');
+    console.log('%cThen sign out, sign back in, and confirm Firebase Auth login works before having me remove the legacy login path.', 'color:#b07030');
+  }
+  return report;
+};
+
 var _PA = {
   high: { dot:'#9a4a3a', bg:'#f8ecea', label:'Urgent'     },
   med:  { dot:'#b07030', bg:'#faf0e4', label:'Follow-up'  },

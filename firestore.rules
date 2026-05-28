@@ -187,33 +187,53 @@ service cloud.firestore {
       allow list: if isAdmin() || isManager();
 
       // create: superadmin anywhere; tenant-admin within own org.
+      // FORBID `password` field on creation — Firebase Auth is the
+      // only credential store. Legacy /users docs may still HAVE a
+      // password field grandfathered in, but no new writes can set
+      // or restore it. _resetTenantData() strips the legacy SA copy.
       allow create: if
-        isSuperAdmin()
-        || (isTenantAdmin() && request.resource.data.orgId == callerOrg());
+        (isSuperAdmin()
+          || (isTenantAdmin() && request.resource.data.orgId == callerOrg()))
+        && !('password' in request.resource.data);
 
-      // self-update — cannot escalate privileges.
+      // self-update — cannot escalate privileges. Also cannot resurrect
+      // a `password` field (additional 'password' key in affectedKeys).
       allow update: if isSignedIn()
         && request.auth.uid == userId
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
              'role', 'orgId', 'tier', 'tierLabel',
              'failedLoginCount', 'lockedUntil', 'superAdmin',
              'accountStatus', 'subscriptionStatus', 'subscriptionTier',
-             'managerId'
-           ]);
+             'managerId', 'firebaseAuthUid'
+           ])
+        // Password may only be REMOVED on self-update, never added or
+        // changed. resource.data.get('password',null) is the old value;
+        // request.resource.data is the new state.
+        && (
+          !('password' in request.resource.data)
+          || resource.data.get('password','') == request.resource.data.password
+        );
 
       // admin-update — tenant-admin within own org, or superadmin
       // anywhere. Tenant-admin cannot move users to another org and
       // CANNOT promote anyone to superadmin (audit found this gap:
       // a single tenant-admin could pivot laterally to global root
       // by flipping `role:'superadmin'` on any user in their org).
+      // Same password-field guard applies to admin-update.
       allow update: if
-        isSuperAdmin()
-        || (
-          isTenantAdmin()
-          && inOrg(resource.data.orgId)
-          && request.resource.data.orgId == resource.data.orgId
-          && request.resource.data.role != 'superadmin'
-          && request.resource.data.get('superAdmin', false) == false
+        (
+          isSuperAdmin()
+          || (
+            isTenantAdmin()
+            && inOrg(resource.data.orgId)
+            && request.resource.data.orgId == resource.data.orgId
+            && request.resource.data.role != 'superadmin'
+            && request.resource.data.get('superAdmin', false) == false
+          )
+        )
+        && (
+          !('password' in request.resource.data)
+          || resource.data.get('password','') == request.resource.data.password
         );
 
       allow delete: if isSuperAdmin();
