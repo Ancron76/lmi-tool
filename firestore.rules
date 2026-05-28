@@ -92,42 +92,12 @@ service cloud.firestore {
       return userDocExists() && userDoc().role == 'manager';
     }
 
-    function isRealtor() {
-      return userDocExists() && userDoc().role == 'realtor';
-    }
-
-    function isHla() {
-      // Alias: Home Loan Advisor. Stored as 'mlo' for back-compat.
-      return userDocExists() && userDoc().role == 'mlo';
-    }
-
-    function isReferralUser() {
-      return userDocExists() && userDoc().role == 'referralUser';
-    }
-
-    function isTitleUser() {
-      return userDocExists() && userDoc().role == 'titleUser';
-    }
-
-    function isEscrowUser() {
-      return userDocExists() && userDoc().role == 'escrowUser';
-    }
-
-    // Anyone who belongs to an org (i.e., not superadmin only) and is
-    // a "producing" individual contributor or manager. Used for things
-    // like creating leads, referral partnerships, etc.
-    function isOrgMember() {
-      return userDocExists() && (
-        userDoc().role == 'admin'
-        || userDoc().role == 'manager'
-        || userDoc().role == 'mlo'
-        || userDoc().role == 'realtor'
-        || userDoc().role == 'referralUser'
-        || userDoc().role == 'titleUser'
-        || userDoc().role == 'escrowUser'
-        || userDoc().role == 'superadmin'
-      );
-    }
+    // (Removed unused helpers: isRealtor, isHla, isReferralUser,
+    // isTitleUser, isEscrowUser, isOrgMember — they had no call sites
+    // and produced 'Unused function' warnings on every deploy. If a
+    // future rule needs role-specific checks, add them back next to
+    // isMlo/isManager. Per-role checks live inline elsewhere via
+    // `userDoc().role == 'X'` so removal didn't break any rule.)
 
     // Manager sees their direct reports. Used by users-list + reporting
     // screens. A "direct report" is any user in the same org whose
