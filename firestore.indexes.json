@@ -98,6 +98,23 @@
         { "fieldPath": "orgId", "order": "ASCENDING" },
         { "fieldPath": "approvalStatus", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "oyz",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "openHouseDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "oyz",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "openHouseDate", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -7810,7 +7810,8 @@ function loadOYZ() {
   var adminFilter = document.getElementById('oyz-admin-filter');
   if (adminFilter) adminFilter.style.display = isAdmin ? 'block' : 'none';
 
-  var query = db.collection('oyz').orderBy('openHouseDate', 'asc');
+  // Server-side org scope; SA bypasses for cross-tenant views.
+  var query = _scopeOrg(db.collection('oyz').orderBy('openHouseDate', 'asc'));
   if (!isAdmin) query = query.where('userId', '==', currentUser.id);
 
   query.get().then(function(snap) {
