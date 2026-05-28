@@ -6775,6 +6775,12 @@ async function useRequiredActions() {
   var now = new Date();
   var in7Days   = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   var ago14Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  // Freshness windows: an open-house report from 6 weeks ago isn't
+  // "needs action" anymore — it's data to clean up. Same for a 60-day-old
+  // pre-qual request still in 'pending'. Without these, the panel
+  // turns into a graveyard of stale test/legacy records.
+  var ago30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  var ago60Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
   function _toDateLocal(v) {
     if (!v) return null;
@@ -6819,6 +6825,15 @@ async function useRequiredActions() {
     var pqSnap = await _scopeOrg(db.collection('prequal').where('status','==','pending')).get();
     pqSnap.forEach(function(d){
       var pq = d.data();
+      // Only nag for requests submitted in the last 60 days. Anything
+      // older than that is stale and should be cleaned up directly in
+      // the pre-qual list, not perpetually surfaced as "needs action".
+      // Skip records missing both a name and a submitter — those are
+      // almost certainly legacy/test docs.
+      var requested = pq.requestedAt || pq.submittedAt || pq.createdAt;
+      var requestedDate = requested ? _toDateLocal(requested) : null;
+      if (requestedDate && requestedDate < ago60Days) return;
+      if (!pq.realtorName && !pq.submittedBy && !pq.borrowerName) return;
       actions.push({
         p: 'high',
         title: 'Pre-qual request pending review',
@@ -6857,8 +6872,13 @@ async function useRequiredActions() {
     oyzSnap.forEach(function(d){
       var e = Object.assign({id:d.id}, d.data());
       if (e.reportSubmitted === true) return;
+      if (e.trackingStatus === 'archived') return;
       var eventDate = _toDateLocal(e.openHouseDate);
       if (!eventDate || eventDate >= now) return;
+      // Freshness window — don't nag forever about ancient events.
+      if (eventDate < ago30Days) return;
+      // Defensive: skip records with no identifying info (test/legacy).
+      if (!e.propertyAddress && !e.streetAddress && !e.realtorName) return;
       actions.push({
         p: 'med',
         title: 'Open house report not submitted',
