@@ -2434,6 +2434,19 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
       <button class="sidebar-nav-item" onclick="openSettings()"><span class="sn-icon">⚙️</span>Settings</button>
       <button class="sidebar-nav-item" id="sn-hub-help" onclick="if(window.Hub){Hub.go('help');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>Help Center</button>
       <button class="sidebar-nav-item" onclick="logout()"><span class="sn-icon">↩</span>Sign Out</button>
+      <!-- Required regulatory footer. Shown inside the sidebar so it
+           accompanies every signed-in surface. NMLS ID auto-populates
+           from the signed-in MLO's profile when available; otherwise a
+           neutral identifier is shown. State license list can be
+           extended in Settings → Compliance once that page is built. -->
+      <div id="sidebar-compliance-footer" style="margin-top:14px;padding:10px 12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);line-height:1.5">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/></svg>
+          <span style="font-weight:700;color:var(--text-secondary)">Equal Housing Lender</span>
+        </div>
+        <div id="sidebar-mlo-nmls" style="font-family:monospace">NMLS ID: <span id="sidebar-nmls-val">—</span></div>
+        <div style="margin-top:4px;font-style:italic">Licensed in CA. Additional state licenses on file.</div>
+      </div>
     </div>
   </aside>
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
@@ -5457,7 +5470,8 @@ async function submitInviteSetup() {
   const confirm = document.getElementById('invite-pw-confirm').value;
   const errEl   = document.getElementById('invite-error');
   errEl.style.display = 'none';
-  if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  var __pwErr = _validatePasswordPolicy(pw);
+  if (__pwErr) { errEl.textContent = __pwErr; errEl.style.display = 'block'; return; }
   if (pw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
   const btn = document.querySelector('.invite-submit-btn');
   btn.textContent = 'Creating account...';
@@ -6192,6 +6206,7 @@ async function _postLoginSetup(user) {
   document.getElementById('app-screen').style.display = 'block';
   // Paint the top-right user avatar (replaces the old Admin/Super buttons).
   try { _paintUserAvatar(); } catch (e) { console.warn('avatar paint failed', e); }
+  try { _paintComplianceFooter(); } catch (e) { /* footer paint is non-critical */ }
   renderBranchShortcuts();
   loadCachedZipPicker(); // populate LMI-search ZIP dropdown (non-blocking)
   cachedProspects = await fetchMyProspects(); renderSaved();
@@ -6816,6 +6831,54 @@ var _requiredActionsCache = [];
 // keep working. Collections that store the tenant key as `tenantId`
 // instead of `orgId` (sequences, scorecardSnapshots, etc.) pass
 // { field: 'tenantId' }.
+// Password policy — FFIEC / GLBA aligned. Returns a string error
+// message if the password fails policy, or null if it's acceptable.
+// Centralizing this means future tightening (raise length, ban
+// common-word lists, add HIBP check) lands in one place and every
+// call site benefits at once.
+//
+// Policy:
+//   - 12+ characters
+//   - at least one lowercase letter
+//   - at least one uppercase letter
+//   - at least one digit
+//   - at least one non-alphanumeric character
+//   - not identical to the user's email (if email provided)
+function _validatePasswordPolicy(pwd, opts) {
+  opts = opts || {};
+  if (!pwd || typeof pwd !== 'string') return 'Password is required.';
+  if (pwd.length < 12) return 'Password must be at least 12 characters.';
+  if (pwd.length > 128) return 'Password is too long (max 128 characters).';
+  if (!/[a-z]/.test(pwd)) return 'Password must include at least one lowercase letter.';
+  if (!/[A-Z]/.test(pwd)) return 'Password must include at least one uppercase letter.';
+  if (!/[0-9]/.test(pwd)) return 'Password must include at least one digit.';
+  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Password must include at least one symbol (e.g. !@#$%).';
+  if (opts.email && pwd.toLowerCase() === String(opts.email).toLowerCase()) {
+    return "Password cannot be the same as your email.";
+  }
+  if (opts.priorPasswords && Array.isArray(opts.priorPasswords)) {
+    var matchPrior = opts.priorPasswords.some(function (p) { return p && p === pwd; });
+    if (matchPrior) return 'You cannot reuse a recent password.';
+  }
+  return null;
+}
+
+// Paint the NMLS / Equal Housing Lender footer in the sidebar with
+// the signed-in MLO's profile NMLS, if present. Called on login +
+// when the profile is saved.
+function _paintComplianceFooter() {
+  try {
+    var el = document.getElementById('sidebar-nmls-val');
+    if (!el) return;
+    var nmls = (window.currentUser && currentUser.profile && currentUser.profile.nmls)
+      ? currentUser.profile.nmls
+      : (window.currentUser && currentUser.nmls)
+        ? currentUser.nmls
+        : '';
+    el.textContent = nmls || '—';
+  } catch (e) { /* never let the footer crash navigation */ }
+}
+
 function _scopeOrg(query, opts) {
   if (!currentUser || !db) return query;
   if (typeof isSuperAdmin === 'function' && isSuperAdmin()) return query;
@@ -9277,6 +9340,8 @@ async function saveProfile() {
   sessionStorage.setItem('g1_session', JSON.stringify(currentUser));
   const idx = cachedUsers.findIndex(function(u) { return u.id === currentUser.id; });
   if (idx > -1) cachedUsers[idx].profile = profile;
+  // Refresh the regulatory footer so the NMLS displays immediately.
+  try { _paintComplianceFooter(); } catch (e) {}
   const succEl = document.getElementById('s-profile-success');
   succEl.textContent = '✅ Profile saved!';
   succEl.style.display = 'block';
@@ -10359,7 +10424,8 @@ async function saveSettingsPassword() {
   const errEl   = document.getElementById('s-pw-error');
   const succEl  = document.getElementById('s-pw-success');
   errEl.style.display = 'none'; succEl.style.display = 'none';
-  if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  var __pwErr2 = _validatePasswordPolicy(newPw, { email: (currentUser && currentUser.email) || '' });
+  if (__pwErr2) { errEl.textContent = __pwErr2; errEl.style.display = 'block'; return; }
   if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
   try {
     var fbUser = (typeof auth !== 'undefined' && auth.currentUser) || null;
@@ -10500,7 +10566,8 @@ async function addUser() {
   if (!name)  { showFormErr('Please enter a full name.'); return; }
   if (!email || !email.includes('@')) { showFormErr('Please enter a valid email.'); return; }
   if (!pass)  { showFormErr('Please enter or generate an initial password.'); return; }
-  if (pass.length < 8) { showFormErr('Password must be at least 8 characters.'); return; }
+  var __pwErr3 = _validatePasswordPolicy(pass, { email: email });
+  if (__pwErr3) { showFormErr(__pwErr3); return; }
   if (cachedUsers.find(function(u) { return u.email.toLowerCase() === email; })) { showFormErr('A user with this email already exists.'); return; }
   const managerSel = document.getElementById('new-manager-id');
   const managerId = (managerSel && managerSel.value) ? managerSel.value : '';
@@ -15297,7 +15364,8 @@ async function createOrganization() {
   if (!orgName)   { errEl.textContent = 'Organization name is required.'; errEl.style.display = 'block'; return; }
   if (!fname || !lname) { errEl.textContent = 'Admin first and last name are required.'; errEl.style.display = 'block'; return; }
   if (!adminEmail || !adminEmail.includes('@')) { errEl.textContent = 'Valid admin email is required.'; errEl.style.display = 'block'; return; }
-  if (adminPass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  var __pwErr4 = _validatePasswordPolicy(adminPass);
+  if (__pwErr4) { errEl.textContent = __pwErr4; errEl.style.display = 'block'; return; }
   btn.textContent = '⏳ Creating...'; btn.disabled = true;
   try {
     var now = new Date();
@@ -15999,7 +16067,8 @@ function signupStep2Next() {
   var err = document.getElementById('su-err-2');
   if (!fname || !lname) { err.textContent = 'First and last name are required.'; err.style.display = 'block'; return; }
   if (!email || !email.includes('@')) { err.textContent = 'Valid email is required.'; err.style.display = 'block'; return; }
-  if (pass.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return; }
+  var __pwErr5 = _validatePasswordPolicy(pass, { email: _signupData.email });
+  if (__pwErr5) { err.textContent = __pwErr5; err.style.display = 'block'; return; }
   if (pass !== confirm) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
   err.style.display = 'none';
   _signupData.fname = fname; _signupData.lname = lname; _signupData.email = email; _signupData.password = pass;
