@@ -17471,7 +17471,7 @@ async function doShareFlyer() {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_name: r.name, to_email: r.email,
       subject: 'Marketing Flyer from ' + (currentUser.name || 'Your MLO'),
-      message: 'Hi ' + r.name + ',\n\nI wanted to share this LMI marketing flyer with you.\n\nView it here: ' + flyerUrl + '\n\nBest,\n' + (currentUser.name || 'Your MLO')
+      message: appendMloEmailFooter('Hi ' + r.name + ',\n\nI wanted to share this LMI marketing flyer with you.\n\nView it here: ' + flyerUrl + '\n\nBest,\n' + (currentUser.name || 'Your MLO'))
     });
     closeShareFlyerModal();
     showToast('✅ Flyer sent to ' + r.name + '!');
@@ -17741,7 +17741,8 @@ async function doSendToRealtor() {
       to_name: r.name,
       to_email: r.email,
       subject: 'New Buyer Profile from ' + (currentUser.name || 'Your MLO'),
-      message: 'Hi ' + r.name + ',\n\nYour MLO partner ' + (currentUser.name||'') + ' has sent you a new buyer profile.\n\n'
+      message: appendMloEmailFooter(
+        'Hi ' + r.name + ',\n\nYour MLO partner ' + (currentUser.name||'') + ' has sent you a new buyer profile.\n\n'
         + 'Buyer: ' + (d.borrowerName || 'Unnamed') + '\n'
         + 'Income: $' + d.income.toLocaleString() + ' (' + d.pctAmi + '% of AMI)\n'
         + 'Category: ' + d.cat.label + '\n'
@@ -17753,6 +17754,7 @@ async function doSendToRealtor() {
         + '🏡 Realtor.com: ' + buildRealtorUrl(d.zip, d.maxPrice) + '\n\n'
         + (notes ? 'MLO Notes: ' + notes + '\n\n' : '')
         + 'Log in to your Realtor Portal to view full details.'
+      )
     });
   } catch(e) { /* email failed, but Firebase write succeeded — that's OK */ }
 
@@ -19609,6 +19611,35 @@ function fillTemplateVars(body,vars){
   return body.replace(/\{\{(\w+)\}\}/g,function(_,k){return vars[k]||('{{'+k+'}}');});
 }
 
+// ── MLO regulatory footer for outbound emails ─────────────────
+// State MLO licensing regs + TILA-RESPA require the originator's
+// NMLS ID on loan-related communications. Most jurisdictions also
+// require the Equal Housing Lender / Equal Housing Opportunity
+// statement when soliciting business. Auto-append both if the
+// body doesn't already include them — keeps every MLO-to-borrower
+// email compliant without burdening template authors.
+//
+// Returns the body unchanged if:
+//   - currentUser has no NMLS in profile (signature would be misleading)
+//   - body already contains "NMLS" (template handled it explicitly)
+function appendMloEmailFooter(body) {
+  if (!body || typeof body !== 'string') return body || '';
+  if (!window.currentUser) return body;
+  var nmls = (currentUser.profile && currentUser.profile.nmls) || currentUser.nmls || '';
+  if (!nmls) return body;
+  // Skip if author already wired in NMLS via template variable.
+  if (/NMLS[\s#:]*\d{2,}/i.test(body)) return body;
+  var name = currentUser.name || '';
+  var phone = (currentUser.profile && currentUser.profile.phone) || currentUser.phone || '';
+  var email = currentUser.email || '';
+  var footer = '\n\n—\n' +
+    (name ? name + '\n' : '') +
+    'Mortgage Loan Originator · NMLS #' + nmls + '\n' +
+    (phone ? phone + (email ? ' · ' : '') : '') + (email || '') + '\n' +
+    '🏠 Equal Housing Lender. This communication is not a commitment to lend; all loans subject to credit approval.';
+  return body + footer;
+}
+
 async function doSendEmail() {
   var t=cachedTemplates.find(function(x){return x.id===_sendTplId;});
   if(!t) return;
@@ -19623,6 +19654,7 @@ async function doSendEmail() {
   var subject=(document.getElementById('send-subject')||{}).value||t.subject;
   var vars={borrowerName:toName,mloName:currentUser.name,mloPhone:currentUser.phone||'',mloEmail:currentUser.email||'',mloNmls:currentUser.nmls||''};
   var body=fillTemplateVars(t.body||'',vars);
+  body = appendMloEmailFooter(body);
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {to_name:toName,to_email:toEmail,subject:subject,message:body});
     await db.collection('email_log').add({
@@ -20690,6 +20722,7 @@ async function _executeStep(step, enrollment, mergeData) {
     if (step.actionType === 'email') {
       var subject = _seqMergeFields(ac.subject, mergeData);
       var body = _seqMergeFields(ac.body, mergeData);
+      body = appendMloEmailFooter(body);  // NMLS + EHL regulatory footer
       // Use EmailJS
       try {
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -21210,6 +21243,32 @@ async function _sendSms(to, message, contactId, contactName, contactType, opts) 
       console.warn('[sms] opt-out check failed, continuing:', e);
     }
   }
+
+  // ── MLO licensee identification (state regulator + NMLS rule) ──
+  // Most state MLO licensing regs require the originator's NMLS ID
+  // on every loan-related communication. Auto-append a short
+  // signature ("— Name, NMLS #xxxxx") if the message doesn't already
+  // include one. Cheap chars (~25-35) and keeps every SMS state-
+  // compliant without burdening the MLO to remember it.
+  try {
+    var mloNmlsForSig = (currentUser && (
+      (currentUser.profile && currentUser.profile.nmls) ||
+      currentUser.nmls
+    )) || '';
+    var alreadyHasNmls = /NMLS[\s#:]*\d{2,}/i.test(message);
+    if (mloNmlsForSig && !alreadyHasNmls) {
+      var sigName = (currentUser && currentUser.name) || '';
+      var sig = '— ' + (sigName ? sigName + ', ' : '') + 'NMLS #' + mloNmlsForSig;
+      // Splice in BEFORE the TCPA STOP footer if we just added one,
+      // so the signature reads naturally and the STOP line stays last.
+      var stopIdx = message.indexOf('\n\nReply STOP');
+      if (stopIdx > 0) {
+        message = message.slice(0, stopIdx) + '\n\n' + sig + message.slice(stopIdx);
+      } else {
+        message = message + '\n\n' + sig;
+      }
+    }
+  } catch(e) { /* signature is nice-to-have; never block a send */ }
 
   // MLO Twilio number.
   var fromNumber = '';
