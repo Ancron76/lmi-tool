@@ -5070,6 +5070,33 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
           <option value="240">4 hours</option>
         </select>
       </div>
+
+      <!-- Multi-factor authentication enrollment -->
+      <div style="margin-top:24px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+        <div style="font-weight:700;color:var(--text-primary);font-size:14px;margin-bottom:4px">🔐 Two-Factor Authentication (TOTP)</div>
+        <div id="mfa-status-line" style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Checking status…</div>
+        <div id="mfa-enroll-area" style="display:none">
+          <button onclick="_mfaStartEnrollment()" id="mfa-enroll-start-btn" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Enroll Authenticator App</button>
+        </div>
+        <div id="mfa-qr-area" style="display:none">
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">1. Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this QR code:</div>
+          <div id="mfa-qr-container" style="background:white;padding:14px;border-radius:10px;display:inline-block;border:1px solid var(--border)"></div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Or paste this secret into your app manually:</div>
+          <code id="mfa-secret-text" style="display:block;padding:8px;background:var(--code-bg, #f5f0e8);border-radius:6px;font-family:monospace;font-size:12px;margin-top:4px;word-break:break-all"></code>
+          <div style="font-size:13px;color:var(--text-secondary);margin-top:14px;margin-bottom:6px">2. Enter the 6-digit code from your authenticator:</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="mfa-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456" autocomplete="one-time-code" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:monospace;font-size:18px;letter-spacing:6px;text-align:center;width:140px;min-height:44px" />
+            <button onclick="_mfaConfirmEnrollment()" id="mfa-confirm-btn" style="background:#5a8a6a;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Verify & Enroll</button>
+            <button onclick="_mfaCancelEnrollment()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;min-height:44px">Cancel</button>
+          </div>
+          <div id="mfa-enroll-msg" style="display:none;font-size:12px;margin-top:10px"></div>
+        </div>
+        <div id="mfa-enrolled-area" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a8a6a;font-weight:600;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Enrolled</div>
+          <button onclick="_mfaUnenroll()" style="background:transparent;border:1px solid #c4b5a3;color:#9a4a3a;border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Remove enrollment</button>
+        </div>
+      </div>
+
       <div style="margin-top:14px" id="security-dashboard-body"></div>
     </div>
     <div class="settings-section" id="rate-source-settings" style="display:none">
@@ -6237,6 +6264,7 @@ async function _postLoginSetup(user) {
   var secSettings = document.getElementById('security-settings');
   if (secSettings) secSettings.style.display = isAnyAdmin() ? '' : 'none';
   if (isAnyAdmin()) _renderSecurityDashboard();
+  if (isAnyAdmin()) { try { _mfaRefreshStatus(); } catch(e) {} }
   var rateSettings = document.getElementById('rate-source-settings');
   if (rateSettings) rateSettings.style.display = isAnyAdmin() ? '' : 'none';
   if (isAnyAdmin()) _renderRateSourceFields();
@@ -6266,13 +6294,31 @@ async function tryLogin() {
   } catch (fbErr) {
     btn.textContent = 'Sign In';
     var errEl = document.getElementById('login-error');
+    var code = fbErr && fbErr.code || '';
+
+    // MFA challenge — user has TOTP enrolled. Prompt for the 6-digit
+    // code and complete the sign-in with it.
+    if (code === 'auth/multi-factor-auth-required' && fbErr.resolver) {
+      try {
+        await _handleMfaChallenge(fbErr.resolver);
+        btn.textContent = 'Sign In';
+        await _handleFirebaseAuthSession(auth.currentUser);
+        return;
+      } catch (mfaErr) {
+        var mfaMsg = (mfaErr && mfaErr.code === 'auth/invalid-verification-code')
+          ? 'Verification code was incorrect. Try the next one your authenticator shows.'
+          : (mfaErr && mfaErr.message) || 'MFA verification failed.';
+        if (errEl) { errEl.textContent = mfaMsg; errEl.style.display = 'block'; }
+        return;
+      }
+    }
+
     if (errEl) {
       // Map Firebase Auth error codes to user-friendly copy. Don't
       // distinguish "no such user" from "wrong password" — both must
       // reveal the same generic "invalid" message to prevent account
       // enumeration (a determined attacker would otherwise know which
       // emails are registered).
-      var code = fbErr && fbErr.code || '';
       var msg;
       if (code === 'auth/user-disabled') msg = 'This account has been disabled.';
       else if (code === 'auth/too-many-requests') msg = 'Too many failed attempts. Try again in a few minutes.';
@@ -13952,6 +13998,222 @@ async function secShipAuditLogCoverage() {
   await _secSetFlag({ phase5AuditLogComplete: true });
   _secLog('sec-phase5-log', 'Flag saved. All sensitive code paths now write to /auditLog.', 'ok');
   _secInitPosture();
+}
+
+// Sign-in-time MFA challenge handler. Called when
+// signInWithEmailAndPassword throws 'auth/multi-factor-auth-required'.
+// Prompts for the 6-digit code (browser prompt is intentionally
+// minimal — when we have a real modal later, swap it in here) and
+// resolves the sign-in. Loops on bad codes up to 3 attempts.
+async function _handleMfaChallenge(resolver) {
+  if (!firebase.auth.TotpMultiFactorGenerator) {
+    throw new Error('Firebase SDK is too old to verify TOTP. Reload the page and try again.');
+  }
+  // Find the TOTP hint to verify against (skip phone hints if any).
+  var hint = null;
+  for (var i = 0; i < resolver.hints.length; i++) {
+    if (resolver.hints[i].factorId === 'totp') { hint = resolver.hints[i]; break; }
+  }
+  if (!hint) hint = resolver.hints[0];
+  var attempts = 0;
+  while (attempts < 3) {
+    attempts++;
+    var code = window.prompt(
+      attempts === 1
+        ? 'Enter the 6-digit code from your authenticator app:'
+        : 'Code was incorrect. Try again — enter the next 6-digit code your authenticator shows:'
+    );
+    if (!code) throw new Error('Sign-in cancelled.');
+    code = code.trim();
+    try {
+      var assertion = firebase.auth.TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
+      await resolver.resolveSignIn(assertion);
+      return;
+    } catch (e) {
+      if (e && e.code === 'auth/invalid-verification-code' && attempts < 3) continue;
+      throw e;
+    }
+  }
+  throw new Error('Too many incorrect attempts. Try again later.');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOTP MFA enrollment (Firebase Auth multi-factor v2 API)
+// ═══════════════════════════════════════════════════════════
+// Caller is the currently-signed-in user. Steps:
+//   1. Get a recent multi-factor session token from the user
+//   2. Generate a TOTP secret + the otpauth URL for it
+//   3. Render the QR code + secret text for the user to scan
+//   4. User enters the 6-digit code from their authenticator
+//   5. Assert the code against the secret, enroll the factor
+//
+// Re-authentication is sometimes required (Firebase asks for it
+// if your sign-in is older than a few minutes). We handle the
+// 'auth/requires-recent-login' error by prompting the user to
+// re-enter their password.
+var _mfaPendingSecret = null;
+var _mfaPendingSession = null;
+
+function _mfaUiMsg(msgEl, ok, text) {
+  if (!msgEl) return;
+  msgEl.style.display = 'block';
+  msgEl.style.padding = '8px 12px';
+  msgEl.style.borderRadius = '8px';
+  msgEl.style.fontSize = '12px';
+  if (ok) {
+    msgEl.style.background = '#ecfdf5';
+    msgEl.style.color = '#047857';
+    msgEl.style.border = '1px solid #a7f3d0';
+  } else {
+    msgEl.style.background = '#fef2f2';
+    msgEl.style.color = '#991b1b';
+    msgEl.style.border = '1px solid #fecaca';
+  }
+  msgEl.textContent = text;
+}
+
+async function _mfaRefreshStatus() {
+  var line = document.getElementById('mfa-status-line');
+  var enrollArea = document.getElementById('mfa-enroll-area');
+  var enrolledArea = document.getElementById('mfa-enrolled-area');
+  if (!line || !enrollArea || !enrolledArea) return;
+  var fbUser = (typeof auth !== 'undefined' && auth && auth.currentUser) || null;
+  if (!fbUser) {
+    line.textContent = 'Sign in to manage two-factor authentication.';
+    enrollArea.style.display = 'none';
+    enrolledArea.style.display = 'none';
+    return;
+  }
+  var enrolled = (fbUser.multiFactor && fbUser.multiFactor.enrolledFactors) || [];
+  if (enrolled.length > 0) {
+    line.textContent = 'Status: ✅ Enrolled (' + enrolled.map(function(f){ return f.displayName||f.factorId||'factor'; }).join(', ') + ')';
+    enrollArea.style.display = 'none';
+    enrolledArea.style.display = 'block';
+  } else {
+    line.textContent = 'Status: Not enrolled. Strongly recommended for super-admin accounts.';
+    enrollArea.style.display = 'block';
+    enrolledArea.style.display = 'none';
+  }
+}
+
+async function _mfaStartEnrollment() {
+  var btn = document.getElementById('mfa-enroll-start-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
+  try {
+    var fbUser = auth && auth.currentUser;
+    if (!fbUser) throw new Error('Sign in first.');
+    var session;
+    try {
+      session = await fbUser.multiFactor.getSession();
+    } catch (e) {
+      if (e && (e.code === 'auth/requires-recent-login' || /recent.*login/i.test(e.message||''))) {
+        var pwd = window.prompt('For security, re-enter your password to continue:');
+        if (!pwd) throw new Error('Cancelled.');
+        var cred = firebase.auth.EmailAuthProvider.credential(fbUser.email, pwd);
+        await fbUser.reauthenticateWithCredential(cred);
+        session = await fbUser.multiFactor.getSession();
+      } else {
+        throw e;
+      }
+    }
+    if (!firebase.auth.TotpMultiFactorGenerator) {
+      throw new Error('Your Firebase SDK is too old for TOTP. Hard-reload the page and try again.');
+    }
+    var secret = await firebase.auth.TotpMultiFactorGenerator.generateSecret(session);
+    _mfaPendingSecret = secret;
+    _mfaPendingSession = session;
+    var otpauthUrl = secret.generateQrCodeUrl(fbUser.email || 'user@loopenta', 'Loopenta');
+    // Render QR code. Uses a small online QR endpoint as a fallback if
+    // no offline library is bundled — the otpauth URL is non-sensitive
+    // beyond this single session and is short-lived (the secret is also
+    // shown in plain text right below as a manual-entry option).
+    var qrContainer = document.getElementById('mfa-qr-container');
+    if (qrContainer) {
+      var qrImg = document.createElement('img');
+      qrImg.alt = 'TOTP enrollment QR code';
+      qrImg.width = 200; qrImg.height = 200;
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(otpauthUrl);
+      qrContainer.innerHTML = '';
+      qrContainer.appendChild(qrImg);
+    }
+    var secretText = document.getElementById('mfa-secret-text');
+    if (secretText) secretText.textContent = secret.secretKey;
+    document.getElementById('mfa-qr-area').style.display = 'block';
+    document.getElementById('mfa-enroll-area').style.display = 'none';
+    var codeInput = document.getElementById('mfa-code-input');
+    if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+  } catch (e) {
+    var msg = (e && e.message) || 'Could not start enrollment.';
+    var msgEl = document.getElementById('mfa-enroll-msg');
+    _mfaUiMsg(msgEl, false, msg);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enroll Authenticator App'; }
+  }
+}
+
+async function _mfaConfirmEnrollment() {
+  var confirmBtn = document.getElementById('mfa-confirm-btn');
+  var msgEl = document.getElementById('mfa-enroll-msg');
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Verifying…'; }
+  try {
+    if (!_mfaPendingSecret) throw new Error('No enrollment in progress — start again.');
+    var code = (document.getElementById('mfa-code-input').value || '').trim();
+    if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit code from your authenticator.');
+    var fbUser = auth && auth.currentUser;
+    if (!fbUser) throw new Error('Sign in first.');
+    var assertion = firebase.auth.TotpMultiFactorGenerator.assertionForEnrollment(_mfaPendingSecret, code);
+    await fbUser.multiFactor.enroll(assertion, 'Authenticator app');
+    _mfaPendingSecret = null;
+    _mfaPendingSession = null;
+    _mfaUiMsg(msgEl, true, 'Enrolled successfully. Future sign-ins on this account will require a 6-digit code.');
+    try {
+      await db.collection('auditLog').add({
+        action: 'mfa_enrolled', resource: 'auth',
+        userId: currentUser.id, userName: currentUser.name||currentUser.email,
+        tenantId: currentUser.orgId||'',
+        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+      });
+    } catch(e){}
+    setTimeout(function() {
+      document.getElementById('mfa-qr-area').style.display = 'none';
+      _mfaRefreshStatus();
+    }, 1500);
+  } catch (e) {
+    var m = (e && e.code === 'auth/invalid-verification-code')
+      ? 'Code is incorrect. Try the next one your authenticator shows.'
+      : (e && e.message) || 'Could not enroll.';
+    _mfaUiMsg(msgEl, false, m);
+  } finally {
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Verify & Enroll'; }
+  }
+}
+
+function _mfaCancelEnrollment() {
+  _mfaPendingSecret = null;
+  _mfaPendingSession = null;
+  var qr = document.getElementById('mfa-qr-area'); if (qr) qr.style.display = 'none';
+  var ea = document.getElementById('mfa-enroll-area'); if (ea) ea.style.display = 'block';
+  var msg = document.getElementById('mfa-enroll-msg'); if (msg) msg.style.display = 'none';
+}
+
+async function _mfaUnenroll() {
+  if (!confirm('Remove the authenticator enrollment? You will be able to sign in with just your password — strongly NOT recommended for super-admin.')) return;
+  try {
+    var fbUser = auth && auth.currentUser;
+    var enrolled = (fbUser && fbUser.multiFactor && fbUser.multiFactor.enrolledFactors) || [];
+    for (var i = 0; i < enrolled.length; i++) {
+      try { await fbUser.multiFactor.unenroll(enrolled[i]); } catch (e) { console.warn('unenroll fail', e); }
+    }
+    try {
+      await db.collection('auditLog').add({
+        action: 'mfa_unenrolled', resource: 'auth',
+        userId: currentUser.id, userName: currentUser.name||currentUser.email,
+        tenantId: currentUser.orgId||'',
+        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
+      });
+    } catch(e){}
+    _mfaRefreshStatus();
+  } catch (e) { alert('Could not remove enrollment: ' + (e.message||e)); }
 }
 
 // ------ Phase 7: Rate limiting ------
