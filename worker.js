@@ -3351,11 +3351,24 @@ async function getMfaEncryptionKey(env) {
   if (!env.MFA_ENCRYPTION_KEY) {
     throw new Error('mfa_encryption_key_not_configured');
   }
+  // Tolerate stray whitespace/newlines that `wrangler secret put`
+  // sometimes carries when pasting from a terminal. The atob built-in
+  // is strict about both whitespace and invalid chars, so normalize
+  // first. Also accept both standard ('+/') and URL-safe ('-_') base64.
+  const cleaned = String(env.MFA_ENCRYPTION_KEY)
+    .replace(/\s+/g, '')
+    .replace(/-/g, '+').replace(/_/g, '/');
   let raw;
-  try { raw = mfaBase64ToBytes(env.MFA_ENCRYPTION_KEY); }
-  catch (e) { throw new Error('mfa_encryption_key_not_base64'); }
+  try { raw = mfaBase64ToBytes(cleaned); }
+  catch (e) {
+    throw new Error('mfa_encryption_key_not_base64: ' +
+      'value (first 8 chars) "' + cleaned.slice(0, 8) + '…" ' +
+      'length=' + cleaned.length);
+  }
   if (raw.length !== 32) {
-    throw new Error('mfa_encryption_key_must_be_32_bytes_base64');
+    throw new Error('mfa_encryption_key_must_be_32_bytes_after_base64_decode: got ' +
+      raw.length + ' bytes (expected 32). ' +
+      'Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"');
   }
   return await crypto.subtle.importKey(
     'raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']

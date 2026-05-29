@@ -14258,9 +14258,20 @@ async function _mfaStartEnrollment() {
     var res = await _mfaPost('/mfa/enroll-start', {});
     if (!res.ok) {
       var err = res.data && res.data.error || ('http_' + res.status);
+      var detail = res.data && res.data.detail || '';
+      var hint = res.data && res.data.hint || '';
       if (err === 'already_enrolled') throw new Error("You're already enrolled. Remove the existing enrollment first to re-enroll.");
-      if (err === 'mfa_encryption_key_not_configured') throw new Error('Worker missing MFA_ENCRYPTION_KEY secret. Run: npx wrangler secret put MFA_ENCRYPTION_KEY (see RUNBOOK).');
-      throw new Error('Could not start enrollment: ' + err);
+      if (err === 'mfa_encryption_key_not_configured') {
+        throw new Error('Worker missing MFA_ENCRYPTION_KEY secret. Run:\n  node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"\n  npx wrangler secret put MFA_ENCRYPTION_KEY\nSee RUNBOOK for details.');
+      }
+      if (err === 'encryption_failed') {
+        // The pre-check passed but the actual encrypt call failed —
+        // usually a bad base64 value or wrong key length. Surface the
+        // detail so the operator can fix the secret without guessing.
+        throw new Error('Encryption failed on the worker.\n\nDetail: ' + (detail || '(no detail)') +
+          '\n\nTip: hit https://lmitool.com/mfa/health to see the exact AES-GCM error, then regenerate the secret with:\n  node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"\n  npx wrangler secret put MFA_ENCRYPTION_KEY');
+      }
+      throw new Error('Could not start enrollment: ' + err + (detail ? ' — ' + detail : '') + (hint ? '\n\n' + hint : ''));
     }
     window._mfaPendingSecret = res.data.secret;
     window._mfaPendingOtpauth = res.data.otpauthUri;
