@@ -251,6 +251,9 @@ export default {
     if (url.pathname === '/mfa/unenroll' && request.method === 'POST') {
       return handleMfaUnenroll(request, env);
     }
+    if (url.pathname === '/mfa/show-qr' && request.method === 'POST') {
+      return handleMfaShowQr(request, env);
+    }
 
     // ── Public error-report sink ─────────────────────────────────
     // The frontend posts uncaught exceptions + unhandled rejections
@@ -4054,4 +4057,74 @@ async function handleMfaUnenroll(request, env) {
   }
 
   return mfaResponse('unenrolled', user.uid, { unenrolled: true }, request);
+}
+
+// ── POST /mfa/show-qr ───────────────────────────────────────────
+// Re-display the otpauth:// URI for the user's existing enrollment
+// so they can scan it into a different/additional authenticator app
+// (e.g. lost the iOS Passwords entry, switching to 1Password, etc.).
+//
+// Security model — why this is safe:
+//   • Requires a recent `mfaVerifiedAt` claim (< 15 min old). An
+//     attacker with a stolen session but no current TOTP code or
+//     backup code can't satisfy this — they'd have to defeat MFA
+//     first, at which point they're already past it.
+//   • Audit-logged loudly via mfaLog + Firestore /auditLog so we
+//     can spot abuse pattern (repeated show-qr by same user).
+//   • Returns the SAME secret already in KV (not a new one) — the
+//     authenticator app entry the user already has remains valid.
+//
+// What this is NOT for:
+//   • First-time enrollment (use /mfa/enroll-start)
+//   • Recovery after MFA failure (use /mfa/verify-backup with a
+//     saved backup code)
+const MFA_RECENT_VERIFY_S = 15 * 60;  // 15 min window for show-qr
+
+async function handleMfaShowQr(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_verify');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+
+  // Require recent mfaVerifiedAt — this is the proof that the
+  // caller actually has the second factor (or did within the last
+  // 15 min). A stolen session alone shouldn't be enough.
+  const verifiedAt = user.claims.mfaVerifiedAt || 0;
+  const now = Math.floor(Date.now() / 1000);
+  if (!verifiedAt || verifiedAt < now - MFA_RECENT_VERIFY_S) {
+    return mfaResponse('show_qr_denied_stale', user.uid, {
+      error: 'recent_mfa_verification_required',
+      message: 'For security, this requires that you verified your authenticator within the last 15 minutes. Sign out and sign back in (or use a backup code) and try immediately after.',
+      verifiedAt: verifiedAt || null,
+      requiredAfter: now - MFA_RECENT_VERIFY_S,
+    }, request, 403);
+  }
+
+  const stored = await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid, 'json');
+  if (!stored || !stored.ciphertext) {
+    return jsonResponse({ error: 'not_enrolled' }, request, 400);
+  }
+  let secret;
+  try { secret = await mfaDecryptSecret(stored, env); }
+  catch (e) { return jsonResponse({ error: 'decryption_failed', detail: String(e.message || e) }, request, 500); }
+
+  const issuer = 'Loopenta';
+  const label  = encodeURIComponent(issuer + ':' + (user.email || user.uid));
+  const otpauthUri = 'otpauth://totp/' + label +
+    '?secret=' + secret +
+    '&issuer=' + encodeURIComponent(issuer) +
+    '&algorithm=SHA1&digits=6&period=' + MFA_STEP_SECONDS;
+
+  return mfaResponse('show_qr', user.uid, {
+    secret,
+    otpauthUri,
+    enrolledAt: stored.enrolledAt || null,
+    note: 'Scanning this into another authenticator app gives that app the SAME secret as your existing enrollment — codes will match. If you want a different secret, remove your enrollment first, then re-enroll fresh.',
+  }, request);
 }

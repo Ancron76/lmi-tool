@@ -5096,8 +5096,20 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a8a6a;font-weight:600;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Enrolled</div>
           <div id="mfa-backup-line" style="font-size:12px;color:var(--text-muted);margin-bottom:10px"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="_mfaShowExistingQr()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Show QR code (re-scan)</button>
             <button onclick="_mfaRegenerateBackup()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Regenerate backup codes</button>
             <button onclick="_mfaUnenroll()" style="background:transparent;border:1px solid #c4b5a3;color:#9a4a3a;border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Remove enrollment</button>
+          </div>
+          <!-- Re-display QR for cases like "lost my iOS Passwords entry,
+               want to scan it into Google Authenticator/Authy/1Password."
+               Server only allows this when mfaVerifiedAt is fresh (<15 min). -->
+          <div id="mfa-show-qr-area" style="display:none;margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:8px">Existing enrollment — scan this into another app</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">This is the SAME secret as your existing enrollment. Codes will match. Don't share this QR with anyone.</div>
+            <div id="mfa-show-qr-container" style="background:white;padding:14px;border-radius:10px;display:inline-block;border:1px solid var(--border)"></div>
+            <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Or paste this secret into your app manually:</div>
+            <code id="mfa-show-qr-secret" style="display:block;padding:8px;background:var(--code-bg, #f5f0e8);border-radius:6px;font-family:monospace;font-size:12px;margin-top:4px;word-break:break-all"></code>
+            <button onclick="_mfaHideExistingQr()" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px;margin-top:10px">Hide</button>
           </div>
         </div>
         <!-- Backup-code display modal area, populated after enroll-confirm
@@ -14369,6 +14381,49 @@ async function _mfaUnenroll() {
   } catch (e) {
     alert('Could not remove enrollment: ' + (e.message || e));
   }
+}
+
+async function _mfaShowExistingQr() {
+  if (!confirm('Re-display the QR code for your existing authenticator enrollment? Use this if you lost the entry in your authenticator app (e.g. iOS Passwords) and want to scan it into a different one (Google Authenticator, Authy, 1Password, etc).\n\nThis requires that you verified your authenticator within the last 15 minutes. Anyone seeing the QR can add it to their own authenticator — keep your screen private.')) return;
+  try {
+    var res = await _mfaPost('/mfa/show-qr', {});
+    if (!res.ok) {
+      var err = res.data && res.data.error || ('http_' + res.status);
+      var msg = res.data && res.data.message || '';
+      if (err === 'recent_mfa_verification_required') {
+        alert(msg || 'For security, this requires recent MFA verification. Sign out, sign back in (or use a backup code), and try again immediately.');
+        return;
+      }
+      if (err === 'not_enrolled') { alert('You are not enrolled. Use Enroll Authenticator App instead.'); return; }
+      alert('Could not show QR: ' + err);
+      return;
+    }
+    var area = document.getElementById('mfa-show-qr-area');
+    var qrContainer = document.getElementById('mfa-show-qr-container');
+    var secretText = document.getElementById('mfa-show-qr-secret');
+    if (qrContainer) {
+      var qrImg = document.createElement('img');
+      qrImg.alt = 'Existing authenticator QR code';
+      qrImg.width = 200; qrImg.height = 200;
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(res.data.otpauthUri);
+      qrContainer.innerHTML = '';
+      qrContainer.appendChild(qrImg);
+    }
+    if (secretText) secretText.textContent = res.data.secret || '';
+    if (area) area.style.display = 'block';
+    await _mfaWriteAudit('qr_redisplayed');
+  } catch (e) {
+    alert('Could not show QR: ' + (e.message || e));
+  }
+}
+
+function _mfaHideExistingQr() {
+  var area = document.getElementById('mfa-show-qr-area');
+  if (area) area.style.display = 'none';
+  var qrContainer = document.getElementById('mfa-show-qr-container');
+  if (qrContainer) qrContainer.innerHTML = '';  // wipe so it can't be recovered via inspect
+  var secretText = document.getElementById('mfa-show-qr-secret');
+  if (secretText) secretText.textContent = '';
 }
 
 async function _mfaRegenerateBackup() {
