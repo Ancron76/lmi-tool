@@ -691,24 +691,132 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
 .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
-/* ─────────────────────────────────────────────────────────────
-   MISSION CONTROL — unified settings overlay
-   ─────────────────────────────────────────────────────────────
-   Design priorities (in order):
-     1. Legibility for users with lower vision — minimum 15px body,
-        17-18px settings titles, 28-32px content header. Generous
-        line-height (1.5+). High-contrast text (no muted greys for
-        primary copy).
-     2. Touch / pointer targets — every clickable item ≥56px tall,
-        every form input ≥48px (WCAG 2.5.5 + Apple HIG comfort).
-     3. Breathing room — the panel feels calm, not crowded. Wider
-        sidebar (300px), more vertical rhythm between items.
-     4. Discoverability via search — search input is large and
-        always the first thing the cursor lands on.
+/* ═════════════════════════════════════════════════════════════
+   THE LOOPENTA WORKSPACE — full-screen Settings shell
+   ═════════════════════════════════════════════════════════════
+   Visual language mirrors the existing admin/super-admin apanel:
+   dark sidebar (brand-brown, like .apanel-sidebar), gold accent
+   on the active row, light content area, serif section titles.
+   When the user clicks a deep-link section that takes them to
+   the admin or super-admin screen, the visual stays consistent —
+   they don't "leave Settings," they just see a different section
+   of the same shell.
 
-   Replaces the legacy fragmented surfaces (sidebar slide-out,
-   topbar gear, admin-screen left nav, super-admin-screen left
-   nav). The TOPBAR GEAR is now the single canonical entry. */
+   Design priorities (in order):
+     1. ONE entry point — topbar gear with visible "Settings" label.
+        No competing nav items. No modal floating on the app.
+        Click → full-screen workspace. Exit → back to app.
+     2. Legibility for users with lower vision — minimum 15px body,
+        17-18px sidebar item titles, 28-32px content headers.
+        High-contrast text, full WCAG-AAA where possible.
+     3. Touch / pointer targets — every clickable item ≥52px tall,
+        every form input ≥52px (WCAG 2.5.5 Level AAA).
+     4. Cognitive flow — sidebar groups follow scope ("Who is this
+        about?") not feature category. Search at the BOTTOM of the
+        sidebar (Linear pattern) so it doesn't compete with the
+        primary navigation. */
+.lw-shell { position: fixed; inset: 0; background: var(--bg, #fffcf4); z-index: 9990; display: none; flex-direction: column; font-family: inherit; }
+.lw-shell.open { display: flex; }
+
+/* Topbar — sticky, holds the breadcrumb and the Exit button */
+.lw-topbar { display: flex; align-items: center; gap: 16px; padding: 0 24px; height: 64px; background: var(--brand-primary, #1c1812); color: white; border-bottom: 1px solid rgba(0,0,0,0.2); flex-shrink: 0; }
+.lw-topbar-brand { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.lw-topbar-brand-mark { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(140deg,#c4943a,#b07030); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: white; }
+.lw-topbar-crumb { font-size: 14px; color: rgba(255,255,255,0.75); flex: 1; display: flex; align-items: center; gap: 10px; }
+.lw-topbar-crumb-sep { color: rgba(255,255,255,0.35); }
+.lw-topbar-crumb-current { color: white; font-weight: 600; }
+.lw-exit-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: white; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.12s; }
+.lw-exit-btn:hover { background: rgba(255,255,255,0.16); }
+.lw-exit-btn:focus-visible { outline: 3px solid #f5c36a; outline-offset: 2px; }
+
+/* The body splits into sidebar + content area */
+.lw-body { flex: 1; display: flex; min-height: 0; }
+
+/* Sidebar — dark, brand-aligned. Mirrors .apanel-sidebar but with
+   a Settings-specific brown tint instead of red/green so the role
+   color stays meaningful (red = SA, green = tenant admin). */
+.lw-sidebar { width: 300px; flex-shrink: 0; background: linear-gradient(180deg, #2a2018 0%, #1a130d 100%); color: white; display: flex; flex-direction: column; padding: 24px 14px 16px; box-sizing: border-box; overflow-y: auto; }
+.lw-sb-label { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: white; padding: 0 12px 18px; letter-spacing: -0.01em; }
+.lw-sb-group { margin-bottom: 24px; }
+.lw-sb-group-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 14px 10px; display: flex; align-items: center; gap: 8px; }
+.lw-sb-group-lock { font-size: 11px; opacity: 0.6; }
+.lw-sb-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: background 0.12s, color 0.12s; border: 2px solid transparent; background: transparent; width: 100%; text-align: left; font-family: inherit; color: rgba(255,255,255,0.78); min-height: 52px; }
+.lw-sb-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.lw-sb-item:focus-visible { outline: none; border-color: #f5c36a; }
+.lw-sb-item.active { background: rgba(196,148,58,0.22); color: #f5c36a; }
+.lw-sb-item-icon { font-size: 18px; line-height: 1.2; flex-shrink: 0; width: 22px; text-align: center; margin-top: 1px; }
+.lw-sb-item-body { flex: 1; min-width: 0; }
+.lw-sb-item-title { font-size: 14.5px; font-weight: 600; line-height: 1.35; }
+.lw-sb-item.active .lw-sb-item-title { color: #f5c36a; }
+.lw-sb-item-desc { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; line-height: 1.45; }
+.lw-sb-item:hover .lw-sb-item-desc { color: rgba(255,255,255,0.7); }
+.lw-sb-item.active .lw-sb-item-desc { color: rgba(245,195,106,0.7); }
+
+/* Search at the bottom of the sidebar — Linear pattern */
+.lw-sb-spacer { flex: 1; }
+.lw-sb-search-row { padding: 12px 6px 6px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; }
+.lw-sb-search { width: 100%; padding: 11px 14px 11px 38px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; font-size: 14px; font-family: inherit; background: rgba(0,0,0,0.25) url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.55)' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center; box-sizing: border-box; outline: none; color: white; min-height: 44px; }
+.lw-sb-search::placeholder { color: rgba(255,255,255,0.45); }
+.lw-sb-search:focus { border-color: #f5c36a; background-color: rgba(0,0,0,0.4); }
+
+/* User identity at the very bottom — Notion / GitHub pattern */
+.lw-sb-identity { margin-top: 6px; padding: 12px; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border-radius: 8px; }
+.lw-sb-identity-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(140deg,#c4943a,#b07030); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; flex-shrink: 0; }
+.lw-sb-identity-body { flex: 1; min-width: 0; }
+.lw-sb-identity-name { font-size: 13.5px; font-weight: 600; color: white; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lw-sb-identity-role { font-size: 11.5px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+/* Content area — light, generous padding */
+.lw-content { flex: 1; min-width: 0; padding: 36px 48px; overflow-y: auto; background: var(--bg, #fffcf4); }
+.lw-content-inner { max-width: 720px; }
+.lw-content-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--text-primary, #1a1410); margin: 0 0 8px; letter-spacing: -0.02em; line-height: 1.1; }
+.lw-content-desc { font-size: 16px; color: var(--text-secondary, #5c5449); margin: 0 0 32px; line-height: 1.5; }
+.lw-empty { text-align: center; padding: 80px 32px; color: var(--text-muted, #888); }
+.lw-empty-icon { font-size: 56px; opacity: 0.4; margin-bottom: 16px; }
+.lw-empty-msg { font-size: 18px; line-height: 1.5; }
+
+/* Form primitives reused inside content sections */
+.lw-field { display: block; margin-bottom: 22px; }
+.lw-label { display: block; font-size: 14px; font-weight: 700; color: var(--text-primary, #1a1410); margin-bottom: 8px; }
+.lw-sub-label { display: block; font-size: 13px; color: var(--text-secondary, #5c5449); margin-bottom: 8px; }
+.lw-input { width: 100%; padding: 13px 16px; border: 2px solid var(--border, #e8e3d6); border-radius: 10px; font-size: 16px; font-family: inherit; box-sizing: border-box; min-height: 52px; color: var(--text-primary, #1a1410); background: white; }
+.lw-input::placeholder { color: var(--text-muted, #888); }
+.lw-input:focus { border-color: var(--brand-accent, #b07030); outline: none; box-shadow: 0 0 0 3px rgba(176, 112, 48, 0.18); }
+.lw-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--brand-accent, #b07030); color: white; border: none; border-radius: 10px; padding: 13px 24px; font-size: 15px; font-weight: 700; cursor: pointer; min-height: 52px; font-family: inherit; transition: filter 0.12s, transform 0.05s; }
+.lw-btn:hover { filter: brightness(1.08); }
+.lw-btn:active { transform: scale(0.98); }
+.lw-btn:focus-visible { outline: 3px solid var(--text-primary, #1a1410); outline-offset: 2px; }
+.lw-btn-ghost { background: transparent; border: 2px solid var(--border, #e8e3d6); color: var(--text-primary, #1a1410); }
+.lw-btn-ghost:hover { background: var(--surface, #faf6ee); border-color: var(--text-primary, #1a1410); filter: none; }
+.lw-btn-danger { background: #9a4a3a; color: white; }
+.lw-msg { padding: 14px 16px; border-radius: 10px; font-size: 15px; line-height: 1.5; margin: 14px 0; }
+.lw-msg-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.lw-msg-err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.lw-msg-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.lw-help-card { background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 12px; padding: 16px 18px; font-size: 14.5px; color: var(--text-primary, #1a1410); line-height: 1.6; margin-bottom: 24px; }
+.lw-divider { height: 1px; background: var(--border, #e8e3d6); margin: 28px 0; border: 0; }
+.lw-section-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-primary, #1a1410); margin: 32px 0 12px; letter-spacing: -0.01em; }
+.lw-section-title:first-of-type { margin-top: 0; }
+
+/* Mobile — sidebar becomes a collapsible drawer */
+@media (max-width: 900px) {
+  .lw-topbar { height: 56px; padding: 0 16px; }
+  .lw-topbar-brand { font-size: 16px; }
+  .lw-topbar-crumb { font-size: 13px; }
+  .lw-body { flex-direction: column; }
+  .lw-sidebar { width: 100%; max-height: 50vh; padding: 16px 12px; }
+  .lw-content { padding: 24px 20px; }
+  .lw-content-title { font-size: 28px; }
+  .lw-content-desc { font-size: 15px; margin-bottom: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lw-sb-item, .lw-btn { transition: none; }
+  .lw-btn:active { transform: none; }
+}
+
+/* ─── Legacy Mission Control overlay (KEPT for any deep-link refs;
+   new UI now opens the Workspace shell, not this modal) ─── */
 .mc-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(6px); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 24px; }
 .mc-backdrop.open { display: flex; }
 .mc-modal { background: var(--bg, #fffcf4); border-radius: 18px; max-width: 1100px; width: 100%; max-height: 92vh; height: 760px; display: flex; flex-direction: column; box-shadow: 0 40px 80px rgba(0,0,0,0.32); overflow: hidden; }
@@ -5077,7 +5185,48 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     MISSION CONTROL — unified settings overlay
+     THE LOOPENTA WORKSPACE — full-screen Settings shell
+     ═══════════════════════════════════════════════════════════ -->
+<div id="lw-shell" class="lw-shell" role="dialog" aria-labelledby="lw-content-title" aria-modal="true">
+  <header class="lw-topbar">
+    <div class="lw-topbar-brand">
+      <div class="lw-topbar-brand-mark">L</div>
+      <span>Loopenta</span>
+    </div>
+    <div class="lw-topbar-crumb" id="lw-crumb">
+      <span>Settings</span>
+      <span class="lw-topbar-crumb-sep">›</span>
+      <span class="lw-topbar-crumb-current" id="lw-crumb-current">Profile</span>
+    </div>
+    <button class="lw-exit-btn" onclick="closeMC()" title="Return to the main app (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Exit to App
+    </button>
+  </header>
+  <div class="lw-body">
+    <nav class="lw-sidebar" aria-label="Settings sections">
+      <div class="lw-sb-label">Settings</div>
+      <div id="lw-groups">
+        <!-- Filled by renderLWGroups() — list of grouped items -->
+      </div>
+      <div class="lw-sb-spacer"></div>
+      <div class="lw-sb-search-row">
+        <input type="text" id="lw-search" class="lw-sb-search" placeholder="Search settings..." autocomplete="off" aria-label="Search settings" />
+      </div>
+      <div class="lw-sb-identity" id="lw-identity">
+        <!-- Filled by renderLWIdentity() -->
+      </div>
+    </nav>
+    <main class="lw-content" id="lw-content">
+      <div class="lw-content-inner" id="lw-content-inner">
+        <!-- Selected section content -->
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LEGACY Mission Control modal — kept for any deep-link refs
      ═══════════════════════════════════════════════════════════ -->
 <div class="mc-backdrop" id="mc-backdrop" onclick="if(event.target===this)closeMC()" role="dialog" aria-labelledby="mc-title" aria-modal="true">
   <div class="mc-modal">
@@ -10730,38 +10879,40 @@ function _mcRenderSidebar(query) {
 function _mcRenderContent(id) {
   var item = SETTINGS_CATALOG.find(function (x) { return x.id === id; });
   if (!item) {
-    return '<div class="mc-empty"><div class="mc-empty-icon">⬅️</div><div>Pick a setting from the left, or search above.</div></div>';
+    return '<div class="lw-empty"><div class="lw-empty-icon">⚙️</div><div class="lw-empty-msg">Pick a setting from the left, or search at the bottom.</div></div>';
   }
   if (!_mcUserMeetsRequirement(item.requires)) {
-    return '<div class="mc-empty"><div class="mc-empty-icon">🔒</div><div>You don\'t have access to this setting.</div></div>';
+    return '<div class="lw-empty"><div class="lw-empty-icon">🔒</div><div class="lw-empty-msg">You don\'t have access to this setting.</div></div>';
   }
-  // Header is the same for every kind.
   var head =
-    '<h1 class="mc-content-title">' + item.icon + ' ' + esc(item.title) + '</h1>' +
-    '<p class="mc-content-desc">' + esc(item.desc) + '</p>';
+    '<h1 class="lw-content-title" id="lw-content-title">' + item.icon + ' ' + esc(item.title) + '</h1>' +
+    '<p class="lw-content-desc">' + esc(item.desc) + '</p>';
 
   if (item.kind === 'inline') {
     return head + _mcInlineBody(item.id);
   }
   if (item.kind === 'admin-section') {
     return head + _mcDeepLinkCard(
-      'This opens the Admin area, scrolled to <strong>' + esc(item.title) + '</strong>.',
+      'Opens the <strong>Admin</strong> area on the <strong>' + esc(item.title) + '</strong> section.',
       function () { _mcGoAdmin(item.sect); }
     );
   }
   if (item.kind === 'sa-section') {
     return head + _mcDeepLinkCard(
-      'This opens the Super-Admin area, scrolled to <strong>' + esc(item.title) + '</strong>.',
+      'Opens the <strong>Super Admin</strong> area on the <strong>' + esc(item.title) + '</strong> section.',
       function () { _mcGoSuperAdmin(item.sect); }
     );
   }
-  return head + '<div class="mc-empty">No content registered for this setting.</div>';
+  return head + '<div class="lw-empty">No content registered for this setting.</div>';
 }
 
 function _mcDeepLinkCard(htmlMsg, openFn) {
-  var btnId = 'mc-open-' + Math.random().toString(36).slice(2, 8);
-  var card = '<div class="mc-help-card">' + htmlMsg + '</div>';
-  card += '<button class="mc-btn" id="' + btnId + '">Open →</button>';
+  var btnId = 'lw-open-' + Math.random().toString(36).slice(2, 8);
+  var card = '<div class="lw-help-card">' + htmlMsg + '</div>';
+  card += '<button class="lw-btn" id="' + btnId + '">';
+  card +=   '<span>Open this section</span>';
+  card +=   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  card += '</button>';
   // Defer wiring so the button exists in the DOM by the time we attach.
   setTimeout(function () {
     var el = document.getElementById(btnId);
@@ -10795,57 +10946,148 @@ function _mcGoSuperAdmin(tab) {
 
 function _mcSelect(id) {
   _mcCurrentId = id;
-  // Flip the active class without rebuilding the whole sidebar —
-  // saves a re-render + DOM diff on every click.
-  var sidebar = document.getElementById('mc-sidebar');
-  if (sidebar) {
-    var prev = sidebar.querySelector('.mc-item.active');
+  // Update sidebar active state without re-rendering the whole list.
+  var groups = document.getElementById('lw-groups');
+  if (groups) {
+    var prev = groups.querySelector('.lw-sb-item.active');
     if (prev) prev.classList.remove('active');
-    var next = sidebar.querySelector('[data-mc-id="' + id + '"]');
-    if (next) next.classList.add('active');
+    var next = groups.querySelector('[data-mc-id="' + id + '"]');
+    if (next) {
+      next.classList.add('active');
+      // Keep the active row visible if it's outside the scroll viewport.
+      if (next.scrollIntoView) next.scrollIntoView({ block: 'nearest' });
+    }
   }
-  var content = document.getElementById('mc-content');
-  if (content) content.innerHTML = _mcRenderContent(id);
-  // Wire any inline section's interactive bits.
+  var inner = document.getElementById('lw-content-inner');
+  if (inner) inner.innerHTML = _mcRenderContent(id);
+  // Update breadcrumb to show where the user is.
+  var crumb = document.getElementById('lw-crumb-current');
+  var item = SETTINGS_CATALOG.find(function (x) { return x.id === id; });
+  if (crumb && item) crumb.textContent = item.title;
+  // Scroll content area to top so the title is the first thing the
+  // user sees on every section switch.
+  var contentEl = document.getElementById('lw-content');
+  if (contentEl) contentEl.scrollTop = 0;
+  // Wire interactive bits for inline sections.
   _mcWireInline(id);
 }
 
+// Build the sidebar's grouped item list. Used both on first open
+// and as a re-render on search input.
+function _lwRenderGroups(query) {
+  var q = String(query || '').trim().toLowerCase();
+  var visible = SETTINGS_CATALOG.filter(function (item) {
+    if (!_mcUserMeetsRequirement(item.requires)) return false;
+    if (!q) return true;
+    var hay = (item.title + ' ' + item.desc + ' ' + item.id).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+  if (!visible.length) {
+    return '<div style="padding:20px 14px;color:rgba(255,255,255,0.55);font-size:13.5px;line-height:1.5">No settings match "<strong>' + esc(q) + '</strong>". Try a different word.</div>';
+  }
+  var byScope = {};
+  visible.forEach(function (it) { (byScope[it.scope] = byScope[it.scope] || []).push(it); });
+  var html = '';
+  ['you', 'team', 'org', 'platform'].forEach(function (scope) {
+    var items = byScope[scope] || [];
+    if (!items.length) return;
+    var label = SCOPE_LABELS[scope];
+    html += '<div class="lw-sb-group">';
+    html += '<div class="lw-sb-group-label">' + esc(label.label) + (label.locked ? '<span class="lw-sb-group-lock">🔒</span>' : '') + '</div>';
+    items.forEach(function (it) {
+      var active = it.id === _mcCurrentId ? ' active' : '';
+      html += '<button class="lw-sb-item' + active + '" data-mc-id="' + esc(it.id) + '" onclick="_mcSelect(\'' + esc(it.id) + '\')">';
+      html +=   '<span class="lw-sb-item-icon">' + it.icon + '</span>';
+      html +=   '<span class="lw-sb-item-body">';
+      html +=     '<span class="lw-sb-item-title">' + esc(it.title) + '</span>';
+      html +=     '<span class="lw-sb-item-desc">' + esc(it.desc) + '</span>';
+      html +=   '</span>';
+      html += '</button>';
+    });
+    html += '</div>';
+  });
+  return html;
+}
+
+function _lwRenderIdentity() {
+  if (!window.currentUser) return '';
+  var name = currentUser.name || currentUser.email || 'User';
+  var roleLabel = 'Member';
+  if (typeof isSuperAdmin === 'function' && isSuperAdmin()) roleLabel = 'Super Admin';
+  else if (typeof isTenantAdmin === 'function' && isTenantAdmin()) roleLabel = 'Admin';
+  else if (typeof isManager === 'function' && isManager()) roleLabel = 'Manager';
+  var initials = name.split(/\s+/).map(function (p) { return p[0]; }).slice(0, 2).join('').toUpperCase();
+  return '<div class="lw-sb-identity-avatar">' + esc(initials || '?') + '</div>' +
+         '<div class="lw-sb-identity-body">' +
+           '<div class="lw-sb-identity-name">' + esc(name) + '</div>' +
+           '<div class="lw-sb-identity-role">' + esc(roleLabel) + '</div>' +
+         '</div>';
+}
+
 function openMC(initialId) {
-  var bd = document.getElementById('mc-backdrop');
-  if (!bd) return;
-  // Default first visible item if no selection.
+  var shell = document.getElementById('lw-shell');
+  if (!shell) return;
+  // Default to first visible item if there's no prior selection.
   if (!_mcCurrentId) {
     var firstVisible = SETTINGS_CATALOG.find(function (it) { return _mcUserMeetsRequirement(it.requires); });
     _mcCurrentId = (initialId || (firstVisible && firstVisible.id) || 'profile');
   } else if (initialId) {
     _mcCurrentId = initialId;
   }
-  var sidebar = document.getElementById('mc-sidebar');
-  var content = document.getElementById('mc-content');
-  var search  = document.getElementById('mc-search');
-  if (search) search.value = _mcLastQuery || '';
-  if (sidebar) sidebar.innerHTML = _mcRenderSidebar(_mcLastQuery);
-  if (content) content.innerHTML = _mcRenderContent(_mcCurrentId);
-  bd.classList.add('open');
+  var groups   = document.getElementById('lw-groups');
+  var inner    = document.getElementById('lw-content-inner');
+  var search   = document.getElementById('lw-search');
+  var identity = document.getElementById('lw-identity');
+  var crumb    = document.getElementById('lw-crumb-current');
+  if (search)   search.value = _mcLastQuery || '';
+  if (groups)   groups.innerHTML = _lwRenderGroups(_mcLastQuery);
+  if (identity) identity.innerHTML = _lwRenderIdentity();
+  if (inner)    inner.innerHTML = _mcRenderContent(_mcCurrentId);
+  var item = SETTINGS_CATALOG.find(function (x) { return x.id === _mcCurrentId; });
+  if (crumb && item) crumb.textContent = item.title;
+  shell.classList.add('open');
   document.body.style.overflow = 'hidden';
-  setTimeout(function () { if (search) search.focus(); }, 30);
+  // Hide the app screens behind the shell so they don't paint
+  // through if there's any z-index conflict.
+  var hidden = [];
+  ['app-screen', 'admin-screen', 'superadmin-screen'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && el.style.display !== 'none') {
+      hidden.push({ id: id, prev: el.style.display });
+      el.dataset.lwHidden = '1';
+    }
+  });
+  shell._lwHidden = hidden;
   _mcWireInline(_mcCurrentId);
+  // Focus the active sidebar item for keyboard navigation; users
+  // who came via Cmd+K can then use Tab / arrows to navigate.
+  setTimeout(function () {
+    var active = groups && groups.querySelector('.lw-sb-item.active');
+    if (active) active.focus();
+  }, 30);
 }
 
 function closeMC() {
-  var bd = document.getElementById('mc-backdrop');
-  if (bd) bd.classList.remove('open');
+  var shell = document.getElementById('lw-shell');
+  if (shell) shell.classList.remove('open');
   document.body.style.overflow = '';
+  // Restore the app screen we were on before opening Settings.
+  if (shell && shell._lwHidden) {
+    shell._lwHidden.forEach(function (h) {
+      var el = document.getElementById(h.id);
+      if (el) delete el.dataset.lwHidden;
+    });
+    shell._lwHidden = null;
+  }
 }
 
-// Search input: re-render sidebar live, auto-select first match.
+// Search input: re-render the grouped sidebar live, auto-select
+// first match so the content pane stays meaningful.
 function _mcSearchHandler(e) {
   var q = e.target.value;
   _mcLastQuery = q;
-  var sidebar = document.getElementById('mc-sidebar');
-  if (sidebar) sidebar.innerHTML = _mcRenderSidebar(q);
-  // If the current selection is no longer in the filter, auto-jump
-  // to the first match so the right pane stays useful.
+  var groups = document.getElementById('lw-groups');
+  if (groups) groups.innerHTML = _lwRenderGroups(q);
   var qLower = q.trim().toLowerCase();
   if (qLower) {
     var hits = SETTINGS_CATALOG.filter(function (it) {
@@ -10860,21 +11102,35 @@ function _mcSearchHandler(e) {
 }
 
 function _mcKeydown(e) {
-  // Esc to close anywhere.
+  // Esc closes the Workspace (returns to the app).
   if (e.key === 'Escape') {
-    var bd = document.getElementById('mc-backdrop');
-    if (bd && bd.classList.contains('open')) { e.preventDefault(); closeMC(); }
+    var shell = document.getElementById('lw-shell');
+    if (shell && shell.classList.contains('open')) {
+      // Don't fight an open <input> the user is typing in.
+      if (e.target && e.target.id === 'lw-search') {
+        e.target.blur();
+        return;
+      }
+      e.preventDefault();
+      closeMC();
+    }
   }
-  // Cmd+K / Ctrl+K to open (and focus search).
+  // Cmd+K / Ctrl+K opens (or refocuses search when already open).
   if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
     e.preventDefault();
-    openMC();
+    var shell = document.getElementById('lw-shell');
+    if (shell && shell.classList.contains('open')) {
+      var s = document.getElementById('lw-search');
+      if (s) s.focus();
+    } else {
+      openMC();
+    }
   }
 }
 if (typeof document !== 'undefined') {
   document.addEventListener('keydown', _mcKeydown);
   document.addEventListener('DOMContentLoaded', function () {
-    var s = document.getElementById('mc-search');
+    var s = document.getElementById('lw-search');
     if (s) s.addEventListener('input', _mcSearchHandler);
   });
 }
@@ -10895,65 +11151,66 @@ function _mcInlineBody(id) {
 
 function _mcSectionProfile() {
   return ''
-    + '<div class="mc-help-card">Used on every flyer, email signature, and SMS you send. Required for state MLO licensing compliance.</div>'
-    + '<label class="mc-field"><span class="mc-label">Full name</span><input class="mc-input" id="mc-prof-name" placeholder="Jane Smith" /></label>'
-    + '<label class="mc-field"><span class="mc-label">NMLS ID</span><input class="mc-input" id="mc-prof-nmls" inputmode="numeric" placeholder="123456" /></label>'
-    + '<label class="mc-field"><span class="mc-label">Work phone</span><input class="mc-input" id="mc-prof-phone" placeholder="(555) 123-4567" /></label>'
-    + '<label class="mc-field"><span class="mc-label">Work email (shown on flyers)</span><input class="mc-input" id="mc-prof-email" type="email" placeholder="you@company.com" /></label>'
-    + '<label class="mc-field"><span class="mc-label">Headshot URL</span><input class="mc-input" id="mc-prof-photo" placeholder="https://…" /></label>'
-    + '<label class="mc-field"><span class="mc-label">Title</span><input class="mc-input" id="mc-prof-title" placeholder="Mortgage Loan Officer" /></label>'
+    + '<div class="lw-help-card">This identity appears on every flyer, email signature, and SMS you send. Required for state MLO licensing compliance.</div>'
+    + '<label class="lw-field"><span class="lw-label">Full name</span><input class="lw-input" id="mc-prof-name" placeholder="Jane Smith" /></label>'
+    + '<label class="lw-field"><span class="lw-label">NMLS ID</span><input class="lw-input" id="mc-prof-nmls" inputmode="numeric" placeholder="123456" /></label>'
+    + '<label class="lw-field"><span class="lw-label">Work phone</span><input class="lw-input" id="mc-prof-phone" placeholder="(555) 123-4567" /></label>'
+    + '<label class="lw-field"><span class="lw-label">Work email (shown on flyers)</span><input class="lw-input" id="mc-prof-email" type="email" placeholder="you@company.com" /></label>'
+    + '<label class="lw-field"><span class="lw-label">Headshot URL</span><input class="lw-input" id="mc-prof-photo" placeholder="https://example.com/headshot.jpg" /></label>'
+    + '<label class="lw-field"><span class="lw-label">Title</span><input class="lw-input" id="mc-prof-title" placeholder="Mortgage Loan Officer" /></label>'
     + '<div id="mc-prof-msg"></div>'
-    + '<button class="mc-btn" onclick="_mcSaveProfile()">Save profile</button>';
+    + '<button class="lw-btn" onclick="_mcSaveProfile()">Save profile</button>';
 }
 
 function _mcSectionSignin() {
   return ''
-    + '<div class="mc-help-card">Your password and second factor protect every record in your Loopenta account. Backup codes are your way back in if your authenticator is lost.</div>'
-    + '<h3 style="font-size:14px;font-weight:700;margin:0 0 10px">Change password</h3>'
-    + '<label class="mc-field"><span class="mc-label">Current password</span><input class="mc-input" id="mc-pw-current" type="password" autocomplete="current-password" /></label>'
-    + '<label class="mc-field"><span class="mc-label">New password (12+ chars, mixed case, number, symbol)</span><input class="mc-input" id="mc-pw-new" type="password" autocomplete="new-password" /></label>'
-    + '<label class="mc-field"><span class="mc-label">Confirm new password</span><input class="mc-input" id="mc-pw-confirm" type="password" autocomplete="new-password" /></label>'
+    + '<div class="lw-help-card">Your password and second factor protect every record in your Loopenta account. Backup codes are your way back in if you lose your authenticator.</div>'
+    + '<h3 class="lw-section-title">Change password</h3>'
+    + '<label class="lw-field"><span class="lw-label">Current password</span><input class="lw-input" id="mc-pw-current" type="password" autocomplete="current-password" /></label>'
+    + '<label class="lw-field"><span class="lw-label">New password</span><span class="lw-sub-label">12+ characters, mixed case, includes a number and a symbol.</span><input class="lw-input" id="mc-pw-new" type="password" autocomplete="new-password" /></label>'
+    + '<label class="lw-field"><span class="lw-label">Confirm new password</span><input class="lw-input" id="mc-pw-confirm" type="password" autocomplete="new-password" /></label>'
     + '<div id="mc-pw-msg"></div>'
-    + '<button class="mc-btn" onclick="_mcSavePassword()">Update password</button>'
-    + '<hr class="mc-divider" />'
-    + '<h3 style="font-size:14px;font-weight:700;margin:0 0 10px">Two-factor authentication</h3>'
-    + '<div id="mc-mfa-status" style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Loading…</div>'
+    + '<button class="lw-btn" onclick="_mcSavePassword()">Update password</button>'
+    + '<hr class="lw-divider" />'
+    + '<h3 class="lw-section-title">Two-factor authentication</h3>'
+    + '<div id="mc-mfa-status" style="font-size:15px;color:var(--text-secondary);margin-bottom:18px;line-height:1.5">Loading...</div>'
     + '<div id="mc-mfa-actions"></div>';
 }
 
 function _mcSectionNotifications() {
+  var rowStyle = 'display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface,#faf6ee);border:1px solid var(--border,#e8e3d6);border-radius:10px;margin-bottom:10px;font-size:15px;cursor:pointer;min-height:52px';
   return ''
-    + '<div class="mc-help-card">Choose what we email you about and how often. You can always change these later.</div>'
-    + '<label class="mc-field"><span class="mc-label">Realtor inactivity alert threshold</span>'
-    +   '<select class="mc-input" id="mc-notif-threshold"><option value="7">7 days</option><option value="14">14 days</option><option value="21" selected>21 days</option><option value="30">30 days</option></select>'
+    + '<div class="lw-help-card">Choose what we email you about and how often. You can always change these later.</div>'
+    + '<label class="lw-field"><span class="lw-label">Realtor inactivity alert threshold</span>'
+    +   '<select class="lw-input" id="mc-notif-threshold"><option value="7">7 days</option><option value="14">14 days</option><option value="21" selected>21 days</option><option value="30">30 days</option></select>'
     + '</label>'
-    + '<div class="mc-field"><span class="mc-label">What to email me</span>'
-    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-realtor" checked /> Realtor goes quiet</label>'
-    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-oyz" checked /> Open house tomorrow</label>'
-    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-followup" checked /> Follow-up due</label>'
-    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-weekly" checked /> Weekly performance summary</label>'
-    + '</div>'
+    + '<h3 class="lw-section-title" style="margin-top:24px;font-size:16px">What to email me</h3>'
+    + '<label style="' + rowStyle + '"><input type="checkbox" id="mc-pref-realtor" checked style="width:20px;height:20px;flex-shrink:0" /> <span>Realtor goes quiet</span></label>'
+    + '<label style="' + rowStyle + '"><input type="checkbox" id="mc-pref-oyz" checked style="width:20px;height:20px;flex-shrink:0" /> <span>Open house tomorrow</span></label>'
+    + '<label style="' + rowStyle + '"><input type="checkbox" id="mc-pref-followup" checked style="width:20px;height:20px;flex-shrink:0" /> <span>Follow-up due</span></label>'
+    + '<label style="' + rowStyle + '"><input type="checkbox" id="mc-pref-weekly" checked style="width:20px;height:20px;flex-shrink:0" /> <span>Weekly performance summary</span></label>'
     + '<div id="mc-notif-msg"></div>'
-    + '<button class="mc-btn" onclick="_mcSaveNotifs()">Save preferences</button>';
+    + '<button class="lw-btn" style="margin-top:16px" onclick="_mcSaveNotifs()">Save preferences</button>';
 }
 
 function _mcSectionDisplay() {
   return ''
-    + '<div class="mc-help-card">Visual preferences. These are saved per-account, so they follow you across devices.</div>'
-    + '<label class="mc-field"><span class="mc-label">Auto-logout after inactivity</span>'
-    +   '<select class="mc-input" id="mc-session-timeout"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 hour</option><option value="240">4 hours</option></select>'
+    + '<div class="lw-help-card">Visual preferences. These are saved per-account and follow you across devices.</div>'
+    + '<label class="lw-field"><span class="lw-label">Auto-logout after inactivity</span>'
+    +   '<span class="lw-sub-label">For your safety. You\'ll be signed out automatically after this much idle time.</span>'
+    +   '<select class="lw-input" id="mc-session-timeout"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">1 hour</option><option value="240">4 hours</option></select>'
     + '</label>'
     + '<div id="mc-display-msg"></div>'
-    + '<button class="mc-btn" onclick="_mcSaveDisplay()">Save</button>';
+    + '<button class="lw-btn" onclick="_mcSaveDisplay()">Save</button>';
 }
 
 function _mcSectionResetMfa() {
   return ''
-    + '<div class="mc-help-card" style="background:#fef2f2;border-color:#fecaca;color:#7f1d1d"><strong>⚠️ High-trust operation.</strong> Verify the user\'s identity out of band BEFORE running this. Call them on a known number from their /users record and confirm DOB / last 4 of SSN or something not in their record. Bypassing this is the single highest-risk path in the platform.</div>'
-    + '<label class="mc-field"><span class="mc-label">Target Firebase UID</span><input class="mc-input" id="mc-op-uid" placeholder="lookup in Firebase Console → Authentication → Users" /></label>'
-    + '<label class="mc-field"><span class="mc-label">Reason for audit log (≥10 chars, will be permanently recorded)</span><textarea class="mc-input" id="mc-op-reason" rows="3" placeholder="e.g. user lost phone, identity-verified via NMLS-on-file phone call 2026-MM-DD"></textarea></label>'
+    + '<div class="lw-help-card" style="background:#fef2f2;border-color:#fecaca;color:#7f1d1d"><strong>⚠️ High-trust operation.</strong> Verify the user\'s identity out of band BEFORE running this. Call them on a known number from their <code>/users</code> record and confirm DOB / last 4 of SSN or something not in their record. Bypassing this verification is the single highest-risk path in the platform.</div>'
+    + '<label class="lw-field"><span class="lw-label">Target Firebase UID</span><span class="lw-sub-label">Look it up in Firebase Console → Authentication → Users.</span><input class="lw-input" id="mc-op-uid" placeholder="abc123XYZ..." /></label>'
+    + '<label class="lw-field"><span class="lw-label">Reason for audit log</span><span class="lw-sub-label">Minimum 10 characters. Permanently recorded.</span><textarea class="lw-input" id="mc-op-reason" rows="3" placeholder="e.g. user lost phone, identity-verified via NMLS-on-file phone call 2026-MM-DD"></textarea></label>'
     + '<div id="mc-op-msg"></div>'
-    + '<button class="mc-btn mc-btn-danger" onclick="_mcOpResetMfa()">Reset this user\'s MFA</button>';
+    + '<button class="lw-btn lw-btn-danger" onclick="_mcOpResetMfa()">Reset this user\'s MFA</button>';
 }
 
 // Wire interactive bits after a section renders.
@@ -10996,10 +11253,10 @@ async function _mcSaveProfile() {
     currentUser.profile = profile;
     currentUser.nmls = profile.nmls;
     currentUser.phone = profile.phone;
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Profile saved.</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-ok">✓ Profile saved.</div>';
     if (typeof _paintComplianceFooter === 'function') { try { _paintComplianceFooter(); } catch(e){} }
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">Save failed: ' + esc(e.message || e) + '</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">Save failed: ' + esc(e.message || e) + '</div>';
   }
 }
 
@@ -11017,26 +11274,26 @@ async function _mcLoadSignin() {
     }
     if (res.data.enrolled) {
       var hr = res.data.verifiedAt ? Math.floor((Date.now()/1000 - res.data.verifiedAt)/3600) : null;
-      var verNote = hr !== null ? (' · verified ' + (hr < 1 ? '<1h' : hr + 'h') + ' ago') : '';
+      var verNote = hr !== null ? (' &middot; verified ' + (hr < 1 ? 'less than 1 hour' : hr + ' hours') + ' ago') : '';
       var remaining = res.data.backupCodesRemaining;
       var bwarn = '';
-      if (remaining === 0) bwarn = '<div class="mc-msg mc-msg-err">⚠️ 0 backup codes left — regenerate now.</div>';
-      else if (remaining <= 3) bwarn = '<div class="mc-msg mc-msg-warn">Only ' + remaining + ' backup code(s) left. Regenerate soon.</div>';
-      else bwarn = '<div style="font-size:12px;color:var(--text-muted);margin:6px 0">' + remaining + ' backup recovery codes remaining.</div>';
-      statusEl.innerHTML = '<strong style="color:#047857">✅ Enrolled</strong>' + verNote;
+      if (remaining === 0) bwarn = '<div class="lw-msg lw-msg-err"><strong>0 backup codes left.</strong> Regenerate now — without them, losing your authenticator means an admin must wipe your enrollment.</div>';
+      else if (remaining <= 3) bwarn = '<div class="lw-msg lw-msg-warn">Only ' + remaining + ' backup code(s) left. Regenerate soon.</div>';
+      else bwarn = '<div style="font-size:13px;color:var(--text-secondary);margin:8px 0">' + remaining + ' backup recovery codes remaining.</div>';
+      statusEl.innerHTML = '<strong style="color:#047857;font-size:16px">&#10003; Enrolled</strong>' + verNote;
       actionsEl.innerHTML = bwarn +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
-          '<button class="mc-btn mc-btn-ghost" onclick="_mfaShowExistingQr()">Show QR (re-scan)</button>' +
-          '<button class="mc-btn mc-btn-ghost" onclick="_mfaRegenerateBackup()">Regenerate backup codes</button>' +
-          '<button class="mc-btn mc-btn-danger" onclick="_mfaUnenroll()">Remove enrollment</button>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">' +
+          '<button class="lw-btn lw-btn-ghost" onclick="_mfaShowExistingQr()">Show QR (re-scan)</button>' +
+          '<button class="lw-btn lw-btn-ghost" onclick="_mfaRegenerateBackup()">Regenerate backup codes</button>' +
+          '<button class="lw-btn lw-btn-danger" onclick="_mfaUnenroll()">Remove enrollment</button>' +
         '</div>';
     } else if (res.data.locked) {
       var until = new Date(res.data.lockUntil * 1000);
-      statusEl.innerHTML = '<span style="color:#9a4a3a">⛔ Locked until ' + esc(until.toLocaleTimeString()) + '</span>';
+      statusEl.innerHTML = '<span style="color:#9a4a3a;font-size:16px">&#9940; Locked until ' + esc(until.toLocaleTimeString()) + '</span>';
       actionsEl.innerHTML = '';
     } else {
-      statusEl.innerHTML = '<span style="color:var(--text-secondary)">Not enrolled. Strongly recommended.</span>';
-      actionsEl.innerHTML = '<button class="mc-btn" onclick="_mfaStartEnrollment()">Enroll authenticator app</button>';
+      statusEl.innerHTML = '<span style="color:var(--text-secondary)">Not enrolled. <strong>Strongly recommended</strong> for super-admin accounts.</span>';
+      actionsEl.innerHTML = '<button class="lw-btn" onclick="_mfaStartEnrollment()">Enroll authenticator app</button>';
     }
   } catch (e) {
     statusEl.textContent = 'Error: ' + (e.message || e);
@@ -11048,23 +11305,23 @@ async function _mcSavePassword() {
   var cur   = document.getElementById('mc-pw-current').value;
   var nw    = document.getElementById('mc-pw-new').value;
   var conf  = document.getElementById('mc-pw-confirm').value;
-  if (!cur || !nw || !conf) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">All three fields required.</div>'; return; }
-  if (nw !== conf) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">New passwords don\'t match.</div>'; return; }
+  if (!cur || !nw || !conf) { if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">All three fields required.</div>'; return; }
+  if (nw !== conf) { if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">New passwords don\'t match.</div>'; return; }
   if (typeof _validatePasswordPolicy === 'function') {
     var err = _validatePasswordPolicy(nw, { email: currentUser && currentUser.email });
-    if (err) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(err) + '</div>'; return; }
+    if (err) { if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">' + esc(err) + '</div>'; return; }
   }
   try {
     var cred = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, cur);
     await auth.currentUser.reauthenticateWithCredential(cred);
     await auth.currentUser.updatePassword(nw);
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Password updated.</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-ok">✓ Password updated.</div>';
     document.getElementById('mc-pw-current').value = '';
     document.getElementById('mc-pw-new').value = '';
     document.getElementById('mc-pw-confirm').value = '';
   } catch (e) {
     var msg = (e && e.code === 'auth/wrong-password') ? 'Current password is incorrect.' : (e.message || e);
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(msg) + '</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">' + esc(msg) + '</div>';
   }
 }
 
@@ -11094,9 +11351,9 @@ async function _mcSaveNotifs() {
       notifWeekly:   document.getElementById('mc-pref-weekly').checked,
     };
     await db.collection('users').doc(currentUser.id).update({ preferences: prefs });
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Preferences saved.</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-ok">✓ Preferences saved.</div>';
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(e.message || e) + '</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">' + esc(e.message || e) + '</div>';
   }
 }
 
@@ -11114,9 +11371,9 @@ function _mcSaveDisplay() {
   var t = document.getElementById('mc-session-timeout').value;
   try {
     localStorage.setItem('sessionTimeoutMin', t);
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Saved. Reload to take effect.</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-ok">✓ Saved. Reload to take effect.</div>';
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(e.message || e) + '</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">' + esc(e.message || e) + '</div>';
   }
 }
 
@@ -11125,9 +11382,9 @@ async function _mcOpResetMfa() {
   var msgEl  = document.getElementById('mc-op-msg');
   var uid    = (document.getElementById('mc-op-uid').value || '').trim();
   var reason = (document.getElementById('mc-op-reason').value || '').trim();
-  if (!uid) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">UID is required.</div>'; return; }
+  if (!uid) { if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">UID is required.</div>'; return; }
   if (reason.length < 10) {
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">Reason must be at least 10 characters — this is permanently recorded in the audit log.</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">Reason must be at least 10 characters — this is permanently recorded in the audit log.</div>';
     return;
   }
   var pw = sessionStorage.getItem('rc_admin_pw') || window.prompt('Super-Admin password:');
@@ -11142,14 +11399,14 @@ async function _mcOpResetMfa() {
     });
     var data = await resp.json();
     if (!resp.ok) {
-      if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(data.error || ('HTTP ' + resp.status)) + (data.detail ? ' — ' + esc(data.detail) : '') + '</div>';
+      if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">' + esc(data.error || ('HTTP ' + resp.status)) + (data.detail ? ' — ' + esc(data.detail) : '') + '</div>';
       return;
     }
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ MFA cleared. Keys wiped: ' + esc(String(data.keysWiped)) + '. Claims cleared: ' + esc(String(data.claimsCleared)) + '. ' + esc(data.note || '') + '</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-ok">✓ MFA cleared. Keys wiped: ' + esc(String(data.keysWiped)) + '. Claims cleared: ' + esc(String(data.claimsCleared)) + '. ' + esc(data.note || '') + '</div>';
     document.getElementById('mc-op-uid').value = '';
     document.getElementById('mc-op-reason').value = '';
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(e.message || e) + '</div>';
+    if (msgEl) msgEl.innerHTML = '<div class="lw-msg lw-msg-err">' + esc(e.message || e) + '</div>';
   }
 }
 
