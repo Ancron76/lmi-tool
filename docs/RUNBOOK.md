@@ -249,6 +249,53 @@ have failed — check `wrangler tail` for `[cron-lock] KV write failed`.
 
 ---
 
+## When you're locked out of MFA
+
+**Symptom:** You enrolled an authenticator, then lost your phone /
+authenticator app data, OR a customer says the same.
+
+The custom TOTP MFA stores secrets in worker KV (key
+`mfa_totp_<uid>`). Five wrong codes in a row trips a 30-minute
+lockout (KV key `mfa_lock_<uid>`).
+
+**Clear a personal lockout (you're the SA):**
+
+```bash
+# From PowerShell, with wrangler authenticated:
+npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_lock_<YOUR_FIREBASE_UID>"
+```
+
+Your UID is visible in the Firebase Console → Authentication →
+Users → click your row.
+
+**Force-unenroll your own MFA (last-resort recovery):**
+
+```bash
+# Wipe the secret + the claims:
+npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_totp_<UID>"
+# Then clear the custom claim from Firebase Auth so the sign-in
+# path stops prompting for a code. Easiest path: Firebase Console →
+# Authentication → Users → click row → "Reset custom claims" via
+# the gcloud CLI:
+gcloud auth login
+gcloud --project=lmi-prospect-finder \
+  iam service-accounts get-iam-policy <svc-acct-email>
+# Or via the Admin SDK in a one-off script using the
+# FIREBASE_SERVICE_ACCOUNT secret to clear customAttributes.
+```
+
+After this you can sign in with just password (no MFA). Re-enroll
+immediately from Settings → Security.
+
+**Help a customer clear their lockout:**
+
+Treat as identity verification first — call them on a known number,
+verify date of birth / last 4 of SSN / something not stored in
+their /users record. Then run the above wipe with their UID. Tell
+them to re-enroll from Settings → Security on next sign-in.
+
+---
+
 ## When RentCast / CFPB / Census APIs are down
 
 **Symptom:** LMI search returns 502 with `reason: cfpb_all_years_failed`
