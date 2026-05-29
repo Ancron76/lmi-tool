@@ -6297,13 +6297,39 @@ async function tryLogin() {
     var errEl = document.getElementById('login-error');
     var code = fbErr && fbErr.code || '';
 
-    // MFA challenge — user has TOTP enrolled. Prompt for the 6-digit
-    // code and complete the sign-in with it.
-    if (code === 'auth/multi-factor-auth-required' && fbErr.resolver) {
+    // MFA challenge — user has TOTP enrolled. Compat's error.resolver
+    // belongs to compat's module graph and only accepts compat
+    // assertions, which compat cannot generate (no TOTP class). So we
+    // re-do the sign-in via the modular SDK to get a modular resolver
+    // and pair it with a modular TOTP assertion. The user typed their
+    // password once; we still have it in `pass` so this is invisible
+    // to them.
+    if (code === 'auth/multi-factor-auth-required') {
       try {
-        await _handleMfaChallenge(fbErr.resolver);
+        var mod = await _loadMfaModular();
+        try {
+          await mod.signInWithEmailAndPassword(mod.modAuth, emailInput, pass);
+          // If this somehow succeeds (factor was unenrolled between
+          // requests), fall through to success.
+        } catch (modErr) {
+          if (!modErr || modErr.code !== 'auth/multi-factor-auth-required') {
+            throw modErr;
+          }
+          var modResolver = mod.getMultiFactorResolver(mod.modAuth, modErr);
+          await _handleMfaChallenge(modResolver);
+        }
+        // Modular sign-in succeeded. Compat's IndexedDB listener will
+        // pick up the same user shortly; wait briefly so downstream
+        // code that reads `auth.currentUser` sees it.
+        await new Promise(function (resolve) {
+          if (auth.currentUser) return resolve();
+          var unsub = auth.onAuthStateChanged(function (u) {
+            if (u) { unsub(); resolve(); }
+          });
+          setTimeout(resolve, 3000);
+        });
         btn.textContent = 'Sign In';
-        await _handleFirebaseAuthSession(auth.currentUser);
+        await _handleFirebaseAuthSession(auth.currentUser || mod.modAuth.currentUser);
         return;
       } catch (mfaErr) {
         var mfaMsg = (mfaErr && mfaErr.code === 'auth/invalid-verification-code')
@@ -14003,31 +14029,58 @@ async function secShipAuditLogCoverage() {
 
 // Firebase's COMPAT bundle never exposed TotpMultiFactorGenerator —
 // TOTP MFA only lives in the MODULAR auth SDK. The compat + modular
-// SDKs are designed to coexist on the same default app, so we
-// dynamic-import the modular bundle the first time MFA is needed,
-// cache the promise, and share state with compat. Pinned to the same
-// SDK version as the compat scripts in <head> to avoid drift.
+// bundles live in separate module graphs, so we must:
+//   1. Dynamic-import firebase-app.js (modular) and call its
+//      initializeApp(config) so the modular graph has a default app.
+//   2. Dynamic-import firebase-auth.js (modular) and call getAuth(app).
+//   3. Wait for onAuthStateChanged so IndexedDB rehydrates the user
+//      from the existing compat session.
+// Pinned to the same SDK version as the compat scripts in <head>.
 var _mfaModularPromise = null;
 async function _loadMfaModular() {
   if (_mfaModularPromise) return _mfaModularPromise;
-  _mfaModularPromise = import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js')
-    .catch(function (e) {
-      _mfaModularPromise = null;  // allow retry
-      throw new Error('Could not load Firebase modular auth SDK: ' + (e && e.message || e));
+  _mfaModularPromise = (async function () {
+    // ESM dynamic imports must hit gstatic which is allowed by CSP.
+    var appMod = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    var authMod = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    // Initialize a default app in the modular graph with the SAME
+    // config the compat SDK used. If something already initialized
+    // it (subsequent _loadMfaModular calls won't hit this path), grab
+    // the existing one via getApp().
+    var app;
+    try {
+      app = appMod.initializeApp(firebaseConfig);
+    } catch (e) {
+      app = appMod.getApp();
+    }
+    var modAuth = authMod.getAuth(app);
+    // Wait for the auth state to hydrate from IndexedDB — both compat
+    // and modular share the IndexedDB key `firebase:authUser:<apiKey>:[DEFAULT]`,
+    // so the user signed in via compat appears here once hydration completes.
+    await new Promise(function (resolve) {
+      var unsub = authMod.onAuthStateChanged(modAuth, function () {
+        unsub();
+        resolve();
+      });
+      // Safety: if onAuthStateChanged never fires (network glitch on
+      // IndexedDB), don't deadlock.
+      setTimeout(resolve, 4000);
     });
+    return Object.assign({}, authMod, { modAuth: modAuth, app: app });
+  })().catch(function (e) {
+    _mfaModularPromise = null;  // allow retry
+    throw new Error('Could not load Firebase modular auth SDK: ' + (e && e.message || e));
+  });
   return _mfaModularPromise;
 }
 
 // Get the modular auth user for the currently signed-in compat user.
-// Both wrap the same default Firebase app, so getAuth().currentUser
-// returns the same identity that compat's auth.currentUser shows.
 async function _mfaModularUser() {
   var mod = await _loadMfaModular();
-  var modAuth = mod.getAuth();
-  if (!modAuth.currentUser) {
+  if (!mod.modAuth.currentUser) {
     throw new Error('Sign in first.');
   }
-  return { mod: mod, modAuth: modAuth, user: modAuth.currentUser };
+  return { mod: mod, modAuth: mod.modAuth, user: mod.modAuth.currentUser };
 }
 
 // Sign-in-time MFA challenge handler. Called when
