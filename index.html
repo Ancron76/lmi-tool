@@ -4364,12 +4364,11 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         <div class="sec-phase-heading">🔒 Recommended next</div>
 
         <div class="sec-card">
-          <div class="sec-card-head"><div class="sec-card-title">Phase 2B — TOTP Multi-factor Authentication</div><span class="sec-badge blocked" id="sec-phase2b-badge">Requires Blaze plan</span></div>
-          <div class="sec-card-desc">Mandatory 6-digit code from an authenticator app on every login. TOTP itself is free — Firebase charges nothing per verification — but enabling the MFA provider requires upgrading the Firebase project from Spark to Blaze. Budget alert of $25/mo is recommended; TOTP keeps you inside the free quota.</div>
+          <div class="sec-card-head"><div class="sec-card-title">Phase 2B — TOTP Multi-factor Authentication</div><span class="sec-badge pending" id="sec-phase2b-badge">Free on Spark up to 3,000 MAU</span></div>
+          <div class="sec-card-desc">Mandatory 6-digit code from an authenticator app on every login. Firebase Auth's Identity Platform includes TOTP MFA in the no-cost tier up to 3,000 monthly active users; above that it's $0.005/MAU. No plan upgrade needed at our current scale. After enabling the provider in the Firebase console, each user enrolls from their own Settings → Security page.</div>
           <div class="sec-card-actions">
-            <a href="https://console.firebase.google.com/project/lmi-prospect-finder/usage/details" target="_blank" rel="noopener" class="sec-btn sec-btn-primary" style="text-decoration:none;display:inline-block">1. Upgrade to Blaze →</a>
-            <a href="https://console.firebase.google.com/project/lmi-prospect-finder/authentication/providers" target="_blank" rel="noopener" class="sec-btn sec-btn-secondary" style="text-decoration:none;display:inline-block">2. Enable TOTP provider →</a>
-            <button class="sec-btn sec-btn-secondary" onclick="secMarkMfaEnabled()">3. I've enabled it — ship client UI</button>
+            <a href="https://console.firebase.google.com/project/lmi-prospect-finder/authentication/providers" target="_blank" rel="noopener" class="sec-btn sec-btn-primary" style="text-decoration:none;display:inline-block">1. Enable TOTP provider →</a>
+            <button class="sec-btn sec-btn-secondary" onclick="secMarkMfaEnabled()">2. I've enabled it — mark complete</button>
           </div>
           <div class="sec-status-log" id="sec-phase2b-log"></div>
         </div>
@@ -4411,7 +4410,7 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         </div>
 
         <div class="sec-card">
-          <div class="sec-card-head"><div class="sec-card-title">Phase 8 — MFA-gated Firestore rules</div><span class="sec-badge blocked" id="sec-phase8-badge">Blocked: needs Phase 2B</span></div>
+          <div class="sec-card-head"><div class="sec-card-title">Phase 8 — MFA-gated Firestore rules</div><span class="sec-badge pending" id="sec-phase8-badge">Waiting on all users enrolled</span></div>
           <div class="sec-card-desc">Every sensitive Firestore read/write requires the caller's ID token to carry a <code>firebase.sign_in_second_factor</code> claim. This is the final lockdown — do not deploy until every user has enrolled an authenticator app.</div>
           <div class="sec-card-actions">
             <button class="sec-btn sec-btn-primary" onclick="secDeployPhase8Rules()" disabled id="sec-phase8-btn">🏁 Deploy final rules</button>

@@ -378,6 +378,19 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ================ PLATFORM SETTINGS (super-admin only) ================
+    // Holds the Security Posture rollout flags read/written by the
+    // Super Admin → Security page (e.g. doc id = 'security' carries
+    // {phase1Deployed, phase2bDeployed, ...} flip-flags). Not customer
+    // data — it's the operator dashboard's own state. SA-only across
+    // the board because tenant admins shouldn't see the platform-wide
+    // posture, let alone flip its flags.
+    match /platformSettings/{docId} {
+      allow get, list: if isSuperAdmin();
+      allow create, update: if isSuperAdmin();
+      allow delete: if false;
+    }
+
     // (email_log, scorecardSnapshots, craReports moved into the
     // tenant-isolated block below. Removing the old looser duplicate
     // match blocks prevents them from OR-merging with the strict
