@@ -135,13 +135,13 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
    operators can tell at a glance which context they're in. */
 .apanel { display: flex; min-height: calc(100vh - 0px); background: var(--body-bg, #f2ede4); }
 .apanel-sidebar {
-  width: 232px;
+  width: 280px;  /* was 232 — extra room for new identity card + larger fonts */
   flex-shrink: 0;
   background: var(--brand-primary, #1c1812);
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 18px 10px 14px;
+  padding: 22px 14px 18px;  /* was 18×10×14 */
   box-sizing: border-box;
   min-height: calc(100vh - 56px);
   position: sticky;
@@ -150,30 +150,42 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 }
 .apanel-sidebar.is-admin { background: linear-gradient(180deg,#0d4f4a 0%, #0b3f3c 100%); }
 .apanel-sidebar.is-super { background: linear-gradient(180deg,#4a1d1d 0%, #2a0f0f 100%); }
-.apanel-sb-title { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.5); letter-spacing: 1.2px; text-transform: uppercase; padding: 0 10px 10px; }
-.apanel-sb-sub { font-size: 11px; color: rgba(255,255,255,0.35); padding: 0 10px 14px; line-height: 1.4; }
-.apanel-nav { display: flex; flex-direction: column; gap: 1px; }
+.apanel-sb-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: white; padding: 0 12px 6px; letter-spacing: -0.01em; }
+.apanel-sb-sub { font-size: 13px; color: rgba(255,255,255,0.6); padding: 0 12px 18px; line-height: 1.5; }
+.apanel-sb-exit { display: inline-flex; align-items: center; gap: 8px; margin: 0 8px 18px; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.85); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background 0.12s; }
+.apanel-sb-exit:hover { background: rgba(255,255,255,0.14); color: white; }
+.apanel-sb-exit:focus-visible { outline: 2px solid #f5c36a; outline-offset: 2px; }
+.apanel-nav { display: flex; flex-direction: column; gap: 2px; }
 .apanel-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 14px;  /* was 10×12 — ~52px tall */
   background: none;
-  border: none;
-  color: rgba(255,255,255,0.72);
-  font-size: 13.5px;
+  border: 2px solid transparent;
+  color: rgba(255,255,255,0.78);
+  font-size: 15px;  /* was 13.5 */
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  border-radius: 7px;
+  border-radius: 8px;
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.12s, color 0.12s;
+  min-height: 48px;
 }
 .apanel-nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.apanel-nav-item:focus-visible { outline: none; border-color: #f5c36a; }
 .apanel-nav-item.active { background: rgba(196,148,58,0.22); color: #f5c36a; font-weight: 600; }
-.apanel-nav-icon { font-size: 15px; width: 22px; text-align: center; flex-shrink: 0; }
-.apanel-nav-section { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1px; padding: 16px 10px 6px; }
-.apanel-sb-footer { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 11px; color: rgba(255,255,255,0.4); }
+.apanel-nav-icon { font-size: 17px; width: 24px; text-align: center; flex-shrink: 0; }
+.apanel-nav-section { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1.2px; padding: 22px 14px 8px; }
+.apanel-sb-footer { margin-top: auto; padding: 14px 12px 4px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 12px; color: rgba(255,255,255,0.5); }
+/* Identity card at the bottom of admin / SA sidebars — matches
+   the new Workspace pattern so the layouts feel like one product. */
+.apanel-sb-identity { margin-top: auto; padding: 12px; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border-radius: 8px; }
+.apanel-sb-identity-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(140deg,#c4943a,#b07030); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; flex-shrink: 0; }
+.apanel-sb-identity-body { flex: 1; min-width: 0; }
+.apanel-sb-identity-name { font-size: 13.5px; font-weight: 600; color: white; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apanel-sb-identity-role { font-size: 11.5px; color: rgba(255,255,255,0.55); margin-top: 2px; }
 .apanel-content {
   flex: 1;
   min-width: 0;
@@ -4078,29 +4090,32 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
   </div>
   <div class="apanel">
     <aside class="apanel-sidebar is-admin">
-      <div class="apanel-sb-title">⚙️ Admin</div>
-      <div class="apanel-sb-sub">Manage users, branding, billing, and operations for your organization.</div>
-      <div class="apanel-nav" style="margin-bottom:8px">
-        <button class="apanel-nav-item" onclick="_goHome()"><span class="apanel-nav-icon">🏠</span> Home</button>
-      </div>
-      <div class="apanel-nav-section">People</div>
+      <div class="apanel-sb-title">Admin</div>
+      <div class="apanel-sb-sub">Manage your team, your operations, and how your organization shows up.</div>
+      <button class="apanel-sb-exit" onclick="_goHome()" title="Return to the main app">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to App
+      </button>
+      <div class="apanel-nav-section">Your Team</div>
       <div class="apanel-nav">
-        <button class="apanel-nav-item active" id="adm-nav-users" onclick="admShowSection('users')"><span class="apanel-nav-icon">👥</span> Users</button>
-        <button class="apanel-nav-item" id="adm-nav-prospects" onclick="admShowSection('prospects')"><span class="apanel-nav-icon">📌</span> Saved Prospects</button>
+        <button class="apanel-nav-item active" id="adm-nav-users" onclick="admShowSection('users')"><span class="apanel-nav-icon">👥</span> Team Members</button>
+        <button class="apanel-nav-item" id="adm-nav-pipeline" onclick="admShowSection('pipeline')"><span class="apanel-nav-icon">📊</span> Team Pipeline</button>
         <button class="apanel-nav-item" id="adm-nav-activity" onclick="admShowSection('activity')"><span class="apanel-nav-icon">📋</span> Activity Log</button>
       </div>
       <div class="apanel-nav-section">Operations</div>
       <div class="apanel-nav">
-        <button class="apanel-nav-item" id="adm-nav-pipeline" onclick="admShowSection('pipeline')"><span class="apanel-nav-icon">📊</span> Team Pipeline</button>
+        <button class="apanel-nav-item" id="adm-nav-prospects" onclick="admShowSection('prospects')"><span class="apanel-nav-icon">📌</span> Saved Prospects</button>
         <button class="apanel-nav-item" id="adm-nav-comms" onclick="admShowSection('comms')"><span class="apanel-nav-icon">💬</span> Communications</button>
-        <button class="apanel-nav-item" id="adm-nav-billing" onclick="admShowSection('billing')"><span class="apanel-nav-icon">💳</span> Billing</button>
       </div>
-      <div class="apanel-nav-section">Configuration</div>
+      <div class="apanel-nav-section">Organization</div>
       <div class="apanel-nav">
         <button class="apanel-nav-item" id="adm-nav-branding" onclick="admShowSection('branding')"><span class="apanel-nav-icon">🎨</span> Branding</button>
-        <button class="apanel-nav-item" id="adm-nav-platform" onclick="admShowSection('platform')"><span class="apanel-nav-icon">⚙️</span> Platform Settings</button>
+        <button class="apanel-nav-item" id="adm-nav-billing" onclick="admShowSection('billing')"><span class="apanel-nav-icon">💳</span> Plan &amp; Billing</button>
+        <button class="apanel-nav-item" id="adm-nav-platform" onclick="admShowSection('platform')"><span class="apanel-nav-icon">⚙️</span> Org Configuration</button>
       </div>
-      <div class="apanel-sb-footer">Signed in as <span id="adm-sidebar-user">—</span></div>
+      <div class="apanel-sb-identity" id="adm-sidebar-identity">
+        <!-- Filled by _paintApanelIdentity('adm') -->
+      </div>
     </aside>
     <div class="apanel-content">
     <div class="admin-main" style="max-width:none;padding:0;margin:0">
@@ -4440,29 +4455,32 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
   </div>
   <div class="apanel">
     <aside class="apanel-sidebar is-super">
-      <div class="apanel-sb-title">⚡ Super Admin</div>
+      <div class="apanel-sb-title">Super Admin</div>
       <div class="apanel-sb-sub">Platform-wide controls across every tenant.</div>
-      <div class="apanel-nav" style="margin-bottom:8px">
-        <button class="apanel-nav-item" onclick="_goHome()"><span class="apanel-nav-icon">🏠</span> Home</button>
-      </div>
-      <div class="apanel-nav-section">Platform</div>
+      <button class="apanel-sb-exit" onclick="_goHome()" title="Return to the main app">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to App
+      </button>
+      <div class="apanel-nav-section">Tenants</div>
       <div class="apanel-nav">
         <button class="apanel-nav-item active" id="sa-tab-orgs" onclick="saShowTab('orgs')"><span class="apanel-nav-icon">🏢</span> Organizations</button>
         <button class="apanel-nav-item" id="sa-tab-users" onclick="saShowTab('users')"><span class="apanel-nav-icon">👥</span> All Users</button>
         <button class="apanel-nav-item" id="sa-tab-billing" onclick="saShowTab('billing')"><span class="apanel-nav-icon">💳</span> Billing Overview</button>
-        <button class="apanel-nav-item" id="sa-tab-features" onclick="saShowTab('features')"><span class="apanel-nav-icon">🧩</span> Feature Matrix</button>
       </div>
-      <div class="apanel-nav-section">Security &amp; Ops</div>
+      <div class="apanel-nav-section">Platform Health</div>
       <div class="apanel-nav">
-        <button class="apanel-nav-item" id="sa-tab-security" onclick="saShowTab('security')"><span class="apanel-nav-icon">🛡️</span> Security</button>
+        <button class="apanel-nav-item" id="sa-tab-security" onclick="saShowTab('security')"><span class="apanel-nav-icon">🛡️</span> Security Posture</button>
         <button class="apanel-nav-item" id="sa-tab-auditlog" onclick="saShowTab('auditlog')"><span class="apanel-nav-icon">🔒</span> Audit Log</button>
-        <button class="apanel-nav-item" id="sa-tab-rentcast" onclick="saShowTab('rentcast')"><span class="apanel-nav-icon">🏘</span> RentCast Data</button>
+        <button class="apanel-nav-item" id="sa-tab-rentcast" onclick="saShowTab('rentcast')"><span class="apanel-nav-icon">🏘</span> RentCast Quota</button>
       </div>
-      <div class="apanel-nav-section">Configuration</div>
+      <div class="apanel-nav-section">System Config</div>
       <div class="apanel-nav">
-        <button class="apanel-nav-item" id="sa-tab-settings" onclick="saShowTab('settings')"><span class="apanel-nav-icon">⚙️</span> Platform Settings</button>
+        <button class="apanel-nav-item" id="sa-tab-features" onclick="saShowTab('features')"><span class="apanel-nav-icon">🧩</span> Feature Matrix</button>
+        <button class="apanel-nav-item" id="sa-tab-settings" onclick="saShowTab('settings')"><span class="apanel-nav-icon">⚙️</span> Worker &amp; KV</button>
       </div>
-      <div class="apanel-sb-footer">Signed in as <span id="sa-sidebar-user">—</span></div>
+      <div class="apanel-sb-identity" id="sa-sidebar-identity">
+        <!-- Filled by _paintApanelIdentity('sa') -->
+      </div>
     </aside>
     <div class="apanel-content">
     <!-- ORGS TAB -->
@@ -7118,11 +7136,9 @@ async function goAdmin() {
   await renderAdminProspects(); populateProspectFilter();
   await renderAdminActivity(); populateAdminActivityFilter();
 
-  // Sidebar footer identity + repaint avatar
+  // Sidebar identity card + repaint avatar
   try {
-    var u = window.currentUser || {};
-    var nm = document.getElementById('adm-sidebar-user');
-    if (nm) nm.textContent = (u.email || u.name || '—');
+    _paintApanelIdentity('adm-sidebar-identity');
     if (typeof _paintUserAvatar === 'function') _paintUserAvatar();
   } catch (e) {}
 
@@ -11010,6 +11026,13 @@ function _lwRenderGroups(query) {
 }
 
 function _lwRenderIdentity() {
+  return _renderIdentityHtml('lw-sb-identity');
+}
+
+// Shared identity-card renderer used by the Workspace shell and by
+// the admin/SA apanel sidebars. Single source for the look + role
+// label logic so the three surfaces stay visually consistent.
+function _renderIdentityHtml(classPrefix) {
   if (!window.currentUser) return '';
   var name = currentUser.name || currentUser.email || 'User';
   var roleLabel = 'Member';
@@ -11017,11 +11040,16 @@ function _lwRenderIdentity() {
   else if (typeof isTenantAdmin === 'function' && isTenantAdmin()) roleLabel = 'Admin';
   else if (typeof isManager === 'function' && isManager()) roleLabel = 'Manager';
   var initials = name.split(/\s+/).map(function (p) { return p[0]; }).slice(0, 2).join('').toUpperCase();
-  return '<div class="lw-sb-identity-avatar">' + esc(initials || '?') + '</div>' +
-         '<div class="lw-sb-identity-body">' +
-           '<div class="lw-sb-identity-name">' + esc(name) + '</div>' +
-           '<div class="lw-sb-identity-role">' + esc(roleLabel) + '</div>' +
+  return '<div class="' + classPrefix + '-avatar">' + esc(initials || '?') + '</div>' +
+         '<div class="' + classPrefix + '-body">' +
+           '<div class="' + classPrefix + '-name">' + esc(name) + '</div>' +
+           '<div class="' + classPrefix + '-role">' + esc(roleLabel) + '</div>' +
          '</div>';
+}
+
+function _paintApanelIdentity(elId) {
+  var el = document.getElementById(elId);
+  if (el) el.innerHTML = _renderIdentityHtml('apanel-sb-identity');
 }
 
 function openMC(initialId) {
@@ -14760,11 +14788,9 @@ async function goSuperAdmin() {
   // Initialize product switcher UI from saved state
   _saActiveProduct = localStorage.getItem('sa_activeProduct') || 'all';
   _saSetProduct(_saActiveProduct);
-  // Paint sidebar footer identity + avatar + restore demo-view selection if any
+  // Paint sidebar identity card + avatar + restore demo-view selection if any
   try {
-    var u = window.currentUser || {};
-    var nm = document.getElementById('sa-sidebar-user');
-    if (nm) nm.textContent = (u.email || u.name || '—');
+    _paintApanelIdentity('sa-sidebar-identity');
     if (typeof _paintUserAvatar === 'function') _paintUserAvatar();
   } catch (e) {}
   try { if (typeof _saRestoreDemoView === 'function') _saRestoreDemoView(); } catch (e) {}
