@@ -424,6 +424,85 @@ because that's anomalous.
 
 ---
 
+## Firestore automated backups
+
+**Why:** Firestore is your system of record for every deal,
+prospect, customer communication, audit log entry, and tenant
+configuration. A single bad client-side write (or a malicious
+insider with admin) can permanently destroy customer data. The
+strict Firestore rules we deployed make this hard, but not
+impossible. A nightly snapshot is your last line of defense.
+
+**Cost:** $0 with the right configuration on Spark. Storage cost
+is ~$0.026 per GiB/month for the first 5 GiB after which you
+hit Blaze. At our current size (~600 MB at 100 users projected)
+we'd be under 1 GiB for years.
+
+### Recommended setup
+
+Firebase doesn't expose nightly backups directly on Spark, but
+the **Point-in-time recovery (PITR)** feature does, and it's the
+gold standard — recovers to any second in the trailing 7 days.
+
+1. Firebase Console → Firestore Database → **`(default)`** → click
+   the gear icon (⚙️) → **Settings**
+2. Scroll to **Point-in-time recovery** → toggle **ON**
+3. Confirm the 7-day window. (PITR storage is billed but small —
+   typically <$1/mo at our scale.)
+
+### Manual export to GCS (deeper retention)
+
+For backups older than 7 days (audit / compliance / legal-hold):
+
+1. Set up a Google Cloud Storage bucket in the same project:
+   - GCP Console → Cloud Storage → **Create bucket**
+   - Name: `lmi-prospect-finder-firestore-backups`
+   - Region: `us-west1` (or wherever the Firestore is)
+   - Storage class: **Nearline** (cheap for backup data)
+   - Lifecycle rule: delete objects after 365 days (or 7 years
+     for hard regulatory retention — depends on your state's
+     MLO record-keeping law)
+
+2. Schedule a daily export from Cloud Scheduler:
+   - GCP Console → Cloud Scheduler → **Create job**
+   - Frequency: `0 7 * * *` (07:00 UTC = 23:00 PT, after nightly cron)
+   - Target: HTTP
+   - URL: `https://firestore.googleapis.com/v1/projects/lmi-prospect-finder/databases/(default):exportDocuments`
+   - Auth: OAuth token → service account with `roles/datastore.importExportAdmin`
+   - Body:
+     ```json
+     {"outputUriPrefix":"gs://lmi-prospect-finder-firestore-backups"}
+     ```
+
+3. Test the first run manually and verify the export landed in
+   the bucket.
+
+### Restore procedure
+
+To restore from PITR (within 7 days):
+```bash
+# Pick a timestamp — must be within trailing 7 days
+gcloud firestore databases restore \
+  --source-database='projects/lmi-prospect-finder/databases/(default)' \
+  --destination-database='projects/lmi-prospect-finder/databases/restore-2026-MM-DD' \
+  --point-in-time='2026-MM-DDTHH:MM:SS.000000Z'
+```
+This creates a new database alongside the original — you can
+inspect it before promoting. Old data stays untouched.
+
+To restore from GCS export:
+```bash
+gcloud firestore import gs://lmi-prospect-finder-firestore-backups/2026-MM-DD/
+```
+
+### Verify
+
+Once monthly, check the GCS bucket has new exports landing. If
+they stop, the Cloud Scheduler job has probably hit a quota or
+the service account permissions drifted.
+
+---
+
 ## HSTS preload-list submission
 
 **Why:** Once lmitool.com is in the Chrome / Firefox / Safari / Edge
