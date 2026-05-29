@@ -2394,6 +2394,34 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
   </div>
 </div>
 
+<!-- MFA sign-in modal. Replaces the old window.prompt-based flow so
+     users have an actual "Where is my code?" affordance at the moment
+     they need it. Triggered from tryLogin via _mfaShowSigninModal(). -->
+<div id="mfa-signin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg, #fffcf4);border-radius:14px;max-width:440px;width:100%;padding:24px;box-shadow:0 24px 48px rgba(0,0,0,0.2);font-family:inherit">
+    <div style="font-weight:700;font-size:18px;color:var(--text-primary, #1a1a1a);margin-bottom:6px">🔐 Two-factor verification</div>
+    <div id="mfa-signin-sub" style="font-size:13px;color:var(--text-secondary, #5a5a5a);margin-bottom:18px">Enter the 6-digit code from your authenticator app.</div>
+    <input type="text" id="mfa-signin-code" inputmode="numeric" autocomplete="one-time-code" maxlength="11" placeholder="123456" style="width:100%;padding:14px;border:1.5px solid #d4c4a8;border-radius:10px;font-family:monospace;font-size:22px;letter-spacing:6px;text-align:center;box-sizing:border-box;min-height:44px" />
+    <div id="mfa-signin-error" style="display:none;margin-top:10px;padding:8px 12px;border-radius:8px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;font-size:12px"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button id="mfa-signin-submit" onclick="_mfaSubmitSigninCode()" style="background:var(--brand-accent, #b07030);color:white;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;flex:1;min-height:44px">Verify</button>
+      <button onclick="_mfaCancelSignin()" style="background:transparent;border:1px solid var(--border, #d4c4a8);color:var(--text-secondary, #5a5a5a);border-radius:10px;padding:12px 18px;font-size:14px;cursor:pointer;min-height:44px">Cancel</button>
+    </div>
+    <div style="margin-top:14px;font-size:12px;text-align:center">
+      <a href="#" onclick="_mfaToggleBackupMode();return false;" id="mfa-signin-toggle-link" style="color:var(--brand-accent, #b07030);font-weight:600;text-decoration:none">Use a backup code instead</a>
+    </div>
+    <details style="margin-top:14px;padding:10px;background:var(--surface, #faf6ee);border:1px solid var(--border, #d4c4a8);border-radius:8px;font-size:12px">
+      <summary style="cursor:pointer;font-weight:600;color:var(--text-primary, #1a1a1a)">📱 Can't find your code?</summary>
+      <div id="mfa-signin-help-list" style="margin-top:10px;color:var(--text-secondary, #5a5a5a);line-height:1.6">
+        <!-- Populated by _mfaRenderHelp -->
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border, #d4c4a8);color:var(--text-muted, #888)">
+        Still stuck? Use one of the backup codes you saved at enrollment (format <code>XXXXX-XXXXX</code>). If you have none left, contact your account admin to reset your MFA — they'll verify your identity first.
+      </div>
+    </details>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div id="app-screen">
   <!-- SIDEBAR -->
@@ -5078,7 +5106,19 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
           <button onclick="_mfaStartEnrollment()" id="mfa-enroll-start-btn" style="background:var(--brand-accent);color:white;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Enroll Authenticator App</button>
         </div>
         <div id="mfa-qr-area" style="display:none">
-          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">1. Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this QR code:</div>
+          <!-- Heads-up about iOS Passwords auto-grabbing the otpauth URI.
+               This is the #1 cause of "I can't find my code later" — iOS
+               17+ silently saves it into Settings → Passwords, which users
+               don't think of as an authenticator app. -->
+          <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#78350f">
+            <strong>📱 Before you scan — pick where your code will live:</strong>
+            <ul style="margin:6px 0 0 18px;padding:0;line-height:1.6">
+              <li><strong>iPhone tip:</strong> When you scan, iOS may pop up "Save to Passwords." If you accept, your code will be in <strong>Settings → Passwords → Loopenta → Verification Code</strong>. To use a separate app instead, dismiss that popup first.</li>
+              <li><strong>Recommended apps:</strong> Google Authenticator, Authy, 1Password, Bitwarden, Microsoft Authenticator. Any TOTP-compatible app works.</li>
+              <li>You can always re-scan into another app later via Settings → Security → "Show QR code (re-scan)".</li>
+            </ul>
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">1. Open your authenticator app and scan this QR code:</div>
           <div id="mfa-qr-container" style="background:white;padding:14px;border-radius:10px;display:inline-block;border:1px solid var(--border)"></div>
           <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Or paste this secret into your app manually:</div>
           <code id="mfa-secret-text" style="display:block;padding:8px;background:var(--code-bg, #f5f0e8);border-radius:6px;font-family:monospace;font-size:12px;margin-top:4px;word-break:break-all"></code>
@@ -5095,6 +5135,16 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         <div id="mfa-enrolled-area" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a8a6a;font-weight:600;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Enrolled</div>
           <div id="mfa-backup-line" style="font-size:12px;color:var(--text-muted);margin-bottom:10px"></div>
+          <!-- Persistent help: where to find the current 6-digit code in
+               each common authenticator app. Collapsed by default so it
+               doesn't clutter the page, but always one click away. -->
+          <details style="margin-bottom:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+            <summary style="cursor:pointer;font-weight:600;font-size:13px;color:var(--text-primary)">📱 Where is my code?</summary>
+            <div style="margin-top:10px;font-size:12px;color:var(--text-secondary);line-height:1.6" id="mfa-help-list">
+              <!-- Filled by _mfaRenderHelp() so we have ONE source of truth
+                   shared between this panel and the sign-in modal. -->
+            </div>
+          </details>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button onclick="_mfaShowExistingQr()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Show QR code (re-scan)</button>
             <button onclick="_mfaRegenerateBackup()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Regenerate backup codes</button>
@@ -6300,6 +6350,7 @@ async function _postLoginSetup(user) {
   if (secSettings) secSettings.style.display = isAnyAdmin() ? '' : 'none';
   if (isAnyAdmin()) _renderSecurityDashboard();
   if (isAnyAdmin()) { try { _mfaRefreshStatus(); } catch(e) {} }
+  if (isAnyAdmin()) { try { _mfaRenderHelp(); } catch(e) {} }
   var rateSettings = document.getElementById('rate-source-settings');
   if (rateSettings) rateSettings.style.display = isAnyAdmin() ? '' : 'none';
   if (isAnyAdmin()) _renderRateSourceFields();
@@ -14144,61 +14195,214 @@ async function _mfaPost(path, body) {
   return { ok: resp.ok, status: resp.status, data: data };
 }
 
-// Post-sign-in MFA prompt. Called from tryLogin after Firebase Auth
-// resolves and the `mfaEnabled` claim is true. Lets the user submit
-// a 6-digit TOTP code OR a backup recovery code. Loops up to 3
-// attempts on bad codes. Returns true on success, false on cancel
-// / exhausted attempts.
-async function _promptAndVerifyMfa(fbUser) {
-  if (!fbUser) return false;
-  var attempts = 0;
-  while (attempts < 3) {
-    attempts++;
-    var code = window.prompt(
-      attempts === 1
-        ? 'Enter the 6-digit code from your authenticator app.\n\nLost your authenticator? Type your backup code (XXXXX-XXXXX) instead.'
-        : 'Code was incorrect. Try again — enter the next 6-digit code, or a backup code if you have one:'
-    );
-    if (!code) return false;
-    code = code.trim();
-    var isBackup = /^[A-Z2-9]{5}-?[A-Z2-9]{5}$/i.test(code);
-    var path = isBackup ? '/mfa/verify-backup' : '/mfa/verify';
-    var bodyKey = isBackup ? 'backupCode' : 'code';
-    if (!isBackup && !/^\d{6}$/.test(code)) {
-      if (attempts < 3) continue;
-      return false;
+// ── App-specific "where is my code" help ──────────────────────
+// Single source of truth used by both the Settings panel and the
+// sign-in modal. If your users adopt a new authenticator app, add
+// it here.
+var _MFA_HELP_APPS = [
+  {
+    name: '🍎 iOS Passwords (iPhone built-in)',
+    where: 'iPhone → <strong>Settings → Passwords</strong> → search <strong>Loopenta</strong> → tap your entry → scroll to <strong>Verification Code</strong> (rotates every 30 s). iOS 18+: open the <strong>Passwords app</strong> directly from the home screen.',
+  },
+  {
+    name: '🤖 Google Authenticator',
+    where: 'Open the app → look for the <strong>Loopenta</strong> row in the list. The 6-digit code rotates every 30 s.',
+  },
+  {
+    name: '🔐 1Password',
+    where: 'Open the app → search <strong>Loopenta</strong> → tap the login → scroll to <strong>One-Time Password</strong>. Tap once to copy.',
+  },
+  {
+    name: '🔑 Authy / Twilio Authy',
+    where: 'Open the app → tap the <strong>Loopenta</strong> tile in the grid. The 6-digit code shows at the top of the detail view.',
+  },
+  {
+    name: '🪟 Microsoft Authenticator',
+    where: 'Open the app → tap <strong>Loopenta</strong> in the accounts list. Code rotates every 30 s.',
+  },
+  {
+    name: '🟦 Bitwarden',
+    where: 'Open the app → search <strong>Loopenta</strong> → tap the entry → see <strong>Verification Code (TOTP)</strong>.',
+  },
+  {
+    name: '🌳 Other TOTP app',
+    where: 'Look for an entry labelled <strong>Loopenta</strong> or your email address. The code is 6 digits and rotates every 30 s.',
+  },
+];
+
+function _mfaRenderHelp() {
+  var html = _MFA_HELP_APPS.map(function (a) {
+    return '<div style="margin-bottom:8px"><div style="font-weight:600">' + a.name + '</div><div>' + a.where + '</div></div>';
+  }).join('');
+  var targets = ['mfa-help-list', 'mfa-signin-help-list'];
+  for (var i = 0; i < targets.length; i++) {
+    var el = document.getElementById(targets[i]);
+    if (el) el.innerHTML = html;
+  }
+}
+// Render once at load so DOM is populated even if the user never
+// expands the <details>. Lightweight (string concat).
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', _mfaRenderHelp);
+}
+
+// ── Sign-in MFA modal (replaces window.prompt) ────────────────
+// Promise-based: resolves true on successful verify, false on
+// cancel / exhausted attempts. State is carried in module-level
+// vars so the inline button handlers can drive it.
+var _mfaSigninResolve = null;
+var _mfaSigninBackupMode = false;
+var _mfaSigninAttempts = 0;
+var _mfaSigninFbUser = null;
+
+function _mfaShowSigninModal(fbUser) {
+  _mfaSigninFbUser = fbUser;
+  _mfaSigninBackupMode = false;
+  _mfaSigninAttempts = 0;
+  _mfaUpdateSigninModalChrome();
+  var input = document.getElementById('mfa-signin-code');
+  if (input) {
+    input.value = '';
+    input.addEventListener('keydown', _mfaSigninKeydown);
+  }
+  var errEl = document.getElementById('mfa-signin-error');
+  if (errEl) errEl.style.display = 'none';
+  var modal = document.getElementById('mfa-signin-modal');
+  if (modal) modal.style.display = 'flex';
+  // Defer focus so display:flex takes effect first.
+  setTimeout(function () { if (input) input.focus(); }, 30);
+  return new Promise(function (resolve) { _mfaSigninResolve = resolve; });
+}
+
+function _mfaSigninKeydown(e) {
+  if (e.key === 'Enter') { e.preventDefault(); _mfaSubmitSigninCode(); }
+  else if (e.key === 'Escape') { _mfaCancelSignin(); }
+}
+
+function _mfaUpdateSigninModalChrome() {
+  var sub = document.getElementById('mfa-signin-sub');
+  var input = document.getElementById('mfa-signin-code');
+  var link = document.getElementById('mfa-signin-toggle-link');
+  if (_mfaSigninBackupMode) {
+    if (sub) sub.textContent = 'Enter one of your backup codes (XXXXX-XXXXX). Each can be used only once.';
+    if (input) {
+      input.placeholder = 'XXXXX-XXXXX';
+      input.style.letterSpacing = '3px';
+      input.style.fontSize = '18px';
     }
-    var bodyObj = {};
-    bodyObj[bodyKey] = code;
-    var res;
-    try { res = await _mfaPost(path, bodyObj); }
-    catch (e) {
-      alert('MFA verification failed: ' + (e.message || e));
-      return false;
+    if (link) link.textContent = 'Use my 6-digit code instead';
+  } else {
+    if (sub) sub.textContent = 'Enter the 6-digit code from your authenticator app.';
+    if (input) {
+      input.placeholder = '123456';
+      input.style.letterSpacing = '6px';
+      input.style.fontSize = '22px';
     }
-    if (res.ok && res.data && res.data.verified) {
-      try { await fbUser.getIdToken(true); } catch(e){}
-      await _mfaWriteAudit(isBackup ? 'verified_backup' : 'verified', {
-        backupCodesRemaining: res.data.backupCodesRemaining || null,
-      });
-      if (isBackup && res.data.warnLowBackup) {
+    if (link) link.textContent = 'Use a backup code instead';
+  }
+}
+
+function _mfaToggleBackupMode() {
+  _mfaSigninBackupMode = !_mfaSigninBackupMode;
+  _mfaUpdateSigninModalChrome();
+  var input = document.getElementById('mfa-signin-code');
+  if (input) { input.value = ''; input.focus(); }
+  var errEl = document.getElementById('mfa-signin-error');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function _mfaHideSigninModal() {
+  var modal = document.getElementById('mfa-signin-modal');
+  if (modal) modal.style.display = 'none';
+  var input = document.getElementById('mfa-signin-code');
+  if (input) {
+    input.removeEventListener('keydown', _mfaSigninKeydown);
+    input.value = '';
+  }
+}
+
+function _mfaCancelSignin() {
+  _mfaHideSigninModal();
+  if (_mfaSigninResolve) { var r = _mfaSigninResolve; _mfaSigninResolve = null; r(false); }
+}
+
+function _mfaSigninShowError(msg) {
+  var errEl = document.getElementById('mfa-signin-error');
+  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+}
+
+async function _mfaSubmitSigninCode() {
+  var input = document.getElementById('mfa-signin-code');
+  var submitBtn = document.getElementById('mfa-signin-submit');
+  if (!input) return;
+  var code = (input.value || '').trim();
+  if (!code) return;
+  // Auto-detect backup format even if user typed it without toggling.
+  var looksBackup = /^[A-Z2-9]{5}-?[A-Z2-9]{5}$/i.test(code);
+  var useBackup = _mfaSigninBackupMode || looksBackup;
+  if (!useBackup && !/^\d{6}$/.test(code)) {
+    _mfaSigninShowError('Enter 6 digits, or toggle to backup-code mode.');
+    return;
+  }
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying…'; }
+  _mfaSigninAttempts++;
+  var path = useBackup ? '/mfa/verify-backup' : '/mfa/verify';
+  var bodyKey = useBackup ? 'backupCode' : 'code';
+  var body = {}; body[bodyKey] = code;
+  var res;
+  try { res = await _mfaPost(path, body); }
+  catch (e) {
+    _mfaSigninShowError('Verification failed: ' + (e.message || e));
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Verify'; }
+    return;
+  }
+  if (res.ok && res.data && res.data.verified) {
+    try { await _mfaSigninFbUser.getIdToken(true); } catch(e){}
+    await _mfaWriteAudit(useBackup ? 'verified_backup' : 'verified', {
+      backupCodesRemaining: res.data.backupCodesRemaining || null,
+    });
+    _mfaHideSigninModal();
+    if (useBackup && res.data.warnLowBackup) {
+      // Defer alert so the modal closes first.
+      setTimeout(function () {
         alert('Heads up: you have ' + res.data.backupCodesRemaining +
               ' backup code(s) left. Go to Settings → Security and regenerate before they run out.');
-      }
-      return true;
+      }, 100);
     }
-    if (res.status === 429) {
-      alert('Too many wrong codes. Account locked for ~30 min. Try later.');
-      await _mfaWriteAudit('locked_out', { source: isBackup ? 'backup' : 'totp' });
-      return false;
-    }
-    if (attempts >= 3) {
-      alert('Three wrong codes. Try signing in again later.');
-      await _mfaWriteAudit('verification_failed_max', { source: isBackup ? 'backup' : 'totp' });
-      return false;
-    }
+    if (_mfaSigninResolve) { var r = _mfaSigninResolve; _mfaSigninResolve = null; r(true); }
+    return;
   }
-  return false;
+  if (res.status === 429) {
+    _mfaSigninShowError('Too many wrong codes. Account locked for ~30 min. Try later.');
+    await _mfaWriteAudit('locked_out', { source: useBackup ? 'backup' : 'totp' });
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Locked'; }
+    setTimeout(function () { _mfaCancelSignin(); }, 3000);
+    return;
+  }
+  var err = res.data && res.data.error || ('http_' + res.status);
+  if (err === 'invalid_code') {
+    _mfaSigninShowError('Wrong code. Try the next one your authenticator shows.');
+  } else if (err === 'invalid_backup_code') {
+    _mfaSigninShowError('Backup code not recognized. Each code is only valid once.');
+  } else if (err === 'code_already_used') {
+    _mfaSigninShowError('That code was already used. Wait for the next one (codes rotate every 30 s).');
+  } else {
+    _mfaSigninShowError('Could not verify: ' + err);
+  }
+  input.value = '';
+  input.focus();
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Verify'; }
+  if (_mfaSigninAttempts >= 5) {
+    setTimeout(function () { _mfaCancelSignin(); }, 1500);
+  }
+}
+
+// Post-sign-in MFA prompt. Called from tryLogin after Firebase Auth
+// resolves and the `mfaEnabled` claim is true. Returns true on
+// success, false on cancel / exhausted attempts. Uses the modal.
+async function _promptAndVerifyMfa(fbUser) {
+  if (!fbUser) return false;
+  return await _mfaShowSigninModal(fbUser);
 }
 
 async function _mfaRefreshStatus() {
