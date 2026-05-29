@@ -694,63 +694,93 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 /* ─────────────────────────────────────────────────────────────
    MISSION CONTROL — unified settings overlay
    ─────────────────────────────────────────────────────────────
-   Replaces 4 fragmented surfaces (sidebar settings slide-out,
+   Design priorities (in order):
+     1. Legibility for users with lower vision — minimum 15px body,
+        17-18px settings titles, 28-32px content header. Generous
+        line-height (1.5+). High-contrast text (no muted greys for
+        primary copy).
+     2. Touch / pointer targets — every clickable item ≥56px tall,
+        every form input ≥48px (WCAG 2.5.5 + Apple HIG comfort).
+     3. Breathing room — the panel feels calm, not crowded. Wider
+        sidebar (300px), more vertical rhythm between items.
+     4. Discoverability via search — search input is large and
+        always the first thing the cursor lands on.
+
+   Replaces the legacy fragmented surfaces (sidebar slide-out,
    topbar gear, admin-screen left nav, super-admin-screen left
-   nav). Inspired by Linear's command palette + Notion's settings
-   sidebar + Apple Settings' search-first navigation.
-   Layout: centered overlay 920×680 (90vw/90vh on small screens),
-   sidebar 240px, content fills remaining width. */
-.mc-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(4px); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 24px; }
+   nav). The TOPBAR GEAR is now the single canonical entry. */
+.mc-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(6px); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 24px; }
 .mc-backdrop.open { display: flex; }
-.mc-modal { background: var(--bg, #fffcf4); border-radius: 16px; max-width: 920px; width: 100%; max-height: 90vh; height: 680px; display: flex; flex-direction: column; box-shadow: 0 32px 64px rgba(0,0,0,0.25); overflow: hidden; }
-.mc-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--border, #e8e3d6); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.mc-header-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-primary, #1a1a1a); margin: 0; flex: 1; letter-spacing: -0.02em; }
-.mc-header-kbd { font-size: 11px; color: var(--text-muted, #888); padding: 4px 8px; background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 5px; font-family: monospace; }
-.mc-close { background: transparent; border: 1px solid var(--border, #e8e3d6); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; color: var(--text-muted, #888); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.12s, color 0.12s; }
-.mc-close:hover { background: var(--surface, #faf6ee); color: var(--text-primary, #1a1a1a); }
-.mc-search-row { padding: 12px 22px; border-bottom: 1px solid var(--border, #e8e3d6); flex-shrink: 0; }
-.mc-search { width: 100%; padding: 11px 14px 11px 38px; border: 1.5px solid var(--border, #e8e3d6); border-radius: 10px; font-size: 14px; font-family: inherit; background: white url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center; box-sizing: border-box; outline: none; }
-.mc-search:focus { border-color: var(--brand-accent, #b07030); }
+.mc-modal { background: var(--bg, #fffcf4); border-radius: 18px; max-width: 1100px; width: 100%; max-height: 92vh; height: 760px; display: flex; flex-direction: column; box-shadow: 0 40px 80px rgba(0,0,0,0.32); overflow: hidden; }
+.mc-header { padding: 28px 32px 22px; border-bottom: 1px solid var(--border, #e8e3d6); display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.mc-header-title { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--text-primary, #1a1a1a); margin: 0; flex: 1; letter-spacing: -0.02em; }
+.mc-header-kbd { font-size: 13px; color: var(--text-secondary, #5a5a5a); padding: 6px 12px; background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 7px; font-family: monospace; }
+.mc-close { background: transparent; border: 2px solid var(--border, #e8e3d6); border-radius: 10px; width: 48px; height: 48px; cursor: pointer; color: var(--text-primary, #1a1a1a); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; transition: background 0.12s, border-color 0.12s; }
+.mc-close:hover { background: var(--surface, #faf6ee); border-color: var(--text-primary, #1a1a1a); }
+.mc-close:focus-visible { outline: 3px solid var(--brand-accent, #b07030); outline-offset: 2px; }
+.mc-search-row { padding: 20px 32px 22px; border-bottom: 1px solid var(--border, #e8e3d6); flex-shrink: 0; }
+.mc-search { width: 100%; padding: 16px 18px 16px 54px; border: 2px solid var(--border, #e8e3d6); border-radius: 12px; font-size: 17px; font-family: inherit; background: white url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%235a5a5a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 18px center; box-sizing: border-box; outline: none; min-height: 56px; color: var(--text-primary, #1a1a1a); }
+.mc-search::placeholder { color: var(--text-muted, #888); }
+.mc-search:focus { border-color: var(--brand-accent, #b07030); box-shadow: 0 0 0 3px rgba(176, 112, 48, 0.2); }
 .mc-body { flex: 1; display: flex; min-height: 0; }
-.mc-sidebar { width: 240px; padding: 16px 10px; border-right: 1px solid var(--border, #e8e3d6); overflow-y: auto; background: var(--surface, #faf6ee); flex-shrink: 0; }
-.mc-group { margin-bottom: 18px; }
-.mc-group-label { font-size: 10px; font-weight: 700; color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: 0.7px; padding: 0 12px 6px; display: flex; align-items: center; gap: 5px; }
-.mc-group-lock { font-size: 9px; opacity: 0.6; }
-.mc-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background 0.12s; border: none; background: transparent; width: 100%; text-align: left; font-family: inherit; }
-.mc-item:hover { background: rgba(176, 112, 48, 0.08); }
+.mc-sidebar { width: 300px; padding: 22px 14px; border-right: 1px solid var(--border, #e8e3d6); overflow-y: auto; background: var(--surface, #faf6ee); flex-shrink: 0; }
+.mc-group { margin-bottom: 28px; }
+.mc-group:last-child { margin-bottom: 12px; }
+.mc-group-label { font-size: 14px; font-weight: 700; color: var(--text-primary, #1a1a1a); padding: 0 14px 12px; display: flex; align-items: center; gap: 8px; }
+.mc-group-lock { font-size: 13px; }
+.mc-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border-radius: 12px; cursor: pointer; transition: background 0.15s, transform 0.05s; border: 2px solid transparent; background: transparent; width: 100%; text-align: left; font-family: inherit; min-height: 64px; }
+.mc-item:hover { background: rgba(176, 112, 48, 0.10); }
+.mc-item:active { transform: scale(0.99); }
+.mc-item:focus-visible { outline: none; border-color: var(--brand-accent, #b07030); }
 .mc-item.active { background: var(--brand-accent, #b07030); color: white; }
-.mc-item.active .mc-item-desc { color: rgba(255,255,255,0.85); }
-.mc-item-icon { font-size: 16px; line-height: 1.2; flex-shrink: 0; width: 20px; text-align: center; }
-.mc-item-body { flex: 1; min-width: 0; }
-.mc-item-title { font-size: 13px; font-weight: 600; color: var(--text-primary, #1a1a1a); line-height: 1.3; }
 .mc-item.active .mc-item-title { color: white; }
-.mc-item-desc { font-size: 11px; color: var(--text-secondary, #5a5a5a); margin-top: 2px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; }
-.mc-content { flex: 1; padding: 24px 28px; overflow-y: auto; }
-.mc-content-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-primary, #1a1a1a); margin: 0 0 4px; letter-spacing: -0.02em; }
-.mc-content-desc { font-size: 13px; color: var(--text-secondary, #5a5a5a); margin: 0 0 22px; }
-.mc-empty { text-align: center; padding: 48px 24px; color: var(--text-muted, #888); }
-.mc-empty-icon { font-size: 36px; opacity: 0.4; margin-bottom: 8px; }
-.mc-field { display: block; margin-bottom: 14px; }
-.mc-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary, #5a5a5a); margin-bottom: 4px; }
-.mc-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border, #e8e3d6); border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; min-height: 42px; }
-.mc-input:focus { border-color: var(--brand-accent, #b07030); outline: none; }
-.mc-btn { background: var(--brand-accent, #b07030); color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 40px; font-family: inherit; }
-.mc-btn:hover { filter: brightness(1.05); }
-.mc-btn-ghost { background: transparent; border: 1px solid var(--border, #e8e3d6); color: var(--text-secondary, #5a5a5a); }
+.mc-item.active .mc-item-desc { color: rgba(255,255,255,0.92); }
+.mc-item-icon { font-size: 24px; line-height: 1.1; flex-shrink: 0; width: 28px; text-align: center; margin-top: 1px; }
+.mc-item-body { flex: 1; min-width: 0; }
+.mc-item-title { font-size: 16px; font-weight: 700; color: var(--text-primary, #1a1a1a); line-height: 1.35; }
+.mc-item-desc { font-size: 13.5px; color: var(--text-secondary, #5a5a5a); margin-top: 4px; line-height: 1.5; }
+.mc-content { flex: 1; padding: 36px 44px; overflow-y: auto; }
+.mc-content-title { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--text-primary, #1a1a1a); margin: 0 0 8px; letter-spacing: -0.02em; line-height: 1.2; }
+.mc-content-desc { font-size: 16px; color: var(--text-secondary, #5a5a5a); margin: 0 0 32px; line-height: 1.5; }
+.mc-empty { text-align: center; padding: 64px 32px; color: var(--text-muted, #888); }
+.mc-empty-icon { font-size: 48px; opacity: 0.5; margin-bottom: 12px; }
+.mc-empty div { font-size: 16px; line-height: 1.5; }
+.mc-field { display: block; margin-bottom: 20px; }
+.mc-label { display: block; font-size: 14px; font-weight: 600; color: var(--text-primary, #1a1a1a); margin-bottom: 8px; }
+.mc-input { width: 100%; padding: 14px 16px; border: 2px solid var(--border, #e8e3d6); border-radius: 10px; font-size: 16px; font-family: inherit; box-sizing: border-box; min-height: 52px; color: var(--text-primary, #1a1a1a); background: white; }
+.mc-input::placeholder { color: var(--text-muted, #888); }
+.mc-input:focus { border-color: var(--brand-accent, #b07030); outline: none; box-shadow: 0 0 0 3px rgba(176, 112, 48, 0.2); }
+.mc-btn { background: var(--brand-accent, #b07030); color: white; border: none; border-radius: 10px; padding: 14px 28px; font-size: 16px; font-weight: 700; cursor: pointer; min-height: 52px; font-family: inherit; transition: filter 0.12s, transform 0.05s; }
+.mc-btn:hover { filter: brightness(1.08); }
+.mc-btn:active { transform: scale(0.98); }
+.mc-btn:focus-visible { outline: 3px solid var(--text-primary, #1a1a1a); outline-offset: 2px; }
+.mc-btn-ghost { background: transparent; border: 2px solid var(--border, #e8e3d6); color: var(--text-primary, #1a1a1a); }
+.mc-btn-ghost:hover { background: var(--surface, #faf6ee); border-color: var(--text-primary, #1a1a1a); filter: none; }
 .mc-btn-danger { background: #9a4a3a; color: white; }
-.mc-msg { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin: 10px 0; }
+.mc-msg { padding: 14px 16px; border-radius: 10px; font-size: 15px; line-height: 1.5; margin: 14px 0; }
 .mc-msg-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
 .mc-msg-err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 .mc-msg-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-.mc-help-card { background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--text-secondary, #5a5a5a); line-height: 1.55; margin-bottom: 18px; }
-.mc-divider { height: 1px; background: var(--border, #e8e3d6); margin: 20px 0; border: 0; }
+.mc-help-card { background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 12px; padding: 16px 18px; font-size: 14.5px; color: var(--text-primary, #1a1a1a); line-height: 1.6; margin-bottom: 24px; }
+.mc-divider { height: 1px; background: var(--border, #e8e3d6); margin: 28px 0; border: 0; }
 
-@media (max-width: 720px) {
-  .mc-backdrop { padding: 8px; }
-  .mc-modal { height: 95vh; max-height: 95vh; border-radius: 12px; }
+@media (max-width: 820px) {
+  .mc-backdrop { padding: 0; }
+  .mc-modal { height: 100vh; max-height: 100vh; border-radius: 0; }
   .mc-body { flex-direction: column; }
-  .mc-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border, #e8e3d6); padding: 12px; max-height: 38vh; }
-  .mc-content { padding: 18px; }
+  .mc-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border, #e8e3d6); padding: 16px; max-height: 42vh; }
+  .mc-content { padding: 24px 22px; }
+  .mc-header { padding: 20px 22px 16px; }
+  .mc-header-title { font-size: 24px; }
+  .mc-search-row { padding: 14px 22px 16px; }
+  .mc-content-title { font-size: 26px; }
+  .mc-content-desc { font-size: 15px; margin-bottom: 24px; }
+}
+
+/* Honor the user's OS-level "I want bigger text" setting. */
+@media (prefers-reduced-motion: reduce) {
+  .mc-item, .mc-btn { transition: none; }
+  .mc-item:active, .mc-btn:active { transform: none; }
 }
 
 /* INVITE MODAL */
@@ -2183,8 +2213,20 @@ h1,h2,h3 { letter-spacing: -0.3px; }
 .dsp-save-confirm { font-size: 12px; color: var(--color-positive); font-weight: 600; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
 .dsp-save-confirm.show { opacity: 1; }
 /* Gear btn in topbar */
-.topbar-gear-btn { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; color: var(--text-muted); flex-shrink: 0; transition: background 0.12s; }
-.topbar-gear-btn:hover { background: var(--body-bg); color: var(--brand-accent); }
+/* Settings button — the ONE entry point. Sized as a real button
+   with a text label so it's discoverable for users with lower
+   vision instead of being a 32px icon competing with a dozen other
+   topbar elements. */
+.topbar-gear-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface, #faf6ee); border: 1.5px solid var(--border, #e8e3d6); border-radius: 10px; height: 44px; min-width: 44px; padding: 0 16px; cursor: pointer; color: var(--text-primary, #1a1a1a); flex-shrink: 0; transition: background 0.12s, border-color 0.12s; font-family: inherit; font-size: 14px; font-weight: 600; }
+.topbar-gear-btn:hover { background: white; border-color: var(--brand-accent, #b07030); color: var(--brand-accent, #b07030); }
+.topbar-gear-btn:focus-visible { outline: 3px solid var(--brand-accent, #b07030); outline-offset: 2px; }
+.topbar-gear-btn svg { flex-shrink: 0; }
+.topbar-gear-label { white-space: nowrap; }
+@media (max-width: 600px) {
+  /* On narrow screens drop the text and shrink to icon-only — still 44px tap target. */
+  .topbar-gear-label { display: none; }
+  .topbar-gear-btn { padding: 0; width: 44px; }
+}
 @media (max-width: 600px) {
   #dash-settings-panel { width: 100%; border-left: none; transform: translateY(110%); top: auto; border-radius: 20px 20px 0 0; max-height: 88vh; }
   #dash-settings-panel.open { transform: translateY(0); }
@@ -2521,7 +2563,6 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
       <button class="sidebar-nav-item" id="sn-marketing" data-feature="marketing" onclick="showTab('marketing');closeSidebar()"><span class="sn-icon">🖨️</span>Marketing</button>
     </nav>
     <div class="sidebar-footer">
-      <button class="sidebar-nav-item" onclick="openMC()" title="Settings (Cmd+K)"><span class="sn-icon">⚙️</span>Settings</button>
       <button class="sidebar-nav-item" id="sn-hub-help" onclick="if(window.Hub){Hub.go('help');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>Help Center</button>
       <button class="sidebar-nav-item" onclick="logout()"><span class="sn-icon">↩</span>Sign Out</button>
       <!-- Required regulatory footer. Shown inside the sidebar so it
@@ -2581,13 +2622,13 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
           <button class="user-menu-item user-menu-super" style="display:none" onclick="_closeUserMenu();goSuperAdmin()"><span class="um-icon">⚡</span>Super Admin</button>
           <button class="user-menu-item user-menu-switch-product" style="display:none" onclick="_superSwitchProduct()"><span class="um-icon">🔀</span><span class="user-menu-switch-product-label">Switch to LMI Finder</span></button>
           <div class="user-menu-divider"></div>
-          <button class="user-menu-item" onclick="_closeUserMenu();openMC()"><span class="um-icon">⚙️</span>Settings <span style="margin-left:auto;font-size:10px;color:#999;font-family:monospace;background:#f5f5f5;padding:2px 5px;border-radius:3px">⌘K</span></button>
           <div class="user-menu-divider"></div>
           <button class="user-menu-item danger" onclick="_closeUserMenu();logout()"><span class="um-icon">↩</span>Sign Out</button>
         </div>
       </div>
-      <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)" id="topbar-gear-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)" aria-label="Open settings" id="topbar-gear-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span class="topbar-gear-label">Settings</span>
       </button>
     </div>
   </div>
@@ -3916,13 +3957,13 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
             <button class="user-menu-item user-menu-super" style="display:none" onclick="_closeUserMenu();goSuperAdmin()"><span class="um-icon">⚡</span>Super Admin</button>
           <button class="user-menu-item user-menu-switch-product" style="display:none" onclick="_superSwitchProduct()"><span class="um-icon">🔀</span><span class="user-menu-switch-product-label">Switch to LMI Finder</span></button>
             <div class="user-menu-divider"></div>
-            <button class="user-menu-item" onclick="_closeUserMenu();openMC()"><span class="um-icon">⚙️</span>Settings <span style="margin-left:auto;font-size:10px;color:#999;font-family:monospace;background:#f5f5f5;padding:2px 5px;border-radius:3px">⌘K</span></button>
-            <div class="user-menu-divider"></div>
+              <div class="user-menu-divider"></div>
             <button class="user-menu-item danger" onclick="_closeUserMenu();logout()"><span class="um-icon">↩</span>Sign Out</button>
           </div>
         </div>
-        <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)" aria-label="Open settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span class="topbar-gear-label">Settings</span>
         </button>
       </div>
     </div>
@@ -4260,13 +4301,13 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
             <button class="user-menu-item user-menu-super" style="display:none" onclick="_closeUserMenu();goSuperAdmin()"><span class="um-icon">⚡</span>Super Admin</button>
           <button class="user-menu-item user-menu-switch-product" style="display:none" onclick="_superSwitchProduct()"><span class="um-icon">🔀</span><span class="user-menu-switch-product-label">Switch to LMI Finder</span></button>
             <div class="user-menu-divider"></div>
-            <button class="user-menu-item" onclick="_closeUserMenu();openMC()"><span class="um-icon">⚙️</span>Settings <span style="margin-left:auto;font-size:10px;color:#999;font-family:monospace;background:#f5f5f5;padding:2px 5px;border-radius:3px">⌘K</span></button>
-            <div class="user-menu-divider"></div>
+              <div class="user-menu-divider"></div>
             <button class="user-menu-item danger" onclick="_closeUserMenu();logout()"><span class="um-icon">↩</span>Sign Out</button>
           </div>
         </div>
-        <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)" aria-label="Open settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <span class="topbar-gear-label">Settings</span>
         </button>
       </div>
     </div>
@@ -5042,11 +5083,11 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
   <div class="mc-modal">
     <div class="mc-header">
       <h2 class="mc-header-title" id="mc-title">Settings</h2>
-      <span class="mc-header-kbd" id="mc-kbd-hint">Esc to close</span>
-      <button class="mc-close" onclick="closeMC()" aria-label="Close settings">✕</button>
+      <span class="mc-header-kbd" id="mc-kbd-hint" aria-hidden="true">Press Esc to close</span>
+      <button class="mc-close" onclick="closeMC()" aria-label="Close settings" title="Close (Esc)">✕</button>
     </div>
     <div class="mc-search-row">
-      <input type="text" id="mc-search" class="mc-search" placeholder="Search settings — try 'MFA', 'NMLS', 'billing'…" autocomplete="off" />
+      <input type="text" id="mc-search" class="mc-search" placeholder="Search — try 'MFA', 'NMLS', 'billing'..." autocomplete="off" aria-label="Search settings" />
     </div>
     <div class="mc-body">
       <nav class="mc-sidebar" id="mc-sidebar" aria-label="Settings sections">
