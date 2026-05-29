@@ -251,48 +251,33 @@ have failed — check `wrangler tail` for `[cron-lock] KV write failed`.
 
 ## When you're locked out of MFA
 
-**Symptom:** You enrolled an authenticator, then lost your phone /
-authenticator app data, OR a customer says the same.
+**Symptom:** You enrolled a TOTP authenticator, then lost your
+phone / authenticator app data, OR a customer says the same.
 
-The custom TOTP MFA stores secrets in worker KV (key
-`mfa_totp_<uid>`). Five wrong codes in a row trips a 30-minute
-lockout (KV key `mfa_lock_<uid>`).
+MFA is managed by Firebase Auth's Identity Platform (included
+in the Spark no-cost tier up to 3,000 MAU). The TOTP secret
+lives inside Firebase; we don't touch it.
 
-**Clear a personal lockout (you're the SA):**
+**Help yourself or a customer remove the lost enrollment:**
 
-```bash
-# From PowerShell, with wrangler authenticated:
-npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_lock_<YOUR_FIREBASE_UID>"
-```
+1. Firebase Console → Authentication → Users → search by email.
+2. Click the row. You'll see "Multi-factor authentication" with
+   the enrolled TOTP factor listed.
+3. Click the ⋮ menu next to the factor → "Remove second factor".
+4. Tell the user to sign in with just their password (no MFA
+   prompt this time) and immediately re-enroll a new authenticator
+   from Settings → Security.
 
-Your UID is visible in the Firebase Console → Authentication →
-Users → click your row.
+**Identity verify before doing this for a customer.** Call them
+on a known phone number from the /users doc and confirm date of
+birth / last 4 of SSN / something not stored in their record. A
+"customer" calling support to disable their own MFA is one of
+the highest-risk identity-takeover vectors there is.
 
-**Force-unenroll your own MFA (last-resort recovery):**
+**If you can't sign into the Firebase Console either:**
 
-```bash
-# Wipe the secret + the claims:
-npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_totp_<UID>"
-# Then clear the custom claim from Firebase Auth so the sign-in
-# path stops prompting for a code. Easiest path: Firebase Console →
-# Authentication → Users → click row → "Reset custom claims" via
-# the gcloud CLI:
-gcloud auth login
-gcloud --project=lmi-prospect-finder \
-  iam service-accounts get-iam-policy <svc-acct-email>
-# Or via the Admin SDK in a one-off script using the
-# FIREBASE_SERVICE_ACCOUNT secret to clear customAttributes.
-```
-
-After this you can sign in with just password (no MFA). Re-enroll
-immediately from Settings → Security.
-
-**Help a customer clear their lockout:**
-
-Treat as identity verification first — call them on a known number,
-verify date of birth / last 4 of SSN / something not stored in
-their /users record. Then run the above wipe with their UID. Tell
-them to re-enroll from Settings → Security on next sign-in.
+You have a backup super-admin account (Task #3). Sign in with
+that and use it to remove your own MFA factor.
 
 ---
 

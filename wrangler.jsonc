@@ -45,9 +45,7 @@
   //  browser session; stored only in sessionStorage.)
   //
   // Firebase service account (required by /admin/migrate-users,
-  // /admin/create-auth-user, /admin/set-auth-password, and the
-  // /mfa/* TOTP endpoints — they use it to verify Firebase ID tokens
-  // and to write custom claims like `mfaEnabled` / `mfaVerifiedAt`):
+  // /admin/create-auth-user, and /admin/set-auth-password):
   //   npx wrangler secret put FIREBASE_SERVICE_ACCOUNT
   // (paste the entire JSON contents of the service-account key file
   //  downloaded from the Firebase console → Project settings →
