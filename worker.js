@@ -221,6 +221,37 @@ export default {
       return handleSetAuthPassword(request, env);
     }
 
+    // ── MFA (worker-side TOTP, RFC 6238) ─────────────────────────
+    // Public health probe — no auth, returns config + crypto self-test.
+    if (url.pathname === '/mfa/health' && request.method === 'GET') {
+      return handleMfaHealth(request, env);
+    }
+    // All other /mfa/* routes verify the caller's Firebase ID token
+    // first (passed in JSON body). Per-IP rate-limited via the
+    // mfa_status / mfa_enroll / mfa_verify scopes. Per-UID lockout
+    // (5 fails / 30 min) layered on top — KV-backed.
+    if (url.pathname === '/mfa/status' && request.method === 'POST') {
+      return handleMfaStatus(request, env);
+    }
+    if (url.pathname === '/mfa/enroll-start' && request.method === 'POST') {
+      return handleMfaEnrollStart(request, env);
+    }
+    if (url.pathname === '/mfa/enroll-confirm' && request.method === 'POST') {
+      return handleMfaEnrollConfirm(request, env);
+    }
+    if (url.pathname === '/mfa/verify' && request.method === 'POST') {
+      return handleMfaVerify(request, env);
+    }
+    if (url.pathname === '/mfa/verify-backup' && request.method === 'POST') {
+      return handleMfaVerifyBackup(request, env);
+    }
+    if (url.pathname === '/mfa/regenerate-backup' && request.method === 'POST') {
+      return handleMfaRegenerateBackup(request, env);
+    }
+    if (url.pathname === '/mfa/unenroll' && request.method === 'POST') {
+      return handleMfaUnenroll(request, env);
+    }
+
     // ── Public error-report sink ─────────────────────────────────
     // The frontend posts uncaught exceptions + unhandled rejections
     // here. Rate-limited per IP. Body is logged via console.error so
@@ -2405,6 +2436,11 @@ const PUBLIC_RATE_MAX = {
   propintel: 30,     // /property-intelligence — slower, more expensive
   forsale: 60,       // /for-sale — KV-cache reads, cheap
   error_report: 20,  // /error-report — one buggy page shouldn't drown the log
+  mfa_status: 30,    // /mfa/status — called on every settings page load
+  mfa_enroll: 5,     // /mfa/enroll-start — expensive (Firebase write), rare
+  mfa_verify: 10,    // /mfa/verify, /mfa/verify-backup, /mfa/enroll-confirm,
+                     //   /mfa/regenerate-backup, /mfa/unenroll — UID-lockout
+                     //   (5 fails / 30 min) is the hard cap
   default: 30,
 };
 const PUBLIC_RATE_KEY_PREFIX = 'public_rate_v1_';
@@ -3160,4 +3196,849 @@ async function handleSetAuthPassword(request, env) {
   } catch (e) {
     return jsonResponse({ error: String(e.message || e) }, request, 500);
   }
+}
+
+// ════════════════════════════════════════════════════════════════
+// Worker-side TOTP MFA (RFC 6238) — hardened for regulator review
+// ════════════════════════════════════════════════════════════════
+//
+// THREAT MODEL
+// ────────────
+// What this defends against:
+//   • Stolen password alone → cannot sign in (needs second factor)
+//   • Phishing of password → attacker still can't pass TOTP without
+//     real-time access to the user's authenticator app
+//   • Credential stuffing from other breaches → blocked by TOTP
+//   • Replay of a sniffed valid code → blocked by per-counter cache
+//   • Brute-force of the 6-digit code → blocked by 5-fail lockout
+//     plus the per-IP rate limit (mfa_verify scope)
+//   • KV-only compromise (read-access to keys) → secret is AES-GCM
+//     encrypted with a key only the worker holds; attacker would
+//     need BOTH the KV dump AND the MFA_ENCRYPTION_KEY secret to
+//     extract the TOTP secret
+//   • Stolen session attempting to disable MFA → /mfa/unenroll
+//     requires a valid current TOTP code
+//   • Lost authenticator → user has 10 one-time backup codes from
+//     enrollment; they self-recover without admin intervention
+//
+// What this does NOT defend against (out of scope):
+//   • Endpoint compromise of the user's device (malware that reads
+//     the authenticator's local storage). TOTP is AAL2, not AAL3.
+//     For AAL3 you need a hardware token (YubiKey via WebAuthn).
+//   • Insider with worker secret access AND KV access (we have
+//     audit logging via Cloudflare Logpush + Firestore /auditLog
+//     so detection is the control, not prevention)
+//
+// COMPLIANCE NOTES
+// ────────────────
+// NIST SP 800-63B Authenticator Assurance Level 2 (AAL2):
+//   • §5.1.4 Single-Factor OTP — meets requirements because:
+//     - 6-digit code (≥6 digits) ✓
+//     - HMAC-SHA1 per RFC 4226 ✓
+//     - 30-second time step per RFC 6238 ✓
+//     - Replay defense (counter cache) ✓
+//     - Rate limit (5 fails / 30 min lockout per UID) ✓
+//   • Combined with the password (something-you-know) and the
+//     authenticator-app possession (something-you-have), this
+//     yields AAL2 multi-factor authentication.
+//
+// FFIEC / GLBA / state mortgage regulator alignment:
+//   • Customer authentication risk = high (PII, NPI, financial
+//     data). Multi-factor auth is industry standard.
+//   • Audit trail: every MFA operation writes to immutable
+//     Firestore /auditLog (rules deny update/delete).
+//   • Recovery procedure: backup codes (user-side) + KV wipe via
+//     wrangler (admin-side). Both documented in RUNBOOK.md.
+//
+// DATA AT REST
+// ────────────
+// KV keys and what's in them:
+//   mfa_totp_<uid>          {ciphertext, iv, enrolledAt}  AES-GCM
+//   mfa_totp_pending_<uid>  {ciphertext, iv, createdAt}   AES-GCM, 10m TTL
+//   mfa_backup_<uid>        ["sha256_hash_b64", ...]      hashed, single-use
+//   mfa_lock_<uid>          {fails, until?, lastFailAt}   30m TTL
+//   mfa_replay_<uid>_<c>    "1"                           90s TTL
+//
+// CONFIGURATION
+// ─────────────
+// Required Wrangler secrets:
+//   FIREBASE_SERVICE_ACCOUNT  — JSON of service-account key for ID
+//                               token verification + custom claims
+//   MFA_ENCRYPTION_KEY        — 32 random bytes, base64-encoded.
+//                               Generate with:
+//                                 node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+//                               then:
+//                                 npx wrangler secret put MFA_ENCRYPTION_KEY
+//
+// Once set, NEVER rotate without a planned re-enrollment of every
+// user, because rotating the key makes all stored secrets
+// undecryptable. The replay/lock/backup KV keys would be unaffected.
+
+const MFA_KV_SECRET_PREFIX  = 'mfa_totp_';
+const MFA_KV_PENDING_PREFIX = 'mfa_totp_pending_';
+const MFA_KV_LOCK_PREFIX    = 'mfa_lock_';
+const MFA_KV_REPLAY_PREFIX  = 'mfa_replay_';
+const MFA_KV_BACKUP_PREFIX  = 'mfa_backup_';
+const MFA_PENDING_TTL_S     = 10 * 60;       // 10 min to finish enroll
+const MFA_LOCK_FAIL_MAX     = 5;
+const MFA_LOCK_WINDOW_S     = 30 * 60;       // 30 min lockout after max fails
+const MFA_REPLAY_TTL_S      = 90;            // can't re-use same counter
+const MFA_VERIFIED_VALID_S  = 12 * 60 * 60;  // mfaVerifiedAt claim valid for 12h
+const MFA_STEP_SECONDS      = 30;            // RFC 6238 standard
+const MFA_WINDOW            = 1;             // ±1 step (±30s) tolerance
+const MFA_BACKUP_CODE_COUNT = 10;            // codes issued per enrollment
+const MFA_BACKUP_CODE_LEN   = 10;            // chars per code (10×log2(31) ≈ 49 bits)
+
+// Base32 (RFC 4648). Used for the otpauth:// URI + the authenticator
+// secret display. Authenticator apps expect Base32 with this alphabet.
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+// Backup-code alphabet: visually unambiguous (no 0/O, 1/I/L, etc).
+// Reduces transcription errors when the user is reading from a
+// printout in a recovery scenario.
+const MFA_BACKUP_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function mfaBase32Encode(bytes) {
+  let bits = 0, value = 0, out = '';
+  for (let i = 0; i < bytes.length; i++) {
+    value = (value << 8) | bytes[i];
+    bits += 8;
+    while (bits >= 5) {
+      out += BASE32_ALPHABET[(value >>> (bits - 5)) & 0x1f];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) {
+    out += BASE32_ALPHABET[(value << (5 - bits)) & 0x1f];
+  }
+  return out;
+}
+
+function mfaBase32Decode(s) {
+  const clean = String(s).toUpperCase().replace(/[^A-Z2-7]/g, '');
+  let bits = 0, value = 0;
+  const out = [];
+  for (let i = 0; i < clean.length; i++) {
+    const idx = BASE32_ALPHABET.indexOf(clean[i]);
+    if (idx < 0) throw new Error('invalid_base32');
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      out.push((value >>> (bits - 8)) & 0xff);
+      bits -= 8;
+    }
+  }
+  return new Uint8Array(out);
+}
+
+function mfaBytesToBase64(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function mfaBase64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// AES-GCM secret-at-rest layer. The TOTP secret is encrypted with
+// a key only the worker holds; KV stores ciphertext + IV. If KV is
+// read-compromised but the worker secret isn't, the TOTP secrets
+// stay confidential.
+async function getMfaEncryptionKey(env) {
+  if (!env.MFA_ENCRYPTION_KEY) {
+    throw new Error('mfa_encryption_key_not_configured');
+  }
+  let raw;
+  try { raw = mfaBase64ToBytes(env.MFA_ENCRYPTION_KEY); }
+  catch (e) { throw new Error('mfa_encryption_key_not_base64'); }
+  if (raw.length !== 32) {
+    throw new Error('mfa_encryption_key_must_be_32_bytes_base64');
+  }
+  return await crypto.subtle.importKey(
+    'raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']
+  );
+}
+
+async function mfaEncryptSecret(secretBase32, env) {
+  const key = await getMfaEncryptionKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = new TextEncoder().encode(secretBase32);
+  const ct = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv }, key, plaintext
+  ));
+  return { ciphertext: mfaBytesToBase64(ct), iv: mfaBytesToBase64(iv) };
+}
+
+async function mfaDecryptSecret(stored, env) {
+  if (!stored || !stored.ciphertext || !stored.iv) {
+    throw new Error('mfa_stored_record_malformed');
+  }
+  const key = await getMfaEncryptionKey(env);
+  const iv = mfaBase64ToBytes(stored.iv);
+  const ct = mfaBase64ToBytes(stored.ciphertext);
+  const pt = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv }, key, ct
+  );
+  return new TextDecoder().decode(pt);
+}
+
+// HMAC-SHA1(secret, counter) → 6-digit code per RFC 4226/6238.
+async function totpComputeCode(secretBytes, counter) {
+  const counterBuf = new ArrayBuffer(8);
+  const view = new DataView(counterBuf);
+  // 64-bit big-endian counter. JS numbers exceed 2^53 only ~5000 yrs
+  // from now, so split-write is safe for our lifetime.
+  view.setUint32(0, Math.floor(counter / 0x100000000));
+  view.setUint32(4, counter >>> 0);
+
+  const key = await crypto.subtle.importKey(
+    'raw', secretBytes,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false, ['sign']
+  );
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, counterBuf));
+  // RFC 4226 §5.3 dynamic truncation
+  const offset = sig[sig.length - 1] & 0x0f;
+  const binCode = ((sig[offset] & 0x7f) << 24)
+                | ((sig[offset + 1] & 0xff) << 16)
+                | ((sig[offset + 2] & 0xff) << 8)
+                | (sig[offset + 3] & 0xff);
+  const code = binCode % 1_000_000;
+  return code.toString().padStart(6, '0');
+}
+
+// Verify a 6-digit code against a base32 secret with ±MFA_WINDOW
+// step tolerance. Returns { ok, counter } where counter is the
+// matched window's counter (for replay-cache).
+async function totpVerify(secretBase32, code) {
+  if (!/^\d{6}$/.test(String(code || ''))) return { ok: false };
+  const secret = mfaBase32Decode(secretBase32);
+  const now = Math.floor(Date.now() / 1000);
+  const baseCounter = Math.floor(now / MFA_STEP_SECONDS);
+  for (let w = -MFA_WINDOW; w <= MFA_WINDOW; w++) {
+    const c = baseCounter + w;
+    const expected = await totpComputeCode(secret, c);
+    // Constant-time string equality (no early return on first mismatch)
+    let diff = code.length ^ expected.length;
+    for (let i = 0; i < expected.length; i++) {
+      diff |= code.charCodeAt(i) ^ expected.charCodeAt(i);
+    }
+    if (diff === 0) return { ok: true, counter: c };
+  }
+  return { ok: false };
+}
+
+// Generate fresh backup recovery codes. Returns the plaintext array
+// so the caller can display them once; only hashes are stored.
+function generateBackupCodes() {
+  const codes = [];
+  for (let i = 0; i < MFA_BACKUP_CODE_COUNT; i++) {
+    const raw = crypto.getRandomValues(new Uint8Array(MFA_BACKUP_CODE_LEN));
+    let s = '';
+    for (let j = 0; j < raw.length; j++) {
+      s += MFA_BACKUP_ALPHABET[raw[j] % MFA_BACKUP_ALPHABET.length];
+    }
+    // Insert a hyphen mid-way for readability (XXXXX-XXXXX)
+    codes.push(s.slice(0, 5) + '-' + s.slice(5));
+  }
+  return codes;
+}
+
+function normalizeBackupCode(code) {
+  return String(code || '').toUpperCase().replace(/[^A-Z2-9]/g, '');
+}
+
+async function hashBackupCode(code) {
+  const buf = new TextEncoder().encode(normalizeBackupCode(code));
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return mfaBytesToBase64(new Uint8Array(hash));
+}
+
+async function setBackupCodes(env, uid, plainCodes) {
+  const hashed = await Promise.all(plainCodes.map(hashBackupCode));
+  await env.KV_NAMESPACE.put(MFA_KV_BACKUP_PREFIX + uid, JSON.stringify(hashed));
+}
+
+// Consume a backup code (single-use). Returns true if accepted.
+// Uses constant-time array search so timing doesn't reveal which
+// position the matching hash held.
+async function consumeBackupCode(env, uid, code) {
+  const list = await env.KV_NAMESPACE.get(MFA_KV_BACKUP_PREFIX + uid, 'json');
+  if (!Array.isArray(list) || list.length === 0) return { ok: false, remaining: 0 };
+  const target = await hashBackupCode(code);
+  let matchIdx = -1;
+  // Walk the full array even after we find a match — keeps timing
+  // independent of position.
+  for (let i = 0; i < list.length; i++) {
+    let diff = target.length ^ list[i].length;
+    for (let j = 0; j < target.length; j++) {
+      diff |= target.charCodeAt(j) ^ list[i].charCodeAt(j);
+    }
+    if (diff === 0 && matchIdx === -1) matchIdx = i;
+  }
+  if (matchIdx === -1) return { ok: false, remaining: list.length };
+  list.splice(matchIdx, 1);
+  await env.KV_NAMESPACE.put(MFA_KV_BACKUP_PREFIX + uid, JSON.stringify(list));
+  return { ok: true, remaining: list.length };
+}
+
+// Verify a Firebase ID token by calling the identitytoolkit
+// accounts:lookup endpoint with our service-account credentials.
+// Returns { uid, email, emailVerified, claims } on success.
+async function verifyFirebaseIdToken(env, idToken) {
+  if (!idToken || typeof idToken !== 'string') {
+    throw new Error('missing_id_token');
+  }
+  const token = await getFirebaseAccessToken(env);
+  const sa = getServiceAccount(env);
+  const url = 'https://identitytoolkit.googleapis.com/v1/projects/' +
+              encodeURIComponent(sa.project_id) + '/accounts:lookup';
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!resp.ok) {
+    const t = await resp.text();
+    throw new Error('id_token_invalid: ' + resp.status + ' ' + t.slice(0, 200));
+  }
+  const data = await resp.json();
+  const user = data.users && data.users[0];
+  if (!user) throw new Error('id_token_user_not_found');
+  let claims = {};
+  if (user.customAttributes) {
+    try { claims = JSON.parse(user.customAttributes); } catch (e) { /* */ }
+  }
+  return {
+    uid: user.localId,
+    email: user.email || '',
+    emailVerified: !!user.emailVerified,
+    claims,
+  };
+}
+
+// Merge a patch into the user's customAttributes. Firebase stores
+// custom claims as a JSON string under customAttributes — total
+// size <1000 bytes. We read existing, merge, write back.
+async function setUserCustomClaims(env, uid, patch) {
+  const lookup = await firebaseAdminFetch(env, '/accounts:lookup', 'POST', {
+    localId: [uid],
+  });
+  if (!lookup.ok) throw new Error('lookup_failed_' + lookup.status);
+  const user = lookup.data && lookup.data.users && lookup.data.users[0];
+  if (!user) throw new Error('user_not_found');
+  let existing = {};
+  if (user.customAttributes) {
+    try { existing = JSON.parse(user.customAttributes); } catch (e) { /* */ }
+  }
+  const merged = { ...existing };
+  for (const k in patch) {
+    if (patch[k] === null) delete merged[k];
+    else merged[k] = patch[k];
+  }
+  const customAttributes = JSON.stringify(merged);
+  if (customAttributes.length > 1000) {
+    throw new Error('custom_claims_too_large');
+  }
+  const upd = await firebaseAdminFetch(env, '/accounts:update', 'POST', {
+    localId: uid, customAttributes,
+  });
+  if (!upd.ok) throw new Error('update_failed_' + upd.status);
+  return merged;
+}
+
+// Per-UID lockout state.
+async function getMfaLockState(env, uid) {
+  if (!env.KV_NAMESPACE) return { locked: false, fails: 0 };
+  const raw = await env.KV_NAMESPACE.get(MFA_KV_LOCK_PREFIX + uid, 'json');
+  if (!raw) return { locked: false, fails: 0 };
+  const now = Math.floor(Date.now() / 1000);
+  if (raw.until && raw.until > now) {
+    return { locked: true, until: raw.until, fails: raw.fails || 0 };
+  }
+  return { locked: false, fails: raw.fails || 0 };
+}
+
+async function recordMfaFail(env, uid) {
+  if (!env.KV_NAMESPACE) return;
+  const cur = await env.KV_NAMESPACE.get(MFA_KV_LOCK_PREFIX + uid, 'json') || { fails: 0 };
+  const fails = (cur.fails || 0) + 1;
+  const now = Math.floor(Date.now() / 1000);
+  const patch = { fails, lastFailAt: now };
+  if (fails >= MFA_LOCK_FAIL_MAX) {
+    patch.until = now + MFA_LOCK_WINDOW_S;
+  }
+  await env.KV_NAMESPACE.put(
+    MFA_KV_LOCK_PREFIX + uid,
+    JSON.stringify(patch),
+    { expirationTtl: MFA_LOCK_WINDOW_S }
+  );
+}
+
+async function clearMfaFails(env, uid) {
+  if (!env.KV_NAMESPACE) return;
+  try { await env.KV_NAMESPACE.delete(MFA_KV_LOCK_PREFIX + uid); } catch (e) { /* */ }
+}
+
+// Replay protection: each counter that successfully verified is
+// remembered for MFA_REPLAY_TTL_S so an attacker who sniffs a
+// valid code can't re-submit it inside the same window.
+async function isReplayed(env, uid, counter) {
+  if (!env.KV_NAMESPACE) return false;
+  const key = MFA_KV_REPLAY_PREFIX + uid + '_' + counter;
+  return !!(await env.KV_NAMESPACE.get(key));
+}
+
+async function markReplayUsed(env, uid, counter) {
+  if (!env.KV_NAMESPACE) return;
+  await env.KV_NAMESPACE.put(
+    MFA_KV_REPLAY_PREFIX + uid + '_' + counter,
+    '1',
+    { expirationTtl: MFA_REPLAY_TTL_S }
+  );
+}
+
+// Structured audit-log breadcrumb. Picked up by `wrangler tail` and
+// (if observability is enabled) by Cloudflare Logs. Pairs with the
+// client-side write to Firestore /auditLog so both surfaces have
+// the same record.
+function mfaLog(action, uid, request, extra) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ua = (request.headers.get('User-Agent') || '').slice(0, 120);
+  const entry = Object.assign({
+    action: 'mfa_' + action,
+    uid: uid ? uid.slice(0, 8) + '…' : '?',
+    ip,
+    ua,
+    ts: new Date().toISOString(),
+  }, extra || {});
+  console.log('[mfa-audit]', JSON.stringify(entry));
+}
+
+function mfaResponse(action, uid, payload, request, status, extra) {
+  mfaLog(action, uid, request, Object.assign({ status: status || 200 }, extra || {}));
+  return jsonResponse(payload, request, status || 200);
+}
+
+// ── GET /mfa/health ─────────────────────────────────────────────
+// Public, no auth. Returns the result of running RFC 6238 Appendix B
+// test vectors through totpComputeCode + an AES-GCM round-trip.
+// Use this in CI or after a deploy to confirm the crypto path is
+// intact. Surfaces missing config (KV, encryption key, service acct).
+async function handleMfaHealth(request, env) {
+  // RFC 6238 Appendix B test vector for SHA-1, secret = ASCII
+  // "12345678901234567890" (20 bytes), counter = 1 → "287082"
+  const testKey = new Uint8Array([
+    0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30,
+    0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30,
+  ]);
+  const code = await totpComputeCode(testKey, 1);
+  const totpOk = code === '287082';
+
+  let aesOk = false, aesErr = null;
+  try {
+    const sample = 'JBSWY3DPEHPK3PXP';  // a base32 string
+    const enc = await mfaEncryptSecret(sample, env);
+    const dec = await mfaDecryptSecret(enc, env);
+    aesOk = dec === sample;
+  } catch (e) {
+    aesErr = String(e.message || e);
+  }
+
+  return jsonResponse({
+    totp_rfc6238_test_vector_ok: totpOk,
+    totp_computed: code,
+    totp_expected: '287082',
+    aes_gcm_roundtrip_ok: aesOk,
+    aes_gcm_error: aesErr,
+    config: {
+      kv_namespace: !!env.KV_NAMESPACE,
+      mfa_encryption_key: !!env.MFA_ENCRYPTION_KEY,
+      firebase_service_account: !!env.FIREBASE_SERVICE_ACCOUNT,
+    },
+    timestamp: new Date().toISOString(),
+  }, request);
+}
+
+// ── POST /mfa/status ────────────────────────────────────────────
+async function handleMfaStatus(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_status');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+  const stored = env.KV_NAMESPACE
+    ? await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid, 'json')
+    : null;
+  const backupRaw = env.KV_NAMESPACE
+    ? await env.KV_NAMESPACE.get(MFA_KV_BACKUP_PREFIX + user.uid, 'json')
+    : null;
+  const lock = await getMfaLockState(env, user.uid);
+  return mfaResponse('status', user.uid, {
+    enrolled: !!stored,
+    enrolledAt: stored ? stored.enrolledAt : null,
+    backupCodesRemaining: Array.isArray(backupRaw) ? backupRaw.length : 0,
+    locked: lock.locked,
+    lockUntil: lock.until || null,
+    verifiedAt: user.claims.mfaVerifiedAt || null,
+    verifiedValidUntil: user.claims.mfaVerifiedAt
+      ? user.claims.mfaVerifiedAt + MFA_VERIFIED_VALID_S
+      : null,
+  }, request);
+}
+
+// ── POST /mfa/enroll-start ──────────────────────────────────────
+async function handleMfaEnrollStart(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_enroll');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+  if (!env.MFA_ENCRYPTION_KEY) {
+    return jsonResponse({
+      error: 'mfa_encryption_key_not_configured',
+      hint: 'Set wrangler secret MFA_ENCRYPTION_KEY (32 random bytes, base64). See RUNBOOK.md.',
+    }, request, 500);
+  }
+
+  // Already enrolled? Refuse — they must unenroll first (which
+  // requires a valid current code, so they can't lock themselves
+  // out accidentally).
+  const existing = await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid);
+  if (existing) {
+    return mfaResponse('enroll_start', user.uid, { error: 'already_enrolled' }, request, 409);
+  }
+
+  // 160 bits of entropy per RFC 4226 §4 recommendation (≥128 bits).
+  const raw = crypto.getRandomValues(new Uint8Array(20));
+  const secret = mfaBase32Encode(raw);
+  const issuer = 'Loopenta';
+  const label  = encodeURIComponent(issuer + ':' + (user.email || user.uid));
+  const otpauthUri = 'otpauth://totp/' + label +
+    '?secret=' + secret +
+    '&issuer=' + encodeURIComponent(issuer) +
+    '&algorithm=SHA1&digits=6&period=' + MFA_STEP_SECONDS;
+
+  // Encrypt the pending secret too — the 10-min TTL window is short
+  // but defense-in-depth costs nothing.
+  let pendingRecord;
+  try {
+    const enc = await mfaEncryptSecret(secret, env);
+    pendingRecord = Object.assign({ createdAt: Math.floor(Date.now() / 1000) }, enc);
+  } catch (e) {
+    return jsonResponse({ error: 'encryption_failed', detail: String(e.message || e) }, request, 500);
+  }
+  await env.KV_NAMESPACE.put(
+    MFA_KV_PENDING_PREFIX + user.uid,
+    JSON.stringify(pendingRecord),
+    { expirationTtl: MFA_PENDING_TTL_S }
+  );
+
+  return mfaResponse('enroll_start', user.uid, {
+    secret, otpauthUri,
+    expiresInSeconds: MFA_PENDING_TTL_S,
+  }, request);
+}
+
+// ── POST /mfa/enroll-confirm ────────────────────────────────────
+async function handleMfaEnrollConfirm(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_verify');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+
+  const pending = await env.KV_NAMESPACE.get(MFA_KV_PENDING_PREFIX + user.uid, 'json');
+  if (!pending || !pending.ciphertext) {
+    return jsonResponse({ error: 'no_pending_enrollment' }, request, 400);
+  }
+  let pendingSecret;
+  try { pendingSecret = await mfaDecryptSecret(pending, env); }
+  catch (e) { return jsonResponse({ error: 'decryption_failed', detail: String(e.message || e) }, request, 500); }
+
+  const code = String(body.code || '').trim();
+  const verify = await totpVerify(pendingSecret, code);
+  if (!verify.ok) {
+    return mfaResponse('enroll_confirm_failed', user.uid, { error: 'invalid_code' }, request, 400);
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  // Promote pending → permanent (still encrypted).
+  let permanentRecord;
+  try {
+    const enc = await mfaEncryptSecret(pendingSecret, env);
+    permanentRecord = Object.assign({ enrolledAt: now }, enc);
+  } catch (e) {
+    return jsonResponse({ error: 'encryption_failed', detail: String(e.message || e) }, request, 500);
+  }
+  await env.KV_NAMESPACE.put(
+    MFA_KV_SECRET_PREFIX + user.uid,
+    JSON.stringify(permanentRecord)
+  );
+  await env.KV_NAMESPACE.delete(MFA_KV_PENDING_PREFIX + user.uid);
+  await markReplayUsed(env, user.uid, verify.counter);
+
+  // Issue 10 backup codes. Plaintext returned ONCE to the client.
+  const backupCodes = generateBackupCodes();
+  await setBackupCodes(env, user.uid, backupCodes);
+
+  try {
+    await setUserCustomClaims(env, user.uid, {
+      mfaEnabled: true,
+      mfaEnrolledAt: now,
+      mfaVerifiedAt: now,
+    });
+  } catch (e) {
+    // Secret + backup codes are saved. Surface the error — the user
+    // can retry the enroll-confirm and we'll re-merge the claim
+    // (setUserCustomClaims is idempotent). Note the secret persists,
+    // which is the safer failure mode (they can verify with the
+    // code; the claim will sync on next /mfa/verify).
+    return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
+  }
+
+  return mfaResponse('enroll_confirmed', user.uid, {
+    enrolled: true, enrolledAt: now,
+    backupCodes,  // shown ONCE; client must persist or display now
+    backupCodesNote: 'Save these immediately. They are shown only once. Each can be used a single time if you lose your authenticator.',
+  }, request);
+}
+
+// ── POST /mfa/verify ────────────────────────────────────────────
+// Used at sign-in for accounts with mfaEnabled: true. Sets
+// mfaVerifiedAt claim so Firestore rules can require recent verify.
+async function handleMfaVerify(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_verify');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+
+  const lock = await getMfaLockState(env, user.uid);
+  if (lock.locked) {
+    return mfaResponse('verify_locked', user.uid, {
+      error: 'mfa_locked',
+      lockUntil: lock.until,
+      retryAfterSeconds: lock.until - Math.floor(Date.now() / 1000),
+    }, request, 429);
+  }
+
+  const stored = await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid, 'json');
+  if (!stored || !stored.ciphertext) {
+    return jsonResponse({ error: 'not_enrolled' }, request, 400);
+  }
+  let secret;
+  try { secret = await mfaDecryptSecret(stored, env); }
+  catch (e) { return jsonResponse({ error: 'decryption_failed', detail: String(e.message || e) }, request, 500); }
+
+  const code = String(body.code || '').trim();
+  const verify = await totpVerify(secret, code);
+  if (!verify.ok) {
+    await recordMfaFail(env, user.uid);
+    const after = await getMfaLockState(env, user.uid);
+    return mfaResponse('verify_failed', user.uid, {
+      error: 'invalid_code',
+      failsRemaining: Math.max(0, MFA_LOCK_FAIL_MAX - after.fails),
+      locked: after.locked,
+      lockUntil: after.until || null,
+    }, request, 400);
+  }
+  if (await isReplayed(env, user.uid, verify.counter)) {
+    await recordMfaFail(env, user.uid);
+    return mfaResponse('verify_replay_blocked', user.uid, { error: 'code_already_used' }, request, 400);
+  }
+  await markReplayUsed(env, user.uid, verify.counter);
+  await clearMfaFails(env, user.uid);
+
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    await setUserCustomClaims(env, user.uid, { mfaVerifiedAt: now });
+  } catch (e) {
+    return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
+  }
+
+  return mfaResponse('verified', user.uid, {
+    verified: true, verifiedAt: now,
+    validUntil: now + MFA_VERIFIED_VALID_S,
+  }, request);
+}
+
+// ── POST /mfa/verify-backup ─────────────────────────────────────
+// Single-use backup code path for users who've lost their
+// authenticator. Same lockout + claim behaviour as /mfa/verify
+// (the backup code IS a valid second factor), but consumes the
+// code from KV so it can never be reused.
+async function handleMfaVerifyBackup(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_verify');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+
+  const lock = await getMfaLockState(env, user.uid);
+  if (lock.locked) {
+    return mfaResponse('backup_locked', user.uid, {
+      error: 'mfa_locked',
+      lockUntil: lock.until,
+    }, request, 429);
+  }
+
+  const stored = await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid, 'json');
+  if (!stored) return jsonResponse({ error: 'not_enrolled' }, request, 400);
+
+  const code = body.backupCode || '';
+  const result = await consumeBackupCode(env, user.uid, code);
+  if (!result.ok) {
+    await recordMfaFail(env, user.uid);
+    const after = await getMfaLockState(env, user.uid);
+    return mfaResponse('backup_failed', user.uid, {
+      error: 'invalid_backup_code',
+      remaining: result.remaining,
+      failsRemaining: Math.max(0, MFA_LOCK_FAIL_MAX - after.fails),
+      locked: after.locked,
+      lockUntil: after.until || null,
+    }, request, 400);
+  }
+
+  await clearMfaFails(env, user.uid);
+
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    await setUserCustomClaims(env, user.uid, { mfaVerifiedAt: now });
+  } catch (e) {
+    return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
+  }
+
+  return mfaResponse('backup_consumed', user.uid, {
+    verified: true, verifiedAt: now,
+    validUntil: now + MFA_VERIFIED_VALID_S,
+    backupCodesRemaining: result.remaining,
+    warnLowBackup: result.remaining <= 3,
+  }, request);
+}
+
+// ── POST /mfa/regenerate-backup ─────────────────────────────────
+// Issue a fresh set of 10 backup codes. Requires a valid CURRENT
+// TOTP code (so a stolen session can't regenerate codes; the
+// authenticator app is still required).
+async function handleMfaRegenerateBackup(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_verify');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+
+  const lock = await getMfaLockState(env, user.uid);
+  if (lock.locked) {
+    return mfaResponse('regen_locked', user.uid, { error: 'mfa_locked', lockUntil: lock.until }, request, 429);
+  }
+
+  const stored = await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid, 'json');
+  if (!stored || !stored.ciphertext) {
+    return jsonResponse({ error: 'not_enrolled' }, request, 400);
+  }
+  let secret;
+  try { secret = await mfaDecryptSecret(stored, env); }
+  catch (e) { return jsonResponse({ error: 'decryption_failed' }, request, 500); }
+
+  const code = String(body.code || '').trim();
+  const verify = await totpVerify(secret, code);
+  if (!verify.ok) {
+    await recordMfaFail(env, user.uid);
+    return mfaResponse('regen_failed', user.uid, { error: 'invalid_code' }, request, 400);
+  }
+
+  // Issue fresh codes.
+  const fresh = generateBackupCodes();
+  await setBackupCodes(env, user.uid, fresh);
+
+  return mfaResponse('backup_regenerated', user.uid, {
+    backupCodes: fresh,
+    note: 'Old backup codes are now invalid. Save these immediately.',
+  }, request);
+}
+
+// ── POST /mfa/unenroll ──────────────────────────────────────────
+// Requires a valid CURRENT TOTP code (so a stolen session can't
+// silently disable MFA).
+async function handleMfaUnenroll(request, env) {
+  const rl = await checkPublicRateLimit(request, env, 'mfa_verify');
+  if (rl) return rl;
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+  let user;
+  try { user = await verifyFirebaseIdToken(env, body.idToken); }
+  catch (e) { return jsonResponse({ error: 'id_token_invalid' }, request, 401); }
+
+  if (!env.KV_NAMESPACE) return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+
+  const lock = await getMfaLockState(env, user.uid);
+  if (lock.locked) {
+    return mfaResponse('unenroll_locked', user.uid, { error: 'mfa_locked', lockUntil: lock.until }, request, 429);
+  }
+
+  const stored = await env.KV_NAMESPACE.get(MFA_KV_SECRET_PREFIX + user.uid, 'json');
+  if (!stored || !stored.ciphertext) {
+    return jsonResponse({ error: 'not_enrolled' }, request, 400);
+  }
+  let secret;
+  try { secret = await mfaDecryptSecret(stored, env); }
+  catch (e) { return jsonResponse({ error: 'decryption_failed' }, request, 500); }
+
+  const code = String(body.code || '').trim();
+  const verify = await totpVerify(secret, code);
+  if (!verify.ok) {
+    await recordMfaFail(env, user.uid);
+    return mfaResponse('unenroll_failed', user.uid, { error: 'invalid_code' }, request, 400);
+  }
+
+  await env.KV_NAMESPACE.delete(MFA_KV_SECRET_PREFIX + user.uid);
+  await env.KV_NAMESPACE.delete(MFA_KV_BACKUP_PREFIX + user.uid);
+  await clearMfaFails(env, user.uid);
+  try {
+    await setUserCustomClaims(env, user.uid, {
+      mfaEnabled: null,
+      mfaEnrolledAt: null,
+      mfaVerifiedAt: null,
+    });
+  } catch (e) {
+    return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
+  }
+
+  return mfaResponse('unenrolled', user.uid, { unenrolled: true }, request);
 }

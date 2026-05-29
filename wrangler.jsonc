@@ -45,9 +45,20 @@
   //  browser session; stored only in sessionStorage.)
   //
   // Firebase service account (required by /admin/migrate-users,
-  // /admin/create-auth-user, and /admin/set-auth-password):
+  // /admin/create-auth-user, /admin/set-auth-password, and the
+  // /mfa/* TOTP endpoints — used to verify Firebase ID tokens and
+  // to write custom claims `mfaEnabled` / `mfaEnrolledAt` /
+  // `mfaVerifiedAt`):
   //   npx wrangler secret put FIREBASE_SERVICE_ACCOUNT
   // (paste the entire JSON contents of the service-account key file
   //  downloaded from the Firebase console → Project settings →
   //  Service accounts → "Generate new private key".)
+  //
+  // MFA encryption key (required by /mfa/* — used to AES-GCM encrypt
+  // TOTP secrets at rest in KV; without it, /mfa/enroll-start refuses
+  // to issue secrets):
+  //   node -e "console.log(crypto.randomBytes(32).toString('base64'))"
+  //   npx wrangler secret put MFA_ENCRYPTION_KEY
+  // (32 random bytes, base64. NEVER rotate without re-enrolling every
+  //  user — rotating breaks decryption of every stored secret.)
 }

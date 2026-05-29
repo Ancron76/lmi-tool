@@ -254,30 +254,83 @@ have failed — check `wrangler tail` for `[cron-lock] KV write failed`.
 **Symptom:** You enrolled a TOTP authenticator, then lost your
 phone / authenticator app data, OR a customer says the same.
 
-MFA is managed by Firebase Auth's Identity Platform (included
-in the Spark no-cost tier up to 3,000 MAU). The TOTP secret
-lives inside Firebase; we don't touch it.
+MFA is implemented in the worker (RFC 6238 TOTP). Secrets are
+stored AES-GCM encrypted in Cloudflare KV under
+`mfa_totp_<firebase_uid>`. Backup codes (hashed) under
+`mfa_backup_<firebase_uid>`. Five wrong codes → 30 min lockout
+(`mfa_lock_<firebase_uid>`).
 
-**Help yourself or a customer remove the lost enrollment:**
+### Self-recovery (preferred): use a backup code
 
-1. Firebase Console → Authentication → Users → search by email.
-2. Click the row. You'll see "Multi-factor authentication" with
-   the enrolled TOTP factor listed.
-3. Click the ⋮ menu next to the factor → "Remove second factor".
-4. Tell the user to sign in with just their password (no MFA
-   prompt this time) and immediately re-enroll a new authenticator
-   from Settings → Security.
+At enrollment, each user got 10 single-use recovery codes. On
+sign-in, when the TOTP prompt appears, type a backup code in
+the form `XXXXX-XXXXX` instead of the 6-digit number. The worker
+detects the format and routes to `/mfa/verify-backup`, consuming
+the code. Once signed in, immediately go to **Settings → Security
+→ Regenerate backup codes** (requires a fresh authenticator
+enrollment first via Remove → Re-enroll).
 
-**Identity verify before doing this for a customer.** Call them
-on a known phone number from the /users doc and confirm date of
-birth / last 4 of SSN / something not stored in their record. A
-"customer" calling support to disable their own MFA is one of
-the highest-risk identity-takeover vectors there is.
+### Operator-side recovery: wipe via wrangler
 
-**If you can't sign into the Firebase Console either:**
+If the user has no backup codes left AND no authenticator:
 
-You have a backup super-admin account (Task #3). Sign in with
-that and use it to remove your own MFA factor.
+1. **Identity-verify the user.** Call them on a known phone
+   number from `/users/{uid}`. Confirm DOB / last 4 of SSN /
+   something not stored in their record. Letting a
+   social-engineer through here is the highest-risk path in this
+   whole system.
+
+2. **Find their Firebase UID.** Firebase Console → Authentication
+   → Users → search email → copy `User UID`.
+
+3. **Wipe the KV records:**
+   ```powershell
+   npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_totp_<UID>"
+   npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_backup_<UID>"
+   npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_lock_<UID>"
+   ```
+
+4. **Clear the custom claims** so the sign-in flow stops
+   demanding MFA:
+   ```powershell
+   # Via the worker's /admin/clear-mfa-claims endpoint (if you
+   # add one), or via gcloud CLI with the FIREBASE_SERVICE_ACCOUNT
+   # key file. Minimum: set customAttributes to "{}" via the
+   # identitytoolkit accounts:update REST call.
+   ```
+
+5. Tell the user to sign in with just their password and
+   re-enroll immediately at Settings → Security.
+
+### Lockout (5 wrong codes / 30 min)
+
+If the user is in the lockout window but still has their
+authenticator:
+
+```powershell
+npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_lock_<UID>"
+```
+
+### Self-check the worker MFA crypto
+
+`GET https://lmitool.com/mfa/health` returns a JSON report:
+- `totp_rfc6238_test_vector_ok: true` — TOTP math is correct
+- `aes_gcm_roundtrip_ok: true` — secret encryption works
+- `config.{kv_namespace, mfa_encryption_key, firebase_service_account}: true`
+
+Use it after every deploy to confirm the crypto path is intact.
+
+### Audit trail
+
+Every MFA operation writes two records:
+- Worker console (Cloudflare Logs / wrangler tail) — structured
+  JSON `[mfa-audit] {action, uid, ip, ua, status, ts}`
+- Firestore `/auditLog` — immutable per rules
+  (`mfa_enrolled`, `mfa_verified`, `mfa_verification_failed`,
+  `mfa_locked_out`, `mfa_unenrolled`, etc.)
+
+Pulling either tells you what happened. The pair gives both
+server-side observability and a regulator-friendly database trail.
 
 ---
 

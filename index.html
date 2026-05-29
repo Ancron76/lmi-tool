@@ -5094,7 +5094,29 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
         <div id="mfa-enroll-msg" style="display:none;font-size:12px;margin-top:10px"></div>
         <div id="mfa-enrolled-area" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a8a6a;font-weight:600;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Enrolled</div>
-          <button onclick="_mfaUnenroll()" style="background:transparent;border:1px solid #c4b5a3;color:#9a4a3a;border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Remove enrollment</button>
+          <div id="mfa-backup-line" style="font-size:12px;color:var(--text-muted);margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="_mfaRegenerateBackup()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Regenerate backup codes</button>
+            <button onclick="_mfaUnenroll()" style="background:transparent;border:1px solid #c4b5a3;color:#9a4a3a;border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Remove enrollment</button>
+          </div>
+        </div>
+        <!-- Backup-code display modal area, populated after enroll-confirm
+             or regenerate-backup. The codes are SHOWN ONCE — only hashes
+             are stored server-side. User must check "I've saved these"
+             before this area can be dismissed. -->
+        <div id="mfa-backup-area" style="display:none;margin-top:14px;padding:14px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px">
+          <div style="font-weight:700;color:#92400e;font-size:13px;margin-bottom:8px">🔑 Backup Recovery Codes — save these now</div>
+          <div style="font-size:12px;color:#78350f;margin-bottom:10px">These codes are shown <strong>once</strong>. Each can be used a single time if you lose your authenticator app. Store them in a password manager or print and lock them up. Generating new codes invalidates these.</div>
+          <div id="mfa-backup-codes" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-family:monospace;font-size:14px;background:white;padding:10px;border-radius:8px;border:1px solid #fde68a;margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onclick="_mfaCopyBackupCodes()" style="background:#92400e;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;min-height:36px">Copy to clipboard</button>
+            <button onclick="_mfaDownloadBackupCodes()" style="background:transparent;border:1px solid #92400e;color:#92400e;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Download as .txt</button>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#78350f;cursor:pointer">
+              <input type="checkbox" id="mfa-backup-saved-cbox" onchange="_mfaToggleBackupDismiss()" />
+              I've saved these
+            </label>
+            <button id="mfa-backup-dismiss-btn" onclick="_mfaDismissBackup()" disabled style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:8px 14px;font-size:12px;cursor:not-allowed;min-height:36px;opacity:0.5">Done</button>
+          </div>
         </div>
       </div>
 
@@ -6282,13 +6304,47 @@ async function tryLogin() {
   const btn = document.querySelector('.login-btn');
   btn.textContent = 'Signing in...';
 
-  // Firebase Auth is now the SOLE credential store. The legacy DIY-
-  // password fallback (u.password === pass against Firestore) was
-  // removed once the reset confirmed every active /users doc has a
-  // firebaseAuthUid and no `password` field. Firestore rules now also
-  // forbid the `password` field on /users writes.
+  // Firebase Auth is the SOLE credential store. MFA is layered on top
+  // via the worker (/mfa/* endpoints): after Firebase auth succeeds,
+  // we force-refresh the ID token, check the `mfaEnabled` custom
+  // claim, and (if set) prompt for the 6-digit TOTP code or a backup
+  // recovery code. Worker verifies and sets `mfaVerifiedAt`. Firestore
+  // rules can require recent verification on sensitive collections.
   try {
     await auth.signInWithEmailAndPassword(emailInput, pass);
+    btn.textContent = 'Verifying...';
+    try {
+      var tokRes = await auth.currentUser.getIdTokenResult(true);
+      if (tokRes && tokRes.claims && tokRes.claims.mfaEnabled) {
+        var ok = await _promptAndVerifyMfa(auth.currentUser);
+        if (!ok) {
+          // Failed / cancelled. Sign the user out — never leave them
+          // in a partially-authenticated state where some app paths
+          // might leak data before Firestore rules block them.
+          try { await auth.signOut(); } catch(e){}
+          btn.textContent = 'Sign In';
+          var errEl0 = document.getElementById('login-error');
+          if (errEl0) {
+            errEl0.textContent = 'MFA verification did not complete. Sign in cancelled.';
+            errEl0.style.display = 'block';
+          }
+          return;
+        }
+      }
+    } catch (claimErr) {
+      // Could not refresh ID token / read claims. Don't fail open —
+      // sign the user out and report. This catches transient network
+      // issues between the auth response and the claim refresh.
+      console.error('[mfa] claim refresh failed', claimErr);
+      try { await auth.signOut(); } catch(e){}
+      btn.textContent = 'Sign In';
+      var errEl1 = document.getElementById('login-error');
+      if (errEl1) {
+        errEl1.textContent = 'Could not verify two-factor status. Check your connection and try again.';
+        errEl1.style.display = 'block';
+      }
+      return;
+    }
     btn.textContent = 'Sign In';
     await _handleFirebaseAuthSession(auth.currentUser);
     return;
@@ -6297,47 +6353,17 @@ async function tryLogin() {
     var errEl = document.getElementById('login-error');
     var code = fbErr && fbErr.code || '';
 
-    // MFA challenge — user has TOTP enrolled. Compat's error.resolver
-    // belongs to compat's module graph and only accepts compat
-    // assertions, which compat cannot generate (no TOTP class). So we
-    // re-do the sign-in via the modular SDK to get a modular resolver
-    // and pair it with a modular TOTP assertion. The user typed their
-    // password once; we still have it in `pass` so this is invisible
-    // to them.
+    // The custom worker-side TOTP path never triggers
+    // 'auth/multi-factor-auth-required' (that's Firebase's own MFA).
+    // If it ever appears here, something is misconfigured — log and
+    // refuse to fall back to a weaker auth path.
     if (code === 'auth/multi-factor-auth-required') {
-      try {
-        var mod = await _loadMfaModular();
-        try {
-          await mod.signInWithEmailAndPassword(mod.modAuth, emailInput, pass);
-          // If this somehow succeeds (factor was unenrolled between
-          // requests), fall through to success.
-        } catch (modErr) {
-          if (!modErr || modErr.code !== 'auth/multi-factor-auth-required') {
-            throw modErr;
-          }
-          var modResolver = mod.getMultiFactorResolver(mod.modAuth, modErr);
-          await _handleMfaChallenge(modResolver);
-        }
-        // Modular sign-in succeeded. Compat's IndexedDB listener will
-        // pick up the same user shortly; wait briefly so downstream
-        // code that reads `auth.currentUser` sees it.
-        await new Promise(function (resolve) {
-          if (auth.currentUser) return resolve();
-          var unsub = auth.onAuthStateChanged(function (u) {
-            if (u) { unsub(); resolve(); }
-          });
-          setTimeout(resolve, 3000);
-        });
-        btn.textContent = 'Sign In';
-        await _handleFirebaseAuthSession(auth.currentUser || mod.modAuth.currentUser);
-        return;
-      } catch (mfaErr) {
-        var mfaMsg = (mfaErr && mfaErr.code === 'auth/invalid-verification-code')
-          ? 'Verification code was incorrect. Try the next one your authenticator shows.'
-          : (mfaErr && mfaErr.message) || 'MFA verification failed.';
-        if (errEl) { errEl.textContent = mfaMsg; errEl.style.display = 'block'; }
-        return;
+      console.error('[mfa] unexpected auth/multi-factor-auth-required — worker-side TOTP is the active MFA path. Did someone re-enable Firebase MFA in the console?');
+      if (errEl) {
+        errEl.textContent = 'Firebase Auth requested a second factor, but this app uses worker-side TOTP instead. Contact support.';
+        errEl.style.display = 'block';
       }
+      return;
     }
 
     if (errEl) {
@@ -14027,122 +14053,26 @@ async function secShipAuditLogCoverage() {
   _secInitPosture();
 }
 
-// Firebase's COMPAT bundle never exposed TotpMultiFactorGenerator —
-// TOTP MFA only lives in the MODULAR auth SDK. The compat + modular
-// bundles live in separate module graphs, so we must:
-//   1. Dynamic-import firebase-app.js (modular) and call its
-//      initializeApp(config) so the modular graph has a default app.
-//   2. Dynamic-import firebase-auth.js (modular) and call getAuth(app).
-//   3. Wait for onAuthStateChanged so IndexedDB rehydrates the user
-//      from the existing compat session.
-// Pinned to the same SDK version as the compat scripts in <head>.
-var _mfaModularPromise = null;
-async function _loadMfaModular() {
-  if (_mfaModularPromise) return _mfaModularPromise;
-  _mfaModularPromise = (async function () {
-    // ESM dynamic imports must hit gstatic which is allowed by CSP.
-    var appMod = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-    var authMod = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-    // Initialize a default app in the modular graph with the SAME
-    // config the compat SDK used. If something already initialized
-    // it (subsequent _loadMfaModular calls won't hit this path), grab
-    // the existing one via getApp().
-    var app;
-    try {
-      app = appMod.initializeApp(firebaseConfig);
-    } catch (e) {
-      app = appMod.getApp();
-    }
-    var modAuth = authMod.getAuth(app);
-    // Wait for the auth state to hydrate from IndexedDB — both compat
-    // and modular share the IndexedDB key `firebase:authUser:<apiKey>:[DEFAULT]`,
-    // so the user signed in via compat appears here once hydration completes.
-    await new Promise(function (resolve) {
-      var unsub = authMod.onAuthStateChanged(modAuth, function () {
-        unsub();
-        resolve();
-      });
-      // Safety: if onAuthStateChanged never fires (network glitch on
-      // IndexedDB), don't deadlock.
-      setTimeout(resolve, 4000);
-    });
-    return Object.assign({}, authMod, { modAuth: modAuth, app: app });
-  })().catch(function (e) {
-    _mfaModularPromise = null;  // allow retry
-    throw new Error('Could not load Firebase modular auth SDK: ' + (e && e.message || e));
-  });
-  return _mfaModularPromise;
-}
-
-// Get the modular auth user for the currently signed-in compat user.
-async function _mfaModularUser() {
-  var mod = await _loadMfaModular();
-  if (!mod.modAuth.currentUser) {
-    throw new Error('Sign in first.');
-  }
-  return { mod: mod, modAuth: mod.modAuth, user: mod.modAuth.currentUser };
-}
-
-// Sign-in-time MFA challenge handler. Called when
-// signInWithEmailAndPassword throws 'auth/multi-factor-auth-required'.
-// The compat error.resolver IS a wrapper around the modular
-// MultiFactorResolver — its `resolveSignIn(assertion)` forwards the
-// assertion straight through to the modular impl, so a modular
-// assertion produced by TotpMultiFactorGenerator works fine here.
-async function _handleMfaChallenge(resolver) {
-  var mod = await _loadMfaModular();
-  if (!mod.TotpMultiFactorGenerator) {
-    throw new Error('TOTP support missing from Firebase modular SDK build. Hard-reload (Ctrl+Shift+R) and try again.');
-  }
-  // Find the TOTP hint to verify against (skip phone hints if any).
-  var hint = null;
-  for (var i = 0; i < resolver.hints.length; i++) {
-    if (resolver.hints[i].factorId === 'totp') { hint = resolver.hints[i]; break; }
-  }
-  if (!hint) hint = resolver.hints[0];
-  var attempts = 0;
-  while (attempts < 3) {
-    attempts++;
-    var code = window.prompt(
-      attempts === 1
-        ? 'Enter the 6-digit code from your authenticator app:'
-        : 'Code was incorrect. Try again — enter the next 6-digit code your authenticator shows:'
-    );
-    if (!code) throw new Error('Sign-in cancelled.');
-    code = code.trim();
-    try {
-      var assertion = mod.TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
-      await resolver.resolveSignIn(assertion);
-      return;
-    } catch (e) {
-      if (e && e.code === 'auth/invalid-verification-code' && attempts < 3) continue;
-      throw e;
-    }
-  }
-  throw new Error('Too many incorrect attempts. Try again later.');
-}
-
 // ═══════════════════════════════════════════════════════════
-// TOTP MFA enrollment (Firebase Auth multi-factor v2 API)
+// TOTP MFA — worker-side implementation (RFC 6238)
 // ═══════════════════════════════════════════════════════════
-// Firebase Auth's TOTP MFA is included in the no-cost tier
-// (Identity Platform) up to 3,000 MAU. Above that it's
-// $0.005/MAU. For our scale this is free; if we ever cross the
-// threshold the same code keeps working — only billing changes.
+// The TOTP secret lives in Cloudflare KV (encrypted with AES-GCM
+// using the worker's MFA_ENCRYPTION_KEY). The client only ever
+// sees the secret once during enrollment so the authenticator app
+// can be set up. After that the worker verifies codes via Web
+// Crypto HMAC-SHA1; the client just submits the 6-digit code.
 //
-// Caller is the currently-signed-in user. Steps:
-//   1. Get a recent multi-factor session token from the user
-//   2. Generate a TOTP secret + the otpauth URL for it
-//   3. Render the QR code + secret text for the user to scan
-//   4. User enters the 6-digit code from their authenticator
-//   5. Assert the code against the secret, enroll the factor
+// On sign-in, after Firebase Auth succeeds we check the user's
+// `mfaEnabled` custom claim (set by /mfa/enroll-confirm). If true,
+// we prompt for the TOTP code or a backup code and POST it to the
+// worker. On verify, the worker sets `mfaVerifiedAt` so Firestore
+// rules can require recent verification on sensitive collections.
 //
-// Re-authentication is sometimes required (Firebase asks for it
-// if your sign-in is older than a few minutes). We handle the
-// 'auth/requires-recent-login' error by prompting the user to
-// re-enter their password.
-var _mfaPendingSecret = null;
-var _mfaPendingSession = null;
+// Audit trail: every operation writes a Firestore /auditLog entry
+// (immutable per rules) so we have a regulator-ready record.
+
+// Storage for the in-flight backup-code display.
+var _mfaPendingBackupCodes = null;
 
 function _mfaUiMsg(msgEl, ok, text) {
   if (!msgEl) return;
@@ -14162,10 +14092,108 @@ function _mfaUiMsg(msgEl, ok, text) {
   msgEl.textContent = text;
 }
 
+// Best-effort audit entry. Firestore rules allow signed-in writes
+// to /auditLog. We don't block the user flow on failure here —
+// the worker also logs structured JSON via console (Cloudflare
+// observability captures it). Both surfaces converge.
+async function _mfaWriteAudit(action, extra) {
+  if (!db || !currentUser) return;
+  try {
+    await db.collection('auditLog').add(Object.assign({
+      action: 'mfa_' + action,
+      resource: 'auth',
+      userId: currentUser.id || (auth.currentUser && auth.currentUser.uid) || '',
+      userName: currentUser.name || currentUser.email || '',
+      tenantId: currentUser.orgId || '',
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+    }, extra || {}));
+  } catch (e) {
+    console.warn('[mfa-audit] write failed:', e);
+  }
+}
+
+// Shared helper: POST to a /mfa/* endpoint with a fresh ID token.
+// Returns { ok, status, data }. Never throws on HTTP errors — the
+// caller decides how to render them.
+async function _mfaPost(path, body) {
+  var fbUser = auth && auth.currentUser;
+  if (!fbUser) throw new Error('Not signed in.');
+  var idToken = await fbUser.getIdToken(true);
+  var payload = Object.assign({ idToken: idToken }, body || {});
+  var resp = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  var data = null;
+  try { data = await resp.json(); }
+  catch (e) { data = { error: 'malformed_response' }; }
+  return { ok: resp.ok, status: resp.status, data: data };
+}
+
+// Post-sign-in MFA prompt. Called from tryLogin after Firebase Auth
+// resolves and the `mfaEnabled` claim is true. Lets the user submit
+// a 6-digit TOTP code OR a backup recovery code. Loops up to 3
+// attempts on bad codes. Returns true on success, false on cancel
+// / exhausted attempts.
+async function _promptAndVerifyMfa(fbUser) {
+  if (!fbUser) return false;
+  var attempts = 0;
+  while (attempts < 3) {
+    attempts++;
+    var code = window.prompt(
+      attempts === 1
+        ? 'Enter the 6-digit code from your authenticator app.\n\nLost your authenticator? Type your backup code (XXXXX-XXXXX) instead.'
+        : 'Code was incorrect. Try again — enter the next 6-digit code, or a backup code if you have one:'
+    );
+    if (!code) return false;
+    code = code.trim();
+    var isBackup = /^[A-Z2-9]{5}-?[A-Z2-9]{5}$/i.test(code);
+    var path = isBackup ? '/mfa/verify-backup' : '/mfa/verify';
+    var bodyKey = isBackup ? 'backupCode' : 'code';
+    if (!isBackup && !/^\d{6}$/.test(code)) {
+      if (attempts < 3) continue;
+      return false;
+    }
+    var bodyObj = {};
+    bodyObj[bodyKey] = code;
+    var res;
+    try { res = await _mfaPost(path, bodyObj); }
+    catch (e) {
+      alert('MFA verification failed: ' + (e.message || e));
+      return false;
+    }
+    if (res.ok && res.data && res.data.verified) {
+      try { await fbUser.getIdToken(true); } catch(e){}
+      await _mfaWriteAudit(isBackup ? 'verified_backup' : 'verified', {
+        backupCodesRemaining: res.data.backupCodesRemaining || null,
+      });
+      if (isBackup && res.data.warnLowBackup) {
+        alert('Heads up: you have ' + res.data.backupCodesRemaining +
+              ' backup code(s) left. Go to Settings → Security and regenerate before they run out.');
+      }
+      return true;
+    }
+    if (res.status === 429) {
+      alert('Too many wrong codes. Account locked for ~30 min. Try later.');
+      await _mfaWriteAudit('locked_out', { source: isBackup ? 'backup' : 'totp' });
+      return false;
+    }
+    if (attempts >= 3) {
+      alert('Three wrong codes. Try signing in again later.');
+      await _mfaWriteAudit('verification_failed_max', { source: isBackup ? 'backup' : 'totp' });
+      return false;
+    }
+  }
+  return false;
+}
+
 async function _mfaRefreshStatus() {
   var line = document.getElementById('mfa-status-line');
   var enrollArea = document.getElementById('mfa-enroll-area');
   var enrolledArea = document.getElementById('mfa-enrolled-area');
+  var backupLine = document.getElementById('mfa-backup-line');
   if (!line || !enrollArea || !enrolledArea) return;
   var fbUser = (typeof auth !== 'undefined' && auth && auth.currentUser) || null;
   if (!fbUser) {
@@ -14174,23 +14202,49 @@ async function _mfaRefreshStatus() {
     enrolledArea.style.display = 'none';
     return;
   }
+  line.textContent = 'Checking…';
   try {
-    var ctx = await _mfaModularUser();
-    var enrolled = ctx.mod.multiFactor(ctx.user).enrolledFactors || [];
-    if (enrolled.length > 0) {
-      line.textContent = 'Status: ✅ Enrolled (' + enrolled.map(function(f){ return f.displayName||f.factorId||'factor'; }).join(', ') + ')';
+    var res = await _mfaPost('/mfa/status', {});
+    if (!res.ok) {
+      line.textContent = 'Status: unknown (' + (res.data && res.data.error || res.status) + ')';
+      enrollArea.style.display = 'block';
+      enrolledArea.style.display = 'none';
+      return;
+    }
+    if (res.data.enrolled) {
+      var verifiedNote = '';
+      if (res.data.verifiedAt) {
+        var ageHr = Math.floor((Date.now()/1000 - res.data.verifiedAt) / 3600);
+        verifiedNote = ' · last verified ' + (ageHr < 1 ? '<1h' : ageHr + 'h') + ' ago';
+      }
+      line.textContent = 'Status: ✅ Enrolled (authenticator app)' + verifiedNote;
       enrollArea.style.display = 'none';
       enrolledArea.style.display = 'block';
+      if (backupLine) {
+        var remaining = res.data.backupCodesRemaining;
+        if (remaining === 0) {
+          backupLine.innerHTML = '⚠️ <strong>No backup codes remaining.</strong> Regenerate now — without them, losing your authenticator means an admin must wipe your enrollment.';
+          backupLine.style.color = '#9a4a3a';
+        } else if (remaining <= 3) {
+          backupLine.textContent = '⚠️ Only ' + remaining + ' backup code(s) left. Regenerate soon.';
+          backupLine.style.color = '#9a4a3a';
+        } else {
+          backupLine.textContent = remaining + ' backup recovery codes remaining.';
+          backupLine.style.color = '';
+        }
+      }
+    } else if (res.data.locked) {
+      var until = new Date(res.data.lockUntil * 1000);
+      line.textContent = 'Status: ⛔ Locked out until ' + until.toLocaleTimeString() + ' (too many wrong codes)';
+      enrollArea.style.display = 'none';
+      enrolledArea.style.display = 'none';
     } else {
       line.textContent = 'Status: Not enrolled. Strongly recommended for super-admin accounts.';
       enrollArea.style.display = 'block';
       enrolledArea.style.display = 'none';
     }
   } catch (e) {
-    console.warn('[mfa] status check failed:', e);
-    line.textContent = 'Status: could not read MFA state (' + (e && e.message || e) + ')';
-    enrollArea.style.display = 'block';
-    enrolledArea.style.display = 'none';
+    line.textContent = 'Status: error — ' + (e.message || e);
   }
 }
 
@@ -14199,61 +14253,41 @@ async function _mfaStartEnrollment() {
   var msgEl = document.getElementById('mfa-enroll-msg');
   if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
   try {
-    var ctx = await _mfaModularUser();
-    var mod = ctx.mod, user = ctx.user;
-    console.log('[mfa] start enrollment for', user.email,
-      'sdk-compat', (firebase.SDK_VERSION || '?'),
-      'modular?', !!mod.TotpMultiFactorGenerator);
-    if (!mod.TotpMultiFactorGenerator) {
-      throw new Error('TOTP class missing from modular SDK. Hard-reload (Ctrl+Shift+R).');
+    var fbUser = auth && auth.currentUser;
+    if (!fbUser) throw new Error('Sign in first.');
+    var res = await _mfaPost('/mfa/enroll-start', {});
+    if (!res.ok) {
+      var err = res.data && res.data.error || ('http_' + res.status);
+      if (err === 'already_enrolled') throw new Error("You're already enrolled. Remove the existing enrollment first to re-enroll.");
+      if (err === 'mfa_encryption_key_not_configured') throw new Error('Worker missing MFA_ENCRYPTION_KEY secret. Run: npx wrangler secret put MFA_ENCRYPTION_KEY (see RUNBOOK).');
+      throw new Error('Could not start enrollment: ' + err);
     }
-    var session;
-    try {
-      session = await mod.multiFactor(user).getSession();
-    } catch (e) {
-      console.warn('[mfa] getSession failed', e && e.code, e && e.message);
-      if (e && (e.code === 'auth/requires-recent-login' || /recent.*login/i.test(e.message||''))) {
-        var pwd = window.prompt('For security, re-enter your password to continue:');
-        if (!pwd) throw new Error('Cancelled.');
-        var cred = mod.EmailAuthProvider.credential(user.email, pwd);
-        await mod.reauthenticateWithCredential(user, cred);
-        session = await mod.multiFactor(user).getSession();
-      } else if (e && e.code === 'auth/operation-not-allowed') {
-        throw new Error('Multi-factor authentication is not enabled in the Firebase Console. Open Authentication → Sign-in method → Multi-factor authentication and enable it.');
-      } else if (e && e.code === 'auth/unsupported-tenant-operation') {
-        throw new Error('TOTP MFA is not enabled on this Firebase project. Open Firebase Console → Authentication → Sign-in method → Multi-factor authentication and add the Authenticator app provider.');
-      } else if (e && e.code === 'auth/unverified-email') {
-        throw new Error('Your account email is unverified. Firebase requires email verification before MFA enrollment. Click "Forgot password?" to receive a reset link, or check your inbox for a Firebase verification email.');
-      } else {
-        throw e;
-      }
-    }
-    var secret = await mod.TotpMultiFactorGenerator.generateSecret(session);
-    _mfaPendingSecret = secret;
-    _mfaPendingSession = session;
-    var otpauthUrl = secret.generateQrCodeUrl(user.email || 'user@loopenta', 'Loopenta');
+    window._mfaPendingSecret = res.data.secret;
+    window._mfaPendingOtpauth = res.data.otpauthUri;
     var qrContainer = document.getElementById('mfa-qr-container');
     if (qrContainer) {
       var qrImg = document.createElement('img');
       qrImg.alt = 'TOTP enrollment QR code';
       qrImg.width = 200; qrImg.height = 200;
-      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(otpauthUrl);
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(window._mfaPendingOtpauth);
       qrContainer.innerHTML = '';
       qrContainer.appendChild(qrImg);
     }
     var secretText = document.getElementById('mfa-secret-text');
-    if (secretText) secretText.textContent = secret.secretKey;
-    document.getElementById('mfa-qr-area').style.display = 'block';
-    document.getElementById('mfa-enroll-area').style.display = 'none';
+    if (secretText) secretText.textContent = window._mfaPendingSecret;
+    var qrArea = document.getElementById('mfa-qr-area');
+    var enrollArea = document.getElementById('mfa-enroll-area');
+    if (qrArea) qrArea.style.display = 'block';
+    if (enrollArea) enrollArea.style.display = 'none';
     var codeInput = document.getElementById('mfa-code-input');
     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+    await _mfaWriteAudit('enroll_started');
   } catch (e) {
-    var msg = (e && e.message) || 'Could not start enrollment.';
     console.error('[mfa] enrollment failed:', e);
     if (msgEl) {
-      _mfaUiMsg(msgEl, false, msg);
+      _mfaUiMsg(msgEl, false, (e && e.message) || 'Could not start enrollment.');
     } else {
-      alert('MFA enrollment failed:\n\n' + msg);
+      alert('MFA enrollment failed:\n\n' + (e && e.message || e));
     }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Enroll Authenticator App'; }
@@ -14265,42 +14299,39 @@ async function _mfaConfirmEnrollment() {
   var msgEl = document.getElementById('mfa-enroll-msg');
   if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Verifying…'; }
   try {
-    if (!_mfaPendingSecret) throw new Error('No enrollment in progress — start again.');
+    if (!window._mfaPendingSecret) throw new Error('No enrollment in progress — start again.');
     var code = (document.getElementById('mfa-code-input').value || '').trim();
     if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit code from your authenticator.');
-    var ctx = await _mfaModularUser();
-    var mod = ctx.mod, user = ctx.user;
-    var assertion = mod.TotpMultiFactorGenerator.assertionForEnrollment(_mfaPendingSecret, code);
-    await mod.multiFactor(user).enroll(assertion, 'Authenticator app');
-    _mfaPendingSecret = null;
-    _mfaPendingSession = null;
-    _mfaUiMsg(msgEl, true, 'Enrolled successfully. Future sign-ins on this account will require a 6-digit code.');
-    try {
-      await db.collection('auditLog').add({
-        action: 'mfa_enrolled', resource: 'auth',
-        userId: currentUser.id, userName: currentUser.name||currentUser.email,
-        tenantId: currentUser.orgId||'',
-        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
-      });
-    } catch(e){}
-    setTimeout(function() {
-      document.getElementById('mfa-qr-area').style.display = 'none';
+    var res = await _mfaPost('/mfa/enroll-confirm', { code: code });
+    if (!res.ok) {
+      var err = res.data && res.data.error || ('http_' + res.status);
+      if (err === 'invalid_code') throw new Error('Code is incorrect. Try the next one your authenticator shows.');
+      if (err === 'no_pending_enrollment') throw new Error('Enrollment session expired. Start again.');
+      throw new Error('Could not enroll: ' + err);
+    }
+    window._mfaPendingSecret = null;
+    window._mfaPendingOtpauth = null;
+    try { await auth.currentUser.getIdToken(true); } catch(e){}
+    _mfaUiMsg(msgEl, true, 'Enrolled. Now save your backup codes below — you will not see them again.');
+    await _mfaWriteAudit('enrolled');
+    // Show backup codes; user must confirm before dismissing.
+    _mfaShowBackupCodes(res.data.backupCodes || []);
+    setTimeout(function () {
+      var qrArea = document.getElementById('mfa-qr-area');
+      if (qrArea) qrArea.style.display = 'none';
       _mfaRefreshStatus();
-    }, 1500);
+    }, 800);
   } catch (e) {
     console.error('[mfa] enroll-confirm failed:', e);
-    var m = (e && e.code === 'auth/invalid-verification-code')
-      ? 'Code is incorrect. Try the next one your authenticator shows.'
-      : (e && e.message) || 'Could not enroll.';
-    _mfaUiMsg(msgEl, false, m);
+    _mfaUiMsg(msgEl, false, (e && e.message) || 'Could not enroll.');
   } finally {
     if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Verify & Enroll'; }
   }
 }
 
 function _mfaCancelEnrollment() {
-  _mfaPendingSecret = null;
-  _mfaPendingSession = null;
+  window._mfaPendingSecret = null;
+  window._mfaPendingOtpauth = null;
   var qr = document.getElementById('mfa-qr-area'); if (qr) qr.style.display = 'none';
   var ea = document.getElementById('mfa-enroll-area'); if (ea) ea.style.display = 'block';
   var msg = document.getElementById('mfa-enroll-msg'); if (msg) msg.style.display = 'none';
@@ -14308,24 +14339,133 @@ function _mfaCancelEnrollment() {
 
 async function _mfaUnenroll() {
   if (!confirm('Remove the authenticator enrollment? You will be able to sign in with just your password — strongly NOT recommended for super-admin.')) return;
+  var code = window.prompt('To confirm, enter your current 6-digit authenticator code:');
+  if (!code) return;
+  code = code.trim();
+  if (!/^\d{6}$/.test(code)) { alert('Code must be 6 digits.'); return; }
   try {
-    var ctx = await _mfaModularUser();
-    var enrolled = ctx.mod.multiFactor(ctx.user).enrolledFactors || [];
-    for (var i = 0; i < enrolled.length; i++) {
-      try { await ctx.mod.multiFactor(ctx.user).unenroll(enrolled[i]); }
-      catch (e) { console.warn('[mfa] unenroll fail', e); }
+    var res = await _mfaPost('/mfa/unenroll', { code: code });
+    if (!res.ok) {
+      var err = res.data && res.data.error || ('http_' + res.status);
+      if (err === 'invalid_code') { alert('Code was incorrect. Enrollment not removed.'); return; }
+      if (err === 'mfa_locked') { alert('Locked out from too many wrong codes. Try later.'); return; }
+      alert('Could not remove enrollment: ' + err);
+      return;
     }
-    try {
-      await db.collection('auditLog').add({
-        action: 'mfa_unenrolled', resource: 'auth',
-        userId: currentUser.id, userName: currentUser.name||currentUser.email,
-        tenantId: currentUser.orgId||'',
-        timestamp: new Date().toISOString(), userAgent: navigator.userAgent
-      });
-    } catch(e){}
+    try { await auth.currentUser.getIdToken(true); } catch(e){}
+    await _mfaWriteAudit('unenrolled');
     _mfaRefreshStatus();
-  } catch (e) { alert('Could not remove enrollment: ' + (e.message||e)); }
+  } catch (e) {
+    alert('Could not remove enrollment: ' + (e.message || e));
+  }
 }
+
+async function _mfaRegenerateBackup() {
+  var code = window.prompt('Generating a fresh set of 10 backup codes — your old codes will stop working. Enter your current 6-digit authenticator code to confirm:');
+  if (!code) return;
+  code = code.trim();
+  if (!/^\d{6}$/.test(code)) { alert('Code must be 6 digits.'); return; }
+  try {
+    var res = await _mfaPost('/mfa/regenerate-backup', { code: code });
+    if (!res.ok) {
+      var err = res.data && res.data.error || ('http_' + res.status);
+      alert('Could not regenerate: ' + err);
+      return;
+    }
+    await _mfaWriteAudit('backup_regenerated');
+    _mfaShowBackupCodes(res.data.backupCodes || []);
+    _mfaRefreshStatus();
+  } catch (e) {
+    alert('Regenerate failed: ' + (e.message || e));
+  }
+}
+
+// ── Backup-codes display + interaction ────────────────────────
+function _mfaShowBackupCodes(codes) {
+  _mfaPendingBackupCodes = codes.slice();
+  var grid = document.getElementById('mfa-backup-codes');
+  if (grid) {
+    grid.innerHTML = '';
+    codes.forEach(function (c) {
+      var div = document.createElement('div');
+      div.textContent = c;
+      div.style.padding = '6px 10px';
+      div.style.border = '1px solid #fde68a';
+      div.style.borderRadius = '6px';
+      div.style.background = '#fffbeb';
+      grid.appendChild(div);
+    });
+  }
+  var area = document.getElementById('mfa-backup-area');
+  if (area) area.style.display = 'block';
+  var cbox = document.getElementById('mfa-backup-saved-cbox');
+  if (cbox) cbox.checked = false;
+  _mfaToggleBackupDismiss();
+}
+
+function _mfaToggleBackupDismiss() {
+  var cbox = document.getElementById('mfa-backup-saved-cbox');
+  var btn = document.getElementById('mfa-backup-dismiss-btn');
+  if (!btn) return;
+  if (cbox && cbox.checked) {
+    btn.disabled = false;
+    btn.style.cursor = 'pointer';
+    btn.style.opacity = '1';
+    btn.style.background = '#92400e';
+    btn.style.color = 'white';
+    btn.style.borderColor = '#92400e';
+  } else {
+    btn.disabled = true;
+    btn.style.cursor = 'not-allowed';
+    btn.style.opacity = '0.5';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--text-muted)';
+    btn.style.borderColor = 'var(--border)';
+  }
+}
+
+function _mfaDismissBackup() {
+  _mfaPendingBackupCodes = null;
+  var area = document.getElementById('mfa-backup-area');
+  if (area) area.style.display = 'none';
+  var grid = document.getElementById('mfa-backup-codes');
+  if (grid) grid.innerHTML = '';  // wipe DOM so the codes can't be recovered via inspect
+}
+
+function _mfaCopyBackupCodes() {
+  if (!_mfaPendingBackupCodes) return;
+  var text = 'Loopenta backup recovery codes (generated ' + new Date().toISOString() + ')\n' +
+             '────────────────────────────────────────────────────────────\n' +
+             'Use ONE of these codes if you lose access to your authenticator.\n' +
+             'Each code can be used only once. Store these securely.\n\n' +
+             _mfaPendingBackupCodes.join('\n');
+  try {
+    navigator.clipboard.writeText(text).then(function () {
+      alert('Copied. Paste into a password manager or safe note.');
+    }, function () {
+      alert('Could not copy to clipboard. Use the Download button.');
+    });
+  } catch (e) {
+    alert('Could not copy: ' + (e.message || e));
+  }
+}
+
+function _mfaDownloadBackupCodes() {
+  if (!_mfaPendingBackupCodes) return;
+  var text = 'Loopenta backup recovery codes (generated ' + new Date().toISOString() + ')\n' +
+             '────────────────────────────────────────────────────────────\n' +
+             'Use ONE of these codes if you lose access to your authenticator.\n' +
+             'Each code can be used only once. Store these securely.\n\n' +
+             _mfaPendingBackupCodes.join('\n') + '\n';
+  var blob = new Blob([text], { type: 'text/plain' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'loopenta-backup-codes-' + new Date().toISOString().slice(0,10) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 0);
+}
+
 
 // ------ Phase 7: Rate limiting ------
 async function secShipRateLimiting() {
