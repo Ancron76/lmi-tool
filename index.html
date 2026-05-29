@@ -14001,14 +14001,45 @@ async function secShipAuditLogCoverage() {
   _secInitPosture();
 }
 
+// Firebase's COMPAT bundle never exposed TotpMultiFactorGenerator —
+// TOTP MFA only lives in the MODULAR auth SDK. The compat + modular
+// SDKs are designed to coexist on the same default app, so we
+// dynamic-import the modular bundle the first time MFA is needed,
+// cache the promise, and share state with compat. Pinned to the same
+// SDK version as the compat scripts in <head> to avoid drift.
+var _mfaModularPromise = null;
+async function _loadMfaModular() {
+  if (_mfaModularPromise) return _mfaModularPromise;
+  _mfaModularPromise = import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js')
+    .catch(function (e) {
+      _mfaModularPromise = null;  // allow retry
+      throw new Error('Could not load Firebase modular auth SDK: ' + (e && e.message || e));
+    });
+  return _mfaModularPromise;
+}
+
+// Get the modular auth user for the currently signed-in compat user.
+// Both wrap the same default Firebase app, so getAuth().currentUser
+// returns the same identity that compat's auth.currentUser shows.
+async function _mfaModularUser() {
+  var mod = await _loadMfaModular();
+  var modAuth = mod.getAuth();
+  if (!modAuth.currentUser) {
+    throw new Error('Sign in first.');
+  }
+  return { mod: mod, modAuth: modAuth, user: modAuth.currentUser };
+}
+
 // Sign-in-time MFA challenge handler. Called when
 // signInWithEmailAndPassword throws 'auth/multi-factor-auth-required'.
-// Prompts for the 6-digit code (browser prompt is intentionally
-// minimal — when we have a real modal later, swap it in here) and
-// resolves the sign-in. Loops on bad codes up to 3 attempts.
+// The compat error.resolver IS a wrapper around the modular
+// MultiFactorResolver — its `resolveSignIn(assertion)` forwards the
+// assertion straight through to the modular impl, so a modular
+// assertion produced by TotpMultiFactorGenerator works fine here.
 async function _handleMfaChallenge(resolver) {
-  if (!firebase.auth.TotpMultiFactorGenerator) {
-    throw new Error('Firebase SDK is too old to verify TOTP. Reload the page and try again.');
+  var mod = await _loadMfaModular();
+  if (!mod.TotpMultiFactorGenerator) {
+    throw new Error('TOTP support missing from Firebase modular SDK build. Hard-reload (Ctrl+Shift+R) and try again.');
   }
   // Find the TOTP hint to verify against (skip phone hints if any).
   var hint = null;
@@ -14027,7 +14058,7 @@ async function _handleMfaChallenge(resolver) {
     if (!code) throw new Error('Sign-in cancelled.');
     code = code.trim();
     try {
-      var assertion = firebase.auth.TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
+      var assertion = mod.TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
       await resolver.resolveSignIn(assertion);
       return;
     } catch (e) {
@@ -14090,13 +14121,21 @@ async function _mfaRefreshStatus() {
     enrolledArea.style.display = 'none';
     return;
   }
-  var enrolled = (fbUser.multiFactor && fbUser.multiFactor.enrolledFactors) || [];
-  if (enrolled.length > 0) {
-    line.textContent = 'Status: ✅ Enrolled (' + enrolled.map(function(f){ return f.displayName||f.factorId||'factor'; }).join(', ') + ')';
-    enrollArea.style.display = 'none';
-    enrolledArea.style.display = 'block';
-  } else {
-    line.textContent = 'Status: Not enrolled. Strongly recommended for super-admin accounts.';
+  try {
+    var ctx = await _mfaModularUser();
+    var enrolled = ctx.mod.multiFactor(ctx.user).enrolledFactors || [];
+    if (enrolled.length > 0) {
+      line.textContent = 'Status: ✅ Enrolled (' + enrolled.map(function(f){ return f.displayName||f.factorId||'factor'; }).join(', ') + ')';
+      enrollArea.style.display = 'none';
+      enrolledArea.style.display = 'block';
+    } else {
+      line.textContent = 'Status: Not enrolled. Strongly recommended for super-admin accounts.';
+      enrollArea.style.display = 'block';
+      enrolledArea.style.display = 'none';
+    }
+  } catch (e) {
+    console.warn('[mfa] status check failed:', e);
+    line.textContent = 'Status: could not read MFA state (' + (e && e.message || e) + ')';
     enrollArea.style.display = 'block';
     enrolledArea.style.display = 'none';
   }
@@ -14104,51 +14143,42 @@ async function _mfaRefreshStatus() {
 
 async function _mfaStartEnrollment() {
   var btn = document.getElementById('mfa-enroll-start-btn');
+  var msgEl = document.getElementById('mfa-enroll-msg');
   if (btn) { btn.disabled = true; btn.textContent = 'Preparing…'; }
   try {
-    var fbUser = auth && auth.currentUser;
-    if (!fbUser) throw new Error('Sign in first.');
-    // Diagnostic breadcrumb so we can tell from console what failed
-    // even if the inline banner can't render.
-    console.log('[mfa] start enrollment for', fbUser.email,
-      'SDK version', (firebase.SDK_VERSION || '?'),
-      'hasGenerator', !!firebase.auth.TotpMultiFactorGenerator,
-      'hasMultiFactor', !!fbUser.multiFactor);
-    if (!firebase.auth.TotpMultiFactorGenerator) {
-      throw new Error('Your browser loaded an older Firebase SDK (' +
-        (firebase.SDK_VERSION || 'unknown') +
-        ') that does not include TotpMultiFactorGenerator. Hard-reload the page (Ctrl+Shift+R) and try again.');
-    }
-    if (!fbUser.multiFactor) {
-      throw new Error('Firebase Auth has no multiFactor API on this user. The TOTP provider may not be enabled in the Firebase Console (Authentication → Sign-in method → Multi-factor authentication → Add new provider → Authenticator app).');
+    var ctx = await _mfaModularUser();
+    var mod = ctx.mod, user = ctx.user;
+    console.log('[mfa] start enrollment for', user.email,
+      'sdk-compat', (firebase.SDK_VERSION || '?'),
+      'modular?', !!mod.TotpMultiFactorGenerator);
+    if (!mod.TotpMultiFactorGenerator) {
+      throw new Error('TOTP class missing from modular SDK. Hard-reload (Ctrl+Shift+R).');
     }
     var session;
     try {
-      session = await fbUser.multiFactor.getSession();
+      session = await mod.multiFactor(user).getSession();
     } catch (e) {
       console.warn('[mfa] getSession failed', e && e.code, e && e.message);
       if (e && (e.code === 'auth/requires-recent-login' || /recent.*login/i.test(e.message||''))) {
         var pwd = window.prompt('For security, re-enter your password to continue:');
         if (!pwd) throw new Error('Cancelled.');
-        var cred = firebase.auth.EmailAuthProvider.credential(fbUser.email, pwd);
-        await fbUser.reauthenticateWithCredential(cred);
-        session = await fbUser.multiFactor.getSession();
-      } else if (e && e.code === 'auth/unsupported-tenant-operation') {
-        throw new Error('TOTP MFA is not enabled on this Firebase project yet. Open Firebase Console → Authentication → Sign-in method → Multi-factor authentication and add the Authenticator app provider.');
+        var cred = mod.EmailAuthProvider.credential(user.email, pwd);
+        await mod.reauthenticateWithCredential(user, cred);
+        session = await mod.multiFactor(user).getSession();
       } else if (e && e.code === 'auth/operation-not-allowed') {
         throw new Error('Multi-factor authentication is not enabled in the Firebase Console. Open Authentication → Sign-in method → Multi-factor authentication and enable it.');
+      } else if (e && e.code === 'auth/unsupported-tenant-operation') {
+        throw new Error('TOTP MFA is not enabled on this Firebase project. Open Firebase Console → Authentication → Sign-in method → Multi-factor authentication and add the Authenticator app provider.');
+      } else if (e && e.code === 'auth/unverified-email') {
+        throw new Error('Your account email is unverified. Firebase requires email verification before MFA enrollment. Click "Forgot password?" to receive a reset link, or check your inbox for a Firebase verification email.');
       } else {
         throw e;
       }
     }
-    var secret = await firebase.auth.TotpMultiFactorGenerator.generateSecret(session);
+    var secret = await mod.TotpMultiFactorGenerator.generateSecret(session);
     _mfaPendingSecret = secret;
     _mfaPendingSession = session;
-    var otpauthUrl = secret.generateQrCodeUrl(fbUser.email || 'user@loopenta', 'Loopenta');
-    // Render QR code. Uses a small online QR endpoint as a fallback if
-    // no offline library is bundled — the otpauth URL is non-sensitive
-    // beyond this single session and is short-lived (the secret is also
-    // shown in plain text right below as a manual-entry option).
+    var otpauthUrl = secret.generateQrCodeUrl(user.email || 'user@loopenta', 'Loopenta');
     var qrContainer = document.getElementById('mfa-qr-container');
     if (qrContainer) {
       var qrImg = document.createElement('img');
@@ -14167,11 +14197,9 @@ async function _mfaStartEnrollment() {
   } catch (e) {
     var msg = (e && e.message) || 'Could not start enrollment.';
     console.error('[mfa] enrollment failed:', e);
-    var msgEl = document.getElementById('mfa-enroll-msg');
     if (msgEl) {
       _mfaUiMsg(msgEl, false, msg);
     } else {
-      // Last-resort fallback so the user never gets a silent failure.
       alert('MFA enrollment failed:\n\n' + msg);
     }
   } finally {
@@ -14187,10 +14215,10 @@ async function _mfaConfirmEnrollment() {
     if (!_mfaPendingSecret) throw new Error('No enrollment in progress — start again.');
     var code = (document.getElementById('mfa-code-input').value || '').trim();
     if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit code from your authenticator.');
-    var fbUser = auth && auth.currentUser;
-    if (!fbUser) throw new Error('Sign in first.');
-    var assertion = firebase.auth.TotpMultiFactorGenerator.assertionForEnrollment(_mfaPendingSecret, code);
-    await fbUser.multiFactor.enroll(assertion, 'Authenticator app');
+    var ctx = await _mfaModularUser();
+    var mod = ctx.mod, user = ctx.user;
+    var assertion = mod.TotpMultiFactorGenerator.assertionForEnrollment(_mfaPendingSecret, code);
+    await mod.multiFactor(user).enroll(assertion, 'Authenticator app');
     _mfaPendingSecret = null;
     _mfaPendingSession = null;
     _mfaUiMsg(msgEl, true, 'Enrolled successfully. Future sign-ins on this account will require a 6-digit code.');
@@ -14207,6 +14235,7 @@ async function _mfaConfirmEnrollment() {
       _mfaRefreshStatus();
     }, 1500);
   } catch (e) {
+    console.error('[mfa] enroll-confirm failed:', e);
     var m = (e && e.code === 'auth/invalid-verification-code')
       ? 'Code is incorrect. Try the next one your authenticator shows.'
       : (e && e.message) || 'Could not enroll.';
@@ -14227,10 +14256,11 @@ function _mfaCancelEnrollment() {
 async function _mfaUnenroll() {
   if (!confirm('Remove the authenticator enrollment? You will be able to sign in with just your password — strongly NOT recommended for super-admin.')) return;
   try {
-    var fbUser = auth && auth.currentUser;
-    var enrolled = (fbUser && fbUser.multiFactor && fbUser.multiFactor.enrolledFactors) || [];
+    var ctx = await _mfaModularUser();
+    var enrolled = ctx.mod.multiFactor(ctx.user).enrolledFactors || [];
     for (var i = 0; i < enrolled.length; i++) {
-      try { await fbUser.multiFactor.unenroll(enrolled[i]); } catch (e) { console.warn('unenroll fail', e); }
+      try { await ctx.mod.multiFactor(ctx.user).unenroll(enrolled[i]); }
+      catch (e) { console.warn('[mfa] unenroll fail', e); }
     }
     try {
       await db.collection('auditLog').add({
