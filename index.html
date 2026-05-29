@@ -5088,8 +5088,10 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
             <button onclick="_mfaConfirmEnrollment()" id="mfa-confirm-btn" style="background:#5a8a6a;color:white;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px">Verify & Enroll</button>
             <button onclick="_mfaCancelEnrollment()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;min-height:44px">Cancel</button>
           </div>
-          <div id="mfa-enroll-msg" style="display:none;font-size:12px;margin-top:10px"></div>
         </div>
+        <!-- Error/status banner. Lives OUTSIDE both hidden areas so early-phase
+             failures (before the QR area renders) are still visible. -->
+        <div id="mfa-enroll-msg" style="display:none;font-size:12px;margin-top:10px"></div>
         <div id="mfa-enrolled-area" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a8a6a;font-weight:600;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Enrolled</div>
           <button onclick="_mfaUnenroll()" style="background:transparent;border:1px solid #c4b5a3;color:#9a4a3a;border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;min-height:36px">Remove enrollment</button>
@@ -14106,22 +14108,38 @@ async function _mfaStartEnrollment() {
   try {
     var fbUser = auth && auth.currentUser;
     if (!fbUser) throw new Error('Sign in first.');
+    // Diagnostic breadcrumb so we can tell from console what failed
+    // even if the inline banner can't render.
+    console.log('[mfa] start enrollment for', fbUser.email,
+      'SDK version', (firebase.SDK_VERSION || '?'),
+      'hasGenerator', !!firebase.auth.TotpMultiFactorGenerator,
+      'hasMultiFactor', !!fbUser.multiFactor);
+    if (!firebase.auth.TotpMultiFactorGenerator) {
+      throw new Error('Your browser loaded an older Firebase SDK (' +
+        (firebase.SDK_VERSION || 'unknown') +
+        ') that does not include TotpMultiFactorGenerator. Hard-reload the page (Ctrl+Shift+R) and try again.');
+    }
+    if (!fbUser.multiFactor) {
+      throw new Error('Firebase Auth has no multiFactor API on this user. The TOTP provider may not be enabled in the Firebase Console (Authentication → Sign-in method → Multi-factor authentication → Add new provider → Authenticator app).');
+    }
     var session;
     try {
       session = await fbUser.multiFactor.getSession();
     } catch (e) {
+      console.warn('[mfa] getSession failed', e && e.code, e && e.message);
       if (e && (e.code === 'auth/requires-recent-login' || /recent.*login/i.test(e.message||''))) {
         var pwd = window.prompt('For security, re-enter your password to continue:');
         if (!pwd) throw new Error('Cancelled.');
         var cred = firebase.auth.EmailAuthProvider.credential(fbUser.email, pwd);
         await fbUser.reauthenticateWithCredential(cred);
         session = await fbUser.multiFactor.getSession();
+      } else if (e && e.code === 'auth/unsupported-tenant-operation') {
+        throw new Error('TOTP MFA is not enabled on this Firebase project yet. Open Firebase Console → Authentication → Sign-in method → Multi-factor authentication and add the Authenticator app provider.');
+      } else if (e && e.code === 'auth/operation-not-allowed') {
+        throw new Error('Multi-factor authentication is not enabled in the Firebase Console. Open Authentication → Sign-in method → Multi-factor authentication and enable it.');
       } else {
         throw e;
       }
-    }
-    if (!firebase.auth.TotpMultiFactorGenerator) {
-      throw new Error('Your Firebase SDK is too old for TOTP. Hard-reload the page and try again.');
     }
     var secret = await firebase.auth.TotpMultiFactorGenerator.generateSecret(session);
     _mfaPendingSecret = secret;
@@ -14148,8 +14166,14 @@ async function _mfaStartEnrollment() {
     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
   } catch (e) {
     var msg = (e && e.message) || 'Could not start enrollment.';
+    console.error('[mfa] enrollment failed:', e);
     var msgEl = document.getElementById('mfa-enroll-msg');
-    _mfaUiMsg(msgEl, false, msg);
+    if (msgEl) {
+      _mfaUiMsg(msgEl, false, msg);
+    } else {
+      // Last-resort fallback so the user never gets a silent failure.
+      alert('MFA enrollment failed:\n\n' + msg);
+    }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Enroll Authenticator App'; }
   }
