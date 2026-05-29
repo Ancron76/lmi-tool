@@ -34,6 +34,15 @@ curl -sI https://lmitool.com/ | grep -i cache-control
 # 6. CSP header live
 curl -sI https://lmitool.com/ | grep -i content-security-policy
 # Expect: a long policy string starting with default-src 'self'
+
+# 7. MFA crypto self-test (worker-side TOTP)
+curl -s https://lmitool.com/mfa/health
+# Expect (JSON):
+#   totp_rfc6238_test_vector_ok: true
+#   aes_gcm_roundtrip_ok:        true
+#   config.kv_namespace:         true
+#   config.mfa_encryption_key:   true
+#   config.firebase_service_account: true
 ```
 
 ---
@@ -270,7 +279,7 @@ the code. Once signed in, immediately go to **Settings → Security
 → Regenerate backup codes** (requires a fresh authenticator
 enrollment first via Remove → Re-enroll).
 
-### Operator-side recovery: wipe via wrangler
+### Operator-side recovery: `/admin/clear-mfa`
 
 If the user has no backup codes left AND no authenticator:
 
@@ -283,24 +292,33 @@ If the user has no backup codes left AND no authenticator:
 2. **Find their Firebase UID.** Firebase Console → Authentication
    → Users → search email → copy `User UID`.
 
-3. **Wipe the KV records:**
-   ```powershell
-   npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_totp_<UID>"
-   npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_backup_<UID>"
-   npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_lock_<UID>"
+3. **Hit `/admin/clear-mfa`** (requires SA password):
+   ```bash
+   curl -X POST https://lmitool.com/admin/clear-mfa \
+     -H "Authorization: Bearer $ADMIN_PASSWORD" \
+     -H "Content-Type: application/json" \
+     -d '{"uid":"<UID>","reason":"user lost phone, identity-verified via call to NMLS phone on 2026-MM-DD"}'
    ```
+   The endpoint validates the SA password, requires a >=10-char
+   reason, wipes all four KV keys (`mfa_totp_<uid>`,
+   `mfa_totp_pending_<uid>`, `mfa_backup_<uid>`, `mfa_lock_<uid>`),
+   clears the Firebase custom claims, and logs the operation to
+   Cloudflare Logs with actor IP, target UID, and reason.
 
-4. **Clear the custom claims** so the sign-in flow stops
-   demanding MFA:
-   ```powershell
-   # Via the worker's /admin/clear-mfa-claims endpoint (if you
-   # add one), or via gcloud CLI with the FIREBASE_SERVICE_ACCOUNT
-   # key file. Minimum: set customAttributes to "{}" via the
-   # identitytoolkit accounts:update REST call.
-   ```
-
-5. Tell the user to sign in with just their password and
+4. Tell the user to sign in with just their password and
    re-enroll immediately at Settings → Security.
+
+### Fallback: direct KV wipe via wrangler
+
+If for any reason `/admin/clear-mfa` is unavailable (worker down,
+admin password rotated, etc.), the wrangler-CLI path still works:
+
+```powershell
+npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_totp_<UID>"
+npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_backup_<UID>"
+npx wrangler kv key delete --binding=KV_NAMESPACE "mfa_lock_<UID>"
+# Then clear customAttributes via gcloud or the Firebase console.
+```
 
 ### Lockout (5 wrong codes / 30 min)
 
@@ -403,6 +421,169 @@ because that's anomalous.
 | GitHub Actions broken | GitHub Status | https://www.githubstatus.com |
 | Security incident | Insurance + counsel | (fill in your contacts) |
 | Regulatory notification | State AG + FTC | varies by state |
+
+---
+
+## HSTS preload-list submission
+
+**Why:** Once lmitool.com is in the Chrome / Firefox / Safari / Edge
+HSTS preload list, the first time anyone in the world visits the
+domain — even on a brand new device that's never seen our cert —
+the browser automatically upgrades to HTTPS before any HTTP request
+is made. Forecloses SSL-stripping man-in-the-middle attacks at
+session-start. Required posture for regulated financial sites.
+
+**Current header (verified 2026-05-29 via `curl -sI`):**
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+```
+
+That satisfies the [preload requirements](https://hstspreload.org/):
+- `max-age` ≥ 31536000 (1 year) ✓
+- `includeSubDomains` ✓
+- `preload` directive ✓
+
+**Submit:**
+
+1. Open https://hstspreload.org/
+2. Enter `lmitool.com` → click **Check HSTS preload status**
+3. If all green, click **Submit** at the bottom
+4. Repeat for `loopenta.com` and `www.loopenta.com`
+
+**Read this before you click Submit** — preload submission is
+**hard to reverse** (browsers can take 12 months to honor a removal
+request). Don't submit until you're confident:
+
+- Every subdomain works on HTTPS (test `www.`, any others)
+- Your cert auto-renewal is rock solid (Cloudflare handles this for
+  us, so it's fine)
+- No internal/dev subdomain you'd ever want to run on HTTP for
+  troubleshooting (e.g. `staging.lmitool.com`)
+
+If you ever need to remove: https://hstspreload.org/removal/
+
+---
+
+## SPF / DKIM / DMARC — email authentication
+
+**Why:** Without these DNS records, any spammer in the world can
+send "From: support@lmitool.com" and the receiving mail server
+has no way to know it's a fake. Gmail / Outlook / Apple Mail
+increasingly send unauthenticated mail to spam (or refuse it
+outright). Banks have been the targets of phishing campaigns for
+years; mortgage CRMs are next.
+
+### Current state
+
+We send email via **EmailJS** (`service_g1ghxq2`, `template_fksjm5e`).
+EmailJS routes through whatever SMTP provider you configured in
+their dashboard — probably Gmail / Google Workspace / SendGrid /
+Mailgun. The records you need depend on that provider.
+
+### What to add
+
+Open your domain registrar's DNS panel for `lmitool.com` (and
+`loopenta.com`). Add these three records:
+
+**1. SPF** (Sender Policy Framework) — TXT record on root domain:
+
+```
+Name:  @  (or lmitool.com)
+Type:  TXT
+Value: v=spf1 include:_spf.google.com ~all
+```
+
+Replace `_spf.google.com` with your actual SMTP provider's include
+directive:
+- Google Workspace: `include:_spf.google.com`
+- SendGrid:         `include:sendgrid.net`
+- Mailgun:          `include:mailgun.org`
+- Microsoft 365:    `include:spf.protection.outlook.com`
+
+Combine multiple if you send through more than one (e.g. Google
+Workspace for human email + SendGrid for transactional):
+
+```
+v=spf1 include:_spf.google.com include:sendgrid.net ~all
+```
+
+The `~all` at the end means "soft-fail" — receivers will mark
+mismatches as suspicious but still deliver. Switch to `-all`
+("hard-fail, reject") once you're confident no legit mail comes
+from anywhere outside the listed providers (usually after running
+`~all` for 30-60 days and watching DMARC reports).
+
+**2. DKIM** (DomainKeys Identified Mail) — your provider gives you
+a public-key TXT record to publish:
+
+- **Google Workspace:** Admin Console → Apps → Google Workspace →
+  Gmail → Authenticate email → Generate new record → publish the
+  TXT they show you (selector usually `google._domainkey.lmitool.com`)
+- **SendGrid:** Settings → Sender Authentication → Authenticate
+  Your Domain → publish all the CNAMEs they show (typically 3
+  CNAMEs: `s1._domainkey`, `s2._domainkey`, and one for return-path)
+- **Mailgun:** Sending → Domains → click your domain → DNS records
+  tab → publish the TXT record (selector usually `mta._domainkey`)
+
+Only publish ONE provider's DKIM at a time per selector. Multiple
+providers can coexist if each uses a different selector.
+
+**3. DMARC** (Domain-based Message Authentication, Reporting, and
+Conformance) — TXT record telling receivers what to do when SPF
+or DKIM fails, plus where to send reports:
+
+```
+Name:  _dmarc  (creates _dmarc.lmitool.com)
+Type:  TXT
+Value: v=DMARC1; p=none; rua=mailto:dmarc-reports@lmitool.com; pct=100; aspf=r; adkim=r
+```
+
+- `p=none` — "monitor only, don't quarantine or reject." START
+  HERE. Run for 30-60 days, read the reports, then graduate to
+  `p=quarantine` (send to spam) and finally `p=reject` (refuse).
+- `rua=mailto:…` — where to send daily DMARC aggregate reports.
+  Use a real inbox you check, or sign up for a free service like
+  https://dmarc.postmarkapp.com/ (10K msgs/mo free) to parse them
+  automatically.
+- `pct=100` — apply policy to 100% of mail. Some teams start with
+  `pct=10` during the migration.
+- `aspf=r` and `adkim=r` — "relaxed" alignment (subdomain matches
+  count). Use `s` (strict) only if you're certain about your
+  setup.
+
+### Verify
+
+After publishing, wait 5-30 min for DNS propagation, then:
+
+```bash
+# SPF
+dig +short TXT lmitool.com | grep spf1
+# DKIM (replace google with your selector)
+dig +short TXT google._domainkey.lmitool.com
+# DMARC
+dig +short TXT _dmarc.lmitool.com
+```
+
+Or use https://mxtoolbox.com/SuperTool.aspx — enter your domain,
+pick "SPF Record Lookup" / "DKIM Lookup" / "DMARC Lookup" from
+the dropdown. Green checks = good.
+
+**Send a test:** https://www.mail-tester.com/ shows you exactly
+what receivers see. Goal: 10/10 score before going live.
+
+### Why this matters for the regulator story
+
+- FFIEC Examination Handbook (Section on Customer Authentication)
+  expects authenticated email for any communication about
+  consumer financial accounts.
+- GLBA Safeguards Rule requires reasonable email protections;
+  unauthenticated email fails this test.
+- The CFPB has cited unauthenticated email as a phishing-enablement
+  finding in enforcement actions against mortgage servicers.
+
+Get these records published before you have any volume of customer
+emails flowing. Cheaper now than after a phishing incident.
 
 ---
 

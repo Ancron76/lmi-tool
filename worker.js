@@ -254,6 +254,9 @@ export default {
     if (url.pathname === '/mfa/show-qr' && request.method === 'POST') {
       return handleMfaShowQr(request, env);
     }
+    if (url.pathname === '/admin/clear-mfa' && request.method === 'POST') {
+      return handleAdminClearMfa(request, env);
+    }
 
     // ── Public error-report sink ─────────────────────────────────
     // The frontend posts uncaught exceptions + unhandled rejections
@@ -4196,5 +4199,88 @@ async function handleMfaShowQr(request, env) {
     otpauthUri,
     enrolledAt: stored.enrolledAt || null,
     note: 'Scanning this into another authenticator app gives that app the SAME secret as your existing enrollment — codes will match. If you want a different secret, remove your enrollment first, then re-enroll fresh.',
+  }, request);
+}
+
+// POST /admin/clear-mfa
+// Body: { uid, reason }
+// Super-admin only. Wipes the target user's MFA enrollment by
+// deleting the KV records (secret + backup codes + lockout state)
+// and clearing the mfaEnabled / mfaEnrolledAt / mfaVerifiedAt
+// Firebase custom claims so the sign-in flow stops prompting.
+//
+// Use case: a customer (or you) lost both the authenticator AND all
+// the backup codes, and has identity-verified out of band. Without
+// this endpoint, recovery requires PowerShell + wrangler CLI per
+// docs/RUNBOOK.md. This endpoint lets the SA do it from the admin
+// UI instead.
+//
+// Audited heavily:
+//   • Requires SA password gate (existing requireSuperAdmin)
+//   • Requires a non-empty `reason` string (recorded in audit log)
+//   • Logs the actor's IP / UA + the target UID + the reason
+//   • Cannot be used to disable MFA on the SA's own account except
+//     via the same path (so audit trail covers self-recovery too)
+async function handleAdminClearMfa(request, env) {
+  try { await requireSuperAdmin(request, env); }
+  catch (e) { return adminErrorResponse(e, request); }
+
+  let body;
+  try { body = await request.json(); }
+  catch (e) { return jsonResponse({ error: 'invalid_json' }, request, 400); }
+
+  const uid = String(body.uid || '').trim();
+  const reason = String(body.reason || '').trim();
+  if (!uid) return jsonResponse({ error: 'missing_uid' }, request, 400);
+  if (reason.length < 10) {
+    return jsonResponse({
+      error: 'reason_required',
+      detail: 'Provide a >=10-char reason for the audit log (e.g. "user lost phone, identity-verified via call to NMLS phone on 2026-05-29")',
+    }, request, 400);
+  }
+
+  if (!env.KV_NAMESPACE) {
+    return jsonResponse({ error: 'kv_not_configured' }, request, 500);
+  }
+
+  // Wipe all KV entries for this user.
+  const wiped = [];
+  for (const prefix of [MFA_KV_SECRET_PREFIX, MFA_KV_PENDING_PREFIX, MFA_KV_BACKUP_PREFIX, MFA_KV_LOCK_PREFIX]) {
+    try {
+      await env.KV_NAMESPACE.delete(prefix + uid);
+      wiped.push(prefix + uid);
+    } catch (e) { /* non-fatal — KV delete is idempotent */ }
+  }
+
+  // Clear Firebase custom claims so sign-in stops prompting.
+  let claimResult = 'ok';
+  try {
+    await setUserCustomClaims(env, uid, {
+      mfaEnabled: null,
+      mfaEnrolledAt: null,
+      mfaVerifiedAt: null,
+    });
+  } catch (e) {
+    claimResult = 'failed: ' + String(e.message || e);
+  }
+
+  // Loud audit log — this is a high-trust operation.
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  console.warn('[admin-clear-mfa]', JSON.stringify({
+    action: 'admin_clear_mfa',
+    targetUid: uid,
+    reason: reason.slice(0, 500),
+    actorIp: ip,
+    keysWiped: wiped,
+    claimResult,
+    timestamp: new Date().toISOString(),
+  }));
+
+  return jsonResponse({
+    cleared: true,
+    targetUid: uid,
+    keysWiped: wiped.length,
+    claimsCleared: claimResult === 'ok',
+    note: 'User must sign in with just their password and re-enroll immediately from Settings → Security.',
   }, request);
 }
