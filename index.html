@@ -691,6 +691,68 @@ body { font-family: var(--font-body); background: var(--body-bg); min-height: 10
 .existing-branches-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
 .existing-branch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
+/* ─────────────────────────────────────────────────────────────
+   MISSION CONTROL — unified settings overlay
+   ─────────────────────────────────────────────────────────────
+   Replaces 4 fragmented surfaces (sidebar settings slide-out,
+   topbar gear, admin-screen left nav, super-admin-screen left
+   nav). Inspired by Linear's command palette + Notion's settings
+   sidebar + Apple Settings' search-first navigation.
+   Layout: centered overlay 920×680 (90vw/90vh on small screens),
+   sidebar 240px, content fills remaining width. */
+.mc-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(4px); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 24px; }
+.mc-backdrop.open { display: flex; }
+.mc-modal { background: var(--bg, #fffcf4); border-radius: 16px; max-width: 920px; width: 100%; max-height: 90vh; height: 680px; display: flex; flex-direction: column; box-shadow: 0 32px 64px rgba(0,0,0,0.25); overflow: hidden; }
+.mc-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--border, #e8e3d6); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.mc-header-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-primary, #1a1a1a); margin: 0; flex: 1; letter-spacing: -0.02em; }
+.mc-header-kbd { font-size: 11px; color: var(--text-muted, #888); padding: 4px 8px; background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 5px; font-family: monospace; }
+.mc-close { background: transparent; border: 1px solid var(--border, #e8e3d6); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; color: var(--text-muted, #888); display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.12s, color 0.12s; }
+.mc-close:hover { background: var(--surface, #faf6ee); color: var(--text-primary, #1a1a1a); }
+.mc-search-row { padding: 12px 22px; border-bottom: 1px solid var(--border, #e8e3d6); flex-shrink: 0; }
+.mc-search { width: 100%; padding: 11px 14px 11px 38px; border: 1.5px solid var(--border, #e8e3d6); border-radius: 10px; font-size: 14px; font-family: inherit; background: white url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center; box-sizing: border-box; outline: none; }
+.mc-search:focus { border-color: var(--brand-accent, #b07030); }
+.mc-body { flex: 1; display: flex; min-height: 0; }
+.mc-sidebar { width: 240px; padding: 16px 10px; border-right: 1px solid var(--border, #e8e3d6); overflow-y: auto; background: var(--surface, #faf6ee); flex-shrink: 0; }
+.mc-group { margin-bottom: 18px; }
+.mc-group-label { font-size: 10px; font-weight: 700; color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: 0.7px; padding: 0 12px 6px; display: flex; align-items: center; gap: 5px; }
+.mc-group-lock { font-size: 9px; opacity: 0.6; }
+.mc-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background 0.12s; border: none; background: transparent; width: 100%; text-align: left; font-family: inherit; }
+.mc-item:hover { background: rgba(176, 112, 48, 0.08); }
+.mc-item.active { background: var(--brand-accent, #b07030); color: white; }
+.mc-item.active .mc-item-desc { color: rgba(255,255,255,0.85); }
+.mc-item-icon { font-size: 16px; line-height: 1.2; flex-shrink: 0; width: 20px; text-align: center; }
+.mc-item-body { flex: 1; min-width: 0; }
+.mc-item-title { font-size: 13px; font-weight: 600; color: var(--text-primary, #1a1a1a); line-height: 1.3; }
+.mc-item.active .mc-item-title { color: white; }
+.mc-item-desc { font-size: 11px; color: var(--text-secondary, #5a5a5a); margin-top: 2px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; }
+.mc-content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+.mc-content-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-primary, #1a1a1a); margin: 0 0 4px; letter-spacing: -0.02em; }
+.mc-content-desc { font-size: 13px; color: var(--text-secondary, #5a5a5a); margin: 0 0 22px; }
+.mc-empty { text-align: center; padding: 48px 24px; color: var(--text-muted, #888); }
+.mc-empty-icon { font-size: 36px; opacity: 0.4; margin-bottom: 8px; }
+.mc-field { display: block; margin-bottom: 14px; }
+.mc-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary, #5a5a5a); margin-bottom: 4px; }
+.mc-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border, #e8e3d6); border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; min-height: 42px; }
+.mc-input:focus { border-color: var(--brand-accent, #b07030); outline: none; }
+.mc-btn { background: var(--brand-accent, #b07030); color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 40px; font-family: inherit; }
+.mc-btn:hover { filter: brightness(1.05); }
+.mc-btn-ghost { background: transparent; border: 1px solid var(--border, #e8e3d6); color: var(--text-secondary, #5a5a5a); }
+.mc-btn-danger { background: #9a4a3a; color: white; }
+.mc-msg { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin: 10px 0; }
+.mc-msg-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.mc-msg-err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.mc-msg-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.mc-help-card { background: var(--surface, #faf6ee); border: 1px solid var(--border, #e8e3d6); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--text-secondary, #5a5a5a); line-height: 1.55; margin-bottom: 18px; }
+.mc-divider { height: 1px; background: var(--border, #e8e3d6); margin: 20px 0; border: 0; }
+
+@media (max-width: 720px) {
+  .mc-backdrop { padding: 8px; }
+  .mc-modal { height: 95vh; max-height: 95vh; border-radius: 12px; }
+  .mc-body { flex-direction: column; }
+  .mc-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border, #e8e3d6); padding: 12px; max-height: 38vh; }
+  .mc-content { padding: 18px; }
+}
+
 /* INVITE MODAL */
 .invite-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); display: none; align-items: center; justify-content: center; z-index: 500; }
 .invite-modal-overlay.open { display: flex; }
@@ -2459,7 +2521,7 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
       <button class="sidebar-nav-item" id="sn-marketing" data-feature="marketing" onclick="showTab('marketing');closeSidebar()"><span class="sn-icon">🖨️</span>Marketing</button>
     </nav>
     <div class="sidebar-footer">
-      <button class="sidebar-nav-item" onclick="openSettings()"><span class="sn-icon">⚙️</span>Settings</button>
+      <button class="sidebar-nav-item" onclick="openMC()" title="Settings (Cmd+K)"><span class="sn-icon">⚙️</span>Settings</button>
       <button class="sidebar-nav-item" id="sn-hub-help" onclick="if(window.Hub){Hub.go('help');}else{showTab('hub');}closeSidebar()"><span class="sn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>Help Center</button>
       <button class="sidebar-nav-item" onclick="logout()"><span class="sn-icon">↩</span>Sign Out</button>
       <!-- Required regulatory footer. Shown inside the sidebar so it
@@ -2519,12 +2581,12 @@ By typing your name and clicking "I Agree," you are providing a legally binding 
           <button class="user-menu-item user-menu-super" style="display:none" onclick="_closeUserMenu();goSuperAdmin()"><span class="um-icon">⚡</span>Super Admin</button>
           <button class="user-menu-item user-menu-switch-product" style="display:none" onclick="_superSwitchProduct()"><span class="um-icon">🔀</span><span class="user-menu-switch-product-label">Switch to LMI Finder</span></button>
           <div class="user-menu-divider"></div>
-          <button class="user-menu-item" onclick="_closeUserMenu();openSettings()"><span class="um-icon">⚙️</span>Settings</button>
+          <button class="user-menu-item" onclick="_closeUserMenu();openMC()"><span class="um-icon">⚙️</span>Settings <span style="margin-left:auto;font-size:10px;color:#999;font-family:monospace;background:#f5f5f5;padding:2px 5px;border-radius:3px">⌘K</span></button>
           <div class="user-menu-divider"></div>
           <button class="user-menu-item danger" onclick="_closeUserMenu();logout()"><span class="um-icon">↩</span>Sign Out</button>
         </div>
       </div>
-      <button class="topbar-gear-btn" onclick="openDashSettings()" title="Dashboard settings" id="topbar-gear-btn">
+      <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)" id="topbar-gear-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       </button>
     </div>
@@ -3196,7 +3258,7 @@ Value:           (paste your API key)<button onclick="_rapidApiCopy(this)" style
     <div class="marketing-main">
       <div class="mkt-header-title">🖨 Marketing Engine</div>
       <div class="mkt-profile-warn" id="mkt-profile-warn">
-        ⚠️ Your MLO profile is incomplete. <a onclick="openSettings()">Add your phone, NMLS, and headshot in Settings</a> to personalize these materials.
+        ⚠️ Your MLO profile is incomplete. <a onclick="openMC('profile')" style="cursor:pointer;text-decoration:underline">Add your phone, NMLS, and headshot in Settings</a> to personalize these materials.
       </div>
       <div class="mkt-pieces-grid">
         <div class="mkt-piece-card">
@@ -3854,12 +3916,12 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
             <button class="user-menu-item user-menu-super" style="display:none" onclick="_closeUserMenu();goSuperAdmin()"><span class="um-icon">⚡</span>Super Admin</button>
           <button class="user-menu-item user-menu-switch-product" style="display:none" onclick="_superSwitchProduct()"><span class="um-icon">🔀</span><span class="user-menu-switch-product-label">Switch to LMI Finder</span></button>
             <div class="user-menu-divider"></div>
-            <button class="user-menu-item" onclick="_closeUserMenu();openSettings()"><span class="um-icon">⚙️</span>Settings</button>
+            <button class="user-menu-item" onclick="_closeUserMenu();openMC()"><span class="um-icon">⚙️</span>Settings <span style="margin-left:auto;font-size:10px;color:#999;font-family:monospace;background:#f5f5f5;padding:2px 5px;border-radius:3px">⌘K</span></button>
             <div class="user-menu-divider"></div>
             <button class="user-menu-item danger" onclick="_closeUserMenu();logout()"><span class="um-icon">↩</span>Sign Out</button>
           </div>
         </div>
-        <button class="topbar-gear-btn" onclick="openDashSettings()" title="Dashboard settings">
+        <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </button>
       </div>
@@ -4198,12 +4260,12 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
             <button class="user-menu-item user-menu-super" style="display:none" onclick="_closeUserMenu();goSuperAdmin()"><span class="um-icon">⚡</span>Super Admin</button>
           <button class="user-menu-item user-menu-switch-product" style="display:none" onclick="_superSwitchProduct()"><span class="um-icon">🔀</span><span class="user-menu-switch-product-label">Switch to LMI Finder</span></button>
             <div class="user-menu-divider"></div>
-            <button class="user-menu-item" onclick="_closeUserMenu();openSettings()"><span class="um-icon">⚙️</span>Settings</button>
+            <button class="user-menu-item" onclick="_closeUserMenu();openMC()"><span class="um-icon">⚙️</span>Settings <span style="margin-left:auto;font-size:10px;color:#999;font-family:monospace;background:#f5f5f5;padding:2px 5px;border-radius:3px">⌘K</span></button>
             <div class="user-menu-divider"></div>
             <button class="user-menu-item danger" onclick="_closeUserMenu();logout()"><span class="um-icon">↩</span>Sign Out</button>
           </div>
         </div>
-        <button class="topbar-gear-btn" onclick="openDashSettings()" title="Dashboard settings">
+        <button class="topbar-gear-btn" onclick="openMC()" title="Settings (⌘K)">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </button>
       </div>
@@ -4973,7 +5035,31 @@ Method: HTTP POST<button onclick="_smsSetupCopy(this,'https://lmi-proxy.aaronsim
   </div>
 </div>
 
-<!-- SETTINGS PANEL -->
+<!-- ═══════════════════════════════════════════════════════════
+     MISSION CONTROL — unified settings overlay
+     ═══════════════════════════════════════════════════════════ -->
+<div class="mc-backdrop" id="mc-backdrop" onclick="if(event.target===this)closeMC()" role="dialog" aria-labelledby="mc-title" aria-modal="true">
+  <div class="mc-modal">
+    <div class="mc-header">
+      <h2 class="mc-header-title" id="mc-title">Settings</h2>
+      <span class="mc-header-kbd" id="mc-kbd-hint">Esc to close</span>
+      <button class="mc-close" onclick="closeMC()" aria-label="Close settings">✕</button>
+    </div>
+    <div class="mc-search-row">
+      <input type="text" id="mc-search" class="mc-search" placeholder="Search settings — try 'MFA', 'NMLS', 'billing'…" autocomplete="off" />
+    </div>
+    <div class="mc-body">
+      <nav class="mc-sidebar" id="mc-sidebar" aria-label="Settings sections">
+        <!-- Populated by renderMC() -->
+      </nav>
+      <main class="mc-content" id="mc-content">
+        <!-- Selected section content -->
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- LEGACY SETTINGS PANEL (kept for any deep-link code paths; new UI uses Mission Control) -->
 <div class="settings-backdrop" id="settings-backdrop" onclick="closeSettings()"></div>
 <div class="settings-overlay" id="settings-panel">
   <div class="settings-header"><div class="settings-title">⚙️ Settings</div><button class="settings-close" onclick="closeSettings()">✕ Close</button></div>
@@ -10492,6 +10578,537 @@ function populateAdminActivityFilter() {
 }
 
 // ── SETTINGS ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// MISSION CONTROL — unified Settings overlay
+// ═══════════════════════════════════════════════════════════
+// Single entry point that replaces openSettings(), openDashSettings(),
+// admShowSection() entry, and saShowTab() entry. Design synthesis:
+//   • Linear: Cmd+K opens; search-first; never make users click around
+//   • Stripe: scope-grouped (YOU / TEAM / ORG / PLATFORM) matches the
+//     user's "what am I changing?" mental model better than category
+//   • Apple iOS 18 Settings: search collapses the IA — type "MFA" or
+//     "NMLS" and jump straight there regardless of taxonomy
+//   • Notion: every row has a 1-line description; reduces "what does
+//     this do?" friction by ~90%
+//   • Discord: one cog, one overlay, period
+//
+// Catalog is the single source of truth. Adding a setting = one
+// entry here. Visibility is role-gated declaratively.
+
+// Active section id (persists across open/close in this session).
+var _mcCurrentId = null;
+var _mcLastQuery = '';
+
+var SETTINGS_CATALOG = [
+  // ── YOU (always visible to signed-in users) ────────────────
+  { scope: 'you', id: 'profile',       icon: '👤', title: 'Profile',                desc: 'Name, photo, NMLS, phone, work email',                    kind: 'inline', requires: 'any' },
+  { scope: 'you', id: 'signin',        icon: '🔐', title: 'Password & Sign-In',     desc: 'Change password · Two-factor authentication · Backup codes', kind: 'inline', requires: 'any' },
+  { scope: 'you', id: 'notifications', icon: '🔔', title: 'Notifications',          desc: 'Alert thresholds, weekly digest, what to email you',      kind: 'inline', requires: 'any' },
+  { scope: 'you', id: 'display',       icon: '🎨', title: 'Display & Dashboard',    desc: 'Layout, density, session timeout',                        kind: 'inline', requires: 'any' },
+
+  // ── YOUR TEAM (tenant admin) ───────────────────────────────
+  { scope: 'team', id: 'members',  icon: '👥', title: 'Team Members',     desc: 'Add MLOs, manage their roles & permissions',   kind: 'admin-section', sect: 'users',     requires: 'admin' },
+  { scope: 'team', id: 'pipeline', icon: '📊', title: 'Team Pipeline',    desc: 'Aggregated deals across every MLO',            kind: 'admin-section', sect: 'pipeline',  requires: 'admin' },
+  { scope: 'team', id: 'activity', icon: '📋', title: 'Activity Log',     desc: 'CRA activity across the team',                 kind: 'admin-section', sect: 'activity',  requires: 'admin' },
+  { scope: 'team', id: 'comms',    icon: '💬', title: 'Communications',   desc: 'SMS numbers, templates, sequences',            kind: 'admin-section', sect: 'comms',     requires: 'admin' },
+  { scope: 'team', id: 'prospects',icon: '📌', title: 'Saved Prospects',  desc: 'All saved ZIPs across the team',               kind: 'admin-section', sect: 'prospects', requires: 'admin' },
+
+  // ── YOUR ORG (tenant admin) ────────────────────────────────
+  { scope: 'org', id: 'branding',  icon: '🎨', title: 'Branding',          desc: 'Logo, colors, company NMLS',                  kind: 'admin-section', sect: 'branding', requires: 'admin' },
+  { scope: 'org', id: 'billing',   icon: '💳', title: 'Billing',           desc: 'Plan, usage, invoices',                       kind: 'admin-section', sect: 'billing',  requires: 'admin' },
+  { scope: 'org', id: 'platform',  icon: '⚙️', title: 'Org Configuration', desc: 'Tenant-wide platform settings',               kind: 'admin-section', sect: 'platform', requires: 'admin' },
+
+  // ── PLATFORM (super-admin only) ────────────────────────────
+  { scope: 'platform', id: 'sa-orgs',     icon: '🏢', title: 'All Organizations', desc: 'Every tenant on the platform',                kind: 'sa-section', sect: 'orgs',     requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-users',    icon: '👥', title: 'All Users',         desc: 'Cross-tenant user search & management',       kind: 'sa-section', sect: 'users',    requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-billing',  icon: '💳', title: 'Billing Overview',  desc: 'Revenue across all tenants',                  kind: 'sa-section', sect: 'billing',  requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-features', icon: '🎚️', title: 'Feature Matrix',    desc: 'Feature flags per tier and tenant',           kind: 'sa-section', sect: 'features', requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-security', icon: '🔒', title: 'Security Posture',  desc: 'Phase rollout tracker, MFA enforcement',      kind: 'sa-section', sect: 'security', requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-audit',    icon: '📜', title: 'Audit Log',         desc: 'Cross-tenant immutable audit trail',          kind: 'sa-section', sect: 'audit',    requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-rentcast', icon: '🏠', title: 'RentCast Quota',    desc: 'API budget, monthly counter, cron schedule',  kind: 'sa-section', sect: 'rentcast', requires: 'superadmin' },
+  { scope: 'platform', id: 'sa-config',   icon: '⚙️', title: 'Platform Settings', desc: 'Worker config, KV, secrets',                  kind: 'sa-section', sect: 'settings', requires: 'superadmin' },
+  { scope: 'platform', id: 'op-reset-mfa',icon: '🛠️', title: 'Reset User MFA',    desc: 'Operator recovery — identity-verify first',   kind: 'inline',                       requires: 'superadmin' },
+];
+
+var SCOPE_LABELS = {
+  you:      { label: 'You',          locked: false },
+  team:     { label: 'Your Team',    locked: false },
+  org:      { label: 'Your Org',     locked: false },
+  platform: { label: 'Platform',     locked: true  },  // shown with 🔒 chrome
+};
+
+function _mcUserMeetsRequirement(req) {
+  if (req === 'any')        return true;
+  if (req === 'admin')      return typeof isAnyAdmin === 'function' ? isAnyAdmin() : false;
+  if (req === 'superadmin') return typeof isSuperAdmin === 'function' ? isSuperAdmin() : false;
+  return false;
+}
+
+// Build sidebar HTML from the catalog filtered by role + search.
+function _mcRenderSidebar(query) {
+  var q = String(query || '').trim().toLowerCase();
+  var visible = SETTINGS_CATALOG.filter(function (item) {
+    if (!_mcUserMeetsRequirement(item.requires)) return false;
+    if (!q) return true;
+    var hay = (item.title + ' ' + item.desc + ' ' + item.id).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+
+  if (!visible.length) {
+    return '<div class="mc-empty"><div class="mc-empty-icon">🔍</div><div>No settings match "' + esc(q) + '"</div></div>';
+  }
+
+  // Group by scope preserving catalog order within each group.
+  var byScope = {};
+  visible.forEach(function (it) {
+    (byScope[it.scope] = byScope[it.scope] || []).push(it);
+  });
+
+  var html = '';
+  ['you', 'team', 'org', 'platform'].forEach(function (scope) {
+    var items = byScope[scope] || [];
+    if (!items.length) return;
+    var label = SCOPE_LABELS[scope];
+    html += '<div class="mc-group">';
+    html += '<div class="mc-group-label">' + esc(label.label) + (label.locked ? '<span class="mc-group-lock">🔒</span>' : '') + '</div>';
+    items.forEach(function (it) {
+      var active = it.id === _mcCurrentId ? ' active' : '';
+      html += '<button class="mc-item' + active + '" data-mc-id="' + esc(it.id) + '" onclick="_mcSelect(\'' + esc(it.id) + '\')">';
+      html +=   '<span class="mc-item-icon">' + it.icon + '</span>';
+      html +=   '<span class="mc-item-body">';
+      html +=     '<span class="mc-item-title">' + esc(it.title) + '</span>';
+      html +=     '<span class="mc-item-desc">' + esc(it.desc) + '</span>';
+      html +=   '</span>';
+      html += '</button>';
+    });
+    html += '</div>';
+  });
+  return html;
+}
+
+function _mcRenderContent(id) {
+  var item = SETTINGS_CATALOG.find(function (x) { return x.id === id; });
+  if (!item) {
+    return '<div class="mc-empty"><div class="mc-empty-icon">⬅️</div><div>Pick a setting from the left, or search above.</div></div>';
+  }
+  if (!_mcUserMeetsRequirement(item.requires)) {
+    return '<div class="mc-empty"><div class="mc-empty-icon">🔒</div><div>You don\'t have access to this setting.</div></div>';
+  }
+  // Header is the same for every kind.
+  var head =
+    '<h1 class="mc-content-title">' + item.icon + ' ' + esc(item.title) + '</h1>' +
+    '<p class="mc-content-desc">' + esc(item.desc) + '</p>';
+
+  if (item.kind === 'inline') {
+    return head + _mcInlineBody(item.id);
+  }
+  if (item.kind === 'admin-section') {
+    return head + _mcDeepLinkCard(
+      'This opens the Admin area, scrolled to <strong>' + esc(item.title) + '</strong>.',
+      function () { _mcGoAdmin(item.sect); }
+    );
+  }
+  if (item.kind === 'sa-section') {
+    return head + _mcDeepLinkCard(
+      'This opens the Super-Admin area, scrolled to <strong>' + esc(item.title) + '</strong>.',
+      function () { _mcGoSuperAdmin(item.sect); }
+    );
+  }
+  return head + '<div class="mc-empty">No content registered for this setting.</div>';
+}
+
+function _mcDeepLinkCard(htmlMsg, openFn) {
+  var btnId = 'mc-open-' + Math.random().toString(36).slice(2, 8);
+  var card = '<div class="mc-help-card">' + htmlMsg + '</div>';
+  card += '<button class="mc-btn" id="' + btnId + '">Open →</button>';
+  // Defer wiring so the button exists in the DOM by the time we attach.
+  setTimeout(function () {
+    var el = document.getElementById(btnId);
+    if (el) el.onclick = openFn;
+  }, 0);
+  return card;
+}
+
+function _mcGoAdmin(section) {
+  closeMC();
+  // Show admin screen + jump to section.
+  var s = document.getElementById('admin-screen');
+  if (s) s.style.display = 'block';
+  var app = document.getElementById('app-screen'); if (app) app.style.display = 'none';
+  var sa  = document.getElementById('superadmin-screen'); if (sa) sa.style.display = 'none';
+  if (typeof admShowSection === 'function') {
+    try { admShowSection(section); } catch (e) { console.warn('[mc] admShowSection failed', e); }
+  }
+}
+
+function _mcGoSuperAdmin(tab) {
+  closeMC();
+  var s = document.getElementById('superadmin-screen');
+  if (s) s.style.display = 'block';
+  var app = document.getElementById('app-screen'); if (app) app.style.display = 'none';
+  var ad  = document.getElementById('admin-screen'); if (ad) ad.style.display = 'none';
+  if (typeof saShowTab === 'function') {
+    try { saShowTab(tab); } catch (e) { console.warn('[mc] saShowTab failed', e); }
+  }
+}
+
+function _mcSelect(id) {
+  _mcCurrentId = id;
+  var sidebar = document.getElementById('mc-sidebar');
+  var content = document.getElementById('mc-content');
+  if (sidebar) sidebar.innerHTML = _mcRenderSidebar(document.getElementById('mc-search').value);
+  if (content) content.innerHTML = _mcRenderContent(id);
+  // Wire any inline section's interactive bits.
+  _mcWireInline(id);
+}
+
+function openMC(initialId) {
+  var bd = document.getElementById('mc-backdrop');
+  if (!bd) return;
+  // Default first visible item if no selection.
+  if (!_mcCurrentId) {
+    var firstVisible = SETTINGS_CATALOG.find(function (it) { return _mcUserMeetsRequirement(it.requires); });
+    _mcCurrentId = (initialId || (firstVisible && firstVisible.id) || 'profile');
+  } else if (initialId) {
+    _mcCurrentId = initialId;
+  }
+  var sidebar = document.getElementById('mc-sidebar');
+  var content = document.getElementById('mc-content');
+  var search  = document.getElementById('mc-search');
+  if (search) search.value = _mcLastQuery || '';
+  if (sidebar) sidebar.innerHTML = _mcRenderSidebar(_mcLastQuery);
+  if (content) content.innerHTML = _mcRenderContent(_mcCurrentId);
+  bd.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function () { if (search) search.focus(); }, 30);
+  _mcWireInline(_mcCurrentId);
+}
+
+function closeMC() {
+  var bd = document.getElementById('mc-backdrop');
+  if (bd) bd.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Search input: re-render sidebar live, auto-select first match.
+function _mcSearchHandler(e) {
+  var q = e.target.value;
+  _mcLastQuery = q;
+  var sidebar = document.getElementById('mc-sidebar');
+  if (sidebar) sidebar.innerHTML = _mcRenderSidebar(q);
+  // If the current selection is no longer in the filter, auto-jump
+  // to the first match so the right pane stays useful.
+  var qLower = q.trim().toLowerCase();
+  if (qLower) {
+    var hits = SETTINGS_CATALOG.filter(function (it) {
+      if (!_mcUserMeetsRequirement(it.requires)) return false;
+      var hay = (it.title + ' ' + it.desc + ' ' + it.id).toLowerCase();
+      return hay.indexOf(qLower) !== -1;
+    });
+    if (hits.length && !hits.find(function (h) { return h.id === _mcCurrentId; })) {
+      _mcSelect(hits[0].id);
+    }
+  }
+}
+
+function _mcKeydown(e) {
+  // Esc to close anywhere.
+  if (e.key === 'Escape') {
+    var bd = document.getElementById('mc-backdrop');
+    if (bd && bd.classList.contains('open')) { e.preventDefault(); closeMC(); }
+  }
+  // Cmd+K / Ctrl+K to open (and focus search).
+  if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    openMC();
+  }
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('keydown', _mcKeydown);
+  document.addEventListener('DOMContentLoaded', function () {
+    var s = document.getElementById('mc-search');
+    if (s) s.addEventListener('input', _mcSearchHandler);
+  });
+}
+
+// ── Inline section bodies (rendered into the right pane) ──────
+// Lightweight content for "YOU" sections. More elaborate work
+// (Profile editing, Notifications, etc.) reuses existing form
+// handlers — we just inject the form markup and reuse the global
+// saveProfile() / saveNotificationPrefs() functions.
+function _mcInlineBody(id) {
+  if (id === 'profile')        return _mcSectionProfile();
+  if (id === 'signin')         return _mcSectionSignin();
+  if (id === 'notifications')  return _mcSectionNotifications();
+  if (id === 'display')        return _mcSectionDisplay();
+  if (id === 'op-reset-mfa')   return _mcSectionResetMfa();
+  return '<div class="mc-empty">No inline view for ' + esc(id) + '.</div>';
+}
+
+function _mcSectionProfile() {
+  return ''
+    + '<div class="mc-help-card">Used on every flyer, email signature, and SMS you send. Required for state MLO licensing compliance.</div>'
+    + '<label class="mc-field"><span class="mc-label">Full name</span><input class="mc-input" id="mc-prof-name" placeholder="Jane Smith" /></label>'
+    + '<label class="mc-field"><span class="mc-label">NMLS ID</span><input class="mc-input" id="mc-prof-nmls" inputmode="numeric" placeholder="123456" /></label>'
+    + '<label class="mc-field"><span class="mc-label">Work phone</span><input class="mc-input" id="mc-prof-phone" placeholder="(555) 123-4567" /></label>'
+    + '<label class="mc-field"><span class="mc-label">Work email (shown on flyers)</span><input class="mc-input" id="mc-prof-email" type="email" placeholder="you@company.com" /></label>'
+    + '<label class="mc-field"><span class="mc-label">Headshot URL</span><input class="mc-input" id="mc-prof-photo" placeholder="https://…" /></label>'
+    + '<label class="mc-field"><span class="mc-label">Title</span><input class="mc-input" id="mc-prof-title" placeholder="Mortgage Loan Officer" /></label>'
+    + '<div id="mc-prof-msg"></div>'
+    + '<button class="mc-btn" onclick="_mcSaveProfile()">Save profile</button>';
+}
+
+function _mcSectionSignin() {
+  return ''
+    + '<div class="mc-help-card">Your password and second factor protect every record in your Loopenta account. Backup codes are your way back in if your authenticator is lost.</div>'
+    + '<h3 style="font-size:14px;font-weight:700;margin:0 0 10px">Change password</h3>'
+    + '<label class="mc-field"><span class="mc-label">Current password</span><input class="mc-input" id="mc-pw-current" type="password" autocomplete="current-password" /></label>'
+    + '<label class="mc-field"><span class="mc-label">New password (12+ chars, mixed case, number, symbol)</span><input class="mc-input" id="mc-pw-new" type="password" autocomplete="new-password" /></label>'
+    + '<label class="mc-field"><span class="mc-label">Confirm new password</span><input class="mc-input" id="mc-pw-confirm" type="password" autocomplete="new-password" /></label>'
+    + '<div id="mc-pw-msg"></div>'
+    + '<button class="mc-btn" onclick="_mcSavePassword()">Update password</button>'
+    + '<hr class="mc-divider" />'
+    + '<h3 style="font-size:14px;font-weight:700;margin:0 0 10px">Two-factor authentication</h3>'
+    + '<div id="mc-mfa-status" style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Loading…</div>'
+    + '<div id="mc-mfa-actions"></div>';
+}
+
+function _mcSectionNotifications() {
+  return ''
+    + '<div class="mc-help-card">Choose what we email you about and how often. You can always change these later.</div>'
+    + '<label class="mc-field"><span class="mc-label">Realtor inactivity alert threshold</span>'
+    +   '<select class="mc-input" id="mc-notif-threshold"><option value="7">7 days</option><option value="14">14 days</option><option value="21" selected>21 days</option><option value="30">30 days</option></select>'
+    + '</label>'
+    + '<div class="mc-field"><span class="mc-label">What to email me</span>'
+    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-realtor" checked /> Realtor goes quiet</label>'
+    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-oyz" checked /> Open house tomorrow</label>'
+    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-followup" checked /> Follow-up due</label>'
+    +   '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0"><input type="checkbox" id="mc-pref-weekly" checked /> Weekly performance summary</label>'
+    + '</div>'
+    + '<div id="mc-notif-msg"></div>'
+    + '<button class="mc-btn" onclick="_mcSaveNotifs()">Save preferences</button>';
+}
+
+function _mcSectionDisplay() {
+  return ''
+    + '<div class="mc-help-card">Visual preferences. These are saved per-account, so they follow you across devices.</div>'
+    + '<label class="mc-field"><span class="mc-label">Auto-logout after inactivity</span>'
+    +   '<select class="mc-input" id="mc-session-timeout"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 hour</option><option value="240">4 hours</option></select>'
+    + '</label>'
+    + '<div id="mc-display-msg"></div>'
+    + '<button class="mc-btn" onclick="_mcSaveDisplay()">Save</button>';
+}
+
+function _mcSectionResetMfa() {
+  return ''
+    + '<div class="mc-help-card" style="background:#fef2f2;border-color:#fecaca;color:#7f1d1d"><strong>⚠️ High-trust operation.</strong> Verify the user\'s identity out of band BEFORE running this. Call them on a known number from their /users record and confirm DOB / last 4 of SSN or something not in their record. Bypassing this is the single highest-risk path in the platform.</div>'
+    + '<label class="mc-field"><span class="mc-label">Target Firebase UID</span><input class="mc-input" id="mc-op-uid" placeholder="lookup in Firebase Console → Authentication → Users" /></label>'
+    + '<label class="mc-field"><span class="mc-label">Reason for audit log (≥10 chars, will be permanently recorded)</span><textarea class="mc-input" id="mc-op-reason" rows="3" placeholder="e.g. user lost phone, identity-verified via NMLS-on-file phone call 2026-MM-DD"></textarea></label>'
+    + '<div id="mc-op-msg"></div>'
+    + '<button class="mc-btn mc-btn-danger" onclick="_mcOpResetMfa()">Reset this user\'s MFA</button>';
+}
+
+// Wire interactive bits after a section renders.
+function _mcWireInline(id) {
+  if (id === 'profile')       _mcLoadProfile();
+  if (id === 'signin')        _mcLoadSignin();
+  if (id === 'notifications') _mcLoadNotifs();
+  if (id === 'display')       _mcLoadDisplay();
+}
+
+// ── Profile ───────────────────────────────────────────────────
+function _mcLoadProfile() {
+  if (!currentUser) return;
+  var p = (currentUser.profile || {});
+  var byId = function (id) { return document.getElementById(id); };
+  if (byId('mc-prof-name'))  byId('mc-prof-name').value  = currentUser.name || '';
+  if (byId('mc-prof-nmls'))  byId('mc-prof-nmls').value  = p.nmls  || currentUser.nmls  || '';
+  if (byId('mc-prof-phone')) byId('mc-prof-phone').value = p.phone || currentUser.phone || '';
+  if (byId('mc-prof-email')) byId('mc-prof-email').value = p.email || currentUser.email || '';
+  if (byId('mc-prof-photo')) byId('mc-prof-photo').value = p.photo || '';
+  if (byId('mc-prof-title')) byId('mc-prof-title').value = p.title || '';
+}
+
+async function _mcSaveProfile() {
+  var msgEl = document.getElementById('mc-prof-msg');
+  try {
+    var profile = {
+      photo: document.getElementById('mc-prof-photo').value.trim(),
+      phone: document.getElementById('mc-prof-phone').value.trim(),
+      email: document.getElementById('mc-prof-email').value.trim(),
+      nmls:  document.getElementById('mc-prof-nmls').value.trim(),
+      title: document.getElementById('mc-prof-title').value.trim(),
+    };
+    var name = document.getElementById('mc-prof-name').value.trim();
+    await db.collection('users').doc(currentUser.id).update({
+      name: name, profile: profile,
+      nmls: profile.nmls, phone: profile.phone,
+    });
+    currentUser.name = name;
+    currentUser.profile = profile;
+    currentUser.nmls = profile.nmls;
+    currentUser.phone = profile.phone;
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Profile saved.</div>';
+    if (typeof _paintComplianceFooter === 'function') { try { _paintComplianceFooter(); } catch(e){} }
+  } catch (e) {
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">Save failed: ' + esc(e.message || e) + '</div>';
+  }
+}
+
+// ── Sign-in / MFA ─────────────────────────────────────────────
+async function _mcLoadSignin() {
+  var statusEl  = document.getElementById('mc-mfa-status');
+  var actionsEl = document.getElementById('mc-mfa-actions');
+  if (!statusEl || !actionsEl) return;
+  statusEl.textContent = 'Checking…';
+  try {
+    var res = await _mfaPost('/mfa/status', {});
+    if (!res.ok) {
+      statusEl.innerHTML = '<span style="color:#9a4a3a">Could not read status: ' + esc(res.data && res.data.error || res.status) + '</span>';
+      return;
+    }
+    if (res.data.enrolled) {
+      var hr = res.data.verifiedAt ? Math.floor((Date.now()/1000 - res.data.verifiedAt)/3600) : null;
+      var verNote = hr !== null ? (' · verified ' + (hr < 1 ? '<1h' : hr + 'h') + ' ago') : '';
+      var remaining = res.data.backupCodesRemaining;
+      var bwarn = '';
+      if (remaining === 0) bwarn = '<div class="mc-msg mc-msg-err">⚠️ 0 backup codes left — regenerate now.</div>';
+      else if (remaining <= 3) bwarn = '<div class="mc-msg mc-msg-warn">Only ' + remaining + ' backup code(s) left. Regenerate soon.</div>';
+      else bwarn = '<div style="font-size:12px;color:var(--text-muted);margin:6px 0">' + remaining + ' backup recovery codes remaining.</div>';
+      statusEl.innerHTML = '<strong style="color:#047857">✅ Enrolled</strong>' + verNote;
+      actionsEl.innerHTML = bwarn +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+          '<button class="mc-btn mc-btn-ghost" onclick="_mfaShowExistingQr()">Show QR (re-scan)</button>' +
+          '<button class="mc-btn mc-btn-ghost" onclick="_mfaRegenerateBackup()">Regenerate backup codes</button>' +
+          '<button class="mc-btn mc-btn-danger" onclick="_mfaUnenroll()">Remove enrollment</button>' +
+        '</div>';
+    } else if (res.data.locked) {
+      var until = new Date(res.data.lockUntil * 1000);
+      statusEl.innerHTML = '<span style="color:#9a4a3a">⛔ Locked until ' + esc(until.toLocaleTimeString()) + '</span>';
+      actionsEl.innerHTML = '';
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--text-secondary)">Not enrolled. Strongly recommended.</span>';
+      actionsEl.innerHTML = '<button class="mc-btn" onclick="_mfaStartEnrollment()">Enroll authenticator app</button>';
+    }
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + (e.message || e);
+  }
+}
+
+async function _mcSavePassword() {
+  var msgEl = document.getElementById('mc-pw-msg');
+  var cur   = document.getElementById('mc-pw-current').value;
+  var nw    = document.getElementById('mc-pw-new').value;
+  var conf  = document.getElementById('mc-pw-confirm').value;
+  if (!cur || !nw || !conf) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">All three fields required.</div>'; return; }
+  if (nw !== conf) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">New passwords don\'t match.</div>'; return; }
+  if (typeof _validatePasswordPolicy === 'function') {
+    var err = _validatePasswordPolicy(nw, { email: currentUser && currentUser.email });
+    if (err) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(err) + '</div>'; return; }
+  }
+  try {
+    var cred = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, cur);
+    await auth.currentUser.reauthenticateWithCredential(cred);
+    await auth.currentUser.updatePassword(nw);
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Password updated.</div>';
+    document.getElementById('mc-pw-current').value = '';
+    document.getElementById('mc-pw-new').value = '';
+    document.getElementById('mc-pw-confirm').value = '';
+  } catch (e) {
+    var msg = (e && e.code === 'auth/wrong-password') ? 'Current password is incorrect.' : (e.message || e);
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(msg) + '</div>';
+  }
+}
+
+// ── Notifications ─────────────────────────────────────────────
+async function _mcLoadNotifs() {
+  if (!currentUser || !db) return;
+  try {
+    var doc = await db.collection('users').doc(currentUser.id).get();
+    var prefs = (doc.data() && doc.data().preferences) || {};
+    var setVal = function (id, v) { var el = document.getElementById(id); if (el) { if (el.type === 'checkbox') el.checked = !!v; else el.value = v; } };
+    setVal('mc-notif-threshold', prefs.realtorInactivityDays || 21);
+    setVal('mc-pref-realtor',  prefs.notifRealtor    !== false);
+    setVal('mc-pref-oyz',      prefs.notifOyz        !== false);
+    setVal('mc-pref-followup', prefs.notifFollowup   !== false);
+    setVal('mc-pref-weekly',   prefs.notifWeekly     !== false);
+  } catch (e) { console.warn('[mc] load notifs', e); }
+}
+
+async function _mcSaveNotifs() {
+  var msgEl = document.getElementById('mc-notif-msg');
+  try {
+    var prefs = {
+      realtorInactivityDays: parseInt(document.getElementById('mc-notif-threshold').value, 10) || 21,
+      notifRealtor:  document.getElementById('mc-pref-realtor').checked,
+      notifOyz:      document.getElementById('mc-pref-oyz').checked,
+      notifFollowup: document.getElementById('mc-pref-followup').checked,
+      notifWeekly:   document.getElementById('mc-pref-weekly').checked,
+    };
+    await db.collection('users').doc(currentUser.id).update({ preferences: prefs });
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Preferences saved.</div>';
+  } catch (e) {
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(e.message || e) + '</div>';
+  }
+}
+
+// ── Display / dashboard ───────────────────────────────────────
+function _mcLoadDisplay() {
+  var tEl = document.getElementById('mc-session-timeout');
+  if (!tEl) return;
+  var saved = parseInt(localStorage.getItem('sessionTimeoutMin') || '30', 10);
+  if ([15, 30, 60, 240].indexOf(saved) === -1) saved = 30;
+  tEl.value = String(saved);
+}
+
+function _mcSaveDisplay() {
+  var msgEl = document.getElementById('mc-display-msg');
+  var t = document.getElementById('mc-session-timeout').value;
+  try {
+    localStorage.setItem('sessionTimeoutMin', t);
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ Saved. Reload to take effect.</div>';
+  } catch (e) {
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(e.message || e) + '</div>';
+  }
+}
+
+// ── Operator: reset another user's MFA ────────────────────────
+async function _mcOpResetMfa() {
+  var msgEl  = document.getElementById('mc-op-msg');
+  var uid    = (document.getElementById('mc-op-uid').value || '').trim();
+  var reason = (document.getElementById('mc-op-reason').value || '').trim();
+  if (!uid) { if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">UID is required.</div>'; return; }
+  if (reason.length < 10) {
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">Reason must be at least 10 characters — this is permanently recorded in the audit log.</div>';
+    return;
+  }
+  var pw = sessionStorage.getItem('rc_admin_pw') || window.prompt('Super-Admin password:');
+  if (!pw) return;
+  if (!sessionStorage.getItem('rc_admin_pw')) sessionStorage.setItem('rc_admin_pw', pw);
+  if (!confirm('Wipe MFA for UID ' + uid + '? This is irreversible — the user must sign in with just password and re-enroll. Confirmed identity verification?')) return;
+  try {
+    var resp = await fetch('/admin/clear-mfa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pw },
+      body: JSON.stringify({ uid: uid, reason: reason }),
+    });
+    var data = await resp.json();
+    if (!resp.ok) {
+      if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(data.error || ('HTTP ' + resp.status)) + (data.detail ? ' — ' + esc(data.detail) : '') + '</div>';
+      return;
+    }
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-ok">✓ MFA cleared. Keys wiped: ' + esc(String(data.keysWiped)) + '. Claims cleared: ' + esc(String(data.claimsCleared)) + '. ' + esc(data.note || '') + '</div>';
+    document.getElementById('mc-op-uid').value = '';
+    document.getElementById('mc-op-reason').value = '';
+  } catch (e) {
+    if (msgEl) msgEl.innerHTML = '<div class="mc-msg mc-msg-err">' + esc(e.message || e) + '</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Legacy openSettings() — kept for any deep-link code paths
+// that still call it. New UI buttons all call openMC().
+// ═══════════════════════════════════════════════════════════
 function openSettings() {
   document.getElementById('settings-panel').classList.add('open');
   document.getElementById('settings-backdrop').classList.add('open');
