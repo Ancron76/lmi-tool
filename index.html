@@ -13972,9 +13972,9 @@ async function secCheckHeaders() {
 
 // ------ Phase 2B: TOTP MFA ------
 async function secMarkMfaEnabled() {
-  if (!confirm('Confirm you have:\n\n1) Upgraded Firebase to Blaze\n2) Enabled the TOTP provider in Auth console\n\nClicking OK ships the MFA enrollment UI on next page load.')) return;
+  if (!confirm('Confirm you have enabled the TOTP provider in the Firebase Console (Authentication → Sign-in method → Multi-factor authentication → Add new provider → Authenticator app).\n\nThis marks Phase 2B complete in the Security Posture tracker. The enrollment UI is already live — each user enrolls from their own Settings → Security page.')) return;
   await _secSetFlag({ phase2bMfaEnabled: true, phase2bEnabledAt: new Date().toISOString() });
-  _secLog('sec-phase2b-log', 'Flag saved. Reload the app to see the MFA enrollment flow.', 'ok');
+  _secLog('sec-phase2b-log', 'Flag saved. To enroll yourself: exit the Super Admin area, open Settings, scroll to the 🔒 Security section, click "Enroll Authenticator App".', 'ok');
   _secInitPosture();
 }
 
