@@ -1751,34 +1751,104 @@ async function fetchHmdaData(tractId, env) {
       .filter(a => a.action_taken === 1 || a.action_taken_name === 'Loan originated')
       .reduce((s, a) => s + (a.count || 0), 0);
 
+    // Fetch this tract's income ratio so the CRA Opportunity Score
+    // can be driven by income (the lawful CRA criterion) rather than
+    // race/national-origin proxies. Result is KV-cached, so this is
+    // typically a sub-50ms read.
+    let incomeRatio = null;
+    let msaMfi = null;
+    let tractMfi = null;
+    try {
+      const ratioRes = await fetchTractIncomeRatio(tractId, env);
+      if (ratioRes && ratioRes.ok) {
+        incomeRatio = ratioRes.ratio || null;
+        msaMfi      = ratioRes.msaMfi || null;
+        tractMfi    = ratioRes.tractMfi || null;
+      }
+    } catch (e) { /* non-fatal — score will degrade gracefully */ }
+
+    // Build the scoring input — note we deliberately do NOT pass
+    // minority population data into the scoring path. See the
+    // calculateCraOpportunity comment block for the Fair Lending
+    // rationale.
+    const scoringData = {
+      median_family_income:     tractMfi || data.median_family_income || 0,
+      msa_median_family_income: msaMfi   || 0,
+      lender_count:             data.lender_count || 0,
+    };
+
     return {
       tractId,
       year,
       totalApplications: total,
       originated,
       approvalRate: total > 0 ? Math.round((originated / total) * 100) : 0,
-      medianIncome: data.median_family_income || null,
+      medianIncome: tractMfi || data.median_family_income || null,
+      msaMedianIncome: msaMfi,
+      incomeRatio,
+      // Kept for CRA reporting display only. The frontend MUST label
+      // this as "CRA-reportable demographic data" and MUST NOT use it
+      // as a credit-decision input or marketing-targeting input.
       minorityPct: data.minority_population_pct || null,
       lenders: data.lender_count || 0,
       avgLoanAmount: data.avg_loan_amount || 0,
-      craOpportunityScore: calculateCraOpportunity(total, originated, data),
+      craOpportunityScore: calculateCraOpportunity(total, originated, scoringData),
     };
   } catch (e) {
     return {};
   }
 }
 
+// CRA Opportunity Score — Fair-Lending-compliant version.
+//
+// Background: an earlier version of this function added 25-40 points
+// when the tract's minority population percentage exceeded 50% / 75%.
+// That used a prohibited basis (race / national origin proxy) directly
+// in a lending-related scoring algorithm — an ECOA violation under
+// disparate-treatment doctrine regardless of intent (CFPB has held
+// that "we were trying to help minorities" is not a defense).
+//
+// Replacement: a score built ONLY on income (LMI tract status) and
+// market-structure factors (lender competition, application volume).
+// These are race-neutral and aligned with the CRA's actual purpose
+// (encouraging lending in LOW- AND MODERATE-INCOME areas — defined
+// strictly by income, not race).
+//
+// Inputs:
+//   total         — HMDA applications received in the tract
+//   originated    — applications that became originated loans
+//   data:
+//     median_family_income      — used to derive LMI status when paired
+//                                  with the MSA AMI passed alongside
+//     msa_median_family_income  — the MSA Area Median Income for ratio
+//     lender_count              — distinct lenders active in the tract
+//
+// Scoring (0-100):
+//   LMI tract (income < 80% AMI):  +40
+//   Low-income tract (<50% AMI):   additional +20  (so deep-LMI = 60)
+//   Few lenders (<5):              +20  (underserved by competition)
+//   Modest application volume:     +20  (latent demand vs. saturated mkt)
+//
+// We intentionally do NOT reward "low approval rate" anymore — that
+// signal can read as "find areas where it's easier to make non-prime
+// loans," which is the opposite of what CRA cares about and would
+// be a reverse-redlining liability.
 function calculateCraOpportunity(total, originated, data) {
-  const approvalRate = total > 0 ? (originated / total) * 100 : 50;
-  const minorityPct = parseFloat(data.minority_population_pct || 0);
   const lenderCount = data.lender_count || 5;
+  const tractMfi    = parseFloat(data.median_family_income || 0);
+  const msaMfi      = parseFloat(data.msa_median_family_income || 0);
+  const incomeRatio = (tractMfi > 0 && msaMfi > 0) ? (tractMfi / msaMfi) * 100 : null;
 
   let score = 0;
-  if (approvalRate < 50) score += 30;
-  if (approvalRate < 30) score += 20;
-  if (minorityPct > 50) score += 25;
-  if (minorityPct > 75) score += 15;
-  if (lenderCount < 5) score += 10;
+  // Income-based: LMI tract identification per CRA definition
+  if (incomeRatio !== null) {
+    if (incomeRatio < 80) score += 40;   // LMI tract
+    if (incomeRatio < 50) score += 20;   // deep low-income
+  }
+  // Competition-based: fewer lenders = more opportunity
+  if (lenderCount < 5) score += 20;
+  // Demand-based: lots of applications but few lenders = latent demand
+  if (total > 50 && lenderCount < 10) score += 20;
 
   return Math.min(score, 100);
 }

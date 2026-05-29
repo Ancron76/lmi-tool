@@ -13315,22 +13315,34 @@ function propIntelPreScreen(idx, btn) {
 function renderHmdaPanel(hmda) {
   if (!hmda || !hmda.tractId) return;
   var el = document.getElementById('prop-intel-hmda-panel');
+  // Fair Lending guardrails on this panel:
+  //   \u2022 CRA Opportunity Score is computed worker-side from INCOME and
+  //     market-structure inputs only (no race/national-origin proxy).
+  //   \u2022 Minority Pop % is present only for CRA-reporting transparency
+  //     per HMDA \u00a71003.4 \u2014 explicitly labelled as such, with a notice
+  //     that it MUST NOT be used to target or avoid lending.
+  //   \u2022 No "tract vs CA average" comparison on approval rate \u2014 that
+  //     could read as "find easy approvals," a reverse-redlining risk.
   el.innerHTML = '<div class="hmda-panel">'
     + '<button class="hmda-panel-toggle" onclick="_toggleHmdaPanel(this)">'
-    + 'Lending Intelligence for This Tract <span class="arrow">\u25bc</span></button>'
+    + 'CRA Lending Intelligence for This Tract <span class="arrow">\u25bc</span></button>'
     + '<div class="hmda-panel-body">'
     + '<div class="hmda-grid">'
-    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.totalApplications || 0) + '</div><div class="hmda-stat-label">Applications</div></div>'
-    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.approvalRate || 0) + '%</div><div class="hmda-stat-label">Approval Rate</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.totalApplications || 0) + '</div><div class="hmda-stat-label">HMDA Applications (2023)</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.approvalRate || 0) + '%</div><div class="hmda-stat-label">Origination Rate</div></div>'
     + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.lenders || 0) + '</div><div class="hmda-stat-label">Active Lenders</div></div>'
     + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.avgLoanAmount ? '$' + Number(hmda.avgLoanAmount).toLocaleString() : 'N/A') + '</div><div class="hmda-stat-label">Avg Loan Amount</div></div>'
-    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.minorityPct || 'N/A') + (hmda.minorityPct ? '%' : '') + '</div><div class="hmda-stat-label">Minority Pop.</div></div>'
-    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.craOpportunityScore || 0) + '/100</div><div class="hmda-stat-label">CRA Score</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.incomeRatio ? Math.round(hmda.incomeRatio) + '%' : 'N/A') + '</div><div class="hmda-stat-label">Tract Income / AMI</div></div>'
+    + '<div class="hmda-stat"><div class="hmda-stat-val">' + (hmda.craOpportunityScore || 0) + '/100</div><div class="hmda-stat-label">CRA Opportunity Score</div></div>'
     + '</div>'
-    + '<div class="hmda-bar-wrap">'
-    + '<div class="hmda-bar-label">Approval rate: <strong>' + (hmda.approvalRate || 0) + '%</strong> this tract vs <strong>73%</strong> CA average</div>'
-    + '<div class="hmda-bar-track"><div class="hmda-bar-fill" style="width:' + Math.min(hmda.approvalRate || 0, 100) + '%;background:' + ((hmda.approvalRate || 0) < 50 ? 'var(--color-negative)' : 'var(--color-positive)') + '"></div></div>'
+    + '<div style="margin-top:14px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.5">'
+    +   '<strong style="color:var(--text-secondary)">\ud83d\udcca Methodology:</strong> CRA Opportunity Score is built from this tract\'s income level vs. the MSA AMI (income-based LMI status), the number of distinct active lenders (competition), and application volume. It does NOT use race, ethnicity, or national-origin data. Score is for community-reinvestment outreach planning only; it is NOT a credit-decision input.'
     + '</div>'
+    + '<details style="margin-top:8px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.5">'
+    +   '<summary style="cursor:pointer;font-weight:600;color:var(--text-secondary)">CRA-reportable demographic data (informational only)</summary>'
+    +   '<div style="margin-top:6px">Per HMDA \u00a71003.4, lenders subject to CRA must track and report aggregated demographics of the tracts they serve. The data below is provided strictly for that purpose and for self-assessment of lending equity. Per ECOA and Fair Housing Act, you may NOT use this information to target or avoid lending in any tract, set different terms, or modify marketing.</div>'
+    +   '<div style="margin-top:8px"><strong>Minority population:</strong> ' + (hmda.minorityPct ? hmda.minorityPct + '%' : 'N/A') + '</div>'
+    + '</details>'
     + '</div></div>';
 }
 
