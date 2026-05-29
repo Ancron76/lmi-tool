@@ -1737,14 +1737,21 @@ async function fetchHmdaData(tractId, env) {
   try {
     // CFPB HMDA currently only has data through 2023.
     const year = 2023;
-    const response = await fetch(
-      'https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?' +
-      'census_tracts=' + encodeURIComponent(tractId) + '&' +
-      'years=' + year + '&' +
-      'actions_taken=1,2,3&' +
-      'loan_purposes=1',
-      { headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' } }
-    );
+    // Both upstreams are independent — fire them in parallel.
+    // (HMDA aggregations: ~150-400ms cold; income ratio: KV-cached
+    // ~20ms warm, ~200ms cold. Sequential cost: up to 600ms.
+    // Parallel: max of the two, typically ~200-400ms total.)
+    const [response, ratioRes] = await Promise.all([
+      fetch(
+        'https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?' +
+        'census_tracts=' + encodeURIComponent(tractId) + '&' +
+        'years=' + year + '&' +
+        'actions_taken=1,2,3&' +
+        'loan_purposes=1',
+        { headers: { 'User-Agent': 'LMI-Tool/1.0', Accept: 'application/json' } }
+      ),
+      fetchTractIncomeRatio(tractId, env).catch(() => null),
+    ]);
     if (!response.ok) return {};
     const data = await response.json();
 
@@ -1754,21 +1761,17 @@ async function fetchHmdaData(tractId, env) {
       .filter(a => a.action_taken === 1 || a.action_taken_name === 'Loan originated')
       .reduce((s, a) => s + (a.count || 0), 0);
 
-    // Fetch this tract's income ratio so the CRA Opportunity Score
-    // can be driven by income (the lawful CRA criterion) rather than
-    // race/national-origin proxies. Result is KV-cached, so this is
-    // typically a sub-50ms read.
+    // Pull income data from the parallel fetch above (race-neutral
+    // input to the CRA Opportunity Score — see calculateCraOpportunity
+    // doc comment for Fair Lending rationale).
     let incomeRatio = null;
     let msaMfi = null;
     let tractMfi = null;
-    try {
-      const ratioRes = await fetchTractIncomeRatio(tractId, env);
-      if (ratioRes && ratioRes.ok) {
-        incomeRatio = ratioRes.ratio || null;
-        msaMfi      = ratioRes.msaMfi || null;
-        tractMfi    = ratioRes.tractMfi || null;
-      }
-    } catch (e) { /* non-fatal — score will degrade gracefully */ }
+    if (ratioRes && ratioRes.ok) {
+      incomeRatio = ratioRes.ratio   || null;
+      msaMfi      = ratioRes.msaMfi  || null;
+      tractMfi    = ratioRes.tractMfi || null;
+    }
 
     // Build the scoring input — note we deliberately do NOT pass
     // minority population data into the scoring path. See the
@@ -3614,17 +3617,29 @@ async function verifyFirebaseIdToken(env, idToken) {
 
 // Merge a patch into the user's customAttributes. Firebase stores
 // custom claims as a JSON string under customAttributes — total
-// size <1000 bytes. We read existing, merge, write back.
-async function setUserCustomClaims(env, uid, patch) {
-  const lookup = await firebaseAdminFetch(env, '/accounts:lookup', 'POST', {
-    localId: [uid],
-  });
-  if (!lookup.ok) throw new Error('lookup_failed_' + lookup.status);
-  const user = lookup.data && lookup.data.users && lookup.data.users[0];
-  if (!user) throw new Error('user_not_found');
-  let existing = {};
-  if (user.customAttributes) {
-    try { existing = JSON.parse(user.customAttributes); } catch (e) { /* */ }
+// size <1000 bytes.
+//
+// `knownClaims` is the optional already-parsed claims object from a
+// preceding `verifyFirebaseIdToken` call. When provided, we skip the
+// redundant `/accounts:lookup` round-trip (~150-300ms + a quota burn
+// against Google Identity Toolkit). Every MFA handler that verifies
+// a token then writes a claim should pass `user.claims` here.
+async function setUserCustomClaims(env, uid, patch, knownClaims) {
+  let existing;
+  if (knownClaims !== undefined && knownClaims !== null) {
+    // Trust the caller — claims came from a same-request token verify.
+    existing = { ...knownClaims };
+  } else {
+    const lookup = await firebaseAdminFetch(env, '/accounts:lookup', 'POST', {
+      localId: [uid],
+    });
+    if (!lookup.ok) throw new Error('lookup_failed_' + lookup.status);
+    const user = lookup.data && lookup.data.users && lookup.data.users[0];
+    if (!user) throw new Error('user_not_found');
+    existing = {};
+    if (user.customAttributes) {
+      try { existing = JSON.parse(user.customAttributes); } catch (e) { /* */ }
+    }
   }
   const merged = { ...existing };
   for (const k in patch) {
@@ -3895,7 +3910,7 @@ async function handleMfaEnrollConfirm(request, env) {
       mfaEnabled: true,
       mfaEnrolledAt: now,
       mfaVerifiedAt: now,
-    });
+    }, user.claims);
   } catch (e) {
     // Secret + backup codes are saved. Surface the error — the user
     // can retry the enroll-confirm and we'll re-merge the claim
@@ -3965,7 +3980,7 @@ async function handleMfaVerify(request, env) {
 
   const now = Math.floor(Date.now() / 1000);
   try {
-    await setUserCustomClaims(env, user.uid, { mfaVerifiedAt: now });
+    await setUserCustomClaims(env, user.uid, { mfaVerifiedAt: now }, user.claims);
   } catch (e) {
     return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
   }
@@ -4022,7 +4037,7 @@ async function handleMfaVerifyBackup(request, env) {
 
   const now = Math.floor(Date.now() / 1000);
   try {
-    await setUserCustomClaims(env, user.uid, { mfaVerifiedAt: now });
+    await setUserCustomClaims(env, user.uid, { mfaVerifiedAt: now }, user.claims);
   } catch (e) {
     return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
   }
@@ -4124,7 +4139,7 @@ async function handleMfaUnenroll(request, env) {
       mfaEnabled: null,
       mfaEnrolledAt: null,
       mfaVerifiedAt: null,
-    });
+    }, user.claims);
   } catch (e) {
     return jsonResponse({ error: 'claim_write_failed', detail: String(e.message || e) }, request, 500);
   }
@@ -4243,14 +4258,13 @@ async function handleAdminClearMfa(request, env) {
     return jsonResponse({ error: 'kv_not_configured' }, request, 500);
   }
 
-  // Wipe all KV entries for this user.
-  const wiped = [];
-  for (const prefix of [MFA_KV_SECRET_PREFIX, MFA_KV_PENDING_PREFIX, MFA_KV_BACKUP_PREFIX, MFA_KV_LOCK_PREFIX]) {
-    try {
-      await env.KV_NAMESPACE.delete(prefix + uid);
-      wiped.push(prefix + uid);
-    } catch (e) { /* non-fatal — KV delete is idempotent */ }
-  }
+  // Wipe all KV entries for this user — fire in parallel since the
+  // deletes are independent (was serial: ~4×30ms = 120ms; now ~30ms).
+  const prefixes = [MFA_KV_SECRET_PREFIX, MFA_KV_PENDING_PREFIX, MFA_KV_BACKUP_PREFIX, MFA_KV_LOCK_PREFIX];
+  const deleteResults = await Promise.all(
+    prefixes.map(p => env.KV_NAMESPACE.delete(p + uid).then(() => p + uid).catch(() => null))
+  );
+  const wiped = deleteResults.filter(Boolean);
 
   // Clear Firebase custom claims so sign-in stops prompting.
   let claimResult = 'ok';

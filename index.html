@@ -10754,9 +10754,16 @@ function _mcGoSuperAdmin(tab) {
 
 function _mcSelect(id) {
   _mcCurrentId = id;
+  // Flip the active class without rebuilding the whole sidebar —
+  // saves a re-render + DOM diff on every click.
   var sidebar = document.getElementById('mc-sidebar');
+  if (sidebar) {
+    var prev = sidebar.querySelector('.mc-item.active');
+    if (prev) prev.classList.remove('active');
+    var next = sidebar.querySelector('[data-mc-id="' + id + '"]');
+    if (next) next.classList.add('active');
+  }
   var content = document.getElementById('mc-content');
-  if (sidebar) sidebar.innerHTML = _mcRenderSidebar(document.getElementById('mc-search').value);
   if (content) content.innerHTML = _mcRenderContent(id);
   // Wire any inline section's interactive bits.
   _mcWireInline(id);
@@ -14805,13 +14812,21 @@ async function _mfaWriteAudit(action, extra) {
   }
 }
 
-// Shared helper: POST to a /mfa/* endpoint with a fresh ID token.
-// Returns { ok, status, data }. Never throws on HTTP errors — the
-// caller decides how to render them.
-async function _mfaPost(path, body) {
+// Shared helper: POST to a /mfa/* endpoint with the caller's ID
+// token. Returns { ok, status, data }. Never throws on HTTP errors
+// — the caller decides how to render them.
+//
+// By default we use the cached ID token (no Firebase round-trip).
+// Pass `opts.forceRefresh: true` only when the call is expected to
+// MUTATE custom claims that the next ID-token read needs to see —
+// the post-mutation refresh handled at the call site is the
+// load-bearing one. Reads like /mfa/status save ~150ms per Settings
+// page open by skipping the pre-call refresh.
+async function _mfaPost(path, body, opts) {
+  opts = opts || {};
   var fbUser = auth && auth.currentUser;
   if (!fbUser) throw new Error('Not signed in.');
-  var idToken = await fbUser.getIdToken(true);
+  var idToken = await fbUser.getIdToken(!!opts.forceRefresh);
   var payload = Object.assign({ idToken: idToken }, body || {});
   var resp = await fetch(path, {
     method: 'POST',
@@ -14877,17 +14892,19 @@ if (typeof document !== 'undefined') {
 
 // ── Sign-in MFA modal (replaces window.prompt) ────────────────
 // Promise-based: resolves true on successful verify, false on
-// cancel / exhausted attempts. State is carried in module-level
-// vars so the inline button handlers can drive it.
-var _mfaSigninResolve = null;
-var _mfaSigninBackupMode = false;
-var _mfaSigninAttempts = 0;
-var _mfaSigninFbUser = null;
+// cancel / exhausted attempts. State lives in a single object so
+// every entry path resets cleanly; previously four module-level
+// vars meant `_mfaSigninFbUser` could linger across sessions if a
+// cancel path didn't clear it.
+var _mfaSigninCtx = null;
 
 function _mfaShowSigninModal(fbUser) {
-  _mfaSigninFbUser = fbUser;
-  _mfaSigninBackupMode = false;
-  _mfaSigninAttempts = 0;
+  _mfaSigninCtx = {
+    fbUser: fbUser,
+    backupMode: false,
+    attempts: 0,
+    resolve: null,  // assigned by the Promise constructor below
+  };
   _mfaUpdateSigninModalChrome();
   var input = document.getElementById('mfa-signin-code');
   if (input) {
@@ -14900,7 +14917,7 @@ function _mfaShowSigninModal(fbUser) {
   if (modal) modal.style.display = 'flex';
   // Defer focus so display:flex takes effect first.
   setTimeout(function () { if (input) input.focus(); }, 30);
-  return new Promise(function (resolve) { _mfaSigninResolve = resolve; });
+  return new Promise(function (resolve) { _mfaSigninCtx.resolve = resolve; });
 }
 
 function _mfaSigninKeydown(e) {
@@ -14912,7 +14929,7 @@ function _mfaUpdateSigninModalChrome() {
   var sub = document.getElementById('mfa-signin-sub');
   var input = document.getElementById('mfa-signin-code');
   var link = document.getElementById('mfa-signin-toggle-link');
-  if (_mfaSigninBackupMode) {
+  if (_mfaSigninCtx && _mfaSigninCtx.backupMode) {
     if (sub) sub.textContent = 'Enter one of your backup codes (XXXXX-XXXXX). Each can be used only once.';
     if (input) {
       input.placeholder = 'XXXXX-XXXXX';
@@ -14932,7 +14949,8 @@ function _mfaUpdateSigninModalChrome() {
 }
 
 function _mfaToggleBackupMode() {
-  _mfaSigninBackupMode = !_mfaSigninBackupMode;
+  if (!_mfaSigninCtx) return;
+  _mfaSigninCtx.backupMode = !_mfaSigninCtx.backupMode;
   _mfaUpdateSigninModalChrome();
   var input = document.getElementById('mfa-signin-code');
   if (input) { input.value = ''; input.focus(); }
@@ -14952,7 +14970,9 @@ function _mfaHideSigninModal() {
 
 function _mfaCancelSignin() {
   _mfaHideSigninModal();
-  if (_mfaSigninResolve) { var r = _mfaSigninResolve; _mfaSigninResolve = null; r(false); }
+  var ctx = _mfaSigninCtx;
+  _mfaSigninCtx = null;  // clean slate for the next session
+  if (ctx && ctx.resolve) ctx.resolve(false);
 }
 
 function _mfaSigninShowError(msg) {
@@ -14967,14 +14987,15 @@ async function _mfaSubmitSigninCode() {
   var code = (input.value || '').trim();
   if (!code) return;
   // Auto-detect backup format even if user typed it without toggling.
+  var ctx = _mfaSigninCtx || {};
   var looksBackup = /^[A-Z2-9]{5}-?[A-Z2-9]{5}$/i.test(code);
-  var useBackup = _mfaSigninBackupMode || looksBackup;
+  var useBackup = ctx.backupMode || looksBackup;
   if (!useBackup && !/^\d{6}$/.test(code)) {
     _mfaSigninShowError('Enter 6 digits, or toggle to backup-code mode.');
     return;
   }
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying…'; }
-  _mfaSigninAttempts++;
+  ctx.attempts = (ctx.attempts || 0) + 1;
   var path = useBackup ? '/mfa/verify-backup' : '/mfa/verify';
   var bodyKey = useBackup ? 'backupCode' : 'code';
   var body = {}; body[bodyKey] = code;
@@ -14986,7 +15007,7 @@ async function _mfaSubmitSigninCode() {
     return;
   }
   if (res.ok && res.data && res.data.verified) {
-    try { await _mfaSigninFbUser.getIdToken(true); } catch(e){}
+    if (ctx.fbUser) { try { await ctx.fbUser.getIdToken(true); } catch(e){} }
     await _mfaWriteAudit(useBackup ? 'verified_backup' : 'verified', {
       backupCodesRemaining: res.data.backupCodesRemaining || null,
     });
@@ -14998,7 +15019,9 @@ async function _mfaSubmitSigninCode() {
               ' backup code(s) left. Go to Settings → Security and regenerate before they run out.');
       }, 100);
     }
-    if (_mfaSigninResolve) { var r = _mfaSigninResolve; _mfaSigninResolve = null; r(true); }
+    var resolved = _mfaSigninCtx && _mfaSigninCtx.resolve;
+    _mfaSigninCtx = null;
+    if (resolved) resolved(true);
     return;
   }
   if (res.status === 429) {
@@ -15021,7 +15044,7 @@ async function _mfaSubmitSigninCode() {
   input.value = '';
   input.focus();
   if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Verify'; }
-  if (_mfaSigninAttempts >= 5) {
+  if (ctx.attempts >= 5) {
     setTimeout(function () { _mfaCancelSignin(); }, 1500);
   }
 }
@@ -20240,33 +20263,48 @@ function fillTemplateVars(body,vars){
   return body.replace(/\{\{(\w+)\}\}/g,function(_,k){return vars[k]||('{{'+k+'}}');});
 }
 
-// ── MLO regulatory footer for outbound emails ─────────────────
+// ── MLO regulatory footer for outbound communications ─────────
 // State MLO licensing regs + TILA-RESPA require the originator's
 // NMLS ID on loan-related communications. Most jurisdictions also
-// require the Equal Housing Lender / Equal Housing Opportunity
-// statement when soliciting business. Auto-append both if the
-// body doesn't already include them — keeps every MLO-to-borrower
-// email compliant without burdening template authors.
+// require the Equal Housing Lender statement when soliciting
+// business. These helpers are the single source of truth for
+// both the SMS short-sig and the email block footer.
 //
-// Returns the body unchanged if:
-//   - currentUser has no NMLS in profile (signature would be misleading)
-//   - body already contains "NMLS" (template handled it explicitly)
+// _mloLicenseeInfo() returns null when the caller has no NMLS in
+// profile — every caller treats that as "skip the footer."
+//
+// _messageHasNmlsRef(body) detects an already-present NMLS
+// reference so we don't double-sign. The regex permits "NMLS 123",
+// "NMLS #123", "NMLS: 123", and "NMLS-ID 123".
+function _mloLicenseeInfo() {
+  if (!window.currentUser) return null;
+  var nmls = (currentUser.profile && currentUser.profile.nmls) || currentUser.nmls || '';
+  if (!nmls) return null;
+  return {
+    name:  currentUser.name || '',
+    nmls:  nmls,
+    phone: (currentUser.profile && currentUser.profile.phone) || currentUser.phone || '',
+    email: currentUser.email || '',
+  };
+}
+
+function _messageHasNmlsRef(body) {
+  return /NMLS[\s#:\-]*(ID[\s#:\-]*)?\d{2,}/i.test(String(body || ''));
+}
+
+// Email footer: multi-line block with Equal Housing Lender + the
+// non-commitment disclaimer. Returns body unchanged if no NMLS or
+// the body already has an NMLS reference.
 function appendMloEmailFooter(body) {
   if (!body || typeof body !== 'string') return body || '';
-  if (!window.currentUser) return body;
-  var nmls = (currentUser.profile && currentUser.profile.nmls) || currentUser.nmls || '';
-  if (!nmls) return body;
-  // Skip if author already wired in NMLS via template variable.
-  if (/NMLS[\s#:]*\d{2,}/i.test(body)) return body;
-  var name = currentUser.name || '';
-  var phone = (currentUser.profile && currentUser.profile.phone) || currentUser.phone || '';
-  var email = currentUser.email || '';
-  var footer = '\n\n—\n' +
-    (name ? name + '\n' : '') +
-    'Mortgage Loan Originator · NMLS #' + nmls + '\n' +
-    (phone ? phone + (email ? ' · ' : '') : '') + (email || '') + '\n' +
+  var info = _mloLicenseeInfo();
+  if (!info) return body;
+  if (_messageHasNmlsRef(body)) return body;
+  return body + '\n\n—\n' +
+    (info.name ? info.name + '\n' : '') +
+    'Mortgage Loan Originator · NMLS #' + info.nmls + '\n' +
+    (info.phone ? info.phone + (info.email ? ' · ' : '') : '') + (info.email || '') + '\n' +
     '🏠 Equal Housing Lender. This communication is not a commitment to lend; all loans subject to credit approval.';
-  return body + footer;
 }
 
 async function doSendEmail() {
@@ -21875,21 +21913,15 @@ async function _sendSms(to, message, contactId, contactName, contactType, opts) 
 
   // ── MLO licensee identification (state regulator + NMLS rule) ──
   // Most state MLO licensing regs require the originator's NMLS ID
-  // on every loan-related communication. Auto-append a short
-  // signature ("— Name, NMLS #xxxxx") if the message doesn't already
-  // include one. Cheap chars (~25-35) and keeps every SMS state-
-  // compliant without burdening the MLO to remember it.
+  // on every loan-related communication. Auto-splice a short
+  // signature ("— Name, NMLS #xxxxx") BEFORE the TCPA STOP footer
+  // so the STOP line stays last. Uses the shared _mloLicenseeInfo +
+  // _messageHasNmlsRef helpers (also used by appendMloEmailFooter)
+  // so SMS and email can't drift on NMLS detection.
   try {
-    var mloNmlsForSig = (currentUser && (
-      (currentUser.profile && currentUser.profile.nmls) ||
-      currentUser.nmls
-    )) || '';
-    var alreadyHasNmls = /NMLS[\s#:]*\d{2,}/i.test(message);
-    if (mloNmlsForSig && !alreadyHasNmls) {
-      var sigName = (currentUser && currentUser.name) || '';
-      var sig = '— ' + (sigName ? sigName + ', ' : '') + 'NMLS #' + mloNmlsForSig;
-      // Splice in BEFORE the TCPA STOP footer if we just added one,
-      // so the signature reads naturally and the STOP line stays last.
+    var info = _mloLicenseeInfo();
+    if (info && !_messageHasNmlsRef(message)) {
+      var sig = '— ' + (info.name ? info.name + ', ' : '') + 'NMLS #' + info.nmls;
       var stopIdx = message.indexOf('\n\nReply STOP');
       if (stopIdx > 0) {
         message = message.slice(0, stopIdx) + '\n\n' + sig + message.slice(stopIdx);
